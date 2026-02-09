@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "nemar.schema.json",
+  "title": "NEMAR Extension",
+  "description": "NEMAR-specific properties that extend the core schema. Includes fields from the NEMAR API and nemar.json that are not part of the universal core.",
+  "type": "object",
+  "properties": {
+    "on_brainlife": {
+      "type": ["boolean", "null"],
+      "description": "Whether the dataset is available on BrainLife."
+    },
+    "has_visualization": {
+      "type": ["boolean", "null"],
+      "description": "Whether NEMAR has generated visualizations for this dataset."
+    },
+    "nemar_json": {
+      "type": ["object", "null"],
+      "description": "Contents of the nemar.json file (warnings, plots, channel system info).",
+      "properties": {
+        "error": { "type": "string" },
+        "warning": { "type": "string" },
+        "has_visualization": { "type": "boolean" },
+        "latest_date": { "type": "string" },
+        "plots": {
+          "type": "object",
+          "properties": {
+            "title": { "type": "string" },
+            "extension": { "type": "string" }
+          }
+        },
+        "channelsystem": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "local_dataset": {
+      "type": ["boolean", "null"],
+      "description": "Whether a local copy of the dataset is maintained by NEMAR."
+    },
+    "processed": {
+      "type": ["boolean", "null"],
+      "description": "Whether NEMAR has processed this dataset."
+    },
+    "hed_annotation": {
+      "type": ["boolean", "null"],
+      "description": "Whether the dataset has HED annotations (from NEMAR processing)."
+    },
+    "citation_count": {
+      "type": ["integer", "null"],
+      "description": "Number of papers citing this dataset (from NEMAR citations repository).",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": true
+}

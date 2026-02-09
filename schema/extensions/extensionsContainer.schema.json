@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "extensionsContainer.schema.json",
+  "title": "Extensions Container",
+  "description": "Container for domain-specific extensions using reserved namespaces. Each project or domain gets its own namespace. Adding new top-level namespaces requires a schema version bump. Follows the pattern established by signalJourney's extension system.",
+  "type": "object",
+  "properties": {
+    "eegdash": {
+      "description": "Namespace for EEGDash-specific properties (visualization, streaming).",
+      "$ref": "eegdash.schema.json"
+    },
+    "signalJourney": {
+      "description": "Namespace for signalJourney processing pipeline metadata.",
+      "$ref": "signalJourney.schema.json"
+    },
+    "nemar": {
+      "description": "Namespace for NEMAR-specific properties (API fields, legacy fields).",
+      "$ref": "nemar.schema.json"
+    },
+    "dataQuality": {
+      "description": "Namespace for data quality metrics and indicators.",
+      "$ref": "dataQuality.schema.json"
+    },
+    "rawDetail": {
+      "description": "Namespace for detailed per-channel arrays (channel names, types, TSV data). Separated from core to keep core documents lean.",
+      "$ref": "rawDetail.schema.json"
+    }
+  },
+  "additionalProperties": true
+}

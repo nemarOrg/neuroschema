@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "demographics.schema.json",
+  "title": "Demographics",
+  "description": "Subject demographics summary at the dataset level.",
+  "type": "object",
+  "properties": {
+    "subjects_count": {
+      "type": "integer",
+      "description": "Total number of subjects in the dataset.",
+      "minimum": 0
+    },
+    "age_min": {
+      "type": ["number", "null"],
+      "description": "Minimum age in the cohort."
+    },
+    "age_max": {
+      "type": ["number", "null"],
+      "description": "Maximum age in the cohort."
+    },
+    "age_mean": {
+      "type": ["number", "null"],
+      "description": "Mean age of subjects."
+    },
+    "species": {
+      "type": ["string", "null"],
+      "description": "Species of subjects (e.g., 'Human', 'Mouse').",
+      "default": "Human"
+    },
+    "sex_distribution": {
+      "type": ["object", "null"],
+      "description": "Count of subjects by sex (e.g., {'m': 50, 'f': 45}).",
+      "additionalProperties": { "type": "integer" }
+    },
+    "handedness_distribution": {
+      "type": ["object", "null"],
+      "description": "Count of subjects by handedness (e.g., {'r': 80, 'l': 15}).",
+      "additionalProperties": { "type": "integer" }
+    }
+  },
+  "additionalProperties": false
+}

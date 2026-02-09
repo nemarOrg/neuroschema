@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bidsEntities.schema.json",
+  "title": "BIDS Entities",
+  "description": "Standard Brain Imaging Data Structure (BIDS) entities parsed from the file path.",
+  "type": "object",
+  "properties": {
+    "subject": {
+      "type": ["string", "null"],
+      "description": "Subject label (e.g., '004', 'NDARAC589YMB')."
+    },
+    "session": {
+      "type": ["string", "null"],
+      "description": "Session label (e.g., 'pre', '01')."
+    },
+    "task": {
+      "type": ["string", "null"],
+      "description": "Task label (e.g., 'FaceRecognition', 'rest')."
+    },
+    "run": {
+      "type": ["string", "null"],
+      "description": "Run label (e.g., '1', '01')."
+    }
+  },
+  "additionalProperties": false
+}

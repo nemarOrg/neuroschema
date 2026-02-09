@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rawDetail.schema.json",
+  "title": "Raw Detail Extension",
+  "description": "Detailed per-channel arrays and raw BIDS sidecar content. This extension holds the verbose data that was previously in the core MongoDB documents (channel_names, channel_types, channel_tsv, eeg_json). Separated from core to allow lean queries that skip large arrays.",
+  "type": "object",
+  "properties": {
+    "channel_names": {
+      "type": "array",
+      "description": "Ordered list of channel names.",
+      "items": { "type": "string" }
+    },
+    "channel_types": {
+      "type": "array",
+      "description": "Ordered list of channel types (parallel to channel_names).",
+      "items": { "type": "string" }
+    },
+    "channel_tsv": {
+      "type": ["object", "null"],
+      "description": "Parsed content of the BIDS channels.tsv file.",
+      "properties": {
+        "name": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "type": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "units": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "additionalProperties": true
+    },
+    "eeg_json": {
+      "type": ["object", "null"],
+      "description": "Parsed content of the BIDS EEG sidecar JSON (*_eeg.json). Contains task description, equipment info, filter settings, etc.",
+      "additionalProperties": true
+    },
+    "participant_tsv": {
+      "type": ["object", "null"],
+      "description": "Parsed row from the BIDS participants.tsv for this subject.",
+      "additionalProperties": true
+    },
+    "bids_dependencies": {
+      "type": "array",
+      "description": "List of BIDS sidecar file paths that this record depends on.",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": true
+}

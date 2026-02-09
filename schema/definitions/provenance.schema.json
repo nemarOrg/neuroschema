@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "provenance.schema.json",
+  "title": "Provenance",
+  "description": "Timestamps and origin tracking for the metadata document.",
+  "type": "object",
+  "properties": {
+    "created_at": {
+      "type": ["string", "null"],
+      "description": "ISO 8601 timestamp of when the dataset was first created/published.",
+      "format": "date-time"
+    },
+    "modified_at": {
+      "type": ["string", "null"],
+      "description": "ISO 8601 timestamp of last modification.",
+      "format": "date-time"
+    },
+    "ingested_at": {
+      "type": ["string", "null"],
+      "description": "ISO 8601 timestamp of when this metadata was ingested into the system.",
+      "format": "date-time"
+    },
+    "latest_snapshot": {
+      "type": ["string", "null"],
+      "description": "Latest version/snapshot identifier of the dataset (e.g., '2.0.2')."
+    },
+    "uploader": {
+      "type": ["string", "null"],
+      "description": "Name of the person who uploaded the dataset."
+    },
+    "publish_date": {
+      "type": ["string", "null"],
+      "description": "Date the dataset was published.",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

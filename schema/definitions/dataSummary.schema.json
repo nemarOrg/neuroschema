@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dataSummary.schema.json",
+  "title": "Data Summary",
+  "description": "Aggregate statistics about the data content of a dataset. These are computed summaries across all recordings (ranges, counts, distributions).",
+  "type": "object",
+  "properties": {
+    "total_files": {
+      "type": ["integer", "null"],
+      "description": "Total number of files in the dataset.",
+      "minimum": 0
+    },
+    "size_bytes": {
+      "type": ["integer", "null"],
+      "description": "Total dataset size in bytes.",
+      "minimum": 0
+    },
+    "channel_count_range": {
+      "type": ["object", "null"],
+      "description": "Range of channel counts across recordings in this dataset.",
+      "properties": {
+        "min": { "type": "integer", "minimum": 0 },
+        "max": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "channel_type_summary": {
+      "type": ["object", "null"],
+      "description": "Summary counts of channel types across the dataset (e.g., {'EEG': 64, 'EOG': 2, 'ECG': 1}).",
+      "additionalProperties": { "type": "integer" }
+    },
+    "sampling_frequency_range": {
+      "type": ["object", "null"],
+      "description": "Range of sampling frequencies across recordings (if they vary).",
+      "properties": {
+        "min": { "type": "number", "minimum": 0 },
+        "max": { "type": "number", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "data_processed": {
+      "type": ["boolean", "null"],
+      "description": "Whether the dataset contains processed (vs. raw) data."
+    }
+  },
+  "additionalProperties": false
+}

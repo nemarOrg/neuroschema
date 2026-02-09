@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "signalJourney.schema.json",
+  "title": "signalJourney Extension",
+  "description": "Namespace for linking to signalJourney processing pipeline records. References processing provenance tracked in signalJourney's own schema.",
+  "type": "object",
+  "properties": {
+    "pipeline_id": {
+      "type": ["string", "null"],
+      "description": "Identifier for the signalJourney pipeline associated with this record/dataset."
+    },
+    "processing_status": {
+      "type": ["string", "null"],
+      "description": "Status of processing (e.g., 'pending', 'completed', 'failed').",
+      "enum": ["pending", "in_progress", "completed", "failed", null]
+    },
+    "sj_version": {
+      "type": ["string", "null"],
+      "description": "Version of the signalJourney specification used."
+    }
+  },
+  "additionalProperties": true
+}

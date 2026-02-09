@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dataset.schema.json",
+  "title": "Dataset Metadata",
+  "description": "Study-level metadata for a NEMAR dataset. Contains all information about the dataset as a whole: what modalities it has, participant demographics (from participants.tsv), signal properties that are shared across recordings, event/HED annotation status, and provenance. Aligned with BIDS dataset_description.json and participants.tsv.",
+  "type": "object",
+  "required": ["dataset_id", "name", "source", "recording_modality"],
+  "properties": {
+    "dataset_id": {
+      "type": "string",
+      "description": "Unique dataset identifier (e.g., 'ds003645').",
+      "pattern": "^ds[0-9]+$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable title of the dataset."
+    },
+    "source": {
+      "type": "string",
+      "description": "Origin of the dataset (e.g., 'openneuro', 'nemar', 'gin').",
+      "enum": ["openneuro", "nemar", "gin", "other"]
+    },
+    "recording_modality": {
+      "type": "array",
+      "description": "Recording modalities present in the dataset (e.g., ['EEG', 'MEG', 'MRI']). Dataset-level property; individual data files inherit their modality from the BIDS datatype directory.",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "bids_version": {
+      "type": ["string", "null"],
+      "description": "BIDS specification version the dataset follows."
+    },
+    "license": {
+      "type": ["string", "null"],
+      "description": "Dataset license (e.g., 'CC0', 'CC-BY-4.0')."
+    },
+    "authors": {
+      "type": "array",
+      "description": "List of dataset authors.",
+      "items": { "type": "string" }
+    },
+    "funding": {
+      "type": "array",
+      "description": "Funding sources.",
+      "items": { "type": "string" }
+    },
+    "readme": {
+      "type": ["string", "null"],
+      "description": "Content of the dataset README."
+    },
+    "tasks": {
+      "type": "array",
+      "description": "Experimental tasks present in the dataset.",
+      "items": { "type": "string" }
+    },
+    "sessions_count": {
+      "type": ["integer", "null"],
+      "description": "Number of sessions in the dataset.",
+      "minimum": 0
+    },
+    "has_hed_annotations": {
+      "type": ["boolean", "null"],
+      "description": "Whether the dataset includes Hierarchical Event Descriptors (HED) annotations."
+    },
+    "hed_version": {
+      "type": ["string", "null"],
+      "description": "Version of the HED schema used for annotations (e.g., '8.1.0')."
+    },
+    "has_event_annotations": {
+      "type": ["boolean", "null"],
+      "description": "Whether the dataset includes event/stimulus annotations (events.tsv files)."
+    },
+    "channel_system": {
+      "type": ["string", "null"],
+      "description": "Electrode placement system (e.g., '10-20', '10-10', '10-5', 'GSN-HydroCel-129', 'other')."
+    },
+    "demographics": {
+      "$ref": "../definitions/demographics.schema.json"
+    },
+    "data_summary": {
+      "$ref": "../definitions/dataSummary.schema.json"
+    },
+    "signal_defaults": {
+      "$ref": "../definitions/signalDefaults.schema.json"
+    },
+    "provenance": {
+      "$ref": "../definitions/provenance.schema.json"
+    },
+    "external_links": {
+      "$ref": "../definitions/externalLinks.schema.json"
+    },
+    "extensions": {
+      "$ref": "../extensions/extensionsContainer.schema.json"
+    }
+  },
+  "additionalProperties": false
+}

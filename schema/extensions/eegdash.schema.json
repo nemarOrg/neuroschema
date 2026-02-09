@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "eegdash.schema.json",
+  "title": "EEGDash Extension",
+  "description": "EEGDash-specific metadata for visualization and streaming. Fields that support the EEGDash dashboard but are not part of the core NEMAR schema.",
+  "type": "object",
+  "properties": {
+    "storage": {
+      "type": "object",
+      "description": "Storage location details for EEGDash backend.",
+      "properties": {
+        "backend": {
+          "type": "string",
+          "enum": ["s3", "https", "local"]
+        },
+        "base": {
+          "type": "string",
+          "description": "Base URI for the storage location."
+        },
+        "raw_key": {
+          "type": "string",
+          "description": "Relative path key to the raw file."
+        },
+        "dep_keys": {
+          "type": "array",
+          "description": "Dependency file keys.",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "tags": {
+      "type": "object",
+      "description": "Classification tags for EEGDash filtering.",
+      "properties": {
+        "pathology": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "modality": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "type": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "repository_stats": {
+      "type": ["object", "null"],
+      "description": "Stats from git-based repository sources.",
+      "properties": {
+        "stars": { "type": "integer" },
+        "forks": { "type": "integer" },
+        "watchers": { "type": "integer" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

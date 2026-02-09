@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "signalDefaults.schema.json",
+  "title": "Signal Defaults",
+  "description": "Dataset-level signal properties that are shared across all (or most) recordings. Following the BIDS inheritance principle, these values apply to all data files unless overridden at the record level.",
+  "type": "object",
+  "properties": {
+    "sampling_frequency": {
+      "type": ["number", "null"],
+      "description": "Default sampling frequency in Hz (applies to all recordings unless overridden per-file).",
+      "minimum": 0
+    },
+    "power_line_frequency": {
+      "type": ["number", "null"],
+      "description": "Power line frequency in Hz (typically 50 or 60).",
+      "enum": [50, 60, null]
+    },
+    "reference": {
+      "type": ["string", "null"],
+      "description": "Default EEG reference (e.g., 'nose', 'Cz', 'average')."
+    },
+    "recording_type": {
+      "type": ["string", "null"],
+      "description": "Recording type (e.g., 'continuous', 'epoched')."
+    },
+    "placement_scheme": {
+      "type": ["string", "null"],
+      "description": "Detailed electrode placement scheme from BIDS EEG sidecar (e.g., 'extended 10-10% system')."
+    }
+  },
+  "additionalProperties": false
+}

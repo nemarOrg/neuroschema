@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Planning/scratch files (at root level only)
+/plan.md
+/ideas.md
+/scratch_notes.md
+/research.md
+
+# Coverage
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+
+# Ruff
+.ruff_cache/

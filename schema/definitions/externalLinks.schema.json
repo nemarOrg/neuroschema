@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "externalLinks.schema.json",
+  "title": "External Links",
+  "description": "Relevant external hyperlinks for the dataset.",
+  "type": "object",
+  "properties": {
+    "source_url": {
+      "type": ["string", "null"],
+      "description": "URL to the primary data source (e.g., OpenNeuro page).",
+      "format": "uri"
+    },
+    "references_and_links": {
+      "type": "array",
+      "description": "List of references and publication links.",
+      "items": { "type": "string" }
+    },
+    "dataset_doi": {
+      "type": ["string", "null"],
+      "description": "Digital Object Identifier for the dataset."
+    },
+    "associated_paper_doi": {
+      "type": ["string", "null"],
+      "description": "DOI of the primary associated paper."
+    }
+  },
+  "additionalProperties": false
+}

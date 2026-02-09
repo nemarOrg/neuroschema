@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dataQuality.schema.json",
+  "title": "Data Quality Extension",
+  "description": "Namespace for data quality metrics and indicators. Placeholder for future data quality assessment projects.",
+  "type": "object",
+  "properties": {
+    "quality_score": {
+      "type": ["number", "null"],
+      "description": "Overall quality score (0-1 scale).",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "quality_flags": {
+      "type": "array",
+      "description": "List of quality flags or issues identified.",
+      "items": { "type": "string" }
+    },
+    "assessed_at": {
+      "type": ["string", "null"],
+      "description": "ISO 8601 timestamp of when the quality assessment was performed.",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": true
+}
