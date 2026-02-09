@@ -1,4 +1,4 @@
-# nm-schema Research
+# neuroschema Research
 
 ## Existing Schema Patterns Analyzed
 
@@ -30,4 +30,4 @@
 - nemar.json adds visualization status, warnings, channel system info
 
 ## Key Insight
-The current system conflates raw BIDS file content (channel arrays, TSV data) with summary metadata. The nm-schema should cleanly separate these: core for discovery/filtering, extensions for detailed data access.
+The current system conflates raw BIDS file content (channel arrays, TSV data) with summary metadata. The neuroschema should cleanly separate these: core for discovery/filtering, extensions for detailed data access.

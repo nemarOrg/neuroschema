@@ -1,14 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "nm.schema.json",
-  "title": "NEMAR Metadata Schema",
-  "description": "Root schema for NEMAR neuroimaging metadata. Supports two document types: dataset-level summaries and record-level (per-file) metadata. The core fields are stable; domain-specific fields live under the 'extensions' namespace.",
+  "$id": "neuroschema.schema.json",
+  "title": "Neuroschema",
+  "description": "Root schema for neuroimaging metadata. Supports two document types: dataset-level summaries and record-level (per-data-file) metadata. The core fields are stable; domain-specific fields live under the 'extensions' namespace.",
   "type": "object",
   "required": ["schema_version", "doc_type"],
   "properties": {
     "schema_version": {
       "type": "string",
-      "description": "Version of the nm-schema specification (Semantic Versioning MAJOR.MINOR.PATCH).",
+      "description": "Version of the neuroschema specification (Semantic Versioning MAJOR.MINOR.PATCH).",
       "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
     },
     "doc_type": {

@@ -1,4 +1,4 @@
-# nm-schema Instructions
+# neuroschema Instructions
 
 ## Project Context
 **Purpose:** Extensible JSON Schema for NEMAR neuroimaging metadata. Defines a frozen core schema used by the NEMAR API and EEGDash MongoDB, with namespace-based extensions for downstream projects (signalJourney, data quality, data categories, etc.).
@@ -13,7 +13,7 @@
 ## Environment Setup
 ```bash
 source ~/miniconda3/etc/profile.d/conda.sh
-conda activate nm-schema  # or use uv venv
+conda activate neuroschema  # or use uv venv
 uv pip install -e ".[dev]"
 pytest  # Real tests only, NO MOCKS
 ```
@@ -42,11 +42,11 @@ pytest tests/ --cov
 ruff check --fix . && ruff format .
 
 # Validate a JSON file against schema
-python -m nm_schema.validate examples/schema1.json
+python -m neuroschema.validate examples/schema1.json
 ```
 
 ## Key Files
-- `schema/nm.schema.json` - Root schema definition
+- `schema/neuroschema.schema.json` - Root schema definition
 - `schema/core/` - Core field definitions (dataset + record level)
 - `schema/definitions/` - Shared type definitions (demographics, BIDS entities, etc.)
 - `schema/extensions/` - Extension namespace definitions

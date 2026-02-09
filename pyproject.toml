@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "nm-schema"
+name = "neuroschema"
 version = "0.1.0"
 description = "Extensible JSON Schema for NEMAR neuroimaging metadata"
 readme = "README.md"

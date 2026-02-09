@@ -1,4 +1,4 @@
-# nm-schema Ideas
+# neuroschema Ideas
 
 ## Extension Ideas for Future Projects
 

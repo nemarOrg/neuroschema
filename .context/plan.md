@@ -1,4 +1,4 @@
-# nm-schema Plan
+# neuroschema Plan
 
 ## Phase 1: Schema Foundation (current)
 - [x] Define core dataset schema with required fields
@@ -10,12 +10,12 @@
 - [ ] Write tests validating examples against schema
 
 ## Phase 2: Migration Mapping
-- [ ] Document mapping from current EEGDash MongoDB documents to nm-schema
-- [ ] Document mapping from NEMAR API responses to nm-schema
+- [ ] Document mapping from current EEGDash MongoDB documents to neuroschema
+- [ ] Document mapping from NEMAR API responses to neuroschema
 - [ ] Create migration scripts or adapters
 
 ## Phase 3: Integration
-- [ ] Update EEGDash `schemas.py` to align with nm-schema
+- [ ] Update EEGDash `schemas.py` to align with neuroschema
 - [ ] Add signalJourney cross-references
 - [ ] Define data quality extension fields based on quality assessment needs
 
