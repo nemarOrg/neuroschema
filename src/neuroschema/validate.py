@@ -19,10 +19,22 @@ SCHEMA_DIR = Path(__file__).resolve().parent.parent.parent / "schema"
 
 def _build_store(schema_dir: Path) -> dict[str, dict]:
     """Load all schema files into a URI -> schema mapping for $ref resolution."""
+    if not schema_dir.is_dir():
+        raise FileNotFoundError(
+            f"Schema directory not found: {schema_dir}. "
+            f"Ensure the schema files are present or pass a valid schema path."
+        )
     store: dict[str, dict] = {}
     for schema_file in schema_dir.rglob("*.schema.json"):
-        with open(schema_file) as f:
-            schema = json.load(f)
+        try:
+            with open(schema_file) as f:
+                schema = json.load(f)
+        except json.JSONDecodeError as exc:
+            raise json.JSONDecodeError(
+                f"Failed to parse {schema_file}: {exc.msg}",
+                exc.doc,
+                exc.pos,
+            ) from exc
         if "$id" in schema:
             rel = schema_file.relative_to(schema_dir)
             uri = f"file://{schema_dir}/{rel}"
@@ -115,7 +127,21 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    errors = validate_file(args.file, args.schema)
+    try:
+        errors = validate_file(args.file, args.schema)
+    except FileNotFoundError as exc:
+        print(f"ERROR: File not found: {exc.filename or exc}", file=sys.stderr)
+        return 2
+    except json.JSONDecodeError as exc:
+        print(
+            f"ERROR: Invalid JSON (line {exc.lineno}, col {exc.colno}): {exc.msg}",
+            file=sys.stderr,
+        )
+        return 2
+    except PermissionError as exc:
+        print(f"ERROR: Permission denied: {exc.filename}", file=sys.stderr)
+        return 2
+
     if errors:
         print(f"INVALID: {len(errors)} error(s) found in {args.file}")
         for error in errors:

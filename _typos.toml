@@ -1,0 +1,4 @@
+[default.extend-words]
+# HED = Hierarchical Event Descriptors (domain-specific term)
+hed = "hed"
+HED = "HED"

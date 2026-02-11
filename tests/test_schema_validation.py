@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from neuroschema.validate import validate_document
+from neuroschema.validate import validate_document, validate_file
 
 ROOT = Path(__file__).resolve().parent.parent
 SCHEMA_DIR = ROOT / "schema"
@@ -32,16 +32,24 @@ def dataset_schema_path():
     return SCHEMA_DIR / "core" / "dataset.schema.json"
 
 
+ROOT_ONLY_KEYS = ("schema_version", "doc_type")
+
+
+def _load_example(name: str) -> dict:
+    """Load an example JSON file, stripping root-only envelope keys."""
+    with open(EXAMPLES_DIR / name) as f:
+        doc = json.load(f)
+    return {k: v for k, v in doc.items() if k not in ROOT_ONLY_KEYS}
+
+
 @pytest.fixture
 def schema1():
-    with open(EXAMPLES_DIR / "schema1.json") as f:
-        return json.load(f)
+    return _load_example("schema1.json")
 
 
 @pytest.fixture
 def schema2():
-    with open(EXAMPLES_DIR / "schema2.json") as f:
-        return json.load(f)
+    return _load_example("schema2.json")
 
 
 @pytest.fixture
@@ -71,16 +79,12 @@ class TestPositiveValidation:
 
     def test_schema1_validates_against_record(self, schema1, record_schema_path):
         """schema1.json (ds002718 record) passes record schema validation."""
-        root_keys = ("schema_version", "doc_type")
-        doc = {k: v for k, v in schema1.items() if k not in root_keys}
-        errors = validate_document(doc, record_schema_path)
+        errors = validate_document(schema1, record_schema_path)
         assert errors == [], [e.message for e in errors]
 
     def test_schema2_validates_against_record(self, schema2, record_schema_path):
         """schema2.json (ds005514 record) passes record schema validation."""
-        root_keys = ("schema_version", "doc_type")
-        doc = {k: v for k, v in schema2.items() if k not in root_keys}
-        errors = validate_document(doc, record_schema_path)
+        errors = validate_document(schema2, record_schema_path)
         assert errors == [], [e.message for e in errors]
 
     def test_minimal_record_validates(self, minimal_record, record_schema_path):
@@ -460,3 +464,176 @@ class TestDatasetEnrichment:
         }
         errors = validate_document(doc, dataset_schema_path)
         assert errors == [], [e.message for e in errors]
+
+
+# ── Root Schema Dispatch Tests ───────────────────────────────────────────
+
+
+class TestRootSchemaDispatch:
+    """Test the root schema's if/then/else doc_type dispatch."""
+
+    def test_record_through_root_schema(self):
+        """Full record with envelope fields validates via root schema."""
+        doc = {
+            "schema_version": "0.2.0",
+            "doc_type": "record",
+            "dataset": "ds000001",
+            "bids_relpath": "sub-01/eeg/sub-01_task-rest_eeg.set",
+            "modality": "EEG",
+        }
+        errors = validate_document(doc)
+        assert errors == [], [e.message for e in errors]
+
+    def test_dataset_through_root_schema(self):
+        """Full dataset with envelope fields validates via root schema."""
+        doc = {
+            "schema_version": "0.2.0",
+            "doc_type": "dataset",
+            "dataset_id": "ds000001",
+            "name": "Test Dataset",
+            "source": "openneuro",
+            "recording_modality": ["EEG"],
+        }
+        errors = validate_document(doc)
+        assert errors == [], [e.message for e in errors]
+
+    def test_root_schema_requires_schema_version(self):
+        """Root schema requires schema_version."""
+        doc = {
+            "doc_type": "record",
+            "dataset": "ds000001",
+            "bids_relpath": "sub-01/eeg/test.set",
+            "modality": "EEG",
+        }
+        errors = validate_document(doc)
+        assert len(errors) > 0
+
+    def test_root_schema_requires_doc_type(self):
+        """Root schema requires doc_type."""
+        doc = {
+            "schema_version": "0.2.0",
+            "dataset": "ds000001",
+            "bids_relpath": "sub-01/eeg/test.set",
+            "modality": "EEG",
+        }
+        errors = validate_document(doc)
+        assert len(errors) > 0
+
+    def test_root_schema_rejects_invalid_doc_type(self):
+        """Root schema rejects unknown doc_type values."""
+        doc = {
+            "schema_version": "0.2.0",
+            "doc_type": "unknown",
+            "dataset": "ds000001",
+        }
+        errors = validate_document(doc)
+        assert len(errors) > 0
+
+    def test_root_schema_rejects_invalid_version_format(self):
+        """Root schema rejects non-semver schema_version."""
+        doc = {
+            "schema_version": "v2",
+            "doc_type": "record",
+            "dataset": "ds000001",
+            "bids_relpath": "sub-01/eeg/test.set",
+            "modality": "EEG",
+        }
+        errors = validate_document(doc)
+        assert len(errors) > 0
+
+    def test_example_files_validate_against_root(self):
+        """Example files (with envelope) validate against root schema."""
+        for name in ("schema1.json", "schema2.json"):
+            with open(EXAMPLES_DIR / name) as f:
+                doc = json.load(f)
+            errors = validate_document(doc)
+            assert errors == [], f"{name}: {[e.message for e in errors]}"
+
+
+# ── Embedded Extension Tests ─────────────────────────────────────────────
+
+
+class TestEmbeddedExtensions:
+    """Extensions embedded in a record/dataset should validate."""
+
+    def test_record_with_extensions(self, minimal_record, record_schema_path):
+        """Record with populated extensions block should validate."""
+        doc = copy.deepcopy(minimal_record)
+        doc["extensions"] = {
+            "rawDetail": {
+                "channel_names": ["Fp1", "Fp2"],
+                "channel_types": ["EEG", "EEG"],
+            }
+        }
+        errors = validate_document(doc, record_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_dataset_with_extensions(self, minimal_dataset, dataset_schema_path):
+        """Dataset with populated extensions block should validate."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["extensions"] = {
+            "dataCite": {
+                "publisher": "OpenNeuro",
+                "publication_year": 2025,
+            },
+            "dataCategories": {
+                "study_domain": "cognitive neuroscience",
+            },
+        }
+        errors = validate_document(doc, dataset_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+
+# ── File Validation Tests ────────────────────────────────────────────────
+
+
+class TestFileValidation:
+    """Test validate_file function."""
+
+    def test_validate_file_with_example(self):
+        """validate_file loads and validates a real JSON file."""
+        schema_path = SCHEMA_DIR / "core" / "record.schema.json"
+        errors = validate_file(EXAMPLES_DIR / "schema1.json", schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_validate_file_against_root(self):
+        """validate_file works against root schema (default)."""
+        errors = validate_file(EXAMPLES_DIR / "schema1.json")
+        assert errors == [], [e.message for e in errors]
+
+
+# ── Schema Integrity Tests ───────────────────────────────────────────────
+
+
+class TestSchemaIntegrity:
+    """Verify schema files are well-formed."""
+
+    def test_all_schemas_have_id(self):
+        """Every schema file should have a $id field."""
+        for schema_file in SCHEMA_DIR.rglob("*.schema.json"):
+            with open(schema_file) as f:
+                schema = json.load(f)
+            assert "$id" in schema, f"{schema_file.name} missing $id"
+
+    def test_record_signal_summary_validates(self, minimal_record, record_schema_path):
+        """Record with signal_summary should validate."""
+        doc = copy.deepcopy(minimal_record)
+        doc["signal_summary"] = {
+            "nchans": 64,
+            "ntimes": 749000,
+            "recording_duration": 2925.78,
+            "channel_type_counts": {"EEG": 60, "EOG": 2, "EMG": 2},
+        }
+        errors = validate_document(doc, record_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_dataset_invalid_id_pattern(self, dataset_schema_path):
+        """Dataset with invalid dataset_id pattern should fail."""
+        doc = {
+            "dataset_id": "invalid-id",
+            "name": "Test",
+            "source": "openneuro",
+            "recording_modality": ["EEG"],
+        }
+        errors = validate_document(doc, dataset_schema_path)
+        assert len(errors) > 0

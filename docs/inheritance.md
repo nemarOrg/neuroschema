@@ -20,8 +20,10 @@ The following fields are defined in `schema/definitions/inheritable.schema.json`
 When resolving the effective signal properties for a record:
 
 1. Start with `dataset.signal_defaults` as the base
-2. Overlay `record.signal_properties` (non-null values override the base)
+2. Overlay `record.signal_properties`: only fields that are **present and non-null** override the base. A field set to `null` (or absent) in the record means "inherit the dataset default."
 3. The result is the effective signal configuration for that record
+
+> **Note:** JSON cannot distinguish "field absent" from "field set to null" once the document is parsed. Both are treated as "no override; use dataset default." To explicitly clear a dataset default at the record level, use an empty string for string fields or 0 for numeric fields.
 
 ### Example
 

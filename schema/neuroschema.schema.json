@@ -17,22 +17,14 @@
       "description": "Discriminator: 'dataset' for study-level metadata, 'record' for per-file metadata."
     }
   },
-  "oneOf": [
-    {
-      "if": {
-        "properties": { "doc_type": { "const": "dataset" } }
-      },
-      "then": {
-        "$ref": "core/dataset.schema.json"
-      }
-    },
-    {
-      "if": {
-        "properties": { "doc_type": { "const": "record" } }
-      },
-      "then": {
-        "$ref": "core/record.schema.json"
-      }
-    }
-  ]
+  "if": {
+    "properties": { "doc_type": { "const": "dataset" } },
+    "required": ["doc_type"]
+  },
+  "then": {
+    "$ref": "core/dataset.schema.json"
+  },
+  "else": {
+    "$ref": "core/record.schema.json"
+  }
 }

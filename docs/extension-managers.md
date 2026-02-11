@@ -48,4 +48,4 @@ db.records.aggregate([
 
 ## Schema Metadata
 
-The collection mapping is encoded in `extensionsContainer.schema.json` under the `x-extension-managers` property. This is a non-validating metadata annotation (JSON Schema ignores `x-` prefixed properties) that documents the intended topology.
+The collection mapping is encoded in `extensionsContainer.schema.json` under the `x-extension-managers` property. This is a non-validating metadata annotation; JSON Schema draft 2020-12 implementations ignore unknown keywords, so custom metadata keys like `x-extension-managers` are safe to include without affecting validation.

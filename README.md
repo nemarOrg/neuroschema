@@ -38,7 +38,7 @@ schema/
     bidsEntities.schema.json       # BIDS path entities
     dataSummary.schema.json        # Dataset-level aggregates
     externalLinks.schema.json      # DOIs, URLs, references
-    provenance.schema.json         # Dataset timestamps
+    provenance.schema.json         # Dataset provenance (timestamps, version, uploader)
     recordProvenance.schema.json   # Record timestamps
   extensions/
     extensionsContainer.schema.json  # Namespace registry
