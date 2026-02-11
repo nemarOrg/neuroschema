@@ -24,6 +24,49 @@
     "rawDetail": {
       "description": "Namespace for detailed per-channel arrays (channel names, types, TSV data). Separated from core to keep core documents lean.",
       "$ref": "rawDetail.schema.json"
+    },
+    "dataCite": {
+      "description": "Namespace for DataCite DOI registration metadata (publisher, contributors, related identifiers).",
+      "$ref": "dataCite.schema.json"
+    },
+    "dataCategories": {
+      "description": "Namespace for study classification (paradigm, clinical context, cognitive domains).",
+      "$ref": "dataCategories.schema.json"
+    }
+  },
+  "x-extension-managers": {
+    "description": "Maps each extension namespace to its owning service and MongoDB collection. Core fields are platform-neutral; extension collections have separate access control per service.",
+    "core": {
+      "manager": "nemar-api",
+      "collection": "datasets | records"
+    },
+    "eegdash": {
+      "manager": "eegdash",
+      "collection": "ext_eegdash"
+    },
+    "signalJourney": {
+      "manager": "signal-journey",
+      "collection": "ext_signalJourney"
+    },
+    "nemar": {
+      "manager": "nemar-api",
+      "collection": "ext_nemar"
+    },
+    "dataQuality": {
+      "manager": "nemar-pipeline",
+      "collection": "ext_dataQuality"
+    },
+    "rawDetail": {
+      "manager": "nemar-api",
+      "collection": "ext_rawDetail"
+    },
+    "dataCite": {
+      "manager": "nemar-tools",
+      "collection": "ext_dataCite"
+    },
+    "dataCategories": {
+      "manager": "nemar-api",
+      "collection": "ext_dataCategories"
     }
   },
   "additionalProperties": true

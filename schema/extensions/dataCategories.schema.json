@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dataCategories.schema.json",
+  "title": "Data Categories Extension",
+  "description": "Study classification metadata for filtering and discovery. Captures the experimental paradigm, clinical context, and cognitive domains of the dataset.",
+  "type": "object",
+  "properties": {
+    "study_domain": {
+      "type": ["string", "null"],
+      "description": "Broad research domain (e.g., 'cognitive neuroscience', 'clinical', 'BCI', 'developmental')."
+    },
+    "study_design": {
+      "type": ["string", "null"],
+      "description": "Study design type (e.g., 'cross-sectional', 'longitudinal', 'case-control', 'within-subject')."
+    },
+    "paradigm": {
+      "type": ["object", "null"],
+      "description": "Experimental paradigm details.",
+      "properties": {
+        "type": {
+          "type": ["string", "null"],
+          "description": "Paradigm type (e.g., 'event-related', 'resting-state', 'steady-state', 'block-design', 'naturalistic')."
+        },
+        "stimulus_modality": {
+          "type": ["string", "null"],
+          "description": "Stimulus modality (e.g., 'visual', 'auditory', 'somatosensory', 'multimodal')."
+        },
+        "response_type": {
+          "type": ["string", "null"],
+          "description": "Response type required (e.g., 'button-press', 'verbal', 'eye-movement', 'passive')."
+        }
+      },
+      "additionalProperties": false
+    },
+    "clinical": {
+      "type": ["object", "null"],
+      "description": "Clinical context of the study.",
+      "properties": {
+        "is_clinical": {
+          "type": ["boolean", "null"],
+          "description": "Whether the dataset involves clinical populations."
+        },
+        "conditions": {
+          "type": "array",
+          "description": "Clinical conditions studied (e.g., ['epilepsy', 'ADHD']).",
+          "items": { "type": "string" }
+        },
+        "population": {
+          "type": ["string", "null"],
+          "description": "Target population (e.g., 'healthy adults', 'pediatric patients', 'elderly')."
+        }
+      },
+      "additionalProperties": false
+    },
+    "cognitive_domains": {
+      "type": "array",
+      "description": "Cognitive domains investigated (e.g., ['attention', 'memory', 'language', 'motor']).",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": true
+}

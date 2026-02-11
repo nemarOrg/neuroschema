@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "recordProvenance.schema.json",
+  "title": "Record Provenance",
+  "description": "Record-level timestamps tracking when a record was digested, created, and last modified.",
+  "type": "object",
+  "properties": {
+    "digested_at": {
+      "type": ["string", "null"],
+      "description": "ISO 8601 timestamp of when this record was ingested/digested into the system.",
+      "format": "date-time"
+    },
+    "created_at": {
+      "type": ["string", "null"],
+      "description": "ISO 8601 timestamp of when this record was first created.",
+      "format": "date-time"
+    },
+    "modified_at": {
+      "type": ["string", "null"],
+      "description": "ISO 8601 timestamp of last modification to this record.",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

@@ -2,14 +2,9 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "signalSummary.schema.json",
   "title": "Signal Summary",
-  "description": "Summary of the recording signal properties. Keeps only aggregate info in core; per-channel details go in extensions.",
+  "description": "Summary of the recording signal properties. Keeps only aggregate info in core; per-channel details go in extensions. Signal properties that follow BIDS inheritance (sampling_frequency, reference, power_line_frequency) are in inheritable.schema.json instead.",
   "type": "object",
   "properties": {
-    "sampling_frequency": {
-      "type": ["number", "null"],
-      "description": "Sampling frequency in Hz.",
-      "minimum": 0
-    },
     "nchans": {
       "type": ["integer", "null"],
       "description": "Total number of channels.",
@@ -29,14 +24,6 @@
       "type": ["object", "null"],
       "description": "Count of channels by type (e.g., {'EEG': 64, 'EOG': 2, 'ECG': 1}).",
       "additionalProperties": { "type": "integer" }
-    },
-    "reference": {
-      "type": ["string", "null"],
-      "description": "EEG reference (e.g., 'nose', 'Cz', 'average')."
-    },
-    "power_line_frequency": {
-      "type": ["number", "null"],
-      "description": "Power line frequency in Hz (e.g., 50 or 60)."
     }
   },
   "additionalProperties": false

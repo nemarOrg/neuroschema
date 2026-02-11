@@ -8,7 +8,7 @@ All tests must validate against real data. No mock data, mock classes, or artifi
 
 - Use the example JSON files in `examples/` as test fixtures.
 - The `schema1.json` and `schema2.json` are real MongoDB exports from EEGDash.
-- The `nemar-api.md` contains a real NEMAR API response.
+- The `nemar-api.md` contains a real API response from the NEMAR platform (one of the schema consumers).
 
 ## Validation Tests
 

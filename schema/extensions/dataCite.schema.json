@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dataCite.schema.json",
+  "title": "DataCite Extension",
+  "description": "DataCite-specific metadata for DOI registration. Fields that map to DataCite Metadata Schema 4.5 but are not part of the core neuroschema. Core already covers title (name), creators (authors), description, and DOI (external_links.dataset_doi).",
+  "type": "object",
+  "properties": {
+    "publisher": {
+      "type": ["string", "null"],
+      "description": "Name of the entity that holds/publishes the data (e.g., 'OpenNeuro', 'NEMAR')."
+    },
+    "publication_year": {
+      "type": ["integer", "null"],
+      "description": "Year when the dataset was first published or made available."
+    },
+    "resource_type": {
+      "type": ["string", "null"],
+      "description": "Free-text description of the resource type (e.g., 'EEG Dataset')."
+    },
+    "resource_type_general": {
+      "type": ["string", "null"],
+      "description": "DataCite controlled vocabulary for resource type.",
+      "enum": [
+        "Audiovisual", "Book", "BookChapter", "Collection", "ComputationalNotebook",
+        "ConferencePaper", "ConferenceProceeding", "DataPaper", "Dataset",
+        "Dissertation", "Event", "Image", "Instrument", "InteractiveResource",
+        "Journal", "JournalArticle", "Model", "OutputManagementPlan", "PeerReview",
+        "PhysicalObject", "Preprint", "Report", "Service", "Software", "Sound",
+        "Standard", "StudyRegistration", "Text", "Workflow", "Other", null
+      ]
+    },
+    "contributors": {
+      "type": "array",
+      "description": "Contributors with roles (beyond authors/creators).",
+      "items": {
+        "type": "object",
+        "required": ["name", "contributor_type"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Full name of the contributor."
+          },
+          "contributor_type": {
+            "type": "string",
+            "description": "DataCite contributor role.",
+            "enum": [
+              "ContactPerson", "DataCollector", "DataCurator", "DataManager",
+              "Distributor", "Editor", "HostingInstitution", "Producer",
+              "ProjectLeader", "ProjectManager", "ProjectMember",
+              "RegistrationAgency", "RegistrationAuthority", "RelatedPerson",
+              "Researcher", "ResearchGroup", "RightsHolder", "Sponsor",
+              "Supervisor", "WorkPackageLeader", "Other"
+            ]
+          },
+          "orcid": {
+            "type": ["string", "null"],
+            "description": "ORCID identifier URL.",
+            "format": "uri"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "related_identifiers": {
+      "type": "array",
+      "description": "Related resources (papers, other datasets, code repos).",
+      "items": {
+        "type": "object",
+        "required": ["identifier", "relation_type"],
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "description": "The identifier value (e.g., DOI, URL, ARK)."
+          },
+          "identifier_type": {
+            "type": ["string", "null"],
+            "description": "Type of the identifier.",
+            "enum": ["ARK", "arXiv", "bibcode", "DOI", "EAN13", "EISSN", "Handle", "IGSN", "ISBN", "ISSN", "ISTC", "LISSN", "LSID", "PMID", "PURL", "UPC", "URL", "URN", "w3id", null]
+          },
+          "relation_type": {
+            "type": "string",
+            "description": "Relationship of the identified resource to this dataset.",
+            "enum": [
+              "IsCitedBy", "Cites", "IsSupplementTo", "IsSupplementedBy",
+              "IsContinuedBy", "Continues", "IsDescribedBy", "Describes",
+              "HasMetadata", "IsMetadataFor", "HasVersion", "IsVersionOf",
+              "IsNewVersionOf", "IsPreviousVersionOf", "IsPartOf", "HasPart",
+              "IsPublishedIn", "IsReferencedBy", "References",
+              "IsDocumentedBy", "Documents", "IsCompiledBy", "Compiles",
+              "IsVariantFormOf", "IsOriginalFormOf", "IsIdenticalTo",
+              "IsReviewedBy", "Reviews", "IsDerivedFrom", "IsSourceOf",
+              "IsRequiredBy", "Requires", "IsObsoletedBy", "Obsoletes",
+              "IsCollectedBy", "Collects"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "geo_locations": {
+      "type": "array",
+      "description": "Geographic locations related to the dataset.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "place": {
+            "type": ["string", "null"],
+            "description": "Free-text description of the location."
+          },
+          "point": {
+            "type": ["object", "null"],
+            "description": "Geographic coordinates.",
+            "properties": {
+              "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+              "longitude": { "type": "number", "minimum": -180, "maximum": 180 }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "language": {
+      "type": ["string", "null"],
+      "description": "Primary language of the dataset (IETF BCP 47 tag, e.g., 'en')."
+    },
+    "alternate_identifiers": {
+      "type": "array",
+      "description": "Other identifiers for this dataset (non-DOI).",
+      "items": {
+        "type": "object",
+        "required": ["identifier"],
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "description": "The alternate identifier value."
+          },
+          "identifier_type": {
+            "type": ["string", "null"],
+            "description": "Type of the alternate identifier (e.g., 'OpenNeuro', 'NEMAR')."
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": true
+}

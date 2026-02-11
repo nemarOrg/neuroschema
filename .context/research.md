@@ -29,5 +29,11 @@
 - Uses `===NEMAR-SEP===` as a separator in multi-value text fields
 - nemar.json adds visualization status, warnings, channel system info
 
+### DataCite Metadata Schema 4.5
+- Required: Identifier (DOI), Creator, Title, Publisher, PublicationYear, ResourceType
+- Recommended: Subject, Contributor, FundingReference, RelatedIdentifier, Description
+- Core neuroschema fields map to most required/recommended DataCite properties
+- dataCite extension covers the rest (publisher, contributors, related identifiers, geo locations)
+
 ## Key Insight
-The current system conflates raw BIDS file content (channel arrays, TSV data) with summary metadata. The neuroschema should cleanly separate these: core for discovery/filtering, extensions for detailed data access.
+The current system conflates raw BIDS file content (channel arrays, TSV data) with summary metadata. Neuroschema cleanly separates these: core for discovery/filtering (FAIR-aligned, platform-neutral), extensions for detailed data access (platform-specific).

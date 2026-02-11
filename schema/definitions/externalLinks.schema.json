@@ -22,6 +22,21 @@
     "associated_paper_doi": {
       "type": ["string", "null"],
       "description": "DOI of the primary associated paper."
+    },
+    "osf_url": {
+      "type": ["string", "null"],
+      "description": "URL to the Open Science Framework (OSF) project.",
+      "format": "uri"
+    },
+    "github_url": {
+      "type": ["string", "null"],
+      "description": "URL to the associated GitHub repository.",
+      "format": "uri"
+    },
+    "paper_url": {
+      "type": ["string", "null"],
+      "description": "URL to the primary associated paper (if not a DOI).",
+      "format": "uri"
     }
   },
   "additionalProperties": false

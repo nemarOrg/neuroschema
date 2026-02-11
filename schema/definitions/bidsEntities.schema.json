@@ -20,6 +20,14 @@
     "run": {
       "type": ["string", "null"],
       "description": "Run label (e.g., '1', '01')."
+    },
+    "acquisition": {
+      "type": ["string", "null"],
+      "description": "Acquisition label (e.g., 'full', 'lowres')."
+    },
+    "space": {
+      "type": ["string", "null"],
+      "description": "Space label (e.g., 'MNI152NLin2009cAsym', 'T1w')."
     }
   },
   "additionalProperties": false

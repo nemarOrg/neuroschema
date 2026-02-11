@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "signalDefaults.schema.json",
-  "title": "Signal Defaults",
-  "description": "Dataset-level signal properties that are shared across all (or most) recordings. Following the BIDS inheritance principle, these values apply to all data files unless overridden at the record level.",
+  "$id": "inheritable.schema.json",
+  "title": "Inheritable Signal Properties",
+  "description": "Signal properties that follow the BIDS inheritance pattern: the dataset provides defaults and individual records can override them. Used in both dataset.signal_defaults and record.signal_properties.",
   "type": "object",
   "properties": {
     "sampling_frequency": {
       "type": ["number", "null"],
-      "description": "Default sampling frequency in Hz (applies to all recordings unless overridden per-file).",
+      "description": "Sampling frequency in Hz.",
       "minimum": 0
     },
     "power_line_frequency": {
@@ -17,11 +17,15 @@
     },
     "reference": {
       "type": ["string", "null"],
-      "description": "Default EEG reference (e.g., 'nose', 'Cz', 'average')."
+      "description": "EEG reference (e.g., 'nose', 'Cz', 'average')."
     },
     "recording_type": {
       "type": ["string", "null"],
       "description": "Recording type (e.g., 'continuous', 'epoched')."
+    },
+    "channel_system": {
+      "type": ["string", "null"],
+      "description": "Electrode placement system (e.g., '10-20', '10-10', '10-5', 'GSN-HydroCel-129', 'other')."
     },
     "placement_scheme": {
       "type": ["string", "null"],

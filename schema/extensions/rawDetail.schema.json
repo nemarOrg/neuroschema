@@ -48,6 +48,16 @@
       "type": "array",
       "description": "List of BIDS sidecar file paths that this record depends on.",
       "items": { "type": "string" }
+    },
+    "electrode_tsv": {
+      "type": ["object", "null"],
+      "description": "Parsed content of the BIDS electrodes.tsv file (electrode names, coordinates).",
+      "additionalProperties": true
+    },
+    "events_tsv": {
+      "type": ["object", "null"],
+      "description": "Parsed content of the BIDS events.tsv file (onset, duration, trial_type columns).",
+      "additionalProperties": true
     }
   },
   "additionalProperties": true

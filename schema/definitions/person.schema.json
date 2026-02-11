@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "person.schema.json",
+  "title": "Person",
+  "description": "A structured person record for authors or contributors. Includes name components, ORCID, and affiliations for DataCite compatibility.",
+  "type": "object",
+  "required": ["name"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Full display name (e.g., 'Jane A. Smith')."
+    },
+    "given_name": {
+      "type": ["string", "null"],
+      "description": "Given (first) name."
+    },
+    "family_name": {
+      "type": ["string", "null"],
+      "description": "Family (last) name."
+    },
+    "orcid": {
+      "type": ["string", "null"],
+      "description": "ORCID identifier URL (e.g., 'https://orcid.org/0000-0002-1234-5678').",
+      "format": "uri"
+    },
+    "affiliations": {
+      "type": "array",
+      "description": "List of institutional affiliations.",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Institution name."
+          },
+          "identifier": {
+            "type": ["string", "null"],
+            "description": "Institution identifier (e.g., ROR ID)."
+          },
+          "scheme": {
+            "type": ["string", "null"],
+            "description": "Identifier scheme (e.g., 'ROR', 'GRID', 'ISNI')."
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

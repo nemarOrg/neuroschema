@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "eegdash.schema.json",
   "title": "EEGDash Extension",
-  "description": "EEGDash-specific metadata for visualization and streaming. Fields that support the EEGDash dashboard but are not part of the core NEMAR schema.",
+  "description": "EEGDash-specific metadata for visualization and streaming. Fields that support the EEGDash dashboard but are not part of the core neuroschema.",
   "type": "object",
   "properties": {
     "storage": {
@@ -56,6 +56,19 @@
         "watchers": { "type": "integer" }
       },
       "additionalProperties": false
+    },
+    "senior_author": {
+      "type": ["string", "null"],
+      "description": "Senior/corresponding author name for display purposes."
+    },
+    "contact_info": {
+      "type": ["string", "null"],
+      "description": "Contact information for the dataset (email or URL)."
+    },
+    "ages": {
+      "type": "array",
+      "description": "Raw array of participant ages. Core has summary statistics only (age_min, age_max, age_mean); this holds the full distribution.",
+      "items": { "type": "number" }
     }
   },
   "additionalProperties": true

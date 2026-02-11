@@ -15,6 +15,15 @@
       "description": "Total dataset size in bytes.",
       "minimum": 0
     },
+    "size_human": {
+      "type": ["string", "null"],
+      "description": "Human-readable dataset size (e.g., '2.3 GB', '450 MB')."
+    },
+    "recording_count": {
+      "type": ["integer", "null"],
+      "description": "Total number of recordings (data files) in the dataset.",
+      "minimum": 0
+    },
     "channel_count_range": {
       "type": ["object", "null"],
       "description": "Range of channel counts across recordings in this dataset.",

@@ -2,9 +2,9 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "record.schema.json",
   "title": "Record Metadata",
-  "description": "Per-data-file metadata for an individual recording within a NEMAR dataset. A data file is a primary recording (e.g., .set, .edf, .vhdr) along with its BIDS sidecar context (channels.tsv, events.tsv, electrodes.tsv, *_eeg.json). The modality is inherited from the dataset; participant info comes from the dataset-level participants.tsv. Only fields that vary per-file belong here.",
+  "description": "Per-data-file metadata for an individual recording within a neuroimaging dataset. A data file is a primary recording (e.g., .set, .edf, .vhdr) along with its BIDS sidecar context. Each record has its own modality (required) and can override dataset-level signal properties via signal_properties.",
   "type": "object",
-  "required": ["dataset", "bids_relpath"],
+  "required": ["dataset", "bids_relpath", "modality"],
   "properties": {
     "dataset": {
       "type": "string",
@@ -19,11 +19,33 @@
       "type": "string",
       "description": "BIDS-compliant relative path within the dataset (e.g., 'sub-004/eeg/sub-004_task-FaceRecognition_eeg.set')."
     },
+    "modality": {
+      "type": "string",
+      "description": "Recording modality for this file (e.g., 'EEG', 'MEG', 'MRI', 'iEEG', 'EMG'). Required per record; not inherited from dataset."
+    },
+    "datatype": {
+      "type": ["string", "null"],
+      "description": "BIDS datatype directory (e.g., 'eeg', 'meg', 'anat', 'func')."
+    },
+    "suffix": {
+      "type": ["string", "null"],
+      "description": "BIDS filename suffix (e.g., 'eeg', 'meg', 'bold', 'T1w')."
+    },
+    "file_extension": {
+      "type": ["string", "null"],
+      "description": "File extension including the leading dot (e.g., '.set', '.edf', '.vhdr', '.fif')."
+    },
     "entities": {
       "$ref": "../definitions/bidsEntities.schema.json"
     },
+    "signal_properties": {
+      "$ref": "../definitions/inheritable.schema.json"
+    },
     "signal_summary": {
       "$ref": "../definitions/signalSummary.schema.json"
+    },
+    "provenance": {
+      "$ref": "../definitions/recordProvenance.schema.json"
     },
     "extensions": {
       "$ref": "../extensions/extensionsContainer.schema.json"

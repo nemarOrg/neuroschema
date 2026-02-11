@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "dataset.schema.json",
   "title": "Dataset Metadata",
-  "description": "Study-level metadata for a NEMAR dataset. Contains all information about the dataset as a whole: what modalities it has, participant demographics (from participants.tsv), signal properties that are shared across recordings, event/HED annotation status, and provenance. Aligned with BIDS dataset_description.json and participants.tsv.",
+  "description": "Study-level metadata for a neuroimaging dataset. Contains what modalities are present, participant demographics (from participants.tsv), signal properties shared across recordings, event/HED annotation status, and provenance. Aligned with BIDS dataset_description.json and participants.tsv. Platform-neutral; platform-specific fields belong in extensions.",
   "type": "object",
   "required": ["dataset_id", "name", "source", "recording_modality"],
   "properties": {
@@ -14,6 +14,10 @@
     "name": {
       "type": "string",
       "description": "Human-readable title of the dataset."
+    },
+    "description": {
+      "type": ["string", "null"],
+      "description": "Short abstract or description of the dataset."
     },
     "source": {
       "type": "string",
@@ -36,13 +40,31 @@
     },
     "authors": {
       "type": "array",
-      "description": "List of dataset authors.",
-      "items": { "type": "string" }
+      "description": "List of dataset authors as structured person objects.",
+      "items": { "$ref": "../definitions/person.schema.json" }
     },
     "funding": {
       "type": "array",
-      "description": "Funding sources.",
-      "items": { "type": "string" }
+      "description": "Funding sources with structured grant information.",
+      "items": {
+        "type": "object",
+        "required": ["funder_name"],
+        "properties": {
+          "funder_name": {
+            "type": "string",
+            "description": "Name of the funding organization."
+          },
+          "award_number": {
+            "type": ["string", "null"],
+            "description": "Grant or award number."
+          },
+          "award_title": {
+            "type": ["string", "null"],
+            "description": "Title of the funded project."
+          }
+        },
+        "additionalProperties": false
+      }
     },
     "readme": {
       "type": ["string", "null"],
@@ -51,6 +73,16 @@
     "tasks": {
       "type": "array",
       "description": "Experimental tasks present in the dataset.",
+      "items": { "type": "string" }
+    },
+    "datatypes": {
+      "type": ["array", "null"],
+      "description": "BIDS datatype directories present in the dataset (e.g., ['eeg', 'anat']).",
+      "items": { "type": "string" }
+    },
+    "sessions": {
+      "type": ["array", "null"],
+      "description": "Session labels present in the dataset (e.g., ['pre', 'post']).",
       "items": { "type": "string" }
     },
     "sessions_count": {
@@ -70,10 +102,6 @@
       "type": ["boolean", "null"],
       "description": "Whether the dataset includes event/stimulus annotations (events.tsv files)."
     },
-    "channel_system": {
-      "type": ["string", "null"],
-      "description": "Electrode placement system (e.g., '10-20', '10-10', '10-5', 'GSN-HydroCel-129', 'other')."
-    },
     "demographics": {
       "$ref": "../definitions/demographics.schema.json"
     },
@@ -81,7 +109,7 @@
       "$ref": "../definitions/dataSummary.schema.json"
     },
     "signal_defaults": {
-      "$ref": "../definitions/signalDefaults.schema.json"
+      "$ref": "../definitions/inheritable.schema.json"
     },
     "provenance": {
       "$ref": "../definitions/provenance.schema.json"
