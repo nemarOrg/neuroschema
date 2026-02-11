@@ -1,9 +1,18 @@
 """Validate JSON documents against neuroschema.
 
-Usage:
+Programmatic usage::
+
+    from neuroschema.validate import validate_document
+    errors = validate_document(doc, schema_path)
+
+CLI usage::
+
     python -m neuroschema.validate examples/schema1.json
-    python -m neuroschema.validate examples/schema1.json \
+    python -m neuroschema.validate examples/schema1.json \\
         --schema schema/core/record.schema.json
+
+Note: Currently uses the deprecated ``jsonschema.RefResolver`` for $ref
+resolution. Planned migration to the ``referencing`` library.
 """
 
 from __future__ import annotations
@@ -48,6 +57,9 @@ def load_schema(
     schema_dir: Path = SCHEMA_DIR,
 ) -> tuple[dict, RefResolver]:
     """Load a JSON Schema with $ref resolution across the schema directory.
+
+    Note: Currently uses the deprecated ``RefResolver``; planned migration
+    to the ``referencing`` library.
 
     Args:
         schema_path: Path to the specific schema file. Defaults to root schema.

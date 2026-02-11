@@ -20,7 +20,7 @@ Maps fields between the [DataCite Metadata Schema 4.5](https://schema.datacite.o
 | FundingReference.awardNumber | `funding[].award_number` | Core field |
 | FundingReference.awardTitle | `funding[].award_title` | Core field |
 | Rights | `license` | Core field |
-| Date | `provenance.publish_date` | Core provenance |
+| Date | `provenance.publish_date` | Maps dateType=Issued; other dateTypes (Created, Updated) not mapped |
 | Version | `provenance.latest_snapshot` | Core provenance |
 
 ## Extension Fields (DataCite -> extensions.dataCite)

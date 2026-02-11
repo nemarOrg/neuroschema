@@ -9,7 +9,7 @@ Maps fields between the current EEGDash MongoDB documents and neuroschema v0.2.0
 | `_id` | (MongoDB internal) | Not part of schema |
 | `data_name` | `data_name` | Direct mapping |
 | `dataset` | `dataset` | Direct mapping |
-| `bidspath` | `bids_relpath` | Strip dataset prefix |
+| `bidspath` | `bids_relpath` | Strip leading `<dataset_id>/` prefix |
 | `subject` | `entities.subject` | Moved into entities |
 | `task` | `entities.task` | Moved into entities |
 | `session` | `entities.session` | Moved into entities |
