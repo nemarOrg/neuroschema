@@ -740,9 +740,7 @@ class TestV030CoreFields:
         errors = validate_document(doc, dataset_schema_path)
         assert errors == [], [e.message for e in errors]
 
-    def test_contributor_missing_type_fails(
-        self, minimal_dataset, dataset_schema_path
-    ):
+    def test_contributor_missing_type_fails(self, minimal_dataset, dataset_schema_path):
         """Contributor without required contributor_type should fail."""
         doc = copy.deepcopy(minimal_dataset)
         doc["contributors"] = [{"name": "John Doe"}]
