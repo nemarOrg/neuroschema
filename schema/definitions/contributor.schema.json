@@ -60,7 +60,7 @@
         "ProjectLeader", "ProjectManager", "ProjectMember",
         "RegistrationAgency", "RegistrationAuthority", "RelatedPerson",
         "Researcher", "ResearchGroup", "RightsHolder", "Sponsor",
-        "Supervisor", "WorkPackageLeader", "Other"
+        "Supervisor", "Translator", "WorkPackageLeader", "Other"
       ]
     }
   },

@@ -32,7 +32,7 @@
         "Audiovisual", "Award", "Book", "BookChapter", "Collection",
         "ComputationalNotebook", "ConferencePaper", "ConferenceProceeding",
         "DataPaper", "Dataset", "Dissertation", "Event", "Image",
-        "InputOutput", "Instrument", "InteractiveResource", "Journal",
+        "Instrument", "InteractiveResource", "Journal",
         "JournalArticle", "Model", "OutputManagementPlan", "PeerReview",
         "PhysicalObject", "Preprint", "Project", "Report", "Service",
         "Software", "Sound", "Standard", "StudyRegistration", "Text",
@@ -109,6 +109,7 @@
           "related_item_identifier": {
             "type": ["object", "null"],
             "description": "Identifier for the related item.",
+            "required": ["identifier"],
             "properties": {
               "identifier": { "type": "string" },
               "identifier_type": {

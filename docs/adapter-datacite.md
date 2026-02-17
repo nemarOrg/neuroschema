@@ -106,6 +106,7 @@ Fields added to `extensions.dataCite`:
 - `related_items[]` (DataCite property 20, full bibliographic citations)
 
 Enums updated to DataCite kernel-4.6:
-- `resource_type_general`: added Award, Project, InputOutput
+- `resource_type_general`: added Award, Project, Instrument, StudyRegistration
 - `relation_type`: added HasTranslation, IsTranslationOf (core relatedIdentifier enum)
+- `contributor_type`: added Translator
 - `date_type`: added Coverage (core structuredDate enum)
