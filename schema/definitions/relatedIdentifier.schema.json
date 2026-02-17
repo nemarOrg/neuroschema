@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "relatedIdentifier.schema.json",
+  "title": "Related Identifier",
+  "description": "A link to a related resource with typed relationship. Aligns with DataCite RelatedIdentifier (property 12). Supports DOIs, URLs, PMIDs, arXiv IDs, and other persistent identifier types. These links feed into citation graphs and scholarly knowledge graphs.",
+  "type": "object",
+  "required": ["identifier", "relation_type"],
+  "properties": {
+    "identifier": {
+      "type": "string",
+      "description": "The identifier value (e.g., '10.1234/example' for DOI, 'https://example.com' for URL)."
+    },
+    "identifier_type": {
+      "type": ["string", "null"],
+      "description": "Type of the identifier. Inferred from format if omitted.",
+      "enum": [
+        "ARK", "arXiv", "bibcode", "CSTR", "DOI", "EAN13", "EISSN",
+        "Handle", "IGSN", "ISBN", "ISSN", "ISTC", "LISSN", "LSID",
+        "PMID", "PURL", "RRID", "UPC", "URL", "URN", "w3id", null
+      ]
+    },
+    "relation_type": {
+      "type": "string",
+      "description": "Relationship of the identified resource to this dataset. Framed as: this dataset [relation_type] the related resource.",
+      "enum": [
+        "IsCitedBy", "Cites",
+        "IsSupplementTo", "IsSupplementedBy",
+        "IsContinuedBy", "Continues",
+        "IsDescribedBy", "Describes",
+        "HasMetadata", "IsMetadataFor",
+        "HasVersion", "IsVersionOf",
+        "IsNewVersionOf", "IsPreviousVersionOf",
+        "IsPartOf", "HasPart",
+        "IsPublishedIn",
+        "IsReferencedBy", "References",
+        "IsDocumentedBy", "Documents",
+        "IsCompiledBy", "Compiles",
+        "IsVariantFormOf", "IsOriginalFormOf",
+        "IsIdenticalTo",
+        "IsReviewedBy", "Reviews",
+        "IsDerivedFrom", "IsSourceOf",
+        "IsRequiredBy", "Requires",
+        "IsObsoletedBy", "Obsoletes",
+        "IsCollectedBy", "Collects",
+        "HasTranslation", "IsTranslationOf"
+      ]
+    },
+    "resource_type_general": {
+      "type": ["string", "null"],
+      "description": "General type of the related resource (not this dataset). Enables graph-based filtering by resource type.",
+      "enum": [
+        "Audiovisual", "Award", "Book", "BookChapter", "Collection",
+        "ComputationalNotebook", "ConferencePaper", "ConferenceProceeding",
+        "DataPaper", "Dataset", "Dissertation", "Event", "Image",
+        "InputOutput", "Instrument", "InteractiveResource", "Journal",
+        "JournalArticle", "Model", "OutputManagementPlan", "PeerReview",
+        "PhysicalObject", "Preprint", "Project", "Report", "Service",
+        "Software", "Sound", "Standard", "StudyRegistration", "Text",
+        "Workflow", "Other", null
+      ]
+    },
+    "related_metadata_scheme": {
+      "type": ["string", "null"],
+      "description": "Name of the metadata scheme. Only applicable when relation_type is HasMetadata or IsMetadataFor."
+    }
+  },
+  "additionalProperties": false
+}

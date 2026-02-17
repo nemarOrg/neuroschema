@@ -26,7 +26,7 @@
       "$ref": "rawDetail.schema.json"
     },
     "dataCite": {
-      "description": "Namespace for DataCite DOI registration metadata (publisher, contributors, related identifiers).",
+      "description": "Namespace for DataCite DOI registration metadata (publisher, resource type, geo_locations, alternate_identifiers, related_items). Note: keywords, related_identifiers, contributors, dates, rights, and language moved to core in v0.3.0.",
       "$ref": "dataCite.schema.json"
     },
     "dataCategories": {

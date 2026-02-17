@@ -10,6 +10,11 @@
       "type": "string",
       "description": "Full display name (e.g., 'Jane A. Smith')."
     },
+    "name_type": {
+      "type": ["string", "null"],
+      "description": "Whether this is a person or organization. Defaults to Personal if omitted.",
+      "enum": ["Personal", "Organizational", null]
+    },
     "given_name": {
       "type": ["string", "null"],
       "description": "Given (first) name."

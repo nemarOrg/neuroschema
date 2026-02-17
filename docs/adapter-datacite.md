@@ -1,58 +1,111 @@
 # DataCite Adapter Mapping
 
-Maps fields between the [DataCite Metadata Schema 4.5](https://schema.datacite.org/meta/kernel-4.5/) and neuroschema v0.2.0.
+Maps fields between the [DataCite Metadata Schema 4.6](https://schema.datacite.org/meta/kernel-4/) and neuroschema v0.3.0.
 
-## Core Fields (DataCite -> Neuroschema Core)
+Reference: DataCite schema repo cloned at `~/Documents/git/nemar/datacite-schema/`.
 
-| DataCite Property | Neuroschema Path | Notes |
-|---|---|---|
-| Identifier (DOI) | `external_links.dataset_doi` | Core field |
-| Title | `name` | Core field |
-| Creator | `authors[]` | Structured person objects |
-| Creator.creatorName | `authors[].name` | Full display name |
-| Creator.givenName | `authors[].given_name` | Optional |
-| Creator.familyName | `authors[].family_name` | Optional |
-| Creator.nameIdentifier (ORCID) | `authors[].orcid` | ORCID URL |
-| Creator.affiliation | `authors[].affiliations[]` | Structured with name + identifier |
-| Description | `description` | Core field (v0.2.0) |
-| Subject | (not mapped) | Consider dataCategories extension |
-| FundingReference.funderName | `funding[].funder_name` | Core field |
-| FundingReference.awardNumber | `funding[].award_number` | Core field |
-| FundingReference.awardTitle | `funding[].award_title` | Core field |
-| Rights | `license` | Core field |
-| Date | `provenance.publish_date` | Maps dateType=Issued; other dateTypes (Created, Updated) not mapped |
-| Version | `provenance.latest_snapshot` | Core provenance |
+## All 20 DataCite Properties
 
-## Extension Fields (DataCite -> extensions.dataCite)
+| # | DataCite Property | Obligation | Neuroschema Path | Notes |
+|---|---|---|---|---|
+| 1 | Identifier (DOI) | **M** | `external_links.dataset_doi` | Core |
+| 2 | Creator | **M** | `authors[]` | Core person objects (name, given_name, family_name, orcid, affiliations with ROR) |
+| 3 | Title | **M** | `name` | Core |
+| 4 | Publisher | **M** | `extensions.dataCite.publisher` | Extension (registration detail) |
+| 5 | PublicationYear | **M** | `extensions.dataCite.publication_year` | Extension; core has `provenance.publish_date` |
+| 6 | Subject | **R** | `keywords[]` | Core (v0.3.0); structured with term, subject_scheme, scheme_uri, value_uri |
+| 7 | Contributor | **R** | `contributors[]` | Core (v0.3.0); person + contributor_type role |
+| 8 | Date | **R** | `dates[]` | Core (v0.3.0); date + date_type + date_information |
+| 9 | Language | O | `language` | Core (v0.3.0) |
+| 10 | ResourceType | **M** | `extensions.dataCite.resource_type` / `resource_type_general` | Extension |
+| 11 | AlternateIdentifier | O | `extensions.dataCite.alternate_identifiers[]` | Extension |
+| 12 | RelatedIdentifier | **R** | `related_identifiers[]` | Core (v0.3.0); full typed with identifier_type, relation_type, resource_type_general |
+| 13 | Size | O | `data_summary.size_human` / `data_summary.size_bytes` | Core (dataSummary) |
+| 14 | Format | O | (computed from file extensions) | Not stored; derived at DOI registration time |
+| 15 | Version | O | `provenance.latest_snapshot` | Core (provenance) |
+| 16 | Rights | O | `rights[]` | Core (v0.3.0); structured with rights_uri, rights_identifier (SPDX). Also `license` for simple string. |
+| 17 | Description | **R** | `description` | Core (Abstract); also `readme` for full text |
+| 18 | GeoLocation | **R** | `extensions.dataCite.geo_locations[]` | Extension; place + point coordinates |
+| 19 | FundingReference | O | `funding[]` | Core; enhanced with funder_identifier, funder_identifier_type, award_uri (v0.3.0) |
+| 20 | RelatedItem | O | `extensions.dataCite.related_items[]` | Extension; full bibliographic citations |
 
-| DataCite Property | Neuroschema Path | Notes |
-|---|---|---|
-| Publisher | `extensions.dataCite.publisher` | e.g., "OpenNeuro" |
-| PublicationYear | `extensions.dataCite.publication_year` | Integer year |
-| ResourceType | `extensions.dataCite.resource_type` | Free text |
-| ResourceType.resourceTypeGeneral | `extensions.dataCite.resource_type_general` | Controlled vocabulary |
-| Contributor | `extensions.dataCite.contributors[]` | With role types |
-| RelatedIdentifier | `extensions.dataCite.related_identifiers[]` | With relation types |
-| GeoLocation | `extensions.dataCite.geo_locations[]` | Place + coordinates |
-| Language | `extensions.dataCite.language` | BCP 47 tag |
-| AlternateIdentifier | `extensions.dataCite.alternate_identifiers[]` | Non-DOI identifiers |
+**M** = Mandatory, **R** = Recommended, **O** = Optional
+
+## Sub-Property Mapping Detail
+
+### Creator (property 2) -> `authors[]`
+
+| DataCite Sub-property | Neuroschema Path |
+|---|---|
+| creatorName | `authors[].name` |
+| nameType | `authors[].name_type` (v0.3.0) |
+| givenName | `authors[].given_name` |
+| familyName | `authors[].family_name` |
+| nameIdentifier (ORCID) | `authors[].orcid` |
+| affiliation | `authors[].affiliations[].name` |
+| affiliationIdentifier (ROR) | `authors[].affiliations[].identifier` |
+| affiliationIdentifierScheme | `authors[].affiliations[].scheme` |
+
+### Subject (property 6) -> `keywords[]`
+
+| DataCite Sub-property | Neuroschema Path |
+|---|---|
+| subject (text) | `keywords[].term` |
+| subjectScheme | `keywords[].subject_scheme` |
+| schemeURI | `keywords[].scheme_uri` |
+| valueURI | `keywords[].value_uri` |
+| classificationCode | `keywords[].classification_code` |
+
+### FundingReference (property 19) -> `funding[]`
+
+| DataCite Sub-property | Neuroschema Path |
+|---|---|
+| funderName | `funding[].funder_name` |
+| funderIdentifier | `funding[].funder_identifier` |
+| funderIdentifierType | `funding[].funder_identifier_type` |
+| awardNumber | `funding[].award_number` |
+| awardTitle | `funding[].award_title` |
+| awardURI | `funding[].award_uri` |
+
+### RelatedIdentifier (property 12) -> `related_identifiers[]`
+
+| DataCite Sub-property | Neuroschema Path |
+|---|---|
+| relatedIdentifier (value) | `related_identifiers[].identifier` |
+| relatedIdentifierType | `related_identifiers[].identifier_type` |
+| relationType | `related_identifiers[].relation_type` |
+| resourceTypeGeneral | `related_identifiers[].resource_type_general` |
+| relatedMetadataScheme | `related_identifiers[].related_metadata_scheme` |
 
 ## DataCite Registration Flow
 
 When registering a DOI for a neuroimaging dataset:
 
-1. Read core dataset document for title, authors, funding, license
-2. Read `extensions.dataCite` for publisher, resource type, contributors
-3. Assemble DataCite XML/JSON payload
-4. Submit to DataCite API
-5. Store returned DOI in `external_links.dataset_doi`
+1. Read core fields: `name` (title), `authors` (creators), `description` (abstract), `funding`, `license`/`rights`, `keywords` (subjects), `related_identifiers`, `contributors`, `dates`, `language`
+2. Read `external_links.dataset_doi` for existing DOI
+3. Read `extensions.dataCite` for publisher, resource type, geo_locations, alternate_identifiers
+4. Read `data_summary` for sizes
+5. Assemble DataCite kernel-4.6 XML
+6. Submit to EZID/DataCite API
+7. Store returned DOI in `external_links.dataset_doi`
 
-## Priority Assessment
+## Changes from v0.2.0
 
-Fields from issue #5 mapped to priority:
+Fields moved from `extensions.dataCite` to core:
+- `contributors[]` -> core `contributors[]`
+- `related_identifiers[]` -> core `related_identifiers[]`
+- `language` -> core `language`
 
-| Priority | Fields | Location |
-|---|---|---|
-| HIGH | authors (structured), funding (structured), publisher, related_identifiers | Core + dataCite |
-| MEDIUM | contributors, geo_locations, resource_type | dataCite extension |
-| LOW | language, alternate_identifiers | dataCite extension |
+Fields added to core:
+- `keywords[]` (structured subjects with controlled vocabulary support)
+- `dates[]` (structured dates with semantic types)
+- `rights[]` (structured license entries with URIs and SPDX identifiers)
+
+Fields added to `extensions.dataCite`:
+- `publisher_identifier`, `publisher_identifier_scheme`
+- `related_items[]` (DataCite property 20, full bibliographic citations)
+
+Enums updated to DataCite kernel-4.6:
+- `resource_type_general`: added Award, Project, InputOutput
+- `relation_type`: added HasTranslation, IsTranslationOf (core relatedIdentifier enum)
+- `date_type`: added Coverage (core structuredDate enum)

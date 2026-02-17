@@ -2,12 +2,20 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "dataCite.schema.json",
   "title": "DataCite Extension",
-  "description": "DataCite-specific metadata for DOI registration. Fields that map to DataCite Metadata Schema 4.5 but are not part of the core neuroschema. Core already covers title (name), creators (authors), description, and DOI (external_links.dataset_doi).",
+  "description": "DataCite-specific metadata for DOI registration (kernel 4.6). Fields here are specific to the DataCite registration format and are not universally needed. Universal scholarly metadata (keywords, related_identifiers, contributors, dates, rights, language) has moved to the core dataset schema as of v0.3.0.",
   "type": "object",
   "properties": {
     "publisher": {
       "type": ["string", "null"],
-      "description": "Name of the entity that holds/publishes the data (e.g., 'OpenNeuro', 'NEMAR')."
+      "description": "Name of the entity that holds/publishes the data (e.g., 'NEMAR', 'OpenNeuro')."
+    },
+    "publisher_identifier": {
+      "type": ["string", "null"],
+      "description": "Persistent identifier for the publisher (e.g., ROR ID for the institution)."
+    },
+    "publisher_identifier_scheme": {
+      "type": ["string", "null"],
+      "description": "Scheme for the publisher identifier (e.g., 'ROR', 'ISNI')."
     },
     "publication_year": {
       "type": ["integer", "null"],
@@ -15,101 +23,35 @@
     },
     "resource_type": {
       "type": ["string", "null"],
-      "description": "Free-text description of the resource type (e.g., 'EEG Dataset')."
+      "description": "Free-text description of the resource type (e.g., 'EEG Dataset', 'EMG Dataset')."
     },
     "resource_type_general": {
       "type": ["string", "null"],
-      "description": "DataCite controlled vocabulary for resource type.",
+      "description": "DataCite controlled vocabulary for general resource type.",
       "enum": [
-        "Audiovisual", "Book", "BookChapter", "Collection", "ComputationalNotebook",
-        "ConferencePaper", "ConferenceProceeding", "DataPaper", "Dataset",
-        "Dissertation", "Event", "Image", "Instrument", "InteractiveResource",
-        "Journal", "JournalArticle", "Model", "OutputManagementPlan", "PeerReview",
-        "PhysicalObject", "Preprint", "Report", "Service", "Software", "Sound",
-        "Standard", "StudyRegistration", "Text", "Workflow", "Other", null
+        "Audiovisual", "Award", "Book", "BookChapter", "Collection",
+        "ComputationalNotebook", "ConferencePaper", "ConferenceProceeding",
+        "DataPaper", "Dataset", "Dissertation", "Event", "Image",
+        "InputOutput", "Instrument", "InteractiveResource", "Journal",
+        "JournalArticle", "Model", "OutputManagementPlan", "PeerReview",
+        "PhysicalObject", "Preprint", "Project", "Report", "Service",
+        "Software", "Sound", "Standard", "StudyRegistration", "Text",
+        "Workflow", "Other", null
       ]
-    },
-    "contributors": {
-      "type": "array",
-      "description": "Contributors with roles (beyond authors/creators).",
-      "items": {
-        "type": "object",
-        "required": ["name", "contributor_type"],
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Full name of the contributor."
-          },
-          "contributor_type": {
-            "type": "string",
-            "description": "DataCite contributor role.",
-            "enum": [
-              "ContactPerson", "DataCollector", "DataCurator", "DataManager",
-              "Distributor", "Editor", "HostingInstitution", "Producer",
-              "ProjectLeader", "ProjectManager", "ProjectMember",
-              "RegistrationAgency", "RegistrationAuthority", "RelatedPerson",
-              "Researcher", "ResearchGroup", "RightsHolder", "Sponsor",
-              "Supervisor", "WorkPackageLeader", "Other"
-            ]
-          },
-          "orcid": {
-            "type": ["string", "null"],
-            "description": "ORCID identifier URL.",
-            "format": "uri"
-          }
-        },
-        "additionalProperties": false
-      }
-    },
-    "related_identifiers": {
-      "type": "array",
-      "description": "Related resources (papers, other datasets, code repos).",
-      "items": {
-        "type": "object",
-        "required": ["identifier", "relation_type"],
-        "properties": {
-          "identifier": {
-            "type": "string",
-            "description": "The identifier value (e.g., DOI, URL, ARK)."
-          },
-          "identifier_type": {
-            "type": ["string", "null"],
-            "description": "Type of the identifier.",
-            "enum": ["ARK", "arXiv", "bibcode", "DOI", "EAN13", "EISSN", "Handle", "IGSN", "ISBN", "ISSN", "ISTC", "LISSN", "LSID", "PMID", "PURL", "UPC", "URL", "URN", "w3id", null]
-          },
-          "relation_type": {
-            "type": "string",
-            "description": "Relationship of the identified resource to this dataset.",
-            "enum": [
-              "IsCitedBy", "Cites", "IsSupplementTo", "IsSupplementedBy",
-              "IsContinuedBy", "Continues", "IsDescribedBy", "Describes",
-              "HasMetadata", "IsMetadataFor", "HasVersion", "IsVersionOf",
-              "IsNewVersionOf", "IsPreviousVersionOf", "IsPartOf", "HasPart",
-              "IsPublishedIn", "IsReferencedBy", "References",
-              "IsDocumentedBy", "Documents", "IsCompiledBy", "Compiles",
-              "IsVariantFormOf", "IsOriginalFormOf", "IsIdenticalTo",
-              "IsReviewedBy", "Reviews", "IsDerivedFrom", "IsSourceOf",
-              "IsRequiredBy", "Requires", "IsObsoletedBy", "Obsoletes",
-              "IsCollectedBy", "Collects"
-            ]
-          }
-        },
-        "additionalProperties": false
-      }
     },
     "geo_locations": {
       "type": "array",
-      "description": "Geographic locations related to the dataset.",
+      "description": "Geographic locations where the data was collected or about which the data is focused. Coordinates use WGS 84.",
       "items": {
         "type": "object",
         "properties": {
           "place": {
             "type": ["string", "null"],
-            "description": "Free-text description of the location."
+            "description": "Free-text description of the location (e.g., 'Fudan University, Shanghai, China')."
           },
           "point": {
             "type": ["object", "null"],
-            "description": "Geographic coordinates.",
+            "description": "Geographic coordinates (WGS 84).",
             "properties": {
               "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
               "longitude": { "type": "number", "minimum": -180, "maximum": 180 }
@@ -120,13 +62,9 @@
         "additionalProperties": false
       }
     },
-    "language": {
-      "type": ["string", "null"],
-      "description": "Primary language of the dataset (IETF BCP 47 tag, e.g., 'en')."
-    },
     "alternate_identifiers": {
       "type": "array",
-      "description": "Other identifiers for this dataset (non-DOI).",
+      "description": "Other identifiers for this dataset besides the DOI (e.g., platform-specific IDs like 'nm000108' for NEMAR, 'ds005516' for OpenNeuro).",
       "items": {
         "type": "object",
         "required": ["identifier"],
@@ -137,8 +75,67 @@
           },
           "identifier_type": {
             "type": ["string", "null"],
-            "description": "Type of the alternate identifier (e.g., 'OpenNeuro', 'NEMAR')."
+            "description": "Type or source of the alternate identifier (e.g., 'NEMAR', 'OpenNeuro', 'PhysioNet')."
           }
+        },
+        "additionalProperties": false
+      }
+    },
+    "related_items": {
+      "type": "array",
+      "description": "Full bibliographic references for related items (DataCite property 20). Use when you need to cite a resource with complete bibliographic detail (title, authors, journal, pages) rather than just an identifier link.",
+      "items": {
+        "type": "object",
+        "required": ["relation_type", "related_item_type"],
+        "properties": {
+          "relation_type": {
+            "type": "string",
+            "description": "Relationship of the related item to this dataset.",
+            "enum": [
+              "IsCitedBy", "Cites", "IsSupplementTo", "IsSupplementedBy",
+              "IsDescribedBy", "Describes", "References", "IsReferencedBy",
+              "IsDerivedFrom", "IsSourceOf", "IsPartOf", "HasPart"
+            ]
+          },
+          "related_item_type": {
+            "type": "string",
+            "description": "Type of the related item.",
+            "enum": [
+              "JournalArticle", "Book", "BookChapter", "ConferencePaper",
+              "Preprint", "DataPaper", "Dissertation", "Report", "Text",
+              "Dataset", "Software", "Other"
+            ]
+          },
+          "related_item_identifier": {
+            "type": ["object", "null"],
+            "description": "Identifier for the related item.",
+            "properties": {
+              "identifier": { "type": "string" },
+              "identifier_type": {
+                "type": "string",
+                "enum": ["DOI", "ISSN", "ISBN", "PMID", "URL", "arXiv"]
+              }
+            },
+            "additionalProperties": false
+          },
+          "title": {
+            "type": ["string", "null"],
+            "description": "Title of the related item."
+          },
+          "creators": {
+            "type": "array",
+            "description": "Authors of the related item.",
+            "items": { "$ref": "../definitions/person.schema.json" }
+          },
+          "publication_year": {
+            "type": ["integer", "null"],
+            "description": "Publication year of the related item."
+          },
+          "volume": { "type": ["string", "null"] },
+          "issue": { "type": ["string", "null"] },
+          "first_page": { "type": ["string", "null"] },
+          "last_page": { "type": ["string", "null"] },
+          "publisher": { "type": ["string", "null"] }
         },
         "additionalProperties": false
       }
