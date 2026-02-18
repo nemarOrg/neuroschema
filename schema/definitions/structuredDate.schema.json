@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "structuredDate.schema.json",
+  "title": "Structured Date",
+  "description": "A date with semantic type. Aligns with DataCite Date (property 8). Supports single dates, date ranges (YYYY-MM-DD/YYYY-MM-DD), and year-only precision. Use 'Collected' for data acquisition periods, 'Issued' for publication date, 'Created' for dataset creation.",
+  "type": "object",
+  "required": ["date", "date_type"],
+  "properties": {
+    "date": {
+      "type": "string",
+      "description": "ISO 8601 date, date-time, or RKMS-ISO8601 date range (e.g., '2024-01-15', '2023-06-01/2024-01-31', '2024')."
+    },
+    "date_type": {
+      "type": "string",
+      "description": "Semantic type of the date.",
+      "enum": [
+        "Accepted", "Available", "Collected", "Copyrighted", "Coverage",
+        "Created", "Issued", "Other", "Submitted", "Updated", "Valid",
+        "Withdrawn"
+      ]
+    },
+    "date_information": {
+      "type": ["string", "null"],
+      "description": "Free-text detail about the date (e.g., 'EEG recording sessions' for a Collected date)."
+    }
+  },
+  "additionalProperties": false
+}

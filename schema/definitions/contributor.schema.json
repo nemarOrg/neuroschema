@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contributor.schema.json",
+  "title": "Contributor",
+  "description": "A contributor with a typed role, beyond the primary authors/creators. Aligns with DataCite Contributor (property 7). Common roles for neuroimaging datasets include DataCollector, ProjectLeader, and HostingInstitution.",
+  "type": "object",
+  "required": ["name", "contributor_type"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Full display name (e.g., 'Jane A. Smith' or 'NEMAR')."
+    },
+    "given_name": {
+      "type": ["string", "null"],
+      "description": "Given (first) name. Omit for organizational contributors."
+    },
+    "family_name": {
+      "type": ["string", "null"],
+      "description": "Family (last) name. Omit for organizational contributors."
+    },
+    "name_type": {
+      "type": ["string", "null"],
+      "description": "Whether this is a person or organization.",
+      "enum": ["Personal", "Organizational", null]
+    },
+    "orcid": {
+      "type": ["string", "null"],
+      "description": "ORCID identifier URL (e.g., 'https://orcid.org/0000-0002-1234-5678').",
+      "format": "uri"
+    },
+    "affiliations": {
+      "type": "array",
+      "description": "Institutional affiliations.",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Institution name."
+          },
+          "identifier": {
+            "type": ["string", "null"],
+            "description": "Institution identifier (e.g., ROR ID)."
+          },
+          "scheme": {
+            "type": ["string", "null"],
+            "description": "Identifier scheme (e.g., 'ROR', 'GRID', 'ISNI')."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "contributor_type": {
+      "type": "string",
+      "description": "Role of this contributor.",
+      "enum": [
+        "ContactPerson", "DataCollector", "DataCurator", "DataManager",
+        "Distributor", "Editor", "HostingInstitution", "Producer",
+        "ProjectLeader", "ProjectManager", "ProjectMember",
+        "RegistrationAgency", "RegistrationAuthority", "RelatedPerson",
+        "Researcher", "ResearchGroup", "RightsHolder", "Sponsor",
+        "Supervisor", "Translator", "WorkPackageLeader", "Other"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

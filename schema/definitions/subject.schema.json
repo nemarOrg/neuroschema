@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "subject.schema.json",
+  "title": "Subject/Keyword",
+  "description": "A structured subject term with optional controlled vocabulary linkage. Aligns with DataCite Subject (property 6). Supports free-text keywords and terms from controlled vocabularies like MeSH, Cognitive Atlas, or Library of Congress Subject Headings.",
+  "type": "object",
+  "required": ["term"],
+  "properties": {
+    "term": {
+      "type": "string",
+      "description": "The subject term or keyword text."
+    },
+    "subject_scheme": {
+      "type": ["string", "null"],
+      "description": "Name of the controlled vocabulary or classification scheme (e.g., 'MeSH', 'Cognitive Atlas', 'LCSH', 'Fields of Science and Technology (FOS)')."
+    },
+    "scheme_uri": {
+      "type": ["string", "null"],
+      "description": "URI of the vocabulary scheme.",
+      "format": "uri"
+    },
+    "value_uri": {
+      "type": ["string", "null"],
+      "description": "URI identifying this specific subject term within the scheme.",
+      "format": "uri"
+    },
+    "classification_code": {
+      "type": ["string", "null"],
+      "description": "Classification code within the scheme (e.g., MeSH tree number, ANZSRC code). Use when the scheme does not provide per-term URIs."
+    }
+  },
+  "additionalProperties": false
+}

@@ -16,8 +16,8 @@
     },
     "dataset_id": {
       "type": "string",
-      "description": "Unique dataset identifier (e.g., 'ds003645').",
-      "pattern": "^ds[0-9]+$"
+      "description": "Unique dataset identifier (e.g., 'ds003645' for OpenNeuro, 'nm000108' for NEMAR).",
+      "pattern": "^[a-z]{2}[0-9]+$"
     },
     "name": {
       "type": "string",
@@ -69,6 +69,20 @@
           "award_title": {
             "type": ["string", "null"],
             "description": "Title of the funded project."
+          },
+          "funder_identifier": {
+            "type": ["string", "null"],
+            "description": "Persistent identifier for the funder (e.g., Crossref Funder ID, ROR ID)."
+          },
+          "funder_identifier_type": {
+            "type": ["string", "null"],
+            "description": "Type of funder identifier.",
+            "enum": ["Crossref Funder ID", "GRID", "ISNI", "ROR", "Other", null]
+          },
+          "award_uri": {
+            "type": ["string", "null"],
+            "description": "URI to the award or grant information page.",
+            "format": "uri"
           }
         },
         "additionalProperties": false
@@ -121,6 +135,35 @@
     },
     "provenance": {
       "$ref": "../definitions/provenance.schema.json"
+    },
+    "keywords": {
+      "type": "array",
+      "description": "Subject terms and keywords for findability. Supports both plain keywords (term only) and controlled vocabulary entries (with scheme and URI). Aligns with DataCite Subject (property 6).",
+      "items": { "$ref": "../definitions/subject.schema.json" }
+    },
+    "related_identifiers": {
+      "type": "array",
+      "description": "Related resources: associated papers, source datasets, code repositories, prior versions. These links feed into scholarly knowledge graphs and citation indices. Aligns with DataCite RelatedIdentifier (property 12).",
+      "items": { "$ref": "../definitions/relatedIdentifier.schema.json" }
+    },
+    "contributors": {
+      "type": "array",
+      "description": "Contributors with typed roles beyond the primary authors. Includes data collectors, hosting institutions, project leaders, etc. Aligns with DataCite Contributor (property 7).",
+      "items": { "$ref": "../definitions/contributor.schema.json" }
+    },
+    "dates": {
+      "type": "array",
+      "description": "Semantically typed dates: data collection period, creation date, publication date, etc. Aligns with DataCite Date (property 8).",
+      "items": { "$ref": "../definitions/structuredDate.schema.json" }
+    },
+    "rights": {
+      "type": "array",
+      "description": "Structured license/rights entries with URIs and machine-readable identifiers. Complements the simpler 'license' string field. Aligns with DataCite Rights (property 16).",
+      "items": { "$ref": "../definitions/rights.schema.json" }
+    },
+    "language": {
+      "type": ["string", "null"],
+      "description": "Primary language of the dataset content (IETF BCP 47 tag, e.g., 'en'). Aligns with DataCite Language (property 9)."
     },
     "external_links": {
       "$ref": "../definitions/externalLinks.schema.json"

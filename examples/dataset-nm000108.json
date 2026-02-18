@@ -1,0 +1,190 @@
+{
+  "schema_version": "0.3.0",
+  "doc_type": "dataset",
+  "dataset_id": "nm000108",
+  "name": "HySER: High-Density Surface Electromyogram Recordings",
+  "description": "High-density surface electromyography (HD-sEMG) dataset of hand gestures. Contains recordings from 20 subjects performing 5 finger-related gestures using a 128-channel EMG electrode grid placed on the forearm.",
+  "source": "nemar",
+  "recording_modality": ["EMG"],
+  "bids_version": "1.9.0",
+  "license": "ODC-By-1.0",
+  "language": "en",
+  "authors": [
+    {
+      "name": "Xiangyu Liu",
+      "given_name": "Xiangyu",
+      "family_name": "Liu",
+      "name_type": "Personal",
+      "affiliations": [
+        {
+          "name": "Fudan University",
+          "identifier": "https://ror.org/013q1eq08",
+          "scheme": "ROR"
+        }
+      ]
+    },
+    {
+      "name": "Alyssa M. Hug",
+      "given_name": "Alyssa M.",
+      "family_name": "Hug",
+      "name_type": "Personal",
+      "orcid": "https://orcid.org/0009-0002-2022-4920",
+      "affiliations": [
+        {
+          "name": "University of California, San Diego",
+          "identifier": "https://ror.org/0168r3w48",
+          "scheme": "ROR"
+        }
+      ]
+    },
+    {
+      "name": "Wei Lu",
+      "given_name": "Wei",
+      "family_name": "Lu",
+      "name_type": "Personal",
+      "orcid": "https://orcid.org/0009-0001-5725-3218",
+      "affiliations": [
+        {
+          "name": "Fudan University",
+          "identifier": "https://ror.org/013q1eq08",
+          "scheme": "ROR"
+        }
+      ]
+    },
+    {
+      "name": "Xiaogang Hu",
+      "given_name": "Xiaogang",
+      "family_name": "Hu",
+      "name_type": "Personal",
+      "orcid": "https://orcid.org/0000-0003-2808-3399",
+      "affiliations": [
+        {
+          "name": "University of North Carolina at Chapel Hill",
+          "identifier": "https://ror.org/0130frc33",
+          "scheme": "ROR"
+        }
+      ]
+    }
+  ],
+  "keywords": [
+    { "term": "EMG" },
+    { "term": "high-density surface electromyography" },
+    { "term": "HD-sEMG" },
+    { "term": "hand gesture recognition" },
+    { "term": "forearm muscles" },
+    {
+      "term": "Electromyography",
+      "subject_scheme": "MeSH",
+      "scheme_uri": "https://www.nlm.nih.gov/mesh/",
+      "value_uri": "https://meshb.nlm.nih.gov/record/ui?ui=D004576"
+    },
+    {
+      "term": "Gestures",
+      "subject_scheme": "MeSH",
+      "scheme_uri": "https://www.nlm.nih.gov/mesh/",
+      "value_uri": "https://meshb.nlm.nih.gov/record/ui?ui=D005868"
+    },
+    { "term": "BIDS" },
+    { "term": "neuroscience" }
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "10.1038/s41597-021-00883-1",
+      "identifier_type": "DOI",
+      "relation_type": "IsDescribedBy",
+      "resource_type_general": "JournalArticle"
+    },
+    {
+      "identifier": "10.13026/t9wv-d929",
+      "identifier_type": "DOI",
+      "relation_type": "IsDerivedFrom",
+      "resource_type_general": "Dataset"
+    },
+    {
+      "identifier": "https://physionet.org/content/hd-semg/1.0.0/",
+      "identifier_type": "URL",
+      "relation_type": "IsDerivedFrom",
+      "resource_type_general": "Dataset"
+    }
+  ],
+  "contributors": [
+    {
+      "name": "NEMAR",
+      "name_type": "Organizational",
+      "contributor_type": "HostingInstitution"
+    }
+  ],
+  "dates": [
+    {
+      "date": "2026-02-17",
+      "date_type": "Issued"
+    }
+  ],
+  "rights": [
+    {
+      "rights": "Open Data Commons Attribution License v1.0",
+      "rights_uri": "https://opendatacommons.org/licenses/by/1.0/",
+      "rights_identifier": "ODC-By-1.0",
+      "rights_identifier_scheme": "SPDX"
+    }
+  ],
+  "funding": [
+    {
+      "funder_name": "National Science Foundation",
+      "funder_identifier": "https://doi.org/10.13039/100000001",
+      "funder_identifier_type": "Crossref Funder ID",
+      "award_number": "2030859",
+      "award_title": "IUCRC Phase I UCSD: Center for Large-scale Optimization and Networks (CLAN)"
+    },
+    {
+      "funder_name": "National Science Foundation of China",
+      "award_number": "52005138"
+    },
+    {
+      "funder_name": "Shanghai Municipal Science and Technology Major Project"
+    }
+  ],
+  "readme": null,
+  "tasks": ["flexion", "extension"],
+  "datatypes": ["emg"],
+  "sessions": ["1"],
+  "sessions_count": 1,
+  "has_hed_annotations": false,
+  "has_event_annotations": true,
+  "data_summary": {
+    "total_files": 640,
+    "size_bytes": 2147483648,
+    "size_human": "2.0 GB",
+    "recording_count": 320,
+    "data_processed": false
+  },
+  "external_links": {
+    "source_url": "https://physionet.org/content/hd-semg/1.0.0/",
+    "dataset_doi": "10.82901/NEMAR.NM000108"
+  },
+  "extensions": {
+    "dataCite": {
+      "publisher": "NEMAR",
+      "publisher_identifier": "https://ror.org/0168r3w48",
+      "publisher_identifier_scheme": "ROR",
+      "publication_year": 2026,
+      "resource_type": "EMG Dataset",
+      "resource_type_general": "Dataset",
+      "alternate_identifiers": [
+        {
+          "identifier": "nm000108",
+          "identifier_type": "NEMAR"
+        }
+      ],
+      "geo_locations": [
+        {
+          "place": "Fudan University, Shanghai, China",
+          "point": {
+            "latitude": 31.2983,
+            "longitude": 121.5014
+          }
+        }
+      ]
+    }
+  }
+}

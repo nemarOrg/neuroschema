@@ -295,25 +295,33 @@ class TestExtensionIsolation:
         """DataCite extension with all fields should validate."""
         schema_path = SCHEMA_DIR / "extensions" / "dataCite.schema.json"
         doc = {
-            "publisher": "OpenNeuro",
-            "publication_year": 2025,
-            "resource_type": "EEG Dataset",
+            "publisher": "NEMAR",
+            "publisher_identifier": "https://ror.org/0168r3w48",
+            "publisher_identifier_scheme": "ROR",
+            "publication_year": 2026,
+            "resource_type": "EMG Dataset",
             "resource_type_general": "Dataset",
-            "contributors": [
+            "geo_locations": [
                 {
-                    "name": "John Doe",
-                    "contributor_type": "DataCurator",
-                    "orcid": "https://orcid.org/0000-0001-2345-6789",
+                    "place": "Fudan University, Shanghai, China",
+                    "point": {"latitude": 31.2983, "longitude": 121.5014},
                 }
             ],
-            "related_identifiers": [
+            "alternate_identifiers": [
+                {"identifier": "nm000108", "identifier_type": "NEMAR"}
+            ],
+            "related_items": [
                 {
-                    "identifier": "10.1234/paper.2025",
-                    "identifier_type": "DOI",
                     "relation_type": "IsDescribedBy",
+                    "related_item_type": "JournalArticle",
+                    "title": "HySER Dataset Paper",
+                    "publication_year": 2021,
+                    "related_item_identifier": {
+                        "identifier": "10.1038/s41597-021-00883-1",
+                        "identifier_type": "DOI",
+                    },
                 }
             ],
-            "language": "en",
         }
         errors = validate_document(doc, schema_path)
         assert errors == [], [e.message for e in errors]
@@ -637,3 +645,185 @@ class TestSchemaIntegrity:
         }
         errors = validate_document(doc, dataset_schema_path)
         assert len(errors) > 0
+
+
+# ── v0.3.0 Core Field Tests ─────────────────────────────────────────────
+
+
+class TestV030CoreFields:
+    """Test new core fields added in v0.3.0."""
+
+    def test_nemar_dataset_id_pattern(self, minimal_dataset, dataset_schema_path):
+        """Dataset with nm-prefix ID should validate (relaxed pattern)."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["dataset_id"] = "nm000108"
+        errors = validate_document(doc, dataset_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_keywords_plain(self, minimal_dataset, dataset_schema_path):
+        """Dataset with plain keywords (term only) should validate."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["keywords"] = [{"term": "EEG"}, {"term": "resting state"}]
+        errors = validate_document(doc, dataset_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_keywords_structured(self, minimal_dataset, dataset_schema_path):
+        """Dataset with structured keywords (scheme + URI) should validate."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["keywords"] = [
+            {
+                "term": "Electromyography",
+                "subject_scheme": "MeSH",
+                "scheme_uri": "https://www.nlm.nih.gov/mesh/",
+                "value_uri": "https://meshb.nlm.nih.gov/record/ui?ui=D004576",
+                "classification_code": "D004576",
+            }
+        ]
+        errors = validate_document(doc, dataset_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_keywords_missing_term_fails(self, minimal_dataset, dataset_schema_path):
+        """Keyword without required term should fail."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["keywords"] = [{"subject_scheme": "MeSH"}]
+        errors = validate_document(doc, dataset_schema_path)
+        assert len(errors) > 0
+
+    def test_related_identifiers(self, minimal_dataset, dataset_schema_path):
+        """Dataset with typed related identifiers should validate."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["related_identifiers"] = [
+            {
+                "identifier": "10.1038/s41597-021-00883-1",
+                "identifier_type": "DOI",
+                "relation_type": "IsDescribedBy",
+                "resource_type_general": "JournalArticle",
+            },
+            {
+                "identifier": "https://physionet.org/content/hd-semg/1.0.0/",
+                "identifier_type": "URL",
+                "relation_type": "IsDerivedFrom",
+                "resource_type_general": "Dataset",
+            },
+        ]
+        errors = validate_document(doc, dataset_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_related_identifier_missing_relation_type_fails(
+        self, minimal_dataset, dataset_schema_path
+    ):
+        """Related identifier without required relation_type should fail."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["related_identifiers"] = [
+            {"identifier": "10.1234/test", "identifier_type": "DOI"}
+        ]
+        errors = validate_document(doc, dataset_schema_path)
+        assert len(errors) > 0
+
+    def test_contributors(self, minimal_dataset, dataset_schema_path):
+        """Dataset with typed contributors should validate."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["contributors"] = [
+            {
+                "name": "NEMAR",
+                "name_type": "Organizational",
+                "contributor_type": "HostingInstitution",
+            },
+            {
+                "name": "Jane Smith",
+                "given_name": "Jane",
+                "family_name": "Smith",
+                "contributor_type": "DataCollector",
+                "orcid": "https://orcid.org/0000-0002-1234-5678",
+            },
+        ]
+        errors = validate_document(doc, dataset_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_contributor_missing_type_fails(self, minimal_dataset, dataset_schema_path):
+        """Contributor without required contributor_type should fail."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["contributors"] = [{"name": "John Doe"}]
+        errors = validate_document(doc, dataset_schema_path)
+        assert len(errors) > 0
+
+    def test_dates(self, minimal_dataset, dataset_schema_path):
+        """Dataset with structured dates should validate."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["dates"] = [
+            {"date": "2026-02-17", "date_type": "Issued"},
+            {
+                "date": "2020-01/2021-06",
+                "date_type": "Collected",
+                "date_information": "Data collection period across two sites",
+            },
+        ]
+        errors = validate_document(doc, dataset_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_date_missing_type_fails(self, minimal_dataset, dataset_schema_path):
+        """Date without required date_type should fail."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["dates"] = [{"date": "2026-01-01"}]
+        errors = validate_document(doc, dataset_schema_path)
+        assert len(errors) > 0
+
+    def test_rights(self, minimal_dataset, dataset_schema_path):
+        """Dataset with structured rights entries should validate."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["rights"] = [
+            {
+                "rights": "Open Data Commons Attribution License v1.0",
+                "rights_uri": "https://opendatacommons.org/licenses/by/1.0/",
+                "rights_identifier": "ODC-By-1.0",
+                "rights_identifier_scheme": "SPDX",
+            }
+        ]
+        errors = validate_document(doc, dataset_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_language(self, minimal_dataset, dataset_schema_path):
+        """Dataset with language field should validate."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["language"] = "en"
+        errors = validate_document(doc, dataset_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_extended_funding(self, minimal_dataset, dataset_schema_path):
+        """Dataset with extended funding fields should validate."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["funding"] = [
+            {
+                "funder_name": "National Science Foundation",
+                "funder_identifier": "https://doi.org/10.13039/100000001",
+                "funder_identifier_type": "Crossref Funder ID",
+                "award_number": "2030859",
+                "award_title": "IUCRC Phase I UCSD: CLAN",
+                "award_uri": "https://www.nsf.gov/awardsearch/showAward?AWD_ID=2030859",
+            }
+        ]
+        errors = validate_document(doc, dataset_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_person_name_type(self, minimal_dataset, dataset_schema_path):
+        """Author with name_type enum should validate."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["authors"] = [
+            {"name": "Jane Smith", "name_type": "Personal"},
+            {"name": "Child Mind Institute", "name_type": "Organizational"},
+        ]
+        errors = validate_document(doc, dataset_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_nm000108_example_validates(self, dataset_schema_path):
+        """Full nm000108 example with all v0.3.0 fields should validate."""
+        doc = _load_example("dataset-nm000108.json")
+        errors = validate_document(doc, dataset_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_nm000108_example_validates_root(self):
+        """Full nm000108 example validates via root schema dispatch."""
+        with open(EXAMPLES_DIR / "dataset-nm000108.json") as f:
+            doc = json.load(f)
+        errors = validate_document(doc)
+        assert errors == [], [e.message for e in errors]
