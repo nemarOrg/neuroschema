@@ -74,7 +74,7 @@ pytest tests/
 
 ## Version
 
-Current: **0.2.0** (pre-1.0; breaking changes allowed in minor bumps)
+Current: **0.3.0** (pre-1.0; breaking changes allowed in minor bumps)
 
 JSON Schema draft: **2020-12**
 
