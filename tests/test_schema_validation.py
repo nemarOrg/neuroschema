@@ -660,6 +660,22 @@ class TestV030CoreFields:
         errors = validate_document(doc, dataset_schema_path)
         assert errors == [], [e.message for e in errors]
 
+    def test_nemar_record_dataset_pattern(self, minimal_record, record_schema_path):
+        """Record whose `dataset` FK is an nm/on ID must validate.
+
+        record.dataset is a foreign key to dataset.dataset_id, so its pattern
+        must accept exactly what dataset_id accepts (^[a-z]{2}[0-9]+$). The
+        v0.3.0 relaxation (commit ff27f7b) loosened dataset_id for nm-prefix
+        IDs but left record.dataset pinned to OpenNeuro-only ^ds[0-9]+$; this
+        completes that migration so native NEMAR (nm*) and OpenNeuro-mirror
+        (on*) records stop failing while their parent dataset passes.
+        """
+        for dataset_id in ("nm000108", "on007139"):
+            doc = copy.deepcopy(minimal_record)
+            doc["dataset"] = dataset_id
+            errors = validate_document(doc, record_schema_path)
+            assert errors == [], [e.message for e in errors]
+
     def test_keywords_plain(self, minimal_dataset, dataset_schema_path):
         """Dataset with plain keywords (term only) should validate."""
         doc = copy.deepcopy(minimal_dataset)
