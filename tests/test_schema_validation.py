@@ -843,3 +843,79 @@ class TestV030CoreFields:
             doc = json.load(f)
         errors = validate_document(doc)
         assert errors == [], [e.message for e in errors]
+
+
+# ── v0.3.1 Core Field Tests ─────────────────────────────────────────────
+
+
+class TestV031CoreFields:
+    """Test new core fields added in v0.3.1 (dataset-level recording duration)."""
+
+    def test_total_recording_duration_accepts_number(
+        self, minimal_dataset, dataset_schema_path
+    ):
+        """data_summary.total_recording_duration accepts a positive number."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["data_summary"] = {"total_recording_duration": 3600.5}
+        errors = validate_document(doc, dataset_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_total_recording_duration_accepts_null(
+        self, minimal_dataset, dataset_schema_path
+    ):
+        """data_summary.total_recording_duration accepts null."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["data_summary"] = {"total_recording_duration": None}
+        errors = validate_document(doc, dataset_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_total_recording_duration_rejects_negative(
+        self, minimal_dataset, dataset_schema_path
+    ):
+        """data_summary.total_recording_duration rejects a negative value."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["data_summary"] = {"total_recording_duration": -1}
+        errors = validate_document(doc, dataset_schema_path)
+        assert len(errors) > 0
+
+    def test_recording_duration_range(self, minimal_dataset, dataset_schema_path):
+        """data_summary.recording_duration_range accepts {min, max}."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["data_summary"] = {"recording_duration_range": {"min": 60.0, "max": 7200.0}}
+        errors = validate_document(doc, dataset_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_recording_duration_range_accepts_null(
+        self, minimal_dataset, dataset_schema_path
+    ):
+        """data_summary.recording_duration_range accepts null."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["data_summary"] = {"recording_duration_range": None}
+        errors = validate_document(doc, dataset_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_recording_duration_range_rejects_unknown_key(
+        self, minimal_dataset, dataset_schema_path
+    ):
+        """data_summary.recording_duration_range rejects an unknown key."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["data_summary"] = {
+            "recording_duration_range": {"min": 60.0, "max": 7200.0, "mean": 900.0}
+        }
+        errors = validate_document(doc, dataset_schema_path)
+        assert len(errors) > 0
+
+    def test_data_summary_without_new_fields_still_validates(
+        self, minimal_dataset, dataset_schema_path
+    ):
+        """A data_summary with neither new field remains backward compatible."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["data_summary"] = {
+            "total_files": 100,
+            "size_bytes": 5000000000,
+            "size_human": "5.0 GB",
+            "recording_count": 42,
+            "data_processed": False,
+        }
+        errors = validate_document(doc, dataset_schema_path)
+        assert errors == [], [e.message for e in errors]
