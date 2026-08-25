@@ -845,11 +845,11 @@ class TestV030CoreFields:
         assert errors == [], [e.message for e in errors]
 
 
-# ── v0.3.1 Core Field Tests ─────────────────────────────────────────────
+# ── v0.4.0 Core Field Tests ─────────────────────────────────────────────
 
 
-class TestV031CoreFields:
-    """Test new core fields added in v0.3.1 (dataset-level recording duration)."""
+class TestV040CoreFields:
+    """Test new core fields added in v0.4.0 (dataset-level recording duration)."""
 
     def test_total_recording_duration_accepts_number(
         self, minimal_dataset, dataset_schema_path
@@ -905,10 +905,37 @@ class TestV031CoreFields:
         errors = validate_document(doc, dataset_schema_path)
         assert len(errors) > 0
 
+    def test_recordings_unavailable_accepts_integer(
+        self, minimal_dataset, dataset_schema_path
+    ):
+        """data_summary.recordings_unavailable accepts a non-negative integer."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["data_summary"] = {"recordings_unavailable": 2}
+        errors = validate_document(doc, dataset_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_recordings_unavailable_accepts_null(
+        self, minimal_dataset, dataset_schema_path
+    ):
+        """data_summary.recordings_unavailable accepts null."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["data_summary"] = {"recordings_unavailable": None}
+        errors = validate_document(doc, dataset_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_recordings_unavailable_rejects_negative(
+        self, minimal_dataset, dataset_schema_path
+    ):
+        """data_summary.recordings_unavailable rejects a negative value."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["data_summary"] = {"recordings_unavailable": -1}
+        errors = validate_document(doc, dataset_schema_path)
+        assert len(errors) > 0
+
     def test_data_summary_without_new_fields_still_validates(
         self, minimal_dataset, dataset_schema_path
     ):
-        """A data_summary with neither new field remains backward compatible."""
+        """A data_summary with none of the new fields remains backward compatible."""
         doc = copy.deepcopy(minimal_dataset)
         doc["data_summary"] = {
             "total_files": 100,
