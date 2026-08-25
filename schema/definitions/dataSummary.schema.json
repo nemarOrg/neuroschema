@@ -24,6 +24,11 @@
       "description": "Total number of recordings (data files) in the dataset.",
       "minimum": 0
     },
+    "total_recording_duration": {
+      "type": ["number", "null"],
+      "description": "Total recording duration in seconds, summed across recordings. Concurrent channel groups within a single recording are not additive: a recording with EEG and EOG streams running simultaneously contributes its longest stream to the sum, not the sum of both streams.",
+      "minimum": 0
+    },
     "channel_count_range": {
       "type": ["object", "null"],
       "description": "Range of channel counts across recordings in this dataset.",
@@ -41,6 +46,15 @@
     "sampling_frequency_range": {
       "type": ["object", "null"],
       "description": "Range of sampling frequencies across recordings (if they vary).",
+      "properties": {
+        "min": { "type": "number", "minimum": 0 },
+        "max": { "type": "number", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "recording_duration_range": {
+      "type": ["object", "null"],
+      "description": "Range of per-recording durations across the dataset, in seconds.",
       "properties": {
         "min": { "type": "number", "minimum": 0 },
         "max": { "type": "number", "minimum": 0 }
