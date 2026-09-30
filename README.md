@@ -16,7 +16,7 @@ The core schema captures what every neuroimaging data registry needs: dataset id
 
 ## Design Principles
 
-1. **Core is frozen** -- required fields rarely change; breaking changes require a major version bump
+1. **Core is frozen** -- required fields rarely change; breaking changes bump MINOR while pre-1.0 and MAJOR from 1.0.0
 2. **Summaries over raw data** -- core stores channel counts and frequency ranges, not per-channel arrays
 3. **Extensions are namespaced** -- each platform or domain gets its own container
 4. **BIDS inheritance** -- dataset-level signal defaults propagate to records unless overridden
@@ -74,7 +74,7 @@ pytest tests/
 
 ## Version
 
-Current: **0.4.0** (pre-1.0; breaking changes allowed in minor bumps)
+Current: **0.4.0** (pre-1.0: a MINOR bump marks a breaking change or a new extension namespace; a PATCH bump marks an additive optional field or a doc fix; 1.0.0 only when the schema is completely stable)
 
 JSON Schema draft: **2020-12**
 

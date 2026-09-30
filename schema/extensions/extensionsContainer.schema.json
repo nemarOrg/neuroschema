@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "extensionsContainer.schema.json",
   "title": "Extensions Container",
-  "description": "Container for domain-specific extensions using reserved namespaces. Each project or domain gets its own namespace. Adding new top-level namespaces requires a schema version bump. Follows the pattern established by signalJourney's extension system.",
+  "description": "Container for domain-specific extensions using reserved namespaces. Each project or domain gets its own namespace. Adding new top-level namespaces requires a MINOR schema version bump. Follows the pattern established by signalJourney's extension system.",
   "type": "object",
   "properties": {
     "eegdash": {
