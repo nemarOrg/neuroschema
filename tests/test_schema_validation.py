@@ -946,3 +946,135 @@ class TestV040CoreFields:
         }
         errors = validate_document(doc, dataset_schema_path)
         assert errors == [], [e.message for e in errors]
+
+
+# ── v0.4.1 Core Field Tests ─────────────────────────────────────────────
+
+
+@pytest.fixture
+def data_paper():
+    """A judged data paper (nm000275's Scientific Data descriptor)."""
+    return {
+        "doi": "10.1038/s41597-019-0027-4",
+        "title": (
+            "Multi-channel EEG recordings during a sustained-attention driving task"
+        ),
+        "year": 2019,
+        "venue": "Scientific Data",
+        "judge_model": "claude-sonnet-5-5",
+    }
+
+
+class TestV041CoreFields:
+    """Test the optional data_papers key added in v0.4.1."""
+
+    def test_data_papers_list_validates(
+        self, minimal_dataset, dataset_schema_path, data_paper
+    ):
+        """A judged data paper with every field validates."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["data_papers"] = [data_paper]
+        errors = validate_document(doc, dataset_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_data_papers_minimal_item_validates(
+        self, minimal_dataset, dataset_schema_path
+    ):
+        """Only the doi is required in a data paper."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["data_papers"] = [{"doi": "10.1038/sdata.2017.40"}]
+        errors = validate_document(doc, dataset_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_data_papers_accepts_null_details(
+        self, minimal_dataset, dataset_schema_path
+    ):
+        """title, year, venue, and judge_model accept null."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["data_papers"] = [
+            {
+                "doi": "10.1038/sdata.2017.40",
+                "title": None,
+                "year": None,
+                "venue": None,
+                "judge_model": None,
+            }
+        ]
+        errors = validate_document(doc, dataset_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_data_papers_empty_list_validates(
+        self, minimal_dataset, dataset_schema_path
+    ):
+        """An empty list means judged, with no data paper."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["data_papers"] = []
+        errors = validate_document(doc, dataset_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_data_papers_absent_still_validates(
+        self, minimal_dataset, dataset_schema_path
+    ):
+        """Absent data_papers means not judged yet and stays valid."""
+        assert "data_papers" not in minimal_dataset
+        errors = validate_document(minimal_dataset, dataset_schema_path)
+        assert errors == [], [e.message for e in errors]
+
+    def test_data_papers_validates_via_root_schema(self, minimal_dataset, data_paper):
+        """data_papers validates through the root schema dispatch."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["schema_version"] = "0.4.1"
+        doc["doc_type"] = "dataset"
+        doc["data_papers"] = [data_paper]
+        errors = validate_document(doc)
+        assert errors == [], [e.message for e in errors]
+
+    def test_data_paper_missing_doi_fails(self, minimal_dataset, dataset_schema_path):
+        """A data paper without a doi fails."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["data_papers"] = [{"title": "No DOI here", "year": 2019}]
+        errors = validate_document(doc, dataset_schema_path)
+        assert len(errors) > 0
+
+    @pytest.mark.parametrize(
+        "doi",
+        ["not-a-doi", "https://doi.org/10.1038/sdata.2017.40", "10.1038/", ""],
+    )
+    def test_data_paper_malformed_doi_fails(
+        self, minimal_dataset, dataset_schema_path, doi
+    ):
+        """A doi must be a bare DOI, not a URL or free text."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["data_papers"] = [{"doi": doi}]
+        errors = validate_document(doc, dataset_schema_path)
+        assert len(errors) > 0
+
+    def test_data_paper_unknown_key_fails(
+        self, minimal_dataset, dataset_schema_path, data_paper
+    ):
+        """A data paper rejects an unknown key."""
+        doc = copy.deepcopy(minimal_dataset)
+        data_paper["relation_type"] = "IsDescribedBy"
+        doc["data_papers"] = [data_paper]
+        errors = validate_document(doc, dataset_schema_path)
+        assert len(errors) > 0
+
+    @pytest.mark.parametrize("year", ["2019", 2019.5, True])
+    def test_data_paper_non_integer_year_fails(
+        self, minimal_dataset, dataset_schema_path, data_paper, year
+    ):
+        """year must be an integer."""
+        doc = copy.deepcopy(minimal_dataset)
+        data_paper["year"] = year
+        doc["data_papers"] = [data_paper]
+        errors = validate_document(doc, dataset_schema_path)
+        assert len(errors) > 0
+
+    def test_data_papers_must_be_an_array(
+        self, minimal_dataset, dataset_schema_path, data_paper
+    ):
+        """data_papers as a single object instead of a list fails."""
+        doc = copy.deepcopy(minimal_dataset)
+        doc["data_papers"] = data_paper
+        errors = validate_document(doc, dataset_schema_path)
+        assert len(errors) > 0
