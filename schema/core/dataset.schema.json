@@ -146,6 +146,11 @@
       "description": "Related resources: associated papers, source datasets, code repositories, prior versions. These links feed into scholarly knowledge graphs and citation indices. Aligns with DataCite RelatedIdentifier (property 12).",
       "items": { "$ref": "../definitions/relatedIdentifier.schema.json" }
     },
+    "data_papers": {
+      "type": "array",
+      "description": "Papers, or deposits of the same data, that a trusted judgment classified as this dataset's own data paper. More reliable than the relation type on related_identifiers, which is only a hint. Key absent means the dataset has not been judged yet; an empty array means it was judged and has no data paper. The dataset's own DOI is not listed here (see external_links).",
+      "items": { "$ref": "../definitions/dataPaper.schema.json" }
+    },
     "contributors": {
       "type": "array",
       "description": "Contributors with typed roles beyond the primary authors. Includes data collectors, hosting institutions, project leaders, etc. Aligns with DataCite Contributor (property 7).",
