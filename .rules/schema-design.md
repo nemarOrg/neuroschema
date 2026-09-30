@@ -2,11 +2,11 @@
 
 ## Core Principles
 
-1. **Core is frozen**: Once a field is added to `schema/core/`, removing or renaming it is a breaking change requiring a major version bump.
+1. **Core is frozen**: Once a field is added to `schema/core/`, removing or renaming it is a breaking change (a MINOR bump while the schema is pre-1.0, a MAJOR bump from 1.0.0).
 
 2. **Summaries over arrays**: The core stores aggregate summaries (counts, ranges, type distributions) rather than per-element arrays. Per-channel arrays like `channel_names` and `channel_types` belong in `extensions/rawDetail`.
 
-3. **Extensions are namespaced**: Each project gets its own namespace under `extensions/`. New namespaces require a minor version bump and an entry in `extensionsContainer.schema.json`.
+3. **Extensions are namespaced**: Each project gets its own namespace under `extensions/`. New namespaces require a MINOR version bump and an entry in `extensionsContainer.schema.json`.
 
 4. **BIDS alignment**: Field names should align with BIDS conventions. Use `snake_case` for all field names in JSON schemas.
 
@@ -24,9 +24,11 @@
 ## Versioning
 
 - Schema version follows Semantic Versioning: `MAJOR.MINOR.PATCH`
-- MAJOR: Breaking changes to core fields (removals, renames, type changes)
-- MINOR: New core fields, new extension namespaces
-- PATCH: Documentation fixes, extension-only changes
+- While the schema is pre-1.0, MINOR is the breaking-change bump:
+  - MINOR: any breaking change (removing, renaming, or retyping a field, or making one required) and any new extension namespace
+  - PATCH: additive optional fields (in core or inside an existing extension) and documentation fixes
+- 1.0.0 is released only when the schema is completely stable.
+  From 1.0.0 on, breaking changes require a MAJOR bump.
 
 ## JSON Schema Conventions
 

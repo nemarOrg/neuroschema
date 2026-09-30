@@ -18,7 +18,7 @@ pytest  # Real tests only, NO MOCKS
 ```
 
 ## Schema Design Principles
-1. **Core is frozen:** Required fields in the core schema should rarely change. Breaking changes require major version bumps.
+1. **Core is frozen:** Required fields in the core schema should rarely change. Breaking changes bump MINOR while the schema is pre-1.0 and MAJOR from 1.0.0 (see `.rules/schema-design.md`).
 2. **Extensions are namespaced:** Each platform/domain gets its own namespace (e.g., `extensions.signalJourney`, `extensions.dataCite`).
 3. **Summaries over raw data:** The core stores summaries (channel count, modality list) rather than raw arrays (individual channel names/types).
 4. **Two levels:** Dataset-level metadata (study info) and Record-level metadata (per-file info).
