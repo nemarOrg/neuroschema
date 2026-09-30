@@ -74,7 +74,7 @@ pytest tests/
 
 ## Version
 
-Current: **0.4.0** (pre-1.0: a MINOR bump marks a breaking change or a new extension namespace; a PATCH bump marks an additive optional field or a doc fix; 1.0.0 only when the schema is completely stable)
+Current: **0.4.1** (pre-1.0: a MINOR bump marks a breaking change or a new extension namespace; a PATCH bump marks an additive optional field or a doc fix; 1.0.0 only when the schema is completely stable)
 
 JSON Schema draft: **2020-12**
 

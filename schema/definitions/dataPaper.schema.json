@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dataPaper.schema.json",
+  "title": "Data Paper",
+  "description": "A paper, or a deposit of the same data, that a trusted judgment classified as this dataset's own data paper: it introduces, describes, or releases the data in this specific dataset. Unlike the relation type on a related identifier, which is only a hint, membership here is a judged verdict.",
+  "type": "object",
+  "required": ["doi"],
+  "properties": {
+    "doi": {
+      "type": "string",
+      "description": "DOI of the data paper, without a resolver prefix (e.g., '10.1038/s41597-019-0027-4'). DOIs are case-insensitive; the producer serves them in canonical lowercase, so consumers must compare case-insensitively (for example against related_identifiers[].identifier).",
+      "pattern": "^10\\.\\d{4,9}/\\S+$"
+    },
+    "title": {
+      "type": ["string", "null"],
+      "description": "Title of the paper as resolved from the DOI registry. Null when it could not be resolved."
+    },
+    "year": {
+      "type": ["integer", "null"],
+      "description": "Publication year. Null when unknown."
+    },
+    "venue": {
+      "type": ["string", "null"],
+      "description": "Journal, preprint server, or repository that published it (e.g., 'Scientific Data', 'bioRxiv'). Null when unknown."
+    },
+    "judge_model": {
+      "type": ["string", "null"],
+      "description": "Identifier of the model that made the data-paper judgment (e.g., 'claude-sonnet-5-5'), as recorded by the pipeline in its judgment_model field. Null when not recorded."
+    }
+  },
+  "additionalProperties": false
+}
