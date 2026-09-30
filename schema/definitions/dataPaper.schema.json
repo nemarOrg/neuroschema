@@ -8,7 +8,7 @@
   "properties": {
     "doi": {
       "type": "string",
-      "description": "DOI of the data paper, without a resolver prefix (e.g., '10.1038/s41597-019-0027-4').",
+      "description": "DOI of the data paper, without a resolver prefix (e.g., '10.1038/s41597-019-0027-4'). DOIs are case-insensitive; the producer serves them in canonical lowercase, so consumers must compare case-insensitively (for example against related_identifiers[].identifier).",
       "pattern": "^10\\.\\d{4,9}/\\S+$"
     },
     "title": {
@@ -25,7 +25,7 @@
     },
     "judge_model": {
       "type": ["string", "null"],
-      "description": "Identifier of the model that made the data-paper judgment (e.g., 'claude-sonnet-5-5'). Null when not recorded."
+      "description": "Identifier of the model that made the data-paper judgment (e.g., 'claude-sonnet-5-5'), as recorded by the pipeline in its judgment_model field. Null when not recorded."
     }
   },
   "additionalProperties": false
