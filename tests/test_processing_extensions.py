@@ -190,8 +190,8 @@ def dq_record():
                 "profile": "serving",
                 "record_sha256": SHA,
                 "metrics": {
-                    "pctGoodSamples": metric(93.2, "%", "Share of samples kept."),
-                    "lineNoise": metric(4.1, "dB", "Line-noise magnitude."),
+                    "percentGoodSamples": metric(93.6, "%", "Share of samples kept."),
+                    "lineNoiseAfterDb": metric(2.8, "dB", "Line noise after removal."),
                 },
                 "figures": [
                     figure("figures/spectrum.svg", "svg", "Power spectrum."),
@@ -232,8 +232,8 @@ def dq_dataset():
                 "profile": "serving",
                 "record_sha256": SHA,
                 "counts": {"passed": 17, "failed": 1, "skipped": 0, "total": 18},
-                "distributions": {"pctGoodSamples": distribution()},
-                "observed_range": {"nGoodChannels": {"min": 58, "max": 64}},
+                "distributions": {"percentGoodSamples": distribution()},
+                "observed_range": {"percentGoodChannels": {"min": 85.1, "max": 100.0}},
                 "not_processed": [
                     {
                         "path": "sub-002/eeg/sub-002_task-FaceRecognition_eeg.set",
@@ -275,7 +275,7 @@ class TestDataQualityRecord:
     def test_bad_metric_key(self):
         doc = dq_record()
         metrics = doc["recipes"]["nemar-floor"]["metrics"]
-        metrics["line.noise"] = metrics.pop("lineNoise")
+        metrics["line.noise"] = metrics.pop("lineNoiseAfterDb")
         assert errors_for(DATA_QUALITY, doc) == {("pattern", f"{FLOOR}/metrics")}
 
     def _fig(self, doc):
@@ -346,9 +346,9 @@ class TestDataQualityRecord:
 
     def test_metric_without_plugin(self):
         doc = dq_record()
-        del doc["recipes"]["nemar-floor"]["metrics"]["lineNoise"]["plugin"]
+        del doc["recipes"]["nemar-floor"]["metrics"]["lineNoiseAfterDb"]["plugin"]
         assert errors_for(DATA_QUALITY, doc) == {
-            ("required", f"{FLOOR}/metrics/lineNoise")
+            ("required", f"{FLOOR}/metrics/lineNoiseAfterDb")
         }
 
 
@@ -363,10 +363,10 @@ class TestDataQualityDataset:
 
     def test_one_edge(self):
         doc = dq_dataset()
-        hist = doc["recipes"]["nemar-floor"]["distributions"]["pctGoodSamples"]
+        hist = doc["recipes"]["nemar-floor"]["distributions"]["percentGoodSamples"]
         hist["histogram"]["edges"] = [0]
         assert errors_for(DATA_QUALITY, doc) == {
-            ("minItems", f"{FLOOR}/distributions/pctGoodSamples/histogram/edges")
+            ("minItems", f"{FLOOR}/distributions/percentGoodSamples/histogram/edges")
         }
 
     def test_not_processed_passed(self):
@@ -715,7 +715,7 @@ class TestInvariants:
 
     def test_bad_histogram_length(self):
         quality = _ext(DATASET_EXAMPLE, "dataQuality")
-        dist = quality["recipes"]["nemar-floor"]["distributions"]["pctGoodSamples"]
+        dist = quality["recipes"]["nemar-floor"]["distributions"]["percentGoodSamples"]
         dist["histogram"]["counts"].append(0)
         assert "len(counts) != len(edges) - 1" in histogram_problems(dist)
 

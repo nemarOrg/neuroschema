@@ -106,10 +106,45 @@
             "total": 18
           },
           "distributions": {
-            "pctGoodSamples": {
+            "percentGoodChannels": {
+              "n": 17,
+              "min": 85.1,
+              "median": 97.3,
+              "max": 100.0,
+              "histogram": {
+                "edges": [
+                  0,
+                  10,
+                  20,
+                  30,
+                  40,
+                  50,
+                  60,
+                  70,
+                  80,
+                  90,
+                  100
+                ],
+                "counts": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  16
+                ],
+                "underflow": 0,
+                "overflow": 0
+              }
+            },
+            "percentGoodSamples": {
               "n": 17,
               "min": 81.5,
-              "median": 94.2,
+              "median": 94.9,
               "max": 99.1,
               "histogram": {
                 "edges": [
@@ -141,46 +176,11 @@
                 "overflow": 0
               }
             },
-            "pctGoodChannels": {
+            "lineNoiseBeforeDb": {
               "n": 17,
-              "min": 85.1,
-              "median": 95.9,
-              "max": 100.0,
-              "histogram": {
-                "edges": [
-                  0,
-                  10,
-                  20,
-                  30,
-                  40,
-                  50,
-                  60,
-                  70,
-                  80,
-                  90,
-                  100
-                ],
-                "counts": [
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  2,
-                  15
-                ],
-                "underflow": 0,
-                "overflow": 0
-              }
-            },
-            "lineNoise": {
-              "n": 17,
-              "min": -3.2,
-              "median": 6.4,
-              "max": 21.7,
+              "min": 7.5,
+              "median": 14.2,
+              "max": 26.4,
               "histogram": {
                 "edges": [
                   -10,
@@ -195,44 +195,44 @@
                 ],
                 "counts": [
                   0,
-                  2,
+                  0,
+                  0,
+                  3,
                   6,
                   5,
                   3,
-                  1,
-                  0,
                   0
                 ],
                 "underflow": 0,
                 "overflow": 0
               }
             },
-            "nGoodChannels": {
+            "lineNoiseAfterDb": {
               "n": 17,
-              "min": 63,
-              "median": 71,
-              "max": 74,
+              "min": -2.6,
+              "median": 2.1,
+              "max": 6.3,
               "histogram": {
                 "edges": [
+                  -10,
+                  -5,
                   0,
+                  5,
                   10,
+                  15,
                   20,
                   30,
-                  40,
-                  50,
-                  60,
-                  70,
-                  80
+                  40
                 ],
                 "counts": [
                   0,
+                  3,
+                  12,
+                  2,
                   0,
                   0,
                   0,
-                  0,
-                  0,
-                  9,
-                  8
+                  0
                 ],
                 "underflow": 0,
                 "overflow": 0
@@ -240,13 +240,13 @@
             }
           },
           "observed_range": {
-            "nGoodChannels": {
-              "min": 63,
-              "max": 74
+            "percentGoodChannels": {
+              "min": 85.1,
+              "max": 100.0
             },
-            "nGoodSamples": {
-              "min": 610000,
-              "max": 749000
+            "percentGoodSamples": {
+              "min": 81.5,
+              "max": 99.1
             }
           },
           "not_processed": [
@@ -271,36 +271,59 @@
             "total": 18
           },
           "distributions": {
-            "pctBrainComponents": {
+            "icaRank": {
               "n": 16,
-              "min": 22.0,
-              "median": 41.5,
-              "max": 63.0,
+              "min": 55,
+              "median": 62.0,
+              "max": 64,
               "histogram": {
                 "edges": [
                   0,
-                  10,
-                  20,
-                  30,
+                  8,
+                  16,
+                  24,
+                  32,
                   40,
-                  50,
-                  60,
-                  70,
-                  80,
-                  90,
-                  100
+                  48,
+                  56,
+                  64
                 ],
                 "counts": [
                   0,
                   0,
+                  0,
+                  0,
+                  0,
+                  0,
                   1,
-                  4,
-                  6,
-                  3,
-                  2,
+                  15
+                ],
+                "underflow": 0,
+                "overflow": 0
+              }
+            },
+            "icaIterations": {
+              "n": 16,
+              "min": 388,
+              "median": 473.0,
+              "max": 1000,
+              "histogram": {
+                "edges": [
+                  0,
+                  50,
+                  100,
+                  250,
+                  500,
+                  1000,
+                  2000
+                ],
+                "counts": [
                   0,
                   0,
-                  0
+                  0,
+                  9,
+                  5,
+                  2
                 ],
                 "underflow": 0,
                 "overflow": 0
@@ -308,9 +331,9 @@
             }
           },
           "observed_range": {
-            "nBrainComponents": {
-              "min": 14,
-              "max": 40
+            "icaRank": {
+              "min": 55,
+              "max": 64
             }
           },
           "not_processed": [

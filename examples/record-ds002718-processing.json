@@ -74,20 +74,7 @@
           "profile": "serving",
           "record_sha256": "2dcd32d355d847aa93dade05530634cb01eb0cd12a27d5c910456bf899da5efe",
           "metrics": {
-            "pctGoodSamples": {
-              "value": 93.4,
-              "unit": "%",
-              "description": "Share of samples kept after bad-window rejection.",
-              "bounds": {
-                "min": 0,
-                "max": 100
-              },
-              "plugin": {
-                "name": "nemar-dataqual",
-                "version": "0.1.0"
-              }
-            },
-            "pctGoodChannels": {
+            "percentGoodChannels": {
               "value": 95.9,
               "unit": "%",
               "description": "Share of channels kept after bad-channel rejection.",
@@ -100,19 +87,32 @@
                 "version": "0.1.0"
               }
             },
-            "lineNoise": {
-              "value": 5.8,
-              "unit": "dB",
-              "description": "Line-noise magnitude at the power-line frequency.",
+            "percentGoodSamples": {
+              "value": 93.6,
+              "unit": "%",
+              "description": "Share of samples kept after bad-window rejection.",
+              "bounds": {
+                "min": 0,
+                "max": 100
+              },
               "plugin": {
                 "name": "nemar-dataqual",
                 "version": "0.1.0"
               }
             },
-            "nGoodChannels": {
-              "value": 71,
-              "unit": "count",
-              "description": "Number of channels kept.",
+            "lineNoiseBeforeDb": {
+              "value": 14.2,
+              "unit": "dB",
+              "description": "Line-noise magnitude at the power-line frequency before line-noise removal.",
+              "plugin": {
+                "name": "nemar-dataqual",
+                "version": "0.1.0"
+              }
+            },
+            "lineNoiseAfterDb": {
+              "value": 2.8,
+              "unit": "dB",
+              "description": "Line-noise magnitude at the power-line frequency after line-noise removal.",
               "plugin": {
                 "name": "nemar-dataqual",
                 "version": "0.1.0"
