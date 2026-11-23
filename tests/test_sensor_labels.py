@@ -35,6 +35,7 @@ from neuroschema.views.sensor_labels import (
     MONTAGE_ALIASES,
     MONTAGE_FORMAT,
     MONTAGE_ORDER,
+    NET_FAMILIES,
     NON_EEG_PREFIXES,
     REASONS,
     REFERENCES,
@@ -471,6 +472,7 @@ def test_the_lists_are_the_specs():
         "10-05": {"t3": "t7", "t4": "t8", "t5": "p7", "t6": "p8"},
         "GSN-HydroCel": {"vref": "cz"},
     }
+    assert NET_FAMILIES == ("GSN-HydroCel", "BioSemi")
     assert MONTAGE_ALIASES == {
         "GSN-HydroCel-32": {"e33": "cz"},
         "GSN-HydroCel-65_1.0": {"e65": "cz"},
@@ -575,9 +577,11 @@ def test_the_number_after_a_nets_last_electrode_is_its_cz(last, net):
     assert f"e{last}" not in keys_ and "cz" in keys_
     names = [f"E{i}" for i in range(1, last + 1)]
     assert infer(names, montages=(BY_NAME[net],)).channels[-1].electrode == "Cz"
+    # Elsewhere E{last} is an electrode: the full next net places it as such.
     for other in MONTAGES:
         if other.name != net and f"e{last}" in other.positions:
-            placed = infer(names, montages=(other,)).channels[-1].electrode
+            full = [f"E{i}" for i in range(1, other.size + 1)]
+            placed = infer(full, montages=(other,)).channels[last - 1].electrode
             assert placed == f"E{last}", other.name
 
 
@@ -720,6 +724,7 @@ def test_spec_names_every_list_member_and_threshold():
         "10 \u00d7 its count \u2265 9 \u00d7 their number",
         "more than half of the names in play",
         "more than 1e-9 m",
+        "10 \u00d7 best < 9 \u00d7 electrodes",
         "MNE-Python 1.13.2",
     ]:
         assert phrase in SPEC, phrase

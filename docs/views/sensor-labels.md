@@ -138,7 +138,8 @@ These steps run in order, and the first that refuses decides the reason.
 6. **The montage**: the first remaining contender with n(m) = best.
 7. **`duplicate_label`**: two or more candidates match one electrode of the montage (`T3` and `T7`, or `E1` and `E001`).
 8. **`montage_ambiguous`**: another remaining contender puts a channel that both match more than 1e-9 m (Euclidean distance) from where the montage puts it.
-9. Otherwise every candidate the montage matches is placed on its electrode, and the other candidates stay unplaced.
+9. **`net_coverage_low`**: the montage is a numbered net (family `GSN-HydroCel` or `BioSemi`) and best is below 90% of its electrodes (10 × best < 9 × electrodes).
+10. Otherwise every candidate the montage matches is placed on its electrode, and the other candidates stay unplaced.
 
 Every comparison of a share is between integers, so every implementation decides a boundary case the same way.
 
@@ -151,8 +152,9 @@ Every comparison of a share is between integers, so every implementation decides
 | `too_few_matched` | Fewer than 8 names matched one montage. |
 | `duplicate_label` | Two channels name the same electrode. |
 | `montage_ambiguous` | The names fit two montages that put the electrodes in different places. |
+| `net_coverage_low` | The names match fewer than 90% of the electrodes of the net they point to, so they may come from another cap that shares its numbering. |
 
-### Why nested nets are dismissed
+### Why nested nets are dismissed, and why a net needs coverage
 
 The nets of one family number their electrodes in one sequence, so a larger net holds every name of a smaller one: E1 to E128 and Cz are names on the 257-channel net as well as the 129-channel net, on other positions.
 Without step 5 every 128-channel EGI recording, and every BioSemi 128 or 160 recording, would tie with a larger net and be refused.
@@ -160,7 +162,12 @@ A recording carries the electrodes of its net, and E1 to E128 from a 256-channel
 The comparison is by channel, with each montage's own aliases, so E1 to E129 is the 129-channel net (E129 is its Cz) and not the 256-channel net (where E129 is an electrode).
 Across families the rule does not apply: `A1`, `A2` and `C1` to `C6` are 10-05 names and BioSemi names on unrelated positions, and such a recording is refused.
 
-One refusal remains on a real net, and it is deliberate in version 1:
+Step 5 picks the smallest listed net that holds the names, which is only right when that net is the recording's cap.
+A cap that numbers its electrodes like a listed net but is not listed would otherwise land on the smallest listed net that holds its names, with every position wrong.
+Step 9 refuses unless the names cover at least 90% of the chosen net's electrodes: `E1` to `E100` is not placed on the 128-channel net, nor `E1` to `E40` on the 64-channel net.
+The cost is that a recording on a listed net that dropped more than a tenth of the net's electrodes is refused too.
+
+One refusal remains on a full real net, and it is deliberate in version 1:
 a 32-channel EGI recording (`E1` to `E32` with `Cz` or `E33`), because the BioSemi 160 cap's E bank matches 32 of its 33 names on unrelated positions.
 
 ## Output
@@ -188,5 +195,5 @@ A change to any step, list, threshold or alias, or to a montage's positions (inc
 
 Each case of the vectors file gives a recording's `channels` as `[name, type]` pairs (type null when absent) and the `result` above.
 The vectors file lists the SHA-256 of each montage file it was computed with; an implementation checks its copies against them, then reproduces every result exactly.
-The cases cover the normalization steps, the exclusions, each reference name and the common reference, bipolar names, each count and share threshold at and beside its boundary, each refusal, the family and montage aliases, every montage but `GSN-HydroCel-32` (its names are also the BioSemi 160 cap's E bank), the nested nets and the coincident Cz variants.
+The cases cover the normalization steps, the exclusions, each reference name and the common reference, bipolar names, each count, share and coverage threshold at and beside its boundary, each refusal, the family and montage aliases, every montage but `GSN-HydroCel-32` (its names are also the BioSemi 160 cap's E bank), the nested nets and the coincident Cz variants.
 No two real montages place an electrode within 1e-9 m of each other without placing it at the same point, so `tests/test_sensor_labels.py` tests that tolerance on a montage derived from a real one.

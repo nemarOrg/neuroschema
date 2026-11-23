@@ -501,6 +501,10 @@ PHYSIONET = [
 ]
 
 
+# Thirteen electrodes of the 129 net, dropped in the coverage cases.
+DROPPED = (8, 14, 17, 21, 25, 43, 48, 49, 56, 63, 68, 73, 81)
+
+
 def eeg(names, kind="EEG"):
     return [[n, kind] for n in names]
 
@@ -808,6 +812,60 @@ CASES = [
         "129, 256 and 257 nets, which the 65 net dismisses.",
         egi(65),
         ("placed", None, "GSN-HydroCel-65_1.0"),
+    ),
+    (
+        "egi_prefix_of_128",
+        "E1 to E100: the 128 net holds every name, but 100 is below 90% of its "
+        "128 electrodes, so the names may come from a cap this algorithm does "
+        "not list.",
+        egi(100),
+        ("refused", "net_coverage_low", None),
+    ),
+    (
+        "egi_prefix_of_64",
+        "E1 to E40: 40 of the 64 net's electrodes.",
+        egi(40),
+        ("refused", "net_coverage_low", None),
+    ),
+    (
+        "egi_duplicate_on_a_partial_net",
+        "E1 to E100 and E001: a duplicate is reported before the coverage.",
+        egi(100, ["E001"]),
+        ("refused", "duplicate_label", None),
+    ),
+    (
+        "egi_e1_to_e28",
+        "E1 to E28: the 32 net and the BioSemi 160 E bank both hold the names; "
+        "an ambiguity is reported before the 32 net's coverage (28 of 33).",
+        egi(28),
+        ("refused", "montage_ambiguous", None),
+    ),
+    (
+        "egi_129_twelve_dropped",
+        "E1 to E128 and Cz with twelve electrodes dropped: 117 of 129 is at least "
+        "90% of the net.",
+        eeg([f"E{i}" for i in range(1, 129) if i not in DROPPED[:12]] + ["Cz"]),
+        ("placed", None, "GSN-HydroCel-129"),
+    ),
+    (
+        "egi_129_thirteen_dropped",
+        "E1 to E128 and Cz with thirteen electrodes dropped: 116 of 129 is below "
+        "90% of the net.",
+        eeg([f"E{i}" for i in range(1, 129) if i not in DROPPED] + ["Cz"]),
+        ("refused", "net_coverage_low", None),
+    ),
+    (
+        "biosemi_160_at_ninety_percent",
+        "A1 to D32 and E1 to E16: 144 of the BioSemi 160 cap's electrodes, "
+        "exactly 90%.",
+        eeg([*(n for n, _ in biosemi("ABCD")), *(f"E{i}" for i in range(1, 17))]),
+        ("placed", None, "biosemi160"),
+    ),
+    (
+        "biosemi_160_below_ninety_percent",
+        "A1 to D32 and E1 to E15: 143 of 160.",
+        eeg([*(n for n, _ in biosemi("ABCD")), *(f"E{i}" for i in range(1, 16))]),
+        ("refused", "net_coverage_low", None),
     ),
     (
         "egi_e33_ambiguous_with_biosemi_e_bank",

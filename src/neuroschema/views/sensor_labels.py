@@ -115,6 +115,10 @@ MIN_SHARE = (4, 5)
 CONTENDER_SHARE = (9, 10)
 COMMON_REFERENCE_SHARE = (9, 10)
 COINCIDENT_M = 1e-9
+# A recording on a numbered net carries most of the net: a chosen net of these
+# families must match at least 90% of its electrodes.
+NET_FAMILIES = ("GSN-HydroCel", "BioSemi")
+NET_COVERAGE = (9, 10)
 
 # Channel status, decided from the names alone.
 EXCLUDED_TYPE = "excluded_type"
@@ -132,6 +136,7 @@ REASONS = (
     "too_few_matched",
     "duplicate_label",
     "montage_ambiguous",
+    "net_coverage_low",
 )
 
 _WHITESPACE = "\t\n\v\f\r "
@@ -439,6 +444,10 @@ def infer_positions(
                 return _refused(
                     "montage_ambiguous", candidates, best, classified, names
                 )
+
+    num, den = NET_COVERAGE
+    if winner.family in NET_FAMILIES and best * den < winner.size * num:
+        return _refused("net_coverage_low", candidates, best, classified, names)
 
     placed = []
     for i, channel in enumerate(classified):
