@@ -51,6 +51,8 @@ Each file holds the positions MNE-Python 1.13.2 returns from `make_standard_mont
   It lists T3, T4, T5 and T6 on the positions of T7, T8, P7 and P8.
 - The HydroCel nets are read with `head_size=None`, the file's own geometry in centimeters, converted to meters.
   Each net and its Cz variant (64 and 65, 128 and 129, 256 and 257) then share every electrode position exactly; MNE-Python's default rescales each file by its own median radius, which moves the 64/65 and 256/257 pairs apart by up to 0.14 mm.
+- Older EGI nets, such as the Geodesic Sensor Net 200 and the GSN 64 version 2.0, number their electrodes E1, E2 and so on as the HydroCel nets do.
+  Channel names cannot tell them apart, so a recording on one of them is placed on HydroCel positions.
 - The BioSemi caps lie on a sphere of radius 0.095 m (MNE-Python's default).
   A BioSemi recording names its channels by amplifier bank (A1 to A32, then B1 to B32, and so on), while MNE-Python names the electrodes of the 16, 32 and 64 channel caps by the 10-20 system.
   The montages of those caps carry the bank labels, given to MNE-Python's electrodes in file order; BioSemi's own layout drawings label the electrodes in that order, and the generator fails unless the file order is the drawings' (`bank_labels` in `PROVENANCE.json` lists each label with its 10-20 name).
