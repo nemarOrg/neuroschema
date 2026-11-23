@@ -16,6 +16,9 @@ Quality views replace figures: a view is data a browser draws, declared with a n
 - `neuroschema.views`: the registry reader and the renderer rule (`draw_as`), which draws an unknown kind by its base only when each of the base's roles is valid under the base kind's schema (`meets_role_contract`, `role_schemas`), offering the other files for download, and otherwise shows a table.
 - `processingTypes`: `viewKey`, `kindName`, `transformName`, `roleName`, `dimName`, `formatName` and `recipe`.
 - `docs/views.md`: the view vocabulary, the renderer rule, data roles, dimensions, inputs, scope, formats, caps, versioning and what digests prove.
+- `nemar.sensor-labels.v1`, sensor positions inferred from channel names, refusing with a reason when the names do not identify one montage: `docs/views/sensor-labels.md`, vectors in `views/vectors/sensor-labels.v1.json`, the pure-Python reference `neuroschema.views.sensor_labels`, and a registry entry.
+- `views/montages/`: eleven standard montages (10-05, seven Electrical Geodesics (EGI) HydroCel nets, three BioSemi caps) in right-anterior-superior (RAS) meters, generated from MNE-Python 1.13.2 by `scripts/generate_montages.py` (uv group `vectors`, with a `--check` mode run in CI), and `PROVENANCE.json` with each file's MNE source and digest, MNE-Python's license and each montage's upstream origin (FieldTrip, EGI, BioSemi).
+- `viewData`: optional `montage`, the montage of a role of `template` positions; it requires `position_source` `template`.
 
 ### Changed (breaking)
 
