@@ -68,11 +68,12 @@ It is a generic kind: it has no base, no inputs, no transform, no parameters and
 
 ### `nemar.sensor-field` version 1
 
-This release also defines the generic kind `nemar.sensor-field` version 1, a scalp map: the role `values` holds one or more maps, each one value per sensor, and the optional role `layout` gives each sensor's place (`name`, `theta_deg`, `radius`).
-With a layout, the values' `sensor` coordinates are the layout's `name` column, by position; without one, they are names in the values file, and a renderer places them with `nemar.sensor-labels.v1`.
+This release also defines the generic kind `nemar.sensor-field` version 1, a scalp map: the role `values` holds one or more maps, each one value per sensor.
+The sensors are placed by one of three sources: the optional role `layout` (`name`, `theta_deg`, `radius`), the optional role `positions` (`name`, `x`, `y`, `z`, which the view's transform `nemar.sensor-layout.v1` projects), or, with neither, the sensors' names, which a renderer places with `nemar.sensor-labels.v1`.
+A view has at most one of `layout` and `positions`, and the values' `sensor` coordinates are that role's `name` column, by position.
 A renderer draws each map with the algorithm `nemar.sensor-field.v1`; [`views/sensor-field.md`](views/sensor-field.md) specifies the algorithm, the roles, how a renderer reads the maps, and parity.
-It is a generic kind: it has no base, no inputs and no transform, and its one parameter, `limits`, chooses `absmax` (the default) or `minmax` color limits.
-In the registry, the `values` role's dimensions are `null`, open names: its schema requires one `sensor` dimension (with `contains`) and admits one more of any name, which labels the maps; the `layout` role carries `sensor` only.
+It is a generic kind: it has no base and no inputs, a transform only with `positions`, and its one parameter, `limits`, chooses `absmax` (the default) or `minmax` color limits.
+In the registry, the `values` role's dimensions are `null`, open names: its schema requires one `sensor` dimension (with `contains`) and admits one more of any name, which labels the maps; the `layout` and `positions` roles carry `sensor` only.
 A registry entry lists the dimensions a role may carry; which of them it must carry, the kind's schema says, and the role contract reads it there.
 
 ## Data roles
@@ -129,7 +130,7 @@ Each input has a `role` and exactly one of:
 A transform is `{name, parameters}`; its name is namespaced and versioned (`nemar.ic-activity.v1`).
 The registry lists the transforms neuroschema specifies, each with its specification, its vectors and its schema, `schema/views/transform.<name>.schema.json`.
 `view.schema.json` applies a listed transform's schema to every view that names it, whatever the view's kind: the schema checks the view's inputs and the transform's parameters.
-This release specifies `nemar.sensor-layout.v1` ([views/sensor-layout.md](views/sensor-layout.md)), three-dimensional sensor positions to a layout, whose one input is the role `positions` and whose one parameter is the positions' `coordinate_system`.
+This release specifies `nemar.sensor-layout.v1` ([views/sensor-layout.md](views/sensor-layout.md)), three-dimensional sensor positions to a layout: the positions are a stored data role `positions` that names its own frame (as `nemar.sensor-field` declares it), or the view's one input `positions`, whose frame the transform's parameters name.
 A view's files are its `data` files and its `file` inputs.
 
 ## Scope

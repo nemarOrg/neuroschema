@@ -9,7 +9,15 @@ The vectors' theta and radius come from eegprep's `convertlocs(..., 'cart2topo')
 
 The positions of one recording's sensors, one row each: a name and `x`, `y` and `z`, Institute of Electrical and Electronics Engineers (IEEE) 754 binary64 values in one unit (any unit; the layout does not depend on it), in the frame a Brain Imaging Data Structure (BIDS) coordinate system names.
 Template positions, taken from a standard montage by `nemar.sensor-labels.v1` (a sensor role with `position_source` `template`), name that montage instead: their coordinate system is `n/a`, and `montage` is the name of a file of `views/montages`, every one of which is in a right-anterior-superior frame, in meters.
-In a view, the positions are the input role `positions`, a tab-separated values (TSV) file of the run's product with the columns `name`, `x`, `y` and `z`; the transform's parameter `coordinate_system` names the frame, and `montage`, for template positions, the montage (`schema/views/transform.nemar.sensor-layout.v1.schema.json`).
+
+A view declares the transform in one of two forms (`schema/views/transform.nemar.sensor-layout.v1.schema.json`), and names the frame once in either:
+
+- **Stored positions.**
+  The positions are the view's data role `positions`, a tab-separated values (TSV) file with the columns `name`, `x`, `y` and `z`, which carries `coordinate_system` (and, for template positions, `montage`) itself.
+  The transform then takes no parameters, and the view has no inputs.
+  `nemar.sensor-field` version 1 declares the transform this way (see [`sensor-field.md`](sensor-field.md#sensors)).
+- **Positions as an input.**
+  The positions are the view's one input, the role `positions`, a TSV file of the run's product with the same columns, and the transform's parameters name the frame: `coordinate_system`, and `montage` for template positions.
 
 ## Algorithm
 
