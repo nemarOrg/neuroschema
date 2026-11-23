@@ -290,7 +290,7 @@
           "then": {
             "properties": {
               "location": {
-                "pattern": "\\.png$"
+                "pattern": "\\.png$(?!\n)"
               }
             }
           }
@@ -309,7 +309,7 @@
           "then": {
             "properties": {
               "location": {
-                "pattern": "\\.svg$"
+                "pattern": "\\.svg$(?!\n)"
               }
             }
           }
@@ -328,7 +328,7 @@
           "then": {
             "properties": {
               "location": {
-                "pattern": "\\.webp$"
+                "pattern": "\\.webp$(?!\n)"
               }
             }
           }

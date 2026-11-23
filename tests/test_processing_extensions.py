@@ -780,3 +780,51 @@ def test_manager_table_matches_container():
     assert table == managers
     for ns in ("dataQuality", "processing", "signalJourney"):
         assert managers[ns][0] == "nemar-api"
+
+
+# ── Anchors: a trailing newline never passes (Python's $ allows one) ──────
+
+
+PT_FILE = DEFINITIONS / "processingTypes.schema.json"
+VALID_BY_DEF = {
+    "recipeId": "nemar-floor",
+    "version": "1.0.0-b1",
+    "sha256": SHA,
+    "checkpointName": "preprocess",
+    "stepId": "bad_windows",
+    "failureCode": "load_failed",
+    "metricName": "percentGoodSamples",
+    "relativeLocation": "figures/spectrum.svg",
+}
+
+
+def _def_errors(name: str, value) -> list:
+    _schema, resolver = load_schema(PT_FILE)
+    validator = Draft202012Validator(
+        {"$ref": f"file://{PT_FILE}#/$defs/{name}"}, resolver=resolver
+    )
+    return list(validator.iter_errors(value))
+
+
+@pytest.mark.parametrize(("name", "value"), sorted(VALID_BY_DEF.items()))
+def test_def_accepts_valid_value(name, value):
+    assert _def_errors(name, value) == []
+
+
+@pytest.mark.parametrize(("name", "value"), sorted(VALID_BY_DEF.items()))
+def test_def_rejects_trailing_newline(name, value):
+    assert [e.validator for e in _def_errors(name, value + "\n")] == ["pattern"]
+
+
+def test_plugin_name_rejects_trailing_newline():
+    assert [e.validator for e in _def_errors("plugin", PLUGIN | {"name": "x\n"})] == [
+        "pattern"
+    ]
+
+
+def test_sj_version_rejects_trailing_newline():
+    doc = sj_links()
+    doc["recipes"]["nemar-floor"]["sj_version"] = "0.1.0\n"
+    assert errors_for(SIGNAL_JOURNEY, doc) == {
+        ("pattern", "recipes/nemar-floor/sj_version")
+    }

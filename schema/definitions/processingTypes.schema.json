@@ -7,22 +7,22 @@
     "recipeId": {
       "type": "string",
       "description": "Identifier of a NEMAR processing recipe (for example nemar-floor), lowercase letters, digits and hyphens.",
-      "pattern": "^[a-z0-9-]{1,64}$"
+      "pattern": "^[a-z0-9-]{1,64}$(?!\n)"
     },
     "version": {
       "type": "string",
       "description": "A version label (recipe, dataset or plugin version) of letters, digits and . _ + -.",
-      "pattern": "^[0-9A-Za-z._+-]{1,64}$"
+      "pattern": "^[0-9A-Za-z._+-]{1,64}$(?!\n)"
     },
     "sha256": {
       "type": "string",
       "description": "Lowercase hexadecimal SHA-256 digest of a file's bytes.",
-      "pattern": "^[0-9a-f]{64}$"
+      "pattern": "^[0-9a-f]{64}$(?!\n)"
     },
     "checkpointName": {
       "type": "string",
       "description": "Name of a processing checkpoint: a coarse stage a recipe declares. Open vocabulary; the writer checks it against the checkpoints the recipe version declares.",
-      "pattern": "^[a-z][a-z0-9_]{0,31}$",
+      "pattern": "^[a-z][a-z0-9_]{0,31}$(?!\n)",
       "examples": [
         "import",
         "preprocess",
@@ -36,24 +36,24 @@
     "stepId": {
       "type": "string",
       "description": "Identifier of a recipe step (the step names of a recipe's step order).",
-      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$(?!\n)"
     },
     "failureCode": {
       "type": "string",
       "description": "Machine-readable failure or skip code, lowercase snake case.",
-      "pattern": "^[a-z][a-z0-9_]{0,63}$"
+      "pattern": "^[a-z][a-z0-9_]{0,63}$(?!\n)"
     },
     "metricName": {
       "type": "string",
       "description": "Name of a quality metric. Safe as a document key (no . or $); allows namespaced names such as eeg:lineNoise. Naming rules live in signalJourney's nemar namespace.",
-      "pattern": "^[A-Za-z][A-Za-z0-9_:-]{0,127}$"
+      "pattern": "^[A-Za-z][A-Za-z0-9_:-]{0,127}$(?!\n)"
     },
     "relativeLocation": {
       "type": "string",
       "description": "Relative POSIX path inside a run's product: no leading slash, no .. segment, no URI scheme, no backslash, no control characters.",
       "minLength": 1,
       "maxLength": 1024,
-      "pattern": "^(?!/)(?![A-Za-z][A-Za-z0-9+.-]*:)(?!(?:.*/)?\\.\\.(?:/|$))[^\\\\\\x00-\\x1f]+$"
+      "pattern": "^(?!/)(?![A-Za-z][A-Za-z0-9+.-]*:)(?!(?:.*/)?\\.\\.(?:/|$))[^\\\\\\x00-\\x1f]+$(?!\n)"
     },
     "inputKind": {
       "type": "string",
@@ -150,7 +150,7 @@
         "name": {
           "type": "string",
           "description": "Plugin name as declared in its manifest.",
-          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$(?!\n)"
         },
         "version": {
           "$ref": "../definitions/processingTypes.schema.json#/$defs/version",
