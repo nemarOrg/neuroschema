@@ -32,3 +32,11 @@ select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--tb=short -q"
+
+[dependency-groups]
+# Generators of reference data, run with `uv run --group vectors`; never a
+# runtime dependency. mne is pinned exactly: scripts/generate_montages.py
+# refuses any other version.
+vectors = [
+    "mne==1.13.2",
+]

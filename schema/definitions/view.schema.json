@@ -336,6 +336,46 @@
             "template"
           ],
           "description": "For a role of sensor positions: measured (taken from the dataset's own files, which NEMAR does not verify) or template (a standard montage matched by label)."
+        },
+        "montage": {
+          "type": "string",
+          "description": "For a role of template sensor positions: the montage they were taken from, by its name in views/montages (nemar.sensor-labels.v1, docs/views/sensor-labels.md). Given exactly with position_source template, with coordinate_system n/a; the positions are read as RAS meters, the montage's frame.",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$(?!\n)"
+        }
+      },
+      "dependentSchemas": {
+        "montage": {
+          "type": "object",
+          "required": [
+            "position_source"
+          ],
+          "properties": {
+            "position_source": {
+              "const": "template"
+            }
+          }
+        },
+        "position_source": {
+          "if": {
+            "type": "object",
+            "properties": {
+              "position_source": {
+                "const": "template"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "required": [
+              "montage",
+              "coordinate_system"
+            ],
+            "properties": {
+              "coordinate_system": {
+                "const": "n/a"
+              }
+            }
+          }
         }
       },
       "allOf": [

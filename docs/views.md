@@ -88,6 +88,7 @@ Each entry of `data` is one file read as one role.
 | `dims` | no | `[{name, axis, type, unit?, coords}]`: the dimensions; see [Dimensions](#dimensions). |
 | `coordinate_system` | no | For a role of sensor positions: the Brain Imaging Data Structure (BIDS) name of the coordinate system, or `n/a`. |
 | `position_source` | no | For a role of sensor positions: `measured` (from the dataset's own files, which NEMAR does not verify) or `template`. |
+| `montage` | no | For a role of `template` positions: the montage they were taken from, by its name in `views/montages` ([`nemar.sensor-labels.v1`](views/sensor-labels.md)). A `template` role carries `montage` and `coordinate_system` `n/a`, and its positions are read as right-anterior-superior (RAS) meters, the montage's frame. |
 
 A role reads only the columns it declares, so one file can serve two roles (a file of sensor names, layout and positions can be the `layout` role with one set of columns and the `positions` role with another).
 The sensor type of each row is the `sensor_type` column.

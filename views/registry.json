@@ -80,6 +80,12 @@
       "name": "nemar.kinds-verdicts.v1",
       "spec": "docs/views/generic-kinds.md",
       "vectors": "views/vectors/kinds-verdicts.v1.json"
+    },
+    {
+      "name": "nemar.sensor-labels.v1",
+      "spec": "docs/views/sensor-labels.md",
+      "vectors": "views/vectors/sensor-labels.v1.json",
+      "montages": "views/montages/PROVENANCE.json"
     }
   ],
   "formats": {
