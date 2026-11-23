@@ -20,6 +20,7 @@ from tests.helpers import (
     count_problems,
     failures,
     histogram_problems,
+    quality_problems,
     total_problems,
 )
 
@@ -838,3 +839,73 @@ def test_failed_link_has_no_record(field):
     assert errors_for(SIGNAL_JOURNEY, doc) == set()
     link[field] = sj_links()["recipes"]["nemar-floor"][field]
     assert errors_for(SIGNAL_JOURNEY, doc) == {("type", f"recipes/nemar-floor/{field}")}
+
+
+# ── Invariant helpers: each check fails on its own mutation ───────────────
+
+
+def _floor_dist(name="percentGoodSamples"):
+    quality = _ext(DATASET_EXAMPLE, "dataQuality")
+    return quality["recipes"]["nemar-floor"]["distributions"][name]
+
+
+class TestHelperMutations:
+    def test_quality_examples_hold(self):
+        assert quality_problems(_ext(DATASET_EXAMPLE, "dataQuality")) == []
+
+    def test_edges_not_increasing(self):
+        dist = _floor_dist()
+        dist["histogram"]["edges"][3] = dist["histogram"]["edges"][2]
+        assert histogram_problems(dist) == ["edges not strictly increasing"]
+
+    def test_min_outside_first_bin(self):
+        dist = _floor_dist()
+        dist["min"] = 91.0  # first non-empty bin is [80, 90)
+        assert "min is not in the first non-empty bin" in histogram_problems(dist)
+
+    def test_max_outside_last_bin(self):
+        dist = _floor_dist("lineNoiseBeforeDb")
+        dist["max"] = 31.0  # last non-empty bin is [20, 30)
+        assert "max is not in the last non-empty bin" in histogram_problems(dist)
+
+    def test_median_order(self):
+        dist = _floor_dist()
+        dist["median"] = dist["max"] + 1
+        assert "not min <= median <= max" in histogram_problems(dist)
+
+    def test_median_bin(self):
+        dist = _floor_dist("lineNoiseBeforeDb")
+        dist["median"] = 21.0  # cumulative counts put the median in [10, 15)
+        assert histogram_problems(dist) == [
+            "median is not in the bin the cumulative counts give"
+        ]
+
+    def test_undeclared_checkpoint(self):
+        proc = _ext(RECORD_EXAMPLE, "processing")
+        proc["recipes"]["nemar-floor"]["checkpoints"]["figures"] = {
+            "status": "passed",
+            "code": None,
+            "step": None,
+        }
+        assert cascade_problems(proc, DECLARED) == [
+            "nemar-floor: undeclared checkpoints ['figures']"
+        ]
+
+    def test_skipped_drops_along_order(self):
+        proc = _ext(DATASET_EXAMPLE, "processing")
+        proc["recipes"]["nemar-ica"]["counts"]["iclabel"].update(passed=17, skipped=1)
+        problems = count_problems(proc)
+        assert "nemar-ica/iclabel: skipped below earlier failed+skipped" in problems
+        assert "nemar-ica/iclabel: passed above the earlier checkpoint" in problems
+
+    def test_quality_counts_sum(self):
+        quality = _ext(DATASET_EXAMPLE, "dataQuality")
+        quality["recipes"]["nemar-ica"]["counts"]["passed"] = 15
+        assert "nemar-ica: passed+failed+skipped != total" in quality_problems(quality)
+
+    def test_not_processed_coverage(self):
+        quality = _ext(DATASET_EXAMPLE, "dataQuality")
+        quality["recipes"]["nemar-ica"]["not_processed"].pop()
+        assert quality_problems(quality) == [
+            "nemar-ica: not_processed does not cover failed+skipped"
+        ]
