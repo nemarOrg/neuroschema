@@ -19,11 +19,16 @@ Processing metadata for NEMAR's pipeline checkpoints, live progress and quality 
 
 - `dataQuality`: the placeholder fields `quality_score`, `quality_flags` and `assessed_at` are removed. The namespace now requires `level` (`record` or `dataset`) and `recipes`: at record level, typed metrics and figures (PNG, SVG or WebP, with size, SHA-256 and caption) per recipe; at dataset level, the quality control summary per recipe (counts, distributions, `observed_range`, not-processed list), which replaces nemar-process `qc-summary.v1`. Each entry carries the SHA-256 of the signalJourney record it came from.
 - `signalJourney`: the placeholder fields `pipeline_id`, `processing_status` and `sj_version` at the namespace root are removed. The namespace now requires `recipes`, one link per recipe with `recipe_version`, `processing_status` (`in_progress`, `completed`, `failed`; `pending` is gone), `location`, `sha256` and `sj_version`.
+
+### Changed
+
 - Every `$ref` below the root schema names its folder (for example `../extensions/dataQuality.schema.json`); resolution targets are unchanged.
+- `x-extension-managers`: `dataQuality` and `signalJourney` move from `nemar-pipeline` and `signal-journey` to `nemar-api`, which also writes the new `processing` namespace. `dataQuality` and `signalJourney` now also appear on dataset documents, not only on records.
+- Every anchored pattern in the new and changed files ends with `$(?!\n)`, so a trailing newline fails in Python as it does in ajv.
 
 ### Documentation
 
-- `docs/extension-managers.md` and `x-extension-managers`: the NEMAR backend (`nemar-api`) writes `dataQuality`, `processing` and `signalJourney`.
+- `docs/extension-managers.md`: the NEMAR backend (`nemar-api`) writes `dataQuality`, `processing` and `signalJourney`.
 - New `docs/processing-extensions.md`: levels, writer-enforced invariants, checkpoints, digest and location rules, and the mapping from `qc-summary.v1`.
 
 ## Earlier versions
