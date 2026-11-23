@@ -128,6 +128,7 @@ def test_sensor_field_vector_file():
         "head_outside_grid",
         "interpolation_failed",
         "frame_unknown",
+        "positions_flat",
     }
 
 
@@ -218,6 +219,15 @@ FIELD_MUTATIONS = {
     "absmax from the largest value": ("limits", _absmax_from_max),
     "merged value is the first": ("mean", _mean_is_first),
     "LU without pivoting": ("lu_solve", _no_pivoting),
+    "plotted strictly inside plotrad": ("is_plotted", lambda r, plotrad: r < plotrad),
+    "square strictly inside intrad": (
+        "in_square",
+        lambda x, y, intrad: (x < intrad) & (y < intrad),
+    ),
+    "merge strictly within the distance": (
+        "within_merge",
+        lambda d: d < sf.MERGE_DISTANCE,
+    ),
 }
 
 
@@ -226,6 +236,23 @@ def test_sensor_field_vectors_catch_a_mutation(monkeypatch, mutation):
     name, value = FIELD_MUTATIONS[mutation]
     monkeypatch.setattr(sf, name, value)
     assert any(field_mismatches(case) for case in FIELD["cases"]), mutation
+
+
+def test_radii_from_the_kept_sensors_are_caught(monkeypatch):
+    """The radii come from every usable sensor; taking them from the sensors
+    the merge keeps changes the merged_outermost case."""
+    kept: list[int] = []
+    merge = sf.merge
+
+    def recording_merge(x, y, rows):
+        groups = merge(x, y, rows)
+        kept[:] = list(groups)
+        return groups
+
+    monkeypatch.setattr(sf, "merge", recording_merge)
+    monkeypatch.setattr(sf, "outermost", lambda radius, usable: radius[kept].max())
+    assert field_mismatches(FIELD_CASES["merged_outermost"])
+    assert not field_mismatches(FIELD_CASES["montage_32"])
 
 
 def test_refusals_without_usable_sensors():
@@ -439,7 +466,18 @@ def _no_wrap(xyz):
     ) / 180
 
 
+def _no_fewest(points):
+    """sphere_center without its three-or-fewer refusal."""
+    centroid = points.sum(axis=0) / len(points)
+    scale = float(np.sqrt(((points - centroid) ** 2).sum(axis=1)).max())
+    u = (points - centroid) / scale
+    return centroid + scale * sl.circle_center(u), "circle"
+
+
 LAYOUT_MUTATIONS = {
+    "three or fewer positions accepted": ("sphere_center", _no_fewest),
+    "a flat disk accepted as a circle": ("CONCYCLIC", math.inf),
+    "a circle centered on the centroid": ("circle_center", lambda u: np.zeros(3)),
     "an ALS name misspelled": (
         "ALS_FRAMES",
         (sl.ALS_FRAMES - {"EEGLAB-HJ"}) | {"EEGLAB_HJ"},
@@ -466,10 +504,15 @@ def test_positions_are_n_by_3():
         sl.sensor_layout(np.ones((4, 2)), "CapTrak")
 
 
-def test_no_finite_position_gives_no_layout():
-    layout = sl.sensor_layout(np.full((3, 3), math.nan), "EEGLAB")
-    assert np.isnan(layout.theta_deg).all() and np.isnan(layout.radius).all()
-    assert layout.center is None and layout.center_method is None
+@pytest.mark.parametrize("finite", [0, 3])
+def test_three_or_fewer_finite_positions_are_flat(finite):
+    xyz = np.full((6, 3), math.nan)
+    points = [[7.0, 1.0, 3.0], [-2.0, 6.0, 4.0], [0.5, -5.0, 6.5]]
+    for row in range(finite):
+        xyz[row] = points[row]
+    with pytest.raises(sl.SensorLayoutRefusal) as raised:
+        sl.sensor_layout(xyz, "EEGLAB")
+    assert raised.value.word == "positions_flat"
 
 
 # ── The generator's --check ────────────────────────────────────────────────
@@ -505,6 +548,67 @@ def test_check_tolerates_rounding_and_catches_changes():
     moved["expected"]["interpolated"] = moved["expected"]["interpolated"][1:]
     assert gen.differences(moved, case)
     assert gen.differences({"refused": "too_few_sensors"}, {"refused": "x"})
+    # Limits and the color axis follow the cells: the map's range bounds them.
+    for key in ("limits", "color_axis"):
+        moved = json.loads(json.dumps(case))
+        moved["expected"][key]["minmax"][1] += 5e-10 * span
+        assert gen.differences(moved, case) == []
+        moved["expected"][key]["minmax"][1] += 2e-9 * span
+        assert len(gen.differences(moved, case)) == 1
+    # A row with a null theta compares its radius alone, absolutely.
+    holes = json.loads(json.dumps(FIELD_CASES["nan_positions"]))
+    row = holes["sensors"]["theta_deg"].index(None)
+    moved = json.loads(json.dumps(holes))
+    moved["sensors"]["radius"][row] += 5e-17
+    assert gen.differences(moved, holes) == []
+    moved["sensors"]["radius"][row] += 1e-11
+    assert len(gen.differences(moved, holes)) == 1
+    # A center at the origin is compared against the positions' extent.
+    cap = json.loads(json.dumps(LAYOUT_CASES["biosemi_128_ras"]))
+    assert max(abs(v) for v in cap["expected"]["center"]) < 1e-12
+    moved = json.loads(json.dumps(cap))
+    moved["expected"]["center"][1] += 4e-14
+    assert gen.differences(moved, cap) == []
+    moved["expected"]["center"][1] += 1e-9
+    assert len(gen.differences(moved, cap)) == 1
+
+
+FROZEN_INPUTS = json.loads((ROOT / "scripts" / "view_vector_inputs.json").read_text())
+
+
+def test_vectors_are_drawn_from_the_frozen_inputs():
+    """Every case's inputs are the stored ones, so platform math cannot move
+    them; only --refresh-inputs rewrites the store."""
+    field = FROZEN_INPUTS["sensor-field"]
+    layout = FROZEN_INPUTS["sensor-layout"]
+    assert set(field) == set(FIELD_CASES)
+    assert set(layout) == set(LAYOUT_CASES)
+    for name, case in FIELD_CASES.items():
+        assert case["sensors"] == field[name], name
+    for name, case in LAYOUT_CASES.items():
+        assert case["positions"] == layout[name], name
+
+
+def test_generator_reads_the_frozen_inputs(monkeypatch):
+    """Inputs come from the store; computed ones are used only while refreshing,
+    and a case missing from the store stops the generator."""
+    gen = _generator()
+    computed = {"name": ["X"], "theta_deg": [0.0], "radius": [0.1], "value": [1.0]}
+    monkeypatch.setattr(gen, "FROZEN", FROZEN_INPUTS)
+    stored = gen.frozen("sensor-field", "montage_32", computed)
+    assert stored == FROZEN_INPUTS["sensor-field"]["montage_32"]
+    with pytest.raises(SystemExit, match="--refresh-inputs"):
+        gen.frozen("sensor-field", "no_such_case", computed)
+    monkeypatch.setattr(gen, "FROZEN", None)
+    assert gen.frozen("sensor-field", "montage_32", computed) is computed
+
+
+def test_check_refuses_to_refresh_inputs(monkeypatch, capsys):
+    gen = _generator()
+    monkeypatch.setattr("sys.argv", ["gen", "--check", "--refresh-inputs"])
+    with pytest.raises(SystemExit):
+        gen.main()
+    assert "drop --refresh-inputs" in capsys.readouterr().err
 
 
 def test_check_compares_layouts_by_planar_point():
