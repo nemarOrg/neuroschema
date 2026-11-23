@@ -21,6 +21,7 @@ import json
 import sys
 from pathlib import Path
 
+from neuroschema.views import load_registry
 from neuroschema.views.models import (
     MODELS_FORMAT,
     ViewRefused,
@@ -41,6 +42,7 @@ HISTOGRAM_CONTENT = "content.nemar.histogram.v1.schema.json"
 PLUGIN = {"plugin": {"name": "nemar-quality", "version": "0.1.0"}}
 RECIPE = {"recipe": {"name": "nemar-ica", "version": "1.0.0"}}
 PREFIX = "sub-01/eeg/sub-01_task-rest_desc-nemarica"
+REGISTRY = load_registry()
 HUGE = "1" + "0" * 400  # an integer literal beyond binary64 range
 
 
@@ -87,11 +89,24 @@ def view(key: str, kind: str, caption: str, data: list, **fields) -> dict:
 
 
 class Case:
-    """A view, its files, and the queries a renderer answers."""
+    """A view, its files, the caps it runs under, and the queries it answers."""
 
-    def __init__(self, name: str, covers: str, view: dict, files: dict, **queries):
+    def __init__(
+        self,
+        name: str,
+        covers: str,
+        view: dict,
+        files: dict,
+        caps: dict | None = None,
+        **queries,
+    ):
         self.name, self.covers, self.view, self.files = name, covers, view, files
+        self.caps = caps or {}
         self.queries = queries
+
+    def registry(self) -> dict:
+        """The registry with this case's caps in place of the registered ones."""
+        return REGISTRY | {"caps": REGISTRY["caps"] | self.caps}
 
 
 def _encoded(files: dict[str, bytes]) -> dict:
@@ -335,7 +350,6 @@ def lines_cases() -> list[Case]:
             dim("measure", "columns", "string", {"header": True}),
         ],
     )
-    cap = tsv("freq_hz Fp1", *(f"{i} 0" for i in range(1025)))
     reordered = spectrum_entry(
         columns=[col(n, unit="dB") for n in ("Cz", "Fp1")] + [col("freq_hz", unit="Hz")]
     )
@@ -430,12 +444,6 @@ def lines_cases() -> list[Case]:
             "A header and no rows: empty.",
             tsv("freq_hz Fp1 Fp2 Cz"),
             None,
-        ),
-        (
-            "lines_rows_over_cap",
-            "1,025 rows exceed caps.entries_per_dim: cap_exceeded.",
-            cap,
-            two_series,
         ),
         (
             "lines_cell_not_number",
@@ -850,6 +858,85 @@ def histogram_cases() -> list[Case]:
     return cases
 
 
+# ── Caps, with each case's own caps in place of the registry's ───────────
+
+
+def cap_cases() -> list[Case]:
+    numbered = data_entry(
+        "values",
+        f"{PREFIX}_numbered.tsv",
+        NUMBERED,
+        columns=[col("freq_hz", unit="Hz")]
+        + [col(n, unit="dB") for n in ("ch1", "ch2", "ch3")],
+        dims=[FREQ, SENSOR],
+    )
+    na = [col("name", "string"), col("status_description")]
+    return [
+        Case(
+            "caps_lines_bytes",
+            "A file one byte over caps.bytes_per_role: cap_exceeded, and the "
+            "fallback offers it for download only.",
+            lines_view(),
+            {SPECTRUM_AT: SPECTRUM},
+            caps={"bytes_per_role": len(SPECTRUM) - 1},
+        ),
+        Case(
+            "caps_lines_rows",
+            "Five rows over caps.entries_per_dim 4: cap_exceeded; the fallback "
+            "has no entries cap and shows the table.",
+            lines_view(),
+            {SPECTRUM_AT: SPECTRUM},
+            caps={"entries_per_dim": 4},
+        ),
+        Case(
+            "caps_lines_value_columns",
+            "Three value columns over caps.entries_per_dim 2, with two rows: "
+            "cap_exceeded.",
+            view("numbered", "nemar.lines", "Three series.", [numbered]),
+            {f"{PREFIX}_numbered.tsv": NUMBERED},
+            caps={"entries_per_dim": 2},
+        ),
+        Case(
+            "caps_lines_cells",
+            "Five rows of four declared columns are 20 cells, over 19, though "
+            "the value cells are 15: cells count every declared column.",
+            lines_view(),
+            {SPECTRUM_AT: SPECTRUM},
+            caps={"cells_per_role": 19},
+        ),
+        Case(
+            "caps_table_cells",
+            "Three rows of two declared columns are 6 cells, over 5: cap_exceeded; "
+            "the fallback's 12 header cells are over 5 too.",
+            table_view(CHANNELS),
+            {CHANNELS_AT: CHANNELS},
+            caps={"cells_per_role": 5},
+        ),
+        Case(
+            "caps_table_cells_count_declared_columns",
+            "Six declared cells under a cap of 6 draw, though the header holds 12.",
+            table_view(CHANNELS),
+            {CHANNELS_AT: CHANNELS},
+            caps={"cells_per_role": 6},
+        ),
+        Case(
+            "caps_fallback_counts_header_cells",
+            "The table refuses n/a (cell_not_number); its fallback counts every "
+            "header column, 12 cells over 8, so it shows no table.",
+            table_view(CHANNELS, na),
+            {CHANNELS_AT: CHANNELS},
+            caps={"cells_per_role": 8},
+        ),
+        Case(
+            "caps_histogram_bytes",
+            "A histogram file one byte over caps.bytes_per_role: cap_exceeded.",
+            histogram_view(EDGES),
+            {HIST_AT: EDGES},
+            caps={"bytes_per_role": len(EDGES) - 1},
+        ),
+    ]
+
+
 # ── The fallback ──────────────────────────────────────────────────────────
 
 
@@ -927,10 +1014,10 @@ def fallback_cases() -> list[Case]:
 # ── Refusals: nothing drawn ───────────────────────────────────────────────
 
 
-def refusals() -> list[tuple[str, str, dict, dict]]:
+def refusals() -> list[Case]:
     wrong = SPECTRUM.replace(b"12.5", b"12.6")
     bad_layout = LAYOUT.replace(b"Cz", b"CZ")
-    return [
+    cases = [
         (
             "refusal_declaration_invalid",
             "A nemar.lines view with a base fails its kind schema: "
@@ -974,6 +1061,7 @@ def refusals() -> list[tuple[str, str, dict, dict]]:
             },
         ),
     ]
+    return [Case(*fields) for fields in cases]
 
 
 # ── The verdict corpus ────────────────────────────────────────────────────
@@ -1390,15 +1478,19 @@ def verdicts() -> dict:
 # ── The model vectors ─────────────────────────────────────────────────────
 
 
-def _model_case(case: Case) -> dict:
-    model = build_model(case.view, case.files)
+def _header(case: Case) -> dict:
     out = {
         "name": case.name,
         "covers": case.covers,
         "view": case.view,
         "files": _encoded(case.files),
-        "model": model,
     }
+    return out | ({"caps": case.caps} if case.caps else {})
+
+
+def _model_case(case: Case) -> dict:
+    model = build_model(case.view, case.files, case.registry())
+    out = _header(case) | {"model": model}
     inner = model["model"]
     if "snaps" in case.queries:
         xs = inner["x"]["values"]
@@ -1411,21 +1503,12 @@ def _model_case(case: Case) -> dict:
     return out
 
 
-def _refusal(name: str, covers: str, the_view: dict, files: dict) -> dict:
+def _refusal(case: Case) -> dict:
     try:
-        build_model(the_view, files)
+        build_model(case.view, case.files, case.registry())
     except ViewRefused as exc:
-        word, downloads = exc.word, exc.downloads
-    else:
-        raise AssertionError(f"{name}: not refused")
-    return {
-        "name": name,
-        "covers": covers,
-        "view": the_view,
-        "files": _encoded(files),
-        "word": word,
-        "downloads": downloads,
-    }
+        return _header(case) | {"word": exc.word, "downloads": exc.downloads}
+    raise AssertionError(f"{case.name}: not refused")
 
 
 def models() -> dict:
@@ -1434,9 +1517,10 @@ def models() -> dict:
         *lines_cases(),
         *heatmap_cases(),
         *histogram_cases(),
+        *cap_cases(),
         *fallback_cases(),
     ]
-    names = [c.name for c in cases] + [r[0] for r in refusals()]
+    names = [c.name for c in [*cases, *refusals()]]
     if len(names) != len(set(names)):
         raise AssertionError("case names repeat")
     return {
@@ -1444,15 +1528,16 @@ def models() -> dict:
         "spec": SPEC,
         "description": (
             "Cases every renderer of the generic kinds reproduces. For each case, "
-            "decode files (text is UTF-8; base64 is raw bytes), build the model of "
-            "view, and compare it with model: numbers by binary64 equality, texts "
+            "decode files (text is UTF-8; base64 is raw bytes), use the registry's "
+            "caps with the case's caps in their place, build the model of view, "
+            "and compare it with model: numbers by binary64 equality, texts "
             "exactly. snaps give the row a pointer at x reads, and locates the bin "
             "that holds a value (-1 underflow, the bin count overflow). Each "
             "refusal's view is refused with word, nothing is drawn, and downloads "
             "lists the files still offered."
         ),
         "cases": [_model_case(case) for case in cases],
-        "refusals": [_refusal(*r) for r in refusals()],
+        "refusals": [_refusal(case) for case in refusals()],
     }
 
 

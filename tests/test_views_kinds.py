@@ -78,19 +78,24 @@ def _load_generator():
     return module
 
 
+def registry_for(case: dict) -> dict:
+    """The registry with the case's caps in place of the registered ones."""
+    return REGISTRY | {"caps": REGISTRY["caps"] | case.get("caps", {})}
+
+
 # ── The model vectors ─────────────────────────────────────────────────────
 
 
 @pytest.mark.parametrize("case", CASES, ids=[c["name"] for c in CASES])
 def test_model_vectors_replay(case):
-    model = build_model(case["view"], decode(case["files"]))
+    model = build_model(case["view"], decode(case["files"]), registry_for(case))
     assert model == case["model"]
 
 
 @pytest.mark.parametrize("refusal", REFUSALS, ids=[r["name"] for r in REFUSALS])
 def test_refusal_vectors_replay(refusal):
     with pytest.raises(ViewRefused) as raised:
-        build_model(refusal["view"], decode(refusal["files"]))
+        build_model(refusal["view"], decode(refusal["files"]), registry_for(refusal))
     assert raised.value.word == refusal["word"]
     assert raised.value.downloads == refusal["downloads"]
 
@@ -562,36 +567,10 @@ def test_heatmap_orientation():
 # ── build_model beyond the vectors ────────────────────────────────────────
 
 
-def _small_caps(**caps) -> dict:
-    return REGISTRY | {"caps": REGISTRY["caps"] | caps}
-
-
-def test_bytes_over_the_cap_fall_back():
-    case = by_name("lines_spectrum")
-    model = build_model(
-        case["view"], decode(case["files"]), _small_caps(bytes_per_role=8)
-    )
-    assert model["refused"]["word"] == "cap_exceeded"
-    assert model["model"] == {"type": "fallback", "tables": []}
-
-
-def test_value_columns_over_the_cap_fall_back():
-    case = by_name("lines_spectrum")
-    model = build_model(
-        case["view"], decode(case["files"]), _small_caps(entries_per_dim=2)
-    )
-    assert model["refused"]["word"] == "cap_exceeded"
-    assert [t["role"] for t in model["model"]["tables"]] == ["values"]
-
-
-def test_cells_over_the_cap_fall_back_to_a_download():
-    case = by_name("table_channels")
-    model = build_model(
-        case["view"], decode(case["files"]), _small_caps(cells_per_role=4)
-    )
-    assert model["refused"]["word"] == "cap_exceeded"
-    assert model["model"] == {"type": "fallback", "tables": []}
-    assert len(model["downloads"]) == 1
+def test_caps_cases_override_only_their_own_caps():
+    """Every cap the vectors override is a registry cap."""
+    overridden = {k for c in [*CASES, *REFUSALS] for k in c.get("caps", {})}
+    assert overridden == set(REGISTRY["caps"])
 
 
 def test_a_kind_without_a_reference_model_is_named(tmp_path):

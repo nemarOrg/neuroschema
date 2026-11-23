@@ -319,6 +319,7 @@ When a kind refused the files, `refused` is `{"kind", "kind_version", "word"}`, 
 Each case has a `name`, what it `covers`, a `view` declaration, its `files` and the expected `model`, which is the whole output of `build_model`: `drawing`, `refused`, `downloads` and `model`.
 `files` maps each location to `{"text": …}`, the file's UTF-8 text, or to `{"base64": …}` for bytes that are not UTF-8; the declaration's `size` and `sha256` are those of the bytes.
 A case of `nemar.lines` also lists `snaps`, each a pointer `x` and the `row` it reads, and a case of bins by edges lists `locates`, each a `value` and the `bin` that holds it (-1 for underflow, the number of bins for overflow).
+A case or a refusal may carry `caps`, which take the place of the registry's caps of the same names for that case alone, so that small files can reach a cap.
 Each refusal has a `name`, what it `covers`, a `view`, its `files`, the `word` and the `downloads` still offered: the view is refused and nothing is drawn.
 
 An implementation parses the file with its JSON parser, builds each case's model and compares it with `model`, numbers by binary64 equality and texts exactly.
