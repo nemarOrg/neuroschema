@@ -8,7 +8,8 @@ This page is normative; [`views/vectors/view-digest.v1.json`](../../views/vector
 
 The input is one view declaration, a JSON object, exactly as written in the record (the signalJourney record's `extensions.nemar.views`, or the record-level `dataQuality` entry projected from it).
 A field that a reader adds, such as an address a route attaches, is not part of it: a reader digests the declaration before it adds anything.
-The declaration is Internet JSON (I-JSON, RFC 7493): in particular, no object has two members with one name, at any depth.
+The declaration is Internet JSON (I-JSON, RFC 7493): its text is UTF-8 with no byte order mark, and no object has two members with one name, at any depth.
+An implementation that reads the declaration from bytes refuses any other encoding, including UTF-16, UTF-32 and a UTF-8 byte order mark, which some parsers accept (Python's `json.loads` detects all three).
 An implementation that reads the declaration from text refuses a duplicate name while it parses, because a standard parser keeps the last member silently (Python's `json.loads` and JavaScript's `JSON.parse` both do): Python passes an `object_pairs_hook` that refuses a repeated name (`neuroschema.views.parse_declaration`), and JavaScript needs a parser or a scan that reports one.
 Otherwise the declaration is parsed with a standard JSON parser, so each number is the Institute of Electrical and Electronics Engineers (IEEE) 754 binary64 value nearest its text, as JavaScript's `JSON.parse` reads it; an integer beyond 2^53 becomes the nearest binary64 (9007199254740993 reads as 9007199254740992).
 

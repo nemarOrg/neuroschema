@@ -80,6 +80,53 @@ def test_parse_declaration_refuses_non_json_literals(literal):
         parse_declaration('{"x":' + literal + "}")
 
 
+DECLARATION = '{"unit":"µV"}'
+
+
+@pytest.mark.parametrize(
+    "text",
+    [DECLARATION, DECLARATION.encode(), bytearray(DECLARATION.encode())],
+    ids=["str", "utf-8-bytes", "utf-8-bytearray"],
+)
+def test_parse_declaration_reads_str_and_utf8(text):
+    assert parse_declaration(text) == {"unit": "µV"}
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        b"\xef\xbb\xbf" + DECLARATION.encode(),
+        "\ufeff" + DECLARATION,
+        DECLARATION.encode("utf-16"),
+        DECLARATION.encode("utf-16-le"),
+        DECLARATION.encode("utf-16-be"),
+        DECLARATION.encode("utf-32"),
+        DECLARATION.encode("utf-32-le"),
+        b'{"unit":"\xff"}',
+    ],
+    ids=[
+        "utf-8-bom-bytes",
+        "bom-str",
+        "utf-16-bom",
+        "utf-16-le",
+        "utf-16-be",
+        "utf-32-bom",
+        "utf-32-le",
+        "invalid-utf-8",
+    ],
+)
+def test_parse_declaration_refuses_other_encodings(text):
+    """I-JSON text is UTF-8 with no byte order mark; json.loads detects the rest."""
+    with pytest.raises(CanonicalizationError):
+        parse_declaration(text)
+
+
+@pytest.mark.parametrize("text", [{"unit": "V"}, 7, None, '{"unit":'])
+def test_parse_declaration_refuses_non_text_and_non_json(text):
+    with pytest.raises(CanonicalizationError):
+        parse_declaration(text)
+
+
 def test_duplicate_member_name_is_refused_at_any_depth():
     with pytest.raises(CanonicalizationError, match="duplicate member name 'k'"):
         parse_declaration('{"k":1,"k":1}')

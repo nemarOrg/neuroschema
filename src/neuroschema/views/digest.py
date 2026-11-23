@@ -47,14 +47,31 @@ def canonicalize(value: object) -> bytes:
 def parse_declaration(text: str | bytes) -> object:
     """Parse a declaration from JSON text as Internet JSON (I-JSON, RFC 7493).
 
-    Refuses, with :class:`CanonicalizationError`, a duplicate member name at any
-    depth (``json.loads`` would keep the last one silently) and the ``NaN``,
-    ``Infinity`` and ``-Infinity`` literals Python accepts and JSON does not.
-    Digest a declaration read from text through this function.
+    ``text`` is a ``str``, or ``bytes`` that decode as strict UTF-8 with no
+    byte order mark; ``json.loads`` would also accept UTF-16, UTF-32 and a
+    UTF-8 byte order mark, which I-JSON forbids. Refuses, with
+    :class:`CanonicalizationError`, any other input, text that is not JSON, a
+    duplicate member name at any depth (``json.loads`` would keep the last one
+    silently) and the ``NaN``, ``Infinity`` and ``-Infinity`` literals Python
+    accepts and JSON does not. Digest a declaration read from text through
+    this function.
     """
-    return json.loads(
-        text, object_pairs_hook=_unique_members, parse_constant=_refuse_constant
-    )
+    if isinstance(text, bytes | bytearray):
+        try:
+            text = bytes(text).decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise CanonicalizationError("declaration text is not UTF-8") from exc
+    elif not isinstance(text, str):
+        raise CanonicalizationError(
+            f"declaration text is str or UTF-8 bytes, not {type(text).__name__}"
+        )
+    try:
+        return json.loads(
+            text, object_pairs_hook=_unique_members, parse_constant=_refuse_constant
+        )
+    except json.JSONDecodeError as exc:
+        # A byte order mark lands here too: json.loads refuses one in a str.
+        raise CanonicalizationError(f"declaration text is not JSON: {exc}") from exc
 
 
 def _unique_members(pairs: list[tuple[str, object]]) -> dict[str, object]:
