@@ -276,6 +276,24 @@
             "template"
           ],
           "description": "For a role of sensor positions: measured (taken from the dataset's own files, which NEMAR does not verify) or template (a standard montage matched by label)."
+        },
+        "montage": {
+          "type": "string",
+          "description": "For a role of template sensor positions: the montage they were taken from, by its name in views/montages (nemar.sensor-labels.v1, docs/views/sensor-labels.md). Given only with position_source template.",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$(?!\n)"
+        }
+      },
+      "dependentSchemas": {
+        "montage": {
+          "type": "object",
+          "required": [
+            "position_source"
+          ],
+          "properties": {
+            "position_source": {
+              "const": "template"
+            }
+          }
         }
       },
       "allOf": [
