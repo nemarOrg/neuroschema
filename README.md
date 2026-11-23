@@ -56,9 +56,12 @@ schema/
     rawDetail.schema.json          # Per-channel arrays, BIDS sidecars
   views/
     kind.nemar.table.v1.schema.json  # One schema per registered view kind and version
+    content.nemar.histogram.v1.schema.json  # Content of a JSON role, per content kind and version
 views/
   registry.json                    # View kinds, transforms, formats, reserved dimensions, caps
-  vectors/                         # Test vectors for the view algorithms
+  vectors/                         # Test vectors for the view algorithms, models and verdicts
+scripts/
+  generate_kind_vectors.py         # Writes the generic-kind model and verdict vectors
 ```
 
 ## Quick Start
@@ -81,6 +84,7 @@ pytest tests/
 - [Extension Managers](docs/extension-managers.md) -- MongoDB collection topology and access control
 - [Processing Extensions](docs/processing-extensions.md) -- dataQuality, processing and signalJourney: levels, invariants, checkpoints
 - [Quality Views](docs/views.md) -- view declarations, kinds, the renderer rule, data roles, formats and digests
+- [Generic Kinds](docs/views/generic-kinds.md) -- the models a renderer builds for tables, line charts, heatmaps and histograms
 - [EEGDash Adapter](docs/adapter-eegdash.md) -- field mapping for EEGDash migration
 - [DataCite Adapter](docs/adapter-datacite.md) -- field mapping for DOI registration
 

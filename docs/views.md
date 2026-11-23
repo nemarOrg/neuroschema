@@ -32,7 +32,8 @@ At least one of `data` and `inputs` is non-empty.
 
 A kind is a namespaced name with its own version.
 There are two layers: generic kinds, each with one renderer, and presets, each drawn over one generic kind (its `base`).
-`views/registry.json` lists the kinds neuroschema defines; this release defines `nemar.table` version 1.
+`views/registry.json` lists the kinds neuroschema defines.
+This release defines the generic kinds `nemar.table`, `nemar.lines`, `nemar.heatmap` and `nemar.histogram`, version 1; [generic-kinds.md](views/generic-kinds.md) gives the model a renderer builds for each, the fallback's model, and the words a renderer refuses with.
 
 `view.schema.json` checks every declaration against the envelope.
 For a kind and version the registry lists, it also applies that kind's schema, `schema/views/kind.<kind>.v<N>.schema.json`.
@@ -55,6 +56,8 @@ An unknown kind is never an error, and neither is a base the renderer does not k
 `neuroschema.views.draw_as` implements the rule against the registry, `neuroschema.views.meets_role_contract` the contract, and `neuroschema.views.role_schemas` finds each role's subschema.
 
 In the registry, each kind lists its roles: `roles.<role>.formats` are the formats the role may take, and `roles.<role>.dims` are the dimensions it may carry, where an empty list means the role carries none.
+`null` means the names are open: the kind's schema constrains how many dimensions the role carries, along which axes, and where their coordinates come from, but not their names.
+A JSON role whose content has a schema names it in `roles.<role>.content`, a file in `schema/views/`.
 The kind's schema admits exactly these roles, formats and dimensions, and a test holds the two to each other.
 Where they could differ, the schema decides: the role contract reads the schema, and the registry summarizes it.
 
@@ -63,6 +66,13 @@ Where they could differ, the schema decides: the role contract reads the schema,
 One stored TSV file, read as the role `table`, with its `columns` declared.
 A renderer shows the declared columns in the order declared, one row per data row, each cell as its stored text, and offers the file for download.
 It is a generic kind: it has no base, no inputs, no transform, no parameters and no dimensions.
+
+### `nemar.lines`, `nemar.heatmap` and `nemar.histogram` version 1
+
+`nemar.lines` draws one TSV file in the role `values` as one line per value column over an x column that strictly increases.
+`nemar.heatmap` draws one TSV file in the role `values` as one flat cell per stored value, with its row and column labels, under `minmax` or `absmax` color limits.
+`nemar.histogram` draws one JSON file in the role `histogram`, whose content (`content.nemar.histogram.v1`) gives counts per bin, by numeric edges or by category.
+Each is a generic kind with no base, no inputs and no transform; [generic-kinds.md](views/generic-kinds.md) is normative for all three, and for the table's model.
 
 ## Data roles
 
@@ -174,6 +184,7 @@ JSON Schema cannot compare one value with another, so the writer enforces:
 - a view that declares a base meets that base's role contract, so a renderer that knows only the base can draw it.
 
 A renderer does not rely on the writer for the last rule: before it draws a view by its base, it checks the contract, and it shows the data as a table when the view misses it.
+Nor does it rely on the writer for the rules of a generic kind's files (a header that holds every declared column, finite numbers, an x column that increases): it checks them while it builds the model, and shows the data as a table, with the word, when a file breaks one ([generic-kinds.md](views/generic-kinds.md)).
 
 ## Versioning
 
