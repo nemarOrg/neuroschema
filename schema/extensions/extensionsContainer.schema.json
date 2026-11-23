@@ -18,7 +18,7 @@
       "$ref": "../extensions/nemar.schema.json"
     },
     "dataQuality": {
-      "description": "Namespace for quality results (metrics and figures) projected from the signalJourney records of NEMAR recipe runs, per recording and per dataset.",
+      "description": "Namespace for quality results (metrics and views) projected from the signalJourney records of NEMAR recipe runs, per recording and per dataset.",
       "$ref": "../extensions/dataQuality.schema.json"
     },
     "processing": {

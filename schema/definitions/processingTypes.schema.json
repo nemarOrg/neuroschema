@@ -29,7 +29,6 @@
         "ica",
         "iclabel",
         "quality",
-        "figures",
         "stored"
       ]
     },
@@ -145,7 +144,7 @@
     },
     "plugin": {
       "type": "object",
-      "description": "The quality plugin, by name and version, that produced a value or figure.",
+      "description": "The quality plugin, by name and version, that produced a value or view.",
       "required": [
         "name",
         "version"

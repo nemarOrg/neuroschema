@@ -1,4 +1,4 @@
-"""Tests for the ADR 0134 processing extensions (neuroschema 0.5.0).
+"""Tests for the processing extensions (neuroschema 0.5.0; views from 0.6.0).
 
 Validates real example documents and inline mutations against the actual
 schema files. No mocks. Expected failures are asserted as (validator, path)
@@ -34,6 +34,7 @@ EXAMPLES_DIR = ROOT / "examples"
 
 SHA = "a" * 64
 PLUGIN = {"name": "nemar-dataqual", "version": "0.1.0"}
+RECIPE = {"name": "nemar-floor", "version": "1.0.0-b1"}
 
 
 def errors_for(schema_path: Path, instance) -> set[tuple[str, str]]:
@@ -161,6 +162,8 @@ def test_every_ref_resolves(path):
 
 DATA_QUALITY = EXTENSIONS / "dataQuality.schema.json"
 FLOOR = "recipes/nemar-floor"
+V0 = f"{FLOOR}/views/0"
+V0D = f"{V0}/data/0"
 
 
 def metric(value, unit, description):
@@ -172,14 +175,26 @@ def metric(value, unit, description):
     }
 
 
-def figure(location, fmt, caption):
+def table_view(key, location, caption):
     return {
-        "location": location,
-        "format": fmt,
-        "size": 48213,
-        "sha256": SHA,
+        "key": key,
+        "kind": "nemar.table",
+        "kind_version": 1,
         "caption": caption,
-        "plugin": dict(PLUGIN),
+        "source": {"recipe": dict(RECIPE)},
+        "data": [
+            {
+                "role": "table",
+                "location": location,
+                "format": "tsv",
+                "size": 2214,
+                "sha256": SHA,
+                "columns": [
+                    {"name": "name", "type": "string"},
+                    {"name": "status", "type": "string"},
+                ],
+            }
+        ],
     }
 
 
@@ -196,13 +211,9 @@ def dq_record():
                     "percentGoodSamples": metric(93.6, "%", "Share of samples kept."),
                     "lineNoiseAfterDb": metric(2.8, "dB", "Line noise after removal."),
                 },
-                "figures": [
-                    figure("figures/spectrum.svg", "svg", "Power spectrum."),
-                    figure(
-                        "figures/activations.svg",
-                        "svg",
-                        "Component activations (time series).",
-                    ),
+                "views": [
+                    table_view("channels", "views/channels.tsv", "Channels."),
+                    table_view("segments", "views/badsegments.tsv", "Bad segments."),
                 ],
             }
         },
@@ -254,13 +265,6 @@ class TestDataQualityRecord:
     def test_valid(self):
         assert errors_for(DATA_QUALITY, dq_record()) == set()
 
-    def test_time_series_svg_is_allowed_here(self):
-        """The raster-only rule for time series lives in signalJourney's nemar
-        namespace, not in neuroschema; the activations figure above is SVG."""
-        doc = dq_record()
-        assert doc["recipes"]["nemar-floor"]["figures"][1]["format"] == "svg"
-        assert errors_for(DATA_QUALITY, doc) == set()
-
     def test_missing_level(self):
         doc = dq_record()
         del doc["level"]
@@ -281,60 +285,44 @@ class TestDataQualityRecord:
         metrics["line.noise"] = metrics.pop("lineNoiseAfterDb")
         assert errors_for(DATA_QUALITY, doc) == {("pattern", f"{FLOOR}/metrics")}
 
-    def _fig(self, doc):
-        return doc["recipes"]["nemar-floor"]["figures"][0]
-
-    def test_bad_format(self):
-        doc = dq_record()
-        self._fig(doc).update(format="jpg", location="figures/spectrum.jpg")
-        assert errors_for(DATA_QUALITY, doc) == {("enum", f"{FLOOR}/figures/0/format")}
+    def _data(self, doc):
+        return doc["recipes"]["nemar-floor"]["views"][0]["data"][0]
 
     def test_zero_size(self):
         doc = dq_record()
-        self._fig(doc)["size"] = 0
-        assert errors_for(DATA_QUALITY, doc) == {("minimum", f"{FLOOR}/figures/0/size")}
+        self._data(doc)["size"] = 0
+        assert errors_for(DATA_QUALITY, doc) == {("minimum", f"{V0D}/size")}
 
     def test_uppercase_sha(self):
         doc = dq_record()
-        self._fig(doc)["sha256"] = "A" * 64
-        assert errors_for(DATA_QUALITY, doc) == {
-            ("pattern", f"{FLOOR}/figures/0/sha256")
-        }
+        self._data(doc)["sha256"] = "A" * 64
+        assert errors_for(DATA_QUALITY, doc) == {("pattern", f"{V0D}/sha256")}
 
     def test_missing_caption(self):
         doc = dq_record()
-        del self._fig(doc)["caption"]
-        assert errors_for(DATA_QUALITY, doc) == {("required", f"{FLOOR}/figures/0")}
-
-    def test_missing_figure_plugin(self):
-        doc = dq_record()
-        del self._fig(doc)["plugin"]
-        assert errors_for(DATA_QUALITY, doc) == {("required", f"{FLOOR}/figures/0")}
+        del doc["recipes"]["nemar-floor"]["views"][0]["caption"]
+        assert errors_for(DATA_QUALITY, doc) == {("required", V0)}
 
     def test_format_must_match_extension(self):
         doc = dq_record()
-        self._fig(doc)["location"] = "figures/spectrum.png"
-        assert errors_for(DATA_QUALITY, doc) == {
-            ("pattern", f"{FLOOR}/figures/0/location")
-        }
+        self._data(doc)["location"] = "views/channels.json"
+        assert errors_for(DATA_QUALITY, doc) == {("pattern", f"{V0D}/location")}
 
     @pytest.mark.parametrize(
         "location",
-        ["/a.svg", "../a.svg", "a/../b.svg", "https://h/a.svg", "a\\b.svg"],
+        ["/a.tsv", "../a.tsv", "a/../b.tsv", "https://h/a.tsv", "a\\b.tsv"],
     )
     def test_bad_location(self, location):
         doc = dq_record()
-        self._fig(doc)["location"] = location
-        assert errors_for(DATA_QUALITY, doc) == {
-            ("pattern", f"{FLOOR}/figures/0/location")
-        }
+        self._data(doc)["location"] = location
+        assert errors_for(DATA_QUALITY, doc) == {("pattern", f"{V0D}/location")}
 
     def test_empty_location(self):
         doc = dq_record()
-        self._fig(doc)["location"] = ""
+        self._data(doc)["location"] = ""
         assert errors_for(DATA_QUALITY, doc) == {
-            ("minLength", f"{FLOOR}/figures/0/location"),
-            ("pattern", f"{FLOOR}/figures/0/location"),
+            ("minLength", f"{V0D}/location"),
+            ("pattern", f"{V0D}/location"),
         }
 
     def test_zarr_needs_serving(self):
@@ -753,6 +741,8 @@ class TestInvariants:
 
 VENDOR_REF = re.compile(r'"\$ref":\s*"([^"#]+)(#[^"]*)?"')
 NEW_OR_CHANGED = {
+    "view.schema.json",
+    "kind.nemar.table.v1.schema.json",
     "processingTypes.schema.json",
     "checkpointCounts.schema.json",
     "qualityMetric.schema.json",
@@ -814,7 +804,7 @@ VALID_BY_DEF = {
     "stepId": "bad_windows",
     "failureCode": "load_failed",
     "metricName": "percentGoodSamples",
-    "relativeLocation": "figures/spectrum.svg",
+    "relativeLocation": "views/channels.tsv",
     "viewKey": "icmaps",
     "kindName": "nemar.sensor-field",
     "transformName": "nemar.ic-activity.v1",
@@ -946,14 +936,16 @@ def _at(doc, path: str):
     return node
 
 
-FIG0 = f"{FLOOR}/figures/0"
 PGS = f"{FLOOR}/distributions/percentGoodSamples"
 CLOSED = [
     (DATA_QUALITY, dq_record, FLOOR),
     (DATA_QUALITY, dq_record, f"{FLOOR}/metrics/percentGoodSamples"),
     (DATA_QUALITY, dq_record, f"{FLOOR}/metrics/percentGoodSamples/plugin"),
-    (DATA_QUALITY, dq_record, FIG0),
-    (DATA_QUALITY, dq_record, f"{FIG0}/plugin"),
+    (DATA_QUALITY, dq_record, V0),
+    (DATA_QUALITY, dq_record, f"{V0}/source"),
+    (DATA_QUALITY, dq_record, f"{V0}/source/recipe"),
+    (DATA_QUALITY, dq_record, V0D),
+    (DATA_QUALITY, dq_record, f"{V0D}/columns/0"),
     (DATA_QUALITY, dq_dataset, FLOOR),
     (DATA_QUALITY, dq_dataset, f"{FLOOR}/counts"),
     (DATA_QUALITY, dq_dataset, PGS),
@@ -981,13 +973,15 @@ def test_every_closed_object_refuses_unknown_key(schema, builder, path):
 
 REQUIRED_KEYS = [
     (DATA_QUALITY, dq_record, FLOOR, "recipe_version input_kind profile"),
-    (DATA_QUALITY, dq_record, FLOOR, "record_sha256 metrics figures"),
+    (DATA_QUALITY, dq_record, FLOOR, "record_sha256 metrics views"),
     (DATA_QUALITY, dq_record, f"{FLOOR}/metrics/percentGoodSamples", "value unit"),
     (DATA_QUALITY, dq_record, f"{FLOOR}/metrics/percentGoodSamples", "description"),
     (DATA_QUALITY, dq_record, f"{FLOOR}/metrics/percentGoodSamples", "plugin"),
     (DATA_QUALITY, dq_record, f"{FLOOR}/metrics/percentGoodSamples/plugin", "name"),
     (DATA_QUALITY, dq_record, f"{FLOOR}/metrics/percentGoodSamples/plugin", "version"),
-    (DATA_QUALITY, dq_record, FIG0, "location format size sha256 caption plugin"),
+    (DATA_QUALITY, dq_record, V0, "key kind kind_version caption source"),
+    (DATA_QUALITY, dq_record, V0D, "role location format size sha256 columns"),
+    (DATA_QUALITY, dq_record, f"{V0D}/columns/0", "name type"),
     (DATA_QUALITY, dq_dataset, FLOOR, "recipe_version dataset_version input_kind"),
     (DATA_QUALITY, dq_dataset, FLOOR, "profile record_sha256 counts distributions"),
     (DATA_QUALITY, dq_dataset, FLOOR, "observed_range not_processed"),
@@ -1041,14 +1035,14 @@ def _set(builder, path, value):
 CASES = [
     # (schema, builder, path set, value, expected failures)
     (PROCESSING, proc_record, f"{ICA}/checkpoints/import/step", "load", "type"),
-    (DATA_QUALITY, dq_record, f"{FIG0}/format", "png", "pattern@location"),
+    (DATA_QUALITY, dq_record, f"{V0D}/location", "views/channels.json", "pattern"),
     # A nullable shared type is anyOf[pattern, null], so a bad value reports anyOf.
     (PROCESSING, proc_record, f"{ICA}/checkpoints/ica/step", "-ica", "anyOf"),
     (PROCESSING, proc_record, f"{ICA}/checkpoints/ica/code", "Bad", "anyOf"),
-    (DATA_QUALITY, dq_record, f"{FIG0}/plugin/name", "-x", "pattern"),
-    (DATA_QUALITY, dq_record, f"{FIG0}/location", "fig\x01.svg", "pattern"),
-    (DATA_QUALITY, dq_record, f"{FIG0}/caption", "c" * 501, "maxLength"),
-    (DATA_QUALITY, dq_record, f"{FIG0}/location", "a" * 1021 + ".svg", "maxLength"),
+    (DATA_QUALITY, dq_record, f"{V0}/source/recipe/name", "Nemar", "pattern"),
+    (DATA_QUALITY, dq_record, f"{V0D}/location", "tab\x01.tsv", "pattern"),
+    (DATA_QUALITY, dq_record, f"{V0}/caption", "c" * 501, "maxLength"),
+    (DATA_QUALITY, dq_record, f"{V0D}/location", "a" * 1021 + ".tsv", "maxLength"),
     (
         DATA_QUALITY,
         dq_record,
@@ -1081,12 +1075,6 @@ def test_edge_case(schema, builder, path, value, expected):
     validator, _, at = expected.partition("@")
     where = path.rsplit("/", 1)[0] + "/" + at if at else path
     assert errors_for(schema, doc) == {(validator, where)}
-
-
-def test_webp_figure_at_png_location():
-    doc = dq_record()
-    _at(doc, FIG0).update(format="webp", location="figures/spectrum.png")
-    assert errors_for(DATA_QUALITY, doc) == {("pattern", f"{FIG0}/location")}
 
 
 def test_bids_needs_archive():

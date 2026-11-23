@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 from jsonschema import Draft202012Validator
 
-from neuroschema.validate import load_schema
+from neuroschema.validate import load_schema, validate_document
 from neuroschema.views import (
     REGISTRY_FORMAT,
     CanonicalizationError,
@@ -628,3 +628,66 @@ class TestRendererRule:
         assert draw_as(unknown_kind(), REGISTRY) == Drawing("table", None, None)
         view = unknown_kind() | {"base": "nemar.table", "base_version": 9}
         assert draw_as(view) == Drawing("table", None, None)
+
+
+# ── dataQuality: views replace figures ────────────────────────────────────
+
+
+DATA_QUALITY = SCHEMA_DIR / "extensions" / "dataQuality.schema.json"
+RECORD_EXAMPLE = ROOT / "examples" / "record-ds002718-processing.json"
+FLOOR = "recipes/nemar-floor"
+
+
+def _record() -> dict:
+    return json.loads(RECORD_EXAMPLE.read_text())
+
+
+def _floor_quality(record: dict) -> dict:
+    return record["extensions"]["dataQuality"]["recipes"]["nemar-floor"]
+
+
+def _dq_record() -> dict:
+    return _record()["extensions"]["dataQuality"]
+
+
+class TestDataQualityViews:
+    def test_record_with_figures_fails(self):
+        doc = _dq_record()
+        entry = doc["recipes"]["nemar-floor"]
+        entry["figures"] = entry.pop("views")
+        assert failures(validate_document(doc, DATA_QUALITY)) == {
+            ("required", FLOOR),
+            ("additionalProperties", FLOOR),
+        }
+
+    def test_record_without_views_fails(self):
+        doc = _dq_record()
+        del doc["recipes"]["nemar-floor"]["views"]
+        assert failures(validate_document(doc, DATA_QUALITY)) == {("required", FLOOR)}
+
+    def test_views_may_be_empty(self):
+        doc = _dq_record()
+        doc["recipes"]["nemar-floor"]["views"] = []
+        assert validate_document(doc, DATA_QUALITY) == []
+
+    def test_at_most_32_views(self):
+        doc = _dq_record()
+        views = doc["recipes"]["nemar-floor"]["views"]
+        views[:] = [views[0] | {"key": f"v{i}"} for i in range(32)]
+        assert validate_document(doc, DATA_QUALITY) == []
+        views.append(views[0] | {"key": "v32"})
+        assert failures(validate_document(doc, DATA_QUALITY)) == {
+            ("maxItems", f"{FLOOR}/views")
+        }
+
+    def test_view_error_is_reported_inside_the_record(self):
+        doc = _record()
+        _floor_quality(doc)["views"][0]["data"][0]["role"] = "values"
+        where = "extensions/dataQuality/recipes/nemar-floor/views/0/data/0/role"
+        assert failures(validate_document(doc)) == {("const", where)}
+
+    def test_example_view_is_the_table_vector(self):
+        """The record example's view is a digest vector, so its digest is pinned."""
+        view = _floor_quality(_record())["views"][0]
+        assert view == vector("table_view")
+        assert view_errors(view) == set()
