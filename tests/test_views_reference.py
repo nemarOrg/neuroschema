@@ -532,6 +532,57 @@ def test_check_compares_layouts_by_planar_point():
     assert gen.differences(moved, case)
 
 
+# Every value the ubuntu-latest view-vectors job regenerated differently from
+# these macOS-written vectors (CI run 45247745795, eegprep edf694c8, numpy
+# 2.5.5, scipy 1.18.1): the regeneration tolerance must absorb each of them.
+LINUX_FIELD = {
+    ("close_pair", "limits", "absmax"): [-19.426989565881048, 19.426989565881048],
+    ("close_pair", "limits", "minmax"): [-19.426989565881048, 13.450841521473963],
+    ("close_pair", "color_axis", "absmax"): [-20.3983390441751, 20.3983390441751],
+    ("close_pair", "color_axis", "minmax"): [-20.3983390441751, 14.123383597547662],
+}
+LINUX_RADIUS = ("nan_positions", 8, 0.48437218538703425)
+LINUX_CENTER = (
+    "biosemi_128_ras",
+    [7.105427357601002e-15, 1.9152969403041287e-14, -4.263256414560601e-14],
+)
+
+
+def _as_linux(field: dict, layout: dict) -> tuple[dict, dict]:
+    field, layout = json.loads(json.dumps(field)), json.loads(json.dumps(layout))
+    cases = {c["name"]: c for c in field["cases"]}
+    for (name, key, choice), pair in LINUX_FIELD.items():
+        cases[name]["expected"][key][choice] = pair
+    name, row, radius = LINUX_RADIUS
+    cases[name]["sensors"]["radius"][row] = radius
+    name, center = LINUX_CENTER
+    next(c for c in layout["cases"] if c["name"] == name)["expected"]["center"] = center
+    return field, layout
+
+
+def test_check_absorbs_the_linux_rounding():
+    gen = _generator()
+    field, layout = _as_linux(FIELD, LAYOUT)
+    assert gen.differences(field, FIELD) == []
+    assert gen.differences(layout, LAYOUT) == []
+
+
+def test_check_still_catches_changes_where_linux_rounds():
+    """The same places, moved beyond the tolerance: a limit by 1e-8 of the
+    map's range, a radius on a row without theta by 1e-11, the center at the
+    origin by 1e-9 of the cap's extent."""
+    gen = _generator()
+    field, layout = _as_linux(FIELD, LAYOUT)
+    close_pair = next(c for c in field["cases"] if c["name"] == "close_pair")
+    close_pair["expected"]["limits"]["minmax"][1] += 1e-8 * 33
+    nan_positions = next(c for c in field["cases"] if c["name"] == "nan_positions")
+    nan_positions["sensors"]["radius"][8] += 1e-11
+    assert len(gen.differences(field, FIELD)) == 2
+    biosemi = next(c for c in layout["cases"] if c["name"] == "biosemi_128_ras")
+    biosemi["expected"]["center"][2] += 1e-9 * 100
+    assert len(gen.differences(layout, LAYOUT)) == 1
+
+
 def test_generator_refuses_decisions_near_a_threshold():
     gen = _generator()
     theta = np.array([0.0, 0.0, 90.0, -90.0])

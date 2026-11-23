@@ -1076,31 +1076,46 @@ def dumps(value, depth=0):
 
 
 LAYOUT_KEYS = {"theta_deg", "radius", "center", "center_method"}
+SCALED_KEYS = {"z", "limits", "color_axis", "contours"}
 
 
-def layout_differences(new, old, path):
+def _close(a, b, bound):
+    return abs(a - b) <= bound
+
+
+def layout_differences(new, old, path, extent=None):
     """A layout's rows, compared as the parity rule compares them: radius
     absolutely and theta through the planar point, since theta is undefined at
-    the pole and a vertex sensor's theta moves with the last bit of the center;
-    the center absolutely, against its largest component."""
+    the pole and a vertex sensor's theta moves with the last bit of the center.
+    A row missing a number must miss the same one, and its other number is
+    compared alone. The center is compared absolutely, against the extent of
+    the positions it was fitted to, since a center at the origin is rounding."""
     if len(new["theta_deg"]) != len(old["theta_deg"]):
         return [f"{path}: {len(old['theta_deg'])} rows -> {len(new['theta_deg'])}"]
     out = []
     columns = (new["theta_deg"], new["radius"], old["theta_deg"], old["radius"])
-    rows = zip(*columns, strict=True)
-    for i, (tn, rn, to, ro) in enumerate(rows):
-        if None in (tn, rn, to, ro):
-            if (tn, rn) != (to, ro):
-                out.append(f"{path}/{i}: ({to!r}, {ro!r}) -> ({tn!r}, {rn!r})")
-            continue
-        an, ao = math.radians(tn), math.radians(to)
-        gap = math.hypot(
-            math.cos(an) * rn - math.cos(ao) * ro, math.sin(an) * rn - math.sin(ao) * ro
-        )
-        if abs(rn - ro) > CHECK_SCALARS or gap > CHECK_SCALARS:
-            out.append(f"{path}/{i}: ({to!r}, {ro!r}) -> ({tn!r}, {rn!r})")
+    for i, (tn, rn, to, ro) in enumerate(zip(*columns, strict=True)):
+        row = f"{path}/{i}: ({to!r}, {ro!r}) -> ({tn!r}, {rn!r})"
+        if (tn is None, rn is None) != (to is None, ro is None):
+            out.append(row)
+        elif tn is None or rn is None:
+            same_theta = tn is None or _close(
+                tn, to, CHECK_SCALARS * max(abs(tn), abs(to), 1.0)
+            )
+            same_radius = rn is None or _close(rn, ro, CHECK_SCALARS)
+            if not (same_theta and same_radius):
+                out.append(row)
+        else:
+            an, ao = math.radians(tn), math.radians(to)
+            gap = math.hypot(
+                math.cos(an) * rn - math.cos(ao) * ro,
+                math.sin(an) * rn - math.sin(ao) * ro,
+            )
+            if abs(rn - ro) > CHECK_SCALARS or gap > CHECK_SCALARS:
+                out.append(row)
     if "center" in new:
-        bound = CHECK_SCALARS * max(abs(v) for v in old["center"] + new["center"])
+        size = max([abs(v) for v in old["center"] + new["center"]] + [extent or 0.0])
+        bound = CHECK_SCALARS * size
         pairs = zip(new["center"], old["center"], strict=True)
         if any(abs(a - b) > bound for a, b in pairs):
             out.append(f"{path}/center: {old['center']!r} -> {new['center']!r}")
@@ -1112,30 +1127,46 @@ def layout_differences(new, old, path):
     return out
 
 
-def differences(new, old, path="", scale=None):
-    """Where two vector documents differ beyond the regeneration tolerance."""
+def _extent(case):
+    """The largest finite coordinate of a case's 3D positions, or None."""
+    positions = case.get("positions") or case.get("sensors") or {}
+    if not isinstance(positions, dict) or "x" not in positions:
+        return None
+    values = [abs(v) for axis in "xyz" for v in positions[axis] if v is not None]
+    return max(values, default=None)
+
+
+def differences(new, old, path="", scale=None, extent=None):
+    """Where two vector documents differ beyond the regeneration tolerance.
+
+    ``scale`` is a map's range, inherited by everything below a key that
+    follows from the cells (``z``, ``limits``, ``color_axis``, ``contours``);
+    ``extent`` is the size of a case's 3D positions, for comparing a center.
+    """
     if isinstance(new, dict) and isinstance(old, dict):
         if set(new) != set(old):
             return [f"{path}: keys {sorted(set(new) ^ set(old))}"]
         out = []
+        extent = _extent(new) or extent
         if isinstance(new.get("theta_deg"), list):
-            out += layout_differences(new, old, path)
+            out += layout_differences(new, old, path, extent)
             new = {k: v for k, v in new.items() if k not in LAYOUT_KEYS}
             old = {k: v for k, v in old.items() if k not in LAYOUT_KEYS}
         grid = new.get("z")
+        local = scale
         if isinstance(grid, list) and grid and isinstance(grid[0], list):
             finite = [v for row in grid for v in row if v is not None]
-            scale = max(finite) - min(finite) or 1.0
+            local = max(finite) - min(finite) or 1.0
         for key in new:
-            tol = scale if key in {"z", "limits", "color_axis", "contours"} else None
-            out += differences(new[key], old[key], f"{path}/{key}", tol)
+            tol = local if key in SCALED_KEYS or scale is not None else None
+            out += differences(new[key], old[key], f"{path}/{key}", tol, extent)
         return out
     if isinstance(new, list) and isinstance(old, list):
         if len(new) != len(old):
             return [f"{path}: length {len(old)} -> {len(new)}"]
         out = []
         for i, (a, b) in enumerate(zip(new, old, strict=True)):
-            out += differences(a, b, f"{path}/{i}", scale)
+            out += differences(a, b, f"{path}/{i}", scale, extent)
         return out
     if (
         isinstance(new, float)
