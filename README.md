@@ -41,8 +41,9 @@ schema/
     provenance.schema.json         # Dataset provenance (timestamps, version, uploader)
     recordProvenance.schema.json   # Record timestamps
     processingTypes.schema.json    # Shared processing types ($defs library)
+    view.schema.json               # View declaration ($defs library)
     checkpointCounts.schema.json   # Recordings passed, failed, skipped, total
-    qualityMetric.schema.json      # One plugin metric (value, unit, bounds, plugin)
+    qualityMetric.schema.json      # One metric (value, unit, bounds, producer)
   extensions/
     extensionsContainer.schema.json  # Namespace registry
     dataCite.schema.json           # DOI registration fields
@@ -50,9 +51,14 @@ schema/
     eegdash.schema.json            # EEGDash platform
     nemar.schema.json              # NEMAR platform
     signalJourney.schema.json      # Links to signalJourney records, per recipe
-    dataQuality.schema.json        # Quality metrics and figures, per recipe
+    dataQuality.schema.json        # Quality metrics and views, per recipe
     processing.schema.json         # Checkpoint outcomes, per recipe
     rawDetail.schema.json          # Per-channel arrays, BIDS sidecars
+  views/
+    kind.nemar.table.v1.schema.json  # One schema per registered view kind and version
+views/
+  registry.json                    # View kinds, transforms, formats, reserved dimensions, caps
+  vectors/                         # Test vectors for the view algorithms
 ```
 
 ## Quick Start
@@ -74,6 +80,7 @@ pytest tests/
 - [BIDS Inheritance](docs/inheritance.md) -- how dataset defaults propagate to records
 - [Extension Managers](docs/extension-managers.md) -- MongoDB collection topology and access control
 - [Processing Extensions](docs/processing-extensions.md) -- dataQuality, processing and signalJourney: levels, invariants, checkpoints
+- [Quality Views](docs/views.md) -- view declarations, kinds, the renderer rule, data roles, formats and digests
 - [EEGDash Adapter](docs/adapter-eegdash.md) -- field mapping for EEGDash migration
 - [DataCite Adapter](docs/adapter-datacite.md) -- field mapping for DOI registration
 

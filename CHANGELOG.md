@@ -3,6 +3,31 @@
 All notable changes to neuroschema are recorded here, following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 While the schema is pre-1.0, a MINOR bump marks a breaking change or a new extension namespace (`.rules/schema-design.md`).
 
+## [Unreleased]
+
+Quality views replace figures: a view is data a browser draws, declared with a namespaced, versioned kind (nemarOrg/neuroschema#21, part of nemarOrg/nemar-cli#2324).
+
+### Added
+
+- `schema/definitions/view.schema.json`: the view declaration (`$defs/view`): key, namespaced `kind` and `kind_version`, optional `base`, caption, source (a plugin or a recipe), scope (`recording`; `subject`, `dataset` and `collection` reserved, with `sources`), parameters, stored `data[]` (role, location, format, size, SHA-256, columns, dimensions, coordinate system, position source) and computed `inputs[]` (a product file or a serving store, each by digest) with a named, versioned `transform`. A kind the registry does not list passes on this envelope; a listed kind is also checked against its own schema.
+- `schema/views/kind.nemar.table.v1.schema.json`: the generic table kind.
+- `views/registry.json` (`neuroschema.views-registry.v1`): kinds, transforms, algorithms, formats (`tsv`, `json`), reserved dimension names and caps.
+- `nemar.view-digest.v1`, the SHA-256 of a declaration's RFC 8785 canonical JSON: `docs/views/view-digest.md`, vectors in `views/vectors/view-digest.v1.json`, and the Python reference `neuroschema.views.view_digest`.
+- `neuroschema.views`: the registry reader and the renderer rule (`draw_as`).
+- `processingTypes`: `viewKey`, `kindName`, `transformName`, `roleName`, `dimName`, `formatName` and `recipe`.
+- `docs/views.md`: the view vocabulary, the renderer rule, data roles, dimensions, inputs, scope, formats, caps, versioning and what digests prove.
+
+### Changed (breaking)
+
+- `dataQuality` record level: `figures` is replaced by the required `views` (at most 32 view declarations), and `$defs/figure` is removed.
+- `dataQuality` dataset level: each distribution requires `unit` and may carry `description`.
+
+### Changed
+
+- `qualityMetric`: the producer is exactly one of `plugin` and `recipe`, so a recipe's own metric names its recipe.
+- `processingTypes`: `figures` leaves the `checkpointName` examples.
+- CI and the typo check run on pull requests into `feature/**` branches.
+
 ## [0.5.0] - 2026-11-22
 
 Processing metadata for NEMAR's pipeline checkpoints, live progress and quality plugins (nemarOrg/neuroschema#18).

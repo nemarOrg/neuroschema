@@ -1,6 +1,6 @@
 # Processing extensions: dataQuality, processing and signalJourney
 
-These three namespaces (neuroschema 0.5.0) carry what the NEMAR backend indexes from its recipe runs.
+These three namespaces (neuroschema 0.5.0; record-level views from 0.6.0) carry what the NEMAR backend indexes from its recipe runs.
 The signalJourney record a run writes stays the source of every step, parameter and metric; these documents are projections of those records, each carrying the SHA-256 of the record it came from.
 The NEMAR backend (`nemar-api`) is the only writer of all three.
 
@@ -17,7 +17,7 @@ Each `dataQuality` entry records its `input_kind` (`bids` or `zarr`) and `profil
 
 ## What the schema checks and what the writer must check
 
-The schema checks types, closed objects, identifier patterns, the figure format list and its match with the file extension, and the status rules (a passed checkpoint has no code; a completed link has a location, digest and signalJourney version).
+The schema checks types, closed objects, identifier patterns, the view declarations ([views.md](views.md)), a metric's single producer (a plugin or a recipe), and the status rules (a passed checkpoint has no code; a completed link has a location, digest and signalJourney version).
 JSON Schema cannot compare one value with another, so the writer enforces:
 
 - every checkpoint's counts satisfy passed + failed + skipped = total once reconciled (at most total while a run reports live);
@@ -31,10 +31,15 @@ JSON Schema cannot compare one value with another, so the writer enforces:
 - the `dataQuality` dataset `counts.passed` equals the last declared checkpoint's `passed`, and its `failed` + `skipped` equals that checkpoint's `total` - `passed`.
 
 `tests/helpers.py` checks the examples against these rules; the package does not ship them.
+The writer also enforces rules that `tests/helpers.py` does not check:
+
+- a plugin's metric is named `<plugin>:<name>`, the part after the colon matching `[A-Za-z][A-Za-z0-9_-]*`, and a recipe's metric is a bare name the recipe declares;
+- the view rules listed in [views.md](views.md): unique view keys and roles, declared columns present in each file, and the caps.
 
 ## Checkpoints
 
-The standard checkpoints, in order: `import`, `preprocess`, `ica`, `iclabel`, `quality`, `figures`, then `stored`, which the backend sets when the derivatives are copied.
+The standard checkpoints, in order: `import`, `preprocess`, `ica`, `iclabel`, `quality`, then `stored`, which the backend sets when the derivatives are copied.
+Views are written at `quality`; there is no `figures` checkpoint.
 A recipe declares the subset it runs; the names are an open vocabulary (`^[a-z][a-z0-9_]{0,31}$`) so a new checkpoint needs no schema release.
 
 ## Digests and locations
@@ -42,7 +47,7 @@ A recipe declares the subset it runs; the names are an open vocabulary (`^[a-z][
 Every digest is the SHA-256 of a file's bytes.
 Every `location` is a relative POSIX path inside the run's product (the same string as the signalJourney `outputTargets` location): no leading slash, no `..` segment, no URI scheme, no backslash, no control characters.
 Paths are not normalized: `./a`, `a//b` and a trailing `/` are accepted, so the writer emits the canonical form.
-Figure size caps and the rule that a time-series figure is raster only (PNG or WebP) belong to signalJourney's `nemar` namespace, not here.
+A view's files, their formats and their caps are described in [views.md](views.md); no figure image is stored.
 
 ## From qc-summary.v1 to the dataQuality dataset level
 
@@ -55,14 +60,15 @@ Figure size caps and the rule that a time-series figure is raster only (PNG or W
 | `describes` | dropped (follows from `profile`) |
 | `record_sha256` | same name |
 | `discovered`, `succeeded`, `failed`, `skipped` | `counts.total`, `counts.passed`, `counts.failed`, `counts.skipped` |
-| `distributions` | same, keyed by metric name, numeric edges |
-| (none) | `observed_range`: lowest and highest value per metric observed across recordings (a metric's `bounds` is instead the valid range its plugin declares) |
+| `distributions` | same, keyed by metric name, numeric edges; each also states its `unit` and may carry a `description` |
+| (none) | `observed_range`: lowest and highest value per metric observed across recordings (a metric's `bounds` is instead the valid range its producer declares) |
 | `not_processed`, `not_processed_truncated` | same names |
 
 ## Reusable definitions
 
-Other schemas reference these by path (`../definitions/...`, `../extensions/...`); in nemar-cli's vendored bundle they become `nsc:/definitions/...` and `nsc:/extensions/...`:
+Other schemas reference these by path (`../definitions/...`, `../extensions/...`, `../views/...`); in nemar-cli's vendored bundle they become `nsc:/definitions/...`, `nsc:/extensions/...` and `nsc:/views/...`:
 
 - `checkpointCounts.schema.json`: the counts shape nemar-cli's live progress object reuses;
-- `qualityMetric.schema.json`: the metric shape a plugin manifest declares for each metric output;
+- `qualityMetric.schema.json`: the metric shape a plugin manifest declares for each metric output, with its producer (a plugin or a recipe);
+- `view.schema.json#/$defs/view`: one view declaration, which a recipe or plugin writes into its signalJourney record;
 - `dataQuality.schema.json#/$defs/datasetRecipeSummary`: the dataset quality summary the backend projects from a recipe run.
