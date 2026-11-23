@@ -1,0 +1,351 @@
+{
+  "schema_version": "0.5.0",
+  "doc_type": "dataset",
+  "dataset_id": "ds002718",
+  "name": "Face processing EEG dataset for EEGLAB",
+  "source": "openneuro",
+  "recording_modality": [
+    "EEG"
+  ],
+  "extensions": {
+    "processing": {
+      "level": "dataset",
+      "recipes": {
+        "nemar-floor": {
+          "recipe_version": "1.0.0-b1",
+          "declared_checkpoints": [
+            "import",
+            "preprocess",
+            "quality",
+            "stored"
+          ],
+          "counts": {
+            "import": {
+              "passed": 17,
+              "failed": 1,
+              "skipped": 0,
+              "total": 18
+            },
+            "preprocess": {
+              "passed": 17,
+              "failed": 0,
+              "skipped": 1,
+              "total": 18
+            },
+            "quality": {
+              "passed": 17,
+              "failed": 0,
+              "skipped": 1,
+              "total": 18
+            },
+            "stored": {
+              "passed": 17,
+              "failed": 0,
+              "skipped": 1,
+              "total": 18
+            }
+          }
+        },
+        "nemar-ica": {
+          "recipe_version": "1.0.0-b1",
+          "declared_checkpoints": [
+            "import",
+            "preprocess",
+            "ica",
+            "iclabel",
+            "stored"
+          ],
+          "counts": {
+            "import": {
+              "passed": 17,
+              "failed": 1,
+              "skipped": 0,
+              "total": 18
+            },
+            "preprocess": {
+              "passed": 17,
+              "failed": 0,
+              "skipped": 1,
+              "total": 18
+            },
+            "ica": {
+              "passed": 16,
+              "failed": 1,
+              "skipped": 1,
+              "total": 18
+            },
+            "iclabel": {
+              "passed": 16,
+              "failed": 0,
+              "skipped": 2,
+              "total": 18
+            },
+            "stored": {
+              "passed": 16,
+              "failed": 0,
+              "skipped": 2,
+              "total": 18
+            }
+          }
+        }
+      }
+    },
+    "dataQuality": {
+      "level": "dataset",
+      "recipes": {
+        "nemar-floor": {
+          "recipe_version": "1.0.0-b1",
+          "dataset_version": "1.0.4",
+          "input_kind": "zarr",
+          "profile": "serving",
+          "record_sha256": "433eb6f8f5470636db100d3318caf6b1b4496ee60d2f177da428b7a31df6e047",
+          "counts": {
+            "passed": 17,
+            "failed": 1,
+            "skipped": 0,
+            "total": 18
+          },
+          "distributions": {
+            "pctGoodSamples": {
+              "n": 17,
+              "min": 81.5,
+              "median": 94.2,
+              "max": 99.1,
+              "histogram": {
+                "edges": [
+                  0,
+                  10,
+                  20,
+                  30,
+                  40,
+                  50,
+                  60,
+                  70,
+                  80,
+                  90,
+                  100
+                ],
+                "counts": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  3,
+                  14
+                ],
+                "underflow": 0,
+                "overflow": 0
+              }
+            },
+            "pctGoodChannels": {
+              "n": 17,
+              "min": 85.1,
+              "median": 95.9,
+              "max": 100.0,
+              "histogram": {
+                "edges": [
+                  0,
+                  10,
+                  20,
+                  30,
+                  40,
+                  50,
+                  60,
+                  70,
+                  80,
+                  90,
+                  100
+                ],
+                "counts": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  2,
+                  15
+                ],
+                "underflow": 0,
+                "overflow": 0
+              }
+            },
+            "lineNoise": {
+              "n": 17,
+              "min": -3.2,
+              "median": 6.4,
+              "max": 21.7,
+              "histogram": {
+                "edges": [
+                  -10,
+                  -5,
+                  0,
+                  5,
+                  10,
+                  15,
+                  20,
+                  30,
+                  40
+                ],
+                "counts": [
+                  0,
+                  2,
+                  6,
+                  5,
+                  3,
+                  1,
+                  0,
+                  0
+                ],
+                "underflow": 0,
+                "overflow": 0
+              }
+            },
+            "nGoodChannels": {
+              "n": 17,
+              "min": 63,
+              "median": 71,
+              "max": 74,
+              "histogram": {
+                "edges": [
+                  0,
+                  10,
+                  20,
+                  30,
+                  40,
+                  50,
+                  60,
+                  70,
+                  80
+                ],
+                "counts": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  9,
+                  8
+                ],
+                "underflow": 0,
+                "overflow": 0
+              }
+            }
+          },
+          "bounds": {
+            "nGoodChannels": {
+              "min": 63,
+              "max": 74
+            },
+            "nGoodSamples": {
+              "min": 610000,
+              "max": 749000
+            }
+          },
+          "not_processed": [
+            {
+              "path": "sub-002/eeg/sub-002_task-FaceRecognition_eeg.set",
+              "status": "failed",
+              "code": "load_failed"
+            }
+          ],
+          "not_processed_truncated": 0
+        },
+        "nemar-ica": {
+          "recipe_version": "1.0.0-b1",
+          "dataset_version": "1.0.4",
+          "input_kind": "zarr",
+          "profile": "serving",
+          "record_sha256": "62b17f0b3e9826e9de4000300da6aeeec93d3e66ae37b281cd9e30ebce063396",
+          "counts": {
+            "passed": 16,
+            "failed": 2,
+            "skipped": 0,
+            "total": 18
+          },
+          "distributions": {
+            "pctBrainComponents": {
+              "n": 16,
+              "min": 22.0,
+              "median": 41.5,
+              "max": 63.0,
+              "histogram": {
+                "edges": [
+                  0,
+                  10,
+                  20,
+                  30,
+                  40,
+                  50,
+                  60,
+                  70,
+                  80,
+                  90,
+                  100
+                ],
+                "counts": [
+                  0,
+                  0,
+                  1,
+                  4,
+                  6,
+                  3,
+                  2,
+                  0,
+                  0,
+                  0
+                ],
+                "underflow": 0,
+                "overflow": 0
+              }
+            }
+          },
+          "bounds": {
+            "nBrainComponents": {
+              "min": 14,
+              "max": 40
+            }
+          },
+          "not_processed": [
+            {
+              "path": "sub-002/eeg/sub-002_task-FaceRecognition_eeg.set",
+              "status": "failed",
+              "code": "load_failed"
+            },
+            {
+              "path": "sub-013/eeg/sub-013_task-FaceRecognition_eeg.set",
+              "status": "failed",
+              "code": "ica_degenerate"
+            }
+          ],
+          "not_processed_truncated": 0
+        }
+      }
+    },
+    "signalJourney": {
+      "recipes": {
+        "nemar-floor": {
+          "recipe_version": "1.0.0-b1",
+          "processing_status": "completed",
+          "location": "desc-nemarfloor_signalJourney.json",
+          "sha256": "433eb6f8f5470636db100d3318caf6b1b4496ee60d2f177da428b7a31df6e047",
+          "sj_version": "0.1.0"
+        },
+        "nemar-ica": {
+          "recipe_version": "1.0.0-b1",
+          "processing_status": "completed",
+          "location": "desc-nemarica_signalJourney.json",
+          "sha256": "62b17f0b3e9826e9de4000300da6aeeec93d3e66ae37b281cd9e30ebce063396",
+          "sj_version": "0.1.0"
+        }
+      }
+    }
+  }
+}

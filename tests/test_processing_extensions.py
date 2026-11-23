@@ -14,8 +14,14 @@ from pathlib import Path
 import pytest
 from jsonschema import Draft202012Validator
 
-from neuroschema.validate import load_schema, validate_document
-from tests.helpers import failures
+from neuroschema.validate import load_schema, validate_document, validate_file
+from tests.helpers import (
+    cascade_problems,
+    count_problems,
+    failures,
+    histogram_problems,
+    total_problems,
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 SCHEMA_DIR = ROOT / "schema"
@@ -611,3 +617,145 @@ def test_refs_are_folder_qualified(path):
         )
     ]
     assert bad == []
+
+
+# ── Examples: embedded in full documents ──────────────────────────────────
+
+
+DATASET_EXAMPLE = EXAMPLES_DIR / "dataset-ds002718-processing.json"
+RECORD_EXAMPLE = EXAMPLES_DIR / "record-ds002718-processing.json"
+ROOT_ONLY_KEYS = ("schema_version", "doc_type")
+
+
+def _example(path: Path) -> dict:
+    return json.loads(path.read_text())
+
+
+@pytest.mark.parametrize("path", sorted(EXAMPLES_DIR.glob("*.json")), ids=str)
+def test_every_example_validates_against_root(path):
+    assert validate_file(path) == []
+
+
+@pytest.mark.parametrize(
+    ("path", "core"),
+    [(DATASET_EXAMPLE, "dataset"), (RECORD_EXAMPLE, "record")],
+    ids=["dataset", "record"],
+)
+def test_example_validates_against_core(path, core):
+    doc = {k: v for k, v in _example(path).items() if k not in ROOT_ONLY_KEYS}
+    assert validate_document(doc, SCHEMA_DIR / "core" / f"{core}.schema.json") == []
+
+
+def test_embedded_extension_error_is_reported_at_its_path():
+    doc = _example(RECORD_EXAMPLE)
+    doc["extensions"]["processing"]["recipes"]["nemar-floor"]["checkpoints"]["import"][
+        "status"
+    ] = "ok"
+    path = "extensions/processing/recipes/nemar-floor/checkpoints/import"
+    assert failures(validate_document(doc)) == {
+        ("enum", f"{path}/status"),
+        ("type", f"{path}/code"),
+    }
+
+
+# ── Invariants the schema cannot express ──────────────────────────────────
+
+
+DECLARED = {
+    "nemar-floor": ["import", "preprocess", "quality", "stored"],
+    "nemar-ica": ["import", "preprocess", "ica", "iclabel", "stored"],
+}
+
+
+def _ext(path, ns):
+    return _example(path)["extensions"][ns]
+
+
+class TestInvariants:
+    def test_examples_hold(self):
+        proc = _ext(DATASET_EXAMPLE, "processing")
+        quality = _ext(DATASET_EXAMPLE, "dataQuality")
+        assert count_problems(proc) == []
+        assert total_problems(quality, proc) == []
+        assert cascade_problems(_ext(RECORD_EXAMPLE, "processing"), DECLARED) == []
+        for entry in quality["recipes"].values():
+            for dist in entry["distributions"].values():
+                assert histogram_problems(dist) == []
+
+    def test_column_sum_mismatch(self):
+        proc = _ext(DATASET_EXAMPLE, "processing")
+        proc["recipes"]["nemar-floor"]["counts"]["quality"]["passed"] = 16
+        problems = count_problems(proc)
+        assert "nemar-floor/quality: passed+failed+skipped != total" in problems
+
+    def test_unequal_totals(self):
+        proc = _ext(DATASET_EXAMPLE, "processing")
+        counts = proc["recipes"]["nemar-floor"]["counts"]["stored"]
+        counts.update(skipped=2, total=19)
+        assert "nemar-floor: checkpoints have unequal totals" in count_problems(proc)
+
+    def test_count_keys_differ_from_declared(self):
+        proc = _ext(DATASET_EXAMPLE, "processing")
+        del proc["recipes"]["nemar-ica"]["counts"]["iclabel"]
+        assert (
+            "nemar-ica: count keys differ from declared checkpoints"
+            in count_problems(proc)
+        )
+
+    def test_broken_cascade(self):
+        proc = _ext(RECORD_EXAMPLE, "processing")
+        proc["recipes"]["nemar-ica"]["checkpoints"]["stored"] = {
+            "status": "passed",
+            "code": None,
+            "step": None,
+        }
+        assert cascade_problems(proc, DECLARED) == [
+            "nemar-ica/stored: breaks the skip cascade"
+        ]
+
+    def test_bad_histogram_length(self):
+        quality = _ext(DATASET_EXAMPLE, "dataQuality")
+        dist = quality["recipes"]["nemar-floor"]["distributions"]["pctGoodSamples"]
+        dist["histogram"]["counts"].append(0)
+        assert "len(counts) != len(edges) - 1" in histogram_problems(dist)
+
+    def test_quality_total_differs(self):
+        proc = _ext(DATASET_EXAMPLE, "processing")
+        quality = _ext(DATASET_EXAMPLE, "dataQuality")
+        quality["recipes"]["nemar-ica"]["counts"]["total"] = 19
+        assert total_problems(quality, proc) == [
+            "nemar-ica: dataQuality total differs from processing"
+        ]
+
+
+# ── Reachability: what nemar-cli's vendor script bundles ──────────────────
+
+
+VENDOR_REF = re.compile(r'"\$ref":\s*"([^"#]+)(#[^"]*)?"')
+NEW_OR_CHANGED = {
+    "processingTypes.schema.json",
+    "checkpointCounts.schema.json",
+    "qualityMetric.schema.json",
+    "dataQuality.schema.json",
+    "processing.schema.json",
+    "signalJourney.schema.json",
+}
+
+
+def _reachable(start: Path) -> set[str]:
+    seen: set[Path] = set()
+    todo = [start.resolve()]
+    while todo:
+        path = todo.pop()
+        if path in seen:
+            continue
+        seen.add(path)
+        for match in VENDOR_REF.finditer(path.read_text()):
+            todo.append((path.parent / match.group(1)).resolve())
+    return {p.name for p in seen}
+
+
+@pytest.mark.parametrize("core", ["dataset", "record"])
+def test_new_files_reachable_from_core(core):
+    reachable = _reachable(SCHEMA_DIR / "core" / f"{core}.schema.json")
+    assert reachable >= NEW_OR_CHANGED
