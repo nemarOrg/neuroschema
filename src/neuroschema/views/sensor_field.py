@@ -82,6 +82,16 @@ def planar(theta_deg: np.ndarray, radius: np.ndarray) -> tuple[np.ndarray, np.nd
     return np.cos(theta) * radius, np.sin(theta) * radius
 
 
+def within_merge(distance: float) -> bool:
+    """A distance at which a sensor merges: at most :data:`MERGE_DISTANCE`."""
+    return distance <= MERGE_DISTANCE
+
+
+def is_plotted(radius: float, plotrad: float) -> bool:
+    """A sensor gets a marker when its radius is at most ``plotrad``."""
+    return radius <= plotrad
+
+
 def merge(x: np.ndarray, y: np.ndarray, rows: list[int]) -> dict[int, list[int]]:
     """Group sensors in row order: each joins the first kept sensor within reach.
 
@@ -95,12 +105,22 @@ def merge(x: np.ndarray, y: np.ndarray, rows: list[int]) -> dict[int, list[int]]
         for kept in groups:
             dx = x[row] - x[kept]
             dy = y[row] - y[kept]
-            if np.sqrt(dx * dx + dy * dy) <= MERGE_DISTANCE:
+            if within_merge(np.sqrt(dx * dx + dy * dy)):
                 groups[kept].append(row)
                 break
         else:
             groups[row] = [row]
     return groups
+
+
+def outermost(radius: np.ndarray, usable: list[int]) -> float:
+    """The largest radius among the usable sensors, merged or not.
+
+    EEGLAB's ``topoplot.m`` takes its radii from every channel with a value
+    and a place, before it interpolates, so a sensor merged into another still
+    reaches the plotting radius.
+    """
+    return float(radius[usable].max())
 
 
 def mean(values: np.ndarray, members: list[int]) -> float:
@@ -123,8 +143,9 @@ def in_square(x: np.ndarray, y: np.ndarray, intrad: float) -> np.ndarray:
 def grid_axis(low: float, high: float) -> np.ndarray:
     """``GRID_SIZE`` points: ``i * ((high - low) / (GRID_SIZE - 1)) + low``.
 
-    The last point is ``high`` itself, as ``numpy.linspace`` and MATLAB's
-    ``linspace`` give it.
+    The last point is ``high`` itself. This is the specification's formula; it
+    is also how ``numpy.linspace`` computes the points, so eegprep's grid is
+    the same to the bit.
     """
     step = (high - low) / (GRID_SIZE - 1)
     axis = np.arange(GRID_SIZE) * step + low
@@ -193,19 +214,20 @@ def sensor_field(
     # 2. Planar positions, in raw layout units.
     x, y = planar(np.where(usable, theta_deg, 0), np.where(usable, radius, 0))
 
-    # 3. Merge sensors within MERGE_DISTANCE of an earlier kept sensor.
+    # 4. Merge sensors within MERGE_DISTANCE of an earlier kept sensor.
     groups = merge(x, y, rows)
     kept = np.array(list(groups), dtype=np.int64)
     kept_values = np.array([mean(values, members) for members in groups.values()])
 
-    # 4. Radii and squeeze, from the kept sensors.
-    outer = float(radius[kept].max())
+    # 3. Radii and squeeze, from every usable sensor, merged or not (the code
+    # runs the merge first; the radii do not depend on it).
+    outer = outermost(radius, rows)
     plotrad = max(min(1.0, outer * RADIUS_MARGIN), HEAD_RADIUS)
     intrad = min(1.0, outer * RADIUS_MARGIN)
     squeezefac = HEAD_RADIUS / plotrad
 
     # 5. Plotted and interpolated sensors.
-    plotted = tuple(r for r in rows if radius[r] <= plotrad)
+    plotted = tuple(r for r in rows if is_plotted(radius[r], plotrad))
     inside = in_square(x[kept], y[kept], intrad)
     interpolated = kept[inside]
     if len(interpolated) < MIN_SENSORS:
@@ -279,8 +301,8 @@ def sensor_field_from_positions(
     and :func:`sensor_field` draws the map; a row without a finite position is
     dropped like any sensor without a place. Raises
     :class:`~neuroschema.views.sensor_layout.SensorLayoutRefusal`
-    (``frame_unknown``), after which a renderer places the sensors by name,
-    or :class:`SensorFieldRefusal`.
+    (``frame_unknown`` or ``positions_flat``), after which a renderer places
+    the sensors by name, or :class:`SensorFieldRefusal`.
     """
     layout = sensor_layout(xyz, coordinate_system, montage=montage)
     return sensor_field(layout.theta_deg, layout.radius, values)
