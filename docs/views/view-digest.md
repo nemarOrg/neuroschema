@@ -24,6 +24,8 @@ The declaration is parsed with a standard JSON parser, so each number is the Ins
 7. The text is encoded as UTF-8 (Unicode Transformation Format, 8-bit), and the digest is the SHA-256 of those bytes.
 
 In JavaScript, rules 2, 5 and 6 are what `JSON.stringify` does for a single value, and rule 4 is the default `Array.prototype.sort` of the names.
+A JavaScript implementation must still apply the [refusals](#refusals) itself, before it writes anything: it checks every string and every member name with `String.prototype.isWellFormed` and every number with `Number.isFinite`, because `JSON.stringify` does not fail on either.
+It writes a lone surrogate as a `\u` escape and a non-finite number as `null`, which would give a digest where there must be none.
 In Python, `json.dumps` is not enough: it prints `100.0` and `1e-07`, sorts by code point, and escapes every character above U+007F by default.
 
 ## Refusals
