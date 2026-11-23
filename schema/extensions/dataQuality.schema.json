@@ -20,6 +20,7 @@
   "allOf": [
     {
       "if": {
+        "type": "object",
         "properties": {
           "level": {
             "const": "record"
@@ -35,6 +36,7 @@
     },
     {
       "if": {
+        "type": "object",
         "properties": {
           "level": {
             "const": "dataset"
@@ -278,6 +280,7 @@
       "allOf": [
         {
           "if": {
+            "type": "object",
             "properties": {
               "format": {
                 "const": "png"
@@ -288,8 +291,10 @@
             ]
           },
           "then": {
+            "type": "object",
             "properties": {
               "location": {
+                "type": "string",
                 "pattern": "\\.png$(?!\n)"
               }
             }
@@ -297,6 +302,7 @@
         },
         {
           "if": {
+            "type": "object",
             "properties": {
               "format": {
                 "const": "svg"
@@ -307,8 +313,10 @@
             ]
           },
           "then": {
+            "type": "object",
             "properties": {
               "location": {
+                "type": "string",
                 "pattern": "\\.svg$(?!\n)"
               }
             }
@@ -316,6 +324,7 @@
         },
         {
           "if": {
+            "type": "object",
             "properties": {
               "format": {
                 "const": "webp"
@@ -326,8 +335,10 @@
             ]
           },
           "then": {
+            "type": "object",
             "properties": {
               "location": {
+                "type": "string",
                 "pattern": "\\.webp$(?!\n)"
               }
             }

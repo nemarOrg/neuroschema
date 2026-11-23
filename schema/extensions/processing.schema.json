@@ -20,6 +20,7 @@
   "allOf": [
     {
       "if": {
+        "type": "object",
         "properties": {
           "level": {
             "const": "record"
@@ -35,6 +36,7 @@
     },
     {
       "if": {
+        "type": "object",
         "properties": {
           "level": {
             "const": "dataset"
@@ -155,6 +157,7 @@
         }
       },
       "if": {
+        "type": "object",
         "properties": {
           "status": {
             "const": "passed"
@@ -165,6 +168,7 @@
         ]
       },
       "then": {
+        "type": "object",
         "properties": {
           "code": {
             "type": "null"
@@ -175,6 +179,7 @@
         }
       },
       "else": {
+        "type": "object",
         "required": [
           "code"
         ],

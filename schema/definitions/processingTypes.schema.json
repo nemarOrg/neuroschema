@@ -76,6 +76,7 @@
       "allOf": [
         {
           "if": {
+            "type": "object",
             "properties": {
               "input_kind": {
                 "const": "zarr"
@@ -86,6 +87,7 @@
             ]
           },
           "then": {
+            "type": "object",
             "properties": {
               "profile": {
                 "const": "serving"
@@ -95,6 +97,7 @@
         },
         {
           "if": {
+            "type": "object",
             "properties": {
               "input_kind": {
                 "const": "bids"
@@ -105,6 +108,7 @@
             ]
           },
           "then": {
+            "type": "object",
             "properties": {
               "profile": {
                 "const": "archive"
