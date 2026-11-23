@@ -223,6 +223,7 @@ def dq_record():
 def distribution():
     return {
         "n": 17,
+        "unit": "%",
         "min": 80.0,
         "median": 94.0,
         "max": 99.0,
@@ -986,7 +987,7 @@ REQUIRED_KEYS = [
     (DATA_QUALITY, dq_dataset, FLOOR, "observed_range not_processed"),
     (DATA_QUALITY, dq_dataset, FLOOR, "not_processed_truncated"),
     (DATA_QUALITY, dq_dataset, f"{FLOOR}/counts", "passed failed skipped total"),
-    (DATA_QUALITY, dq_dataset, PGS, "n min median max histogram"),
+    (DATA_QUALITY, dq_dataset, PGS, "n unit min median max histogram"),
     (DATA_QUALITY, dq_dataset, f"{PGS}/histogram", "edges counts underflow overflow"),
     (DATA_QUALITY, dq_dataset, f"{FLOOR}/observed_range/percentGoodChannels", "min"),
     (DATA_QUALITY, dq_dataset, f"{FLOOR}/observed_range/percentGoodChannels", "max"),

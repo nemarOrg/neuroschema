@@ -736,3 +736,41 @@ class TestMetricProducer:
         assert failures(validate_document(metric, METRIC)) == {
             ("additionalProperties", "recipe")
         }
+
+
+# ── Distribution: a stated unit ───────────────────────────────────────────
+
+
+DATASET_EXAMPLE = ROOT / "examples" / "dataset-ds002718-processing.json"
+
+
+class TestDistributionUnit:
+    def _dist(self, doc):
+        entry = doc["extensions"]["dataQuality"]["recipes"]["nemar-floor"]
+        return entry["distributions"]["percentGoodSamples"]
+
+    WHERE = (
+        "extensions/dataQuality/recipes/nemar-floor/distributions/percentGoodSamples"
+    )
+
+    def test_example_is_valid(self):
+        assert validate_document(json.loads(DATASET_EXAMPLE.read_text())) == []
+
+    def test_distribution_without_unit_fails(self):
+        doc = json.loads(DATASET_EXAMPLE.read_text())
+        del self._dist(doc)["unit"]
+        assert failures(validate_document(doc)) == {("required", self.WHERE)}
+
+    def test_description_is_optional_and_bounded(self):
+        doc = json.loads(DATASET_EXAMPLE.read_text())
+        del self._dist(doc)["description"]
+        assert validate_document(doc) == []
+        self._dist(doc)["description"] = "d" * 501
+        assert failures(validate_document(doc)) == {
+            ("maxLength", f"{self.WHERE}/description")
+        }
+
+    def test_empty_unit_fails(self):
+        doc = json.loads(DATASET_EXAMPLE.read_text())
+        self._dist(doc)["unit"] = ""
+        assert failures(validate_document(doc)) == {("minLength", f"{self.WHERE}/unit")}

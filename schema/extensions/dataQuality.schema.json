@@ -238,6 +238,7 @@
       "description": "Summary of one metric's values over the recordings that passed.",
       "required": [
         "n",
+        "unit",
         "min",
         "median",
         "max",
@@ -248,6 +249,18 @@
           "type": "integer",
           "minimum": 0,
           "description": "Number of values summarized."
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32,
+          "description": "Unit of the metric's values (for example %, dB, count), as its producer states it."
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "description": "One-sentence description of what the metric measures, as its producer states it."
         },
         "min": {
           "type": [
