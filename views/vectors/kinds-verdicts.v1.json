@@ -629,6 +629,575 @@
       ]
     },
     {
+      "name": "envelope_coords_two_forms",
+      "covers": "Coordinates naming a column and the header at once.",
+      "schema": "view",
+      "instance": {
+        "key": "movie",
+        "kind": "acme.scalp-movie",
+        "kind_version": 1,
+        "caption": "A kind no renderer knows.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "parameters": {
+          "fps": 30
+        },
+        "data": [
+          {
+            "role": "frames",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_frames.npy",
+            "format": "npy",
+            "size": 8,
+            "sha256": "21eaac327f0aecbb787b9a1ce54d68aa855cfc59ae5c9f4f6924cd61028bcd90"
+          },
+          {
+            "role": "labels",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_labels.tsv",
+            "format": "tsv",
+            "size": 78,
+            "sha256": "af77dc802bf58662721f76a369e4e6859dd95f46d07b854597ed1055e0f839e7",
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name",
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "broken",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_broken.tsv",
+            "format": "tsv",
+            "size": 88,
+            "sha256": "12a03501c6ca2c77a554f56f9750c087b1a1e19e6b5528bd8f303a09de1fe552"
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["oneOf", "data/1/dims/0/coords"]
+      ]
+    },
+    {
+      "name": "envelope_coords_header_false",
+      "covers": "header is only ever true.",
+      "schema": "view",
+      "instance": {
+        "key": "movie",
+        "kind": "acme.scalp-movie",
+        "kind_version": 1,
+        "caption": "A kind no renderer knows.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "parameters": {
+          "fps": 30
+        },
+        "data": [
+          {
+            "role": "frames",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_frames.npy",
+            "format": "npy",
+            "size": 8,
+            "sha256": "21eaac327f0aecbb787b9a1ce54d68aa855cfc59ae5c9f4f6924cd61028bcd90"
+          },
+          {
+            "role": "labels",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_labels.tsv",
+            "format": "tsv",
+            "size": 78,
+            "sha256": "af77dc802bf58662721f76a369e4e6859dd95f46d07b854597ed1055e0f839e7",
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "header": false
+                }
+              }
+            ]
+          },
+          {
+            "role": "broken",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_broken.tsv",
+            "format": "tsv",
+            "size": 88,
+            "sha256": "12a03501c6ca2c77a554f56f9750c087b1a1e19e6b5528bd8f303a09de1fe552"
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["oneOf", "data/1/dims/0/coords"]
+      ]
+    },
+    {
+      "name": "envelope_axis",
+      "covers": "An axis other than rows and columns.",
+      "schema": "view",
+      "instance": {
+        "key": "movie",
+        "kind": "acme.scalp-movie",
+        "kind_version": 1,
+        "caption": "A kind no renderer knows.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "parameters": {
+          "fps": 30
+        },
+        "data": [
+          {
+            "role": "frames",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_frames.npy",
+            "format": "npy",
+            "size": 8,
+            "sha256": "21eaac327f0aecbb787b9a1ce54d68aa855cfc59ae5c9f4f6924cd61028bcd90"
+          },
+          {
+            "role": "labels",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_labels.tsv",
+            "format": "tsv",
+            "size": 78,
+            "sha256": "af77dc802bf58662721f76a369e4e6859dd95f46d07b854597ed1055e0f839e7",
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "depth",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ]
+          },
+          {
+            "role": "broken",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_broken.tsv",
+            "format": "tsv",
+            "size": 88,
+            "sha256": "12a03501c6ca2c77a554f56f9750c087b1a1e19e6b5528bd8f303a09de1fe552"
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["enum", "data/1/dims/0/axis"]
+      ]
+    },
+    {
+      "name": "envelope_dims_valid",
+      "covers": "An unknown kind with a dimension.",
+      "schema": "view",
+      "instance": {
+        "key": "movie",
+        "kind": "acme.scalp-movie",
+        "kind_version": 1,
+        "caption": "A kind no renderer knows.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "parameters": {
+          "fps": 30
+        },
+        "data": [
+          {
+            "role": "frames",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_frames.npy",
+            "format": "npy",
+            "size": 8,
+            "sha256": "21eaac327f0aecbb787b9a1ce54d68aa855cfc59ae5c9f4f6924cd61028bcd90"
+          },
+          {
+            "role": "labels",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_labels.tsv",
+            "format": "tsv",
+            "size": 78,
+            "sha256": "af77dc802bf58662721f76a369e4e6859dd95f46d07b854597ed1055e0f839e7",
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ]
+          },
+          {
+            "role": "broken",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_broken.tsv",
+            "format": "tsv",
+            "size": 88,
+            "sha256": "12a03501c6ca2c77a554f56f9750c087b1a1e19e6b5528bd8f303a09de1fe552"
+          }
+        ]
+      },
+      "valid": true,
+      "errors": []
+    },
+    {
+      "name": "envelope_kind_version_0",
+      "covers": "kind_version starts at 1.",
+      "schema": "view",
+      "instance": {
+        "key": "movie",
+        "kind": "acme.scalp-movie",
+        "kind_version": 0,
+        "caption": "A kind no renderer knows.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "parameters": {
+          "fps": 30
+        },
+        "data": [
+          {
+            "role": "frames",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_frames.npy",
+            "format": "npy",
+            "size": 8,
+            "sha256": "21eaac327f0aecbb787b9a1ce54d68aa855cfc59ae5c9f4f6924cd61028bcd90"
+          },
+          {
+            "role": "labels",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_labels.tsv",
+            "format": "tsv",
+            "size": 78,
+            "sha256": "af77dc802bf58662721f76a369e4e6859dd95f46d07b854597ed1055e0f839e7"
+          },
+          {
+            "role": "broken",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_broken.tsv",
+            "format": "tsv",
+            "size": 88,
+            "sha256": "12a03501c6ca2c77a554f56f9750c087b1a1e19e6b5528bd8f303a09de1fe552"
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["minimum", "kind_version"]
+      ]
+    },
+    {
+      "name": "envelope_kind_version_1000",
+      "covers": "kind_version is at most 999.",
+      "schema": "view",
+      "instance": {
+        "key": "movie",
+        "kind": "acme.scalp-movie",
+        "kind_version": 1000,
+        "caption": "A kind no renderer knows.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "parameters": {
+          "fps": 30
+        },
+        "data": [
+          {
+            "role": "frames",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_frames.npy",
+            "format": "npy",
+            "size": 8,
+            "sha256": "21eaac327f0aecbb787b9a1ce54d68aa855cfc59ae5c9f4f6924cd61028bcd90"
+          },
+          {
+            "role": "labels",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_labels.tsv",
+            "format": "tsv",
+            "size": 78,
+            "sha256": "af77dc802bf58662721f76a369e4e6859dd95f46d07b854597ed1055e0f839e7"
+          },
+          {
+            "role": "broken",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_broken.tsv",
+            "format": "tsv",
+            "size": 88,
+            "sha256": "12a03501c6ca2c77a554f56f9750c087b1a1e19e6b5528bd8f303a09de1fe552"
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["maximum", "kind_version"]
+      ]
+    },
+    {
+      "name": "envelope_kind_version_text",
+      "covers": "kind_version is an integer, not text.",
+      "schema": "view",
+      "instance": {
+        "key": "movie",
+        "kind": "acme.scalp-movie",
+        "kind_version": "1",
+        "caption": "A kind no renderer knows.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "parameters": {
+          "fps": 30
+        },
+        "data": [
+          {
+            "role": "frames",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_frames.npy",
+            "format": "npy",
+            "size": 8,
+            "sha256": "21eaac327f0aecbb787b9a1ce54d68aa855cfc59ae5c9f4f6924cd61028bcd90"
+          },
+          {
+            "role": "labels",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_labels.tsv",
+            "format": "tsv",
+            "size": 78,
+            "sha256": "af77dc802bf58662721f76a369e4e6859dd95f46d07b854597ed1055e0f839e7"
+          },
+          {
+            "role": "broken",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_broken.tsv",
+            "format": "tsv",
+            "size": 88,
+            "sha256": "12a03501c6ca2c77a554f56f9750c087b1a1e19e6b5528bd8f303a09de1fe552"
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["type", "kind_version"]
+      ]
+    },
+    {
+      "name": "envelope_size_0",
+      "covers": "A file has at least one byte.",
+      "schema": "view",
+      "instance": {
+        "key": "channels",
+        "kind": "nemar.table",
+        "kind_version": 1,
+        "caption": "Channels and the floor's decisions.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "table",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+            "format": "tsv",
+            "size": 0,
+            "sha256": "0cad6be49122197e1babfc62712a4de6fabebe2e8884380808f58c7a006ec062",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "status",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["minimum", "data/0/size"]
+      ]
+    },
+    {
+      "name": "envelope_sha256_uppercase",
+      "covers": "A SHA-256 in capitals.",
+      "schema": "view",
+      "instance": {
+        "key": "channels",
+        "kind": "nemar.table",
+        "kind_version": 1,
+        "caption": "Channels and the floor's decisions.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "table",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+            "format": "tsv",
+            "size": 86,
+            "sha256": "0CAD6BE49122197E1BABFC62712A4DE6FABEBE2E8884380808F58C7A006EC062",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "status",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "data/0/sha256"]
+      ]
+    },
+    {
+      "name": "envelope_sha256_short",
+      "covers": "A SHA-256 of 63 digits.",
+      "schema": "view",
+      "instance": {
+        "key": "channels",
+        "kind": "nemar.table",
+        "kind_version": 1,
+        "caption": "Channels and the floor's decisions.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "table",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+            "format": "tsv",
+            "size": 86,
+            "sha256": "0cad6be49122197e1babfc62712a4de6fabebe2e8884380808f58c7a006ec06",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "status",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "data/0/sha256"]
+      ]
+    },
+    {
+      "name": "envelope_unit_empty",
+      "covers": "An empty unit.",
+      "schema": "view",
+      "instance": {
+        "key": "channels",
+        "kind": "nemar.table",
+        "kind_version": 1,
+        "caption": "Channels and the floor's decisions.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "table",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+            "format": "tsv",
+            "size": 86,
+            "sha256": "0cad6be49122197e1babfc62712a4de6fabebe2e8884380808f58c7a006ec062",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string",
+                "unit": ""
+              },
+              {
+                "name": "status",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["minLength", "data/0/columns/0/unit"]
+      ]
+    },
+    {
+      "name": "envelope_column_type",
+      "covers": "A column type other than number, integer and string.",
+      "schema": "view",
+      "instance": {
+        "key": "channels",
+        "kind": "nemar.table",
+        "kind_version": 1,
+        "caption": "Channels and the floor's decisions.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "table",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+            "format": "tsv",
+            "size": 86,
+            "sha256": "0cad6be49122197e1babfc62712a4de6fabebe2e8884380808f58c7a006ec062",
+            "columns": [
+              {
+                "name": "name",
+                "type": "float"
+              },
+              {
+                "name": "status",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["enum", "data/0/columns/0/type"]
+      ]
+    },
+    {
       "name": "envelope_closed",
       "covers": "A member the envelope does not define.",
       "schema": "view",

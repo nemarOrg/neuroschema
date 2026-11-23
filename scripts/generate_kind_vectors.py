@@ -1433,6 +1433,11 @@ def view_verdicts() -> list[tuple[str, str, dict]]:
     hist = histogram_view(EDGES)
     unknown = fallback_cases()[0].view
     x_dim = "data/0/dims/0"
+    dims = _set(
+        unknown,
+        "data/1/dims",
+        [dim("sensor", "rows", "string", {"column": "name"})],
+    )
     series_dim = "data/0/dims/1"
     return [
         ("envelope_unknown_kind", "An unknown kind passes on the envelope.", unknown),
@@ -1488,6 +1493,62 @@ def view_verdicts() -> list[tuple[str, str, dict]]:
             "envelope_serving_store_digest",
             "A serving-copy store input with no digest.",
             _set(fallback_cases()[1].view, "inputs/1/store/content_sha256", None),
+        ),
+        (
+            "envelope_coords_two_forms",
+            "Coordinates naming a column and the header at once.",
+            _set(dims, "data/1/dims/0/coords", {"column": "name", "header": True}),
+        ),
+        (
+            "envelope_coords_header_false",
+            "header is only ever true.",
+            _set(dims, "data/1/dims/0/coords", {"header": False}),
+        ),
+        (
+            "envelope_axis",
+            "An axis other than rows and columns.",
+            _set(dims, "data/1/dims/0/axis", "depth"),
+        ),
+        ("envelope_dims_valid", "An unknown kind with a dimension.", dims),
+        (
+            "envelope_kind_version_0",
+            "kind_version starts at 1.",
+            _set(unknown, "kind_version", 0),
+        ),
+        (
+            "envelope_kind_version_1000",
+            "kind_version is at most 999.",
+            _set(unknown, "kind_version", 1000),
+        ),
+        (
+            "envelope_kind_version_text",
+            "kind_version is an integer, not text.",
+            _set(unknown, "kind_version", "1"),
+        ),
+        (
+            "envelope_size_0",
+            "A file has at least one byte.",
+            _set(table, "data/0/size", 0),
+        ),
+        (
+            "envelope_sha256_uppercase",
+            "A SHA-256 in capitals.",
+            _set(table, "data/0/sha256", table["data"][0]["sha256"].upper()),
+        ),
+        (
+            "envelope_sha256_short",
+            "A SHA-256 of 63 digits.",
+            _set(table, "data/0/sha256", table["data"][0]["sha256"][:63]),
+        ),
+        (
+            "envelope_unit_empty",
+            "An empty unit.",
+            _set(table, "data/0/columns/0/unit", ""),
+        ),
+        (
+            "envelope_column_type",
+            "A column type other than number, integer and string.",
+            _set(table, "data/0/columns/0/type", "float"),
         ),
         (
             "envelope_closed",
