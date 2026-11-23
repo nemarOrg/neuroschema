@@ -41,11 +41,14 @@ Any other kind or version passes on the envelope alone: an unknown kind is never
 A renderer applies this rule:
 
 1. If it knows the view's kind and version, it draws the view with that kind's renderer.
-2. Otherwise, if it knows the base and base version, it draws the view with the generic renderer for the base.
+2. Otherwise, if it knows the base and base version and the view's data meet the base's role contract, it draws the view with the generic renderer for the base.
 3. Otherwise it shows the data as a table, with a download of each file.
 
-An unknown kind is never an error.
-`neuroschema.views.draw_as` implements the rule against the registry.
+A view meets a kind's role contract when every role the registry lists for that kind appears exactly once in its `data`, in a format listed for that role, carrying only dimensions listed for it.
+Roles the kind does not list are allowed, and its renderer ignores them.
+A declared base is a claim: the schema cannot check an unknown kind's data against its base, so the renderer checks the contract before it trusts the claim.
+An unknown kind is never an error, and neither is a base the renderer does not know or a view that misses its base's contract.
+`neuroschema.views.draw_as` implements the rule against the registry, and `neuroschema.views.meets_role_contract` the contract.
 
 ### `nemar.table` version 1
 
@@ -159,7 +162,10 @@ JSON Schema cannot compare one value with another, so the writer enforces:
 - a `{role, column}` coordinate names a role of the same view and a column that role declares;
 - `size` and `sha256` are those of the file, and `location` is the `outputTargets` location of the step that wrote it;
 - each file, dimension and role is within the caps;
-- the reserved dimensions keep their meanings (a `sensor` dimension's coordinates are a layout role's names, in order).
+- the reserved dimensions keep their meanings (a `sensor` dimension's coordinates are a layout role's names, in order);
+- a view that declares a base meets that base's role contract, so a renderer that knows only the base can draw it.
+
+A renderer does not rely on the writer for the last rule: before it draws a view by its base, it checks the contract, and it shows the data as a table when the view misses it.
 
 ## Versioning
 

@@ -25,6 +25,7 @@ from neuroschema.views import (
     kind_schema_path,
     known_kinds,
     load_registry,
+    meets_role_contract,
     view_digest,
 )
 from tests.helpers import failures
@@ -620,13 +621,59 @@ class TestRendererRule:
     def test_known_kind_draws_as_itself(self):
         assert draw_as(table(), REGISTRY) == Drawing("kind", "nemar.table", 1)
 
-    def test_unknown_kind_with_a_known_base_draws_as_its_base(self):
-        view = unknown_kind() | {"base": "nemar.table", "base_version": 1}
+    def _preset(self, view):
+        """An unknown kind over the base nemar.table version 1."""
+        return view | {
+            "kind": "acme.channel-table",
+            "kind_version": 1,
+            "base": "nemar.table",
+            "base_version": 1,
+        }
+
+    def test_unknown_kind_meeting_its_base_contract_draws_as_its_base(self):
+        view = self._preset(table())
+        assert meets_role_contract(view, known_kinds(REGISTRY)[("nemar.table", 1)])
         assert draw_as(view, REGISTRY) == Drawing("base", "nemar.table", 1)
+
+    def test_extra_roles_do_not_break_the_base_contract(self):
+        view = self._preset(table())
+        view["data"].append(unknown_kind()["data"][0])
+        assert draw_as(view, REGISTRY) == Drawing("base", "nemar.table", 1)
+
+    def test_unknown_kind_missing_its_base_contract_draws_as_a_table(self):
+        """Role frames, format npy, no columns: nothing a table renderer reads."""
+        view = self._preset(unknown_kind())
+        assert draw_as(view, REGISTRY) == Drawing("table", None, None)
+
+    @pytest.mark.parametrize("breach", ["format", "twice", "dims", "no-data"])
+    def test_each_breach_of_the_base_contract_draws_as_a_table(self, breach):
+        view = self._preset(table())
+        if breach == "format":
+            view["data"][0].update(format="json", location="views/channels.json")
+        elif breach == "twice":
+            view["data"].append(copy.deepcopy(view["data"][0]))
+        elif breach == "dims":
+            view["data"][0]["dims"] = [
+                {
+                    "name": "sensor",
+                    "axis": "rows",
+                    "type": "string",
+                    "coords": {"column": "name"},
+                }
+            ]
+        else:
+            del view["data"]
+        assert draw_as(view, REGISTRY) == Drawing("table", None, None)
+
+    @pytest.mark.parametrize("missing", ["base_version", "base"])
+    def test_half_a_base_draws_as_a_table(self, missing):
+        view = self._preset(table())
+        del view[missing]
+        assert draw_as(view, REGISTRY) == Drawing("table", None, None)
 
     def test_unknown_kind_draws_as_a_table(self):
         assert draw_as(unknown_kind(), REGISTRY) == Drawing("table", None, None)
-        view = unknown_kind() | {"base": "nemar.table", "base_version": 9}
+        view = self._preset(table()) | {"base_version": 9}
         assert draw_as(view) == Drawing("table", None, None)
 
 

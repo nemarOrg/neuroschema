@@ -61,18 +61,47 @@ def kind_schema_path(
     return None if entry is None else REPO_ROOT / entry["schema"]
 
 
+def meets_role_contract(view: Mapping, entry: Mapping) -> bool:
+    """Whether a view's stored data meet a registered kind's role contract.
+
+    Every role the registry lists for the kind appears exactly once in the
+    view's ``data``, in a format listed for that role, carrying only dimensions
+    listed for it (an empty list allows none). Roles the kind does not list are
+    allowed; its renderer ignores them.
+    """
+    data = view.get("data")
+    if not isinstance(data, list):
+        return False
+    for role, spec in entry["roles"].items():
+        files = [f for f in data if isinstance(f, Mapping) and f.get("role") == role]
+        if len(files) != 1:
+            return False
+        file = files[0]
+        if file.get("format") not in spec["formats"]:
+            return False
+        dims = file.get("dims", [])
+        if not isinstance(dims, list) or any(
+            not isinstance(dim, Mapping) or dim.get("name") not in spec["dims"]
+            for dim in dims
+        ):
+            return False
+    return True
+
+
 def draw_as(view: Mapping, registry: Mapping | None = None) -> Drawing:
     """Apply the renderer rule to a view declaration.
 
-    A known kind draws with its own renderer; otherwise a known base draws
-    with the generic renderer; otherwise the data show as a table.
+    A known kind draws with its own renderer. Otherwise a known base draws
+    with the generic renderer, but only when the view's data meet the base's
+    role contract (:func:`meets_role_contract`). Otherwise the data show as a
+    table. A base without a base version, or one this registry does not know,
+    falls back to the table; nothing here raises for an unknown kind.
     """
     kinds = known_kinds(load_registry() if registry is None else registry)
-    own = (view["kind"], view["kind_version"])
+    own = (view.get("kind"), view.get("kind_version"))
     if own in kinds:
         return Drawing("kind", *own)
-    if "base" in view:
-        base = (view["base"], view["base_version"])
-        if base in kinds:
-            return Drawing("base", *base)
+    base = kinds.get((view.get("base"), view.get("base_version")))
+    if base is not None and meets_role_contract(view, base):
+        return Drawing("base", base["kind"], base["kind_version"])
     return Drawing("table", None, None)
