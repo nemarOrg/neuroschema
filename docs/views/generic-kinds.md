@@ -36,8 +36,8 @@ A renderer offers each of them for download, so no view hides data, whether a fi
 
 A tab-separated values (TSV) file is read under the grammar of [docs/views.md](../views.md#tsv).
 
-- The bytes decode as UTF-8 (Unicode Transformation Format, 8-bit) and do not begin with a byte order mark (`tsv_encoding`).
-  JavaScript's `TextDecoder` drops a byte order mark unless it is built with `ignoreBOM: true`, so a renderer checks the first three bytes itself.
+- The bytes do not begin with a byte order mark, and they decode as UTF-8 (Unicode Transformation Format, 8-bit) (`tsv_encoding`).
+  JavaScript's `TextDecoder` replaces bytes that are not UTF-8 with U+FFFD unless it is built with `fatal: true`, and it drops a byte order mark unless it is built with `ignoreBOM: true`; a renderer builds it with `{fatal: true}` and checks the first three bytes itself.
 - The text holds no carriage return (CR) and ends with a line feed (LF) (`tsv_line_endings`).
 - Without its final LF, the text splits at each LF into lines: the first is the header, and each later line is a data row.
 - A line splits at each TAB into cells.

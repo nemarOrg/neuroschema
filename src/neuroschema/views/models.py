@@ -4,9 +4,11 @@
 and the bytes of the files it reads, a renderer builds one model: the table of
 ``nemar.table``, the x axis and series of ``nemar.lines``, the cells and color
 limits of ``nemar.heatmap``, the bins of ``nemar.histogram`` (all version 1),
-or the table-and-download fallback. Every number in a model is a stored value
-and every readout prints stored text. ``views/vectors/kinds-models.v1.json``
-holds the cases every renderer reproduces; this module is the Python reference.
+or the table-and-download fallback. A model's numbers are stored values, or
+are computed from them by a stated rule (a histogram's ``total`` and
+``max_count``, and the ``absmax`` limits), and every readout prints stored
+text. ``views/vectors/kinds-models.v1.json`` holds the cases every renderer
+reproduces; this module is the Python reference.
 """
 
 from __future__ import annotations
