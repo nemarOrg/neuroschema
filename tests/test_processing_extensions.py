@@ -233,7 +233,7 @@ def dq_dataset():
                 "record_sha256": SHA,
                 "counts": {"passed": 17, "failed": 1, "skipped": 0, "total": 18},
                 "distributions": {"pctGoodSamples": distribution()},
-                "bounds": {"nGoodChannels": {"min": 58, "max": 64}},
+                "observed_range": {"nGoodChannels": {"min": 58, "max": 64}},
                 "not_processed": [
                     {
                         "path": "sub-002/eeg/sub-002_task-FaceRecognition_eeg.set",

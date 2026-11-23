@@ -155,7 +155,7 @@
         "record_sha256",
         "counts",
         "distributions",
-        "bounds",
+        "observed_range",
         "not_processed",
         "not_processed_truncated"
       ],
@@ -201,9 +201,9 @@
             "$ref": "../extensions/dataQuality.schema.json#/$defs/distribution"
           }
         },
-        "bounds": {
+        "observed_range": {
           "type": "object",
-          "description": "Lowest and highest value of each metric across recordings (for example good channels, good data, brain components), keyed by metric name.",
+          "description": "Lowest and highest value of each metric observed across the recordings that passed (for example good channels, good data, brain components), keyed by metric name. Not a metric's bounds, which is the valid range its plugin declares.",
           "propertyNames": {
             "$ref": "../definitions/processingTypes.schema.json#/$defs/metricName"
           },

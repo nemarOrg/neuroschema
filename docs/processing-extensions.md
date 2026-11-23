@@ -25,7 +25,8 @@ JSON Schema cannot compare one value with another, so the writer enforces:
 - the keys of a dataset `processing` entry's `counts` equal its `declared_checkpoints`;
 - after a recording's first non-passed checkpoint, every later declared checkpoint is `skipped` with the same `code` and `step`;
 - each checkpoint name is one the recipe version declares in the registry;
-- a histogram has one count fewer than its edges, and `n` = sum(counts) + underflow + overflow.
+- a histogram has one count fewer than its edges, its edges strictly increase, and `n` = sum(counts) + underflow + overflow;
+- every range (a metric's `bounds`, each `observed_range` entry) has min <= max when both are set.
 
 `tests/helpers.py` checks the examples against these rules; the package does not ship them.
 
@@ -52,7 +53,7 @@ Figure size caps and the rule that a time-series figure is raster only (PNG or W
 | `record_sha256` | same name |
 | `discovered`, `succeeded`, `failed`, `skipped` | `counts.total`, `counts.passed`, `counts.failed`, `counts.skipped` |
 | `distributions` | same, keyed by metric name, numeric edges |
-| (none) | `bounds`: lowest and highest value per metric across recordings |
+| (none) | `observed_range`: lowest and highest value per metric observed across recordings (a metric's `bounds` is instead the valid range its plugin declares) |
 | `not_processed`, `not_processed_truncated` | same names |
 
 ## Reusable definitions

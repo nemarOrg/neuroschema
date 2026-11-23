@@ -32,7 +32,7 @@
     },
     "bounds": {
       "$ref": "../definitions/processingTypes.schema.json#/$defs/range",
-      "description": "The valid range the plugin declares for this value (not a quality threshold)."
+      "description": "The valid range the plugin declares for this value (for example 0 to 100 for a percentage), not a quality threshold and not the range observed across recordings (that is the dataset summary's observed_range)."
     },
     "plugin": {
       "$ref": "../definitions/processingTypes.schema.json#/$defs/plugin",

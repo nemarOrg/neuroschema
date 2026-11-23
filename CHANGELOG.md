@@ -11,13 +11,13 @@ Processing metadata for NEMAR's pipeline checkpoints, live progress and quality 
 
 - `processing` extension namespace: per recording and recipe, each checkpoint's outcome (`passed`, `failed`, `skipped`, with failure code and step); per dataset and recipe, the declared checkpoints and reconciled counts.
 - `schema/definitions/checkpointCounts.schema.json`: the counts shape (passed, failed, skipped, total), reused by nemar-cli's live progress object.
-- `schema/definitions/qualityMetric.schema.json`: one plugin metric (value, unit, description, optional valid-range bounds, producing plugin).
+- `schema/definitions/qualityMetric.schema.json`: one plugin metric (value, unit, description, optional `bounds` as the plugin-declared valid range, producing plugin).
 - `schema/definitions/processingTypes.schema.json`: shared identifier, digest, location and plugin types.
 - Examples `examples/dataset-ds002718-processing.json` and `examples/record-ds002718-processing.json`.
 
 ### Changed (breaking)
 
-- `dataQuality`: the placeholder fields `quality_score`, `quality_flags` and `assessed_at` are removed. The namespace now requires `level` (`record` or `dataset`) and `recipes`: at record level, typed metrics and figures (PNG, SVG or WebP, with size, SHA-256 and caption) per recipe; at dataset level, the quality control summary per recipe (counts, distributions, bounds, not-processed list), which replaces nemar-process `qc-summary.v1`. Each entry carries the SHA-256 of the signalJourney record it came from.
+- `dataQuality`: the placeholder fields `quality_score`, `quality_flags` and `assessed_at` are removed. The namespace now requires `level` (`record` or `dataset`) and `recipes`: at record level, typed metrics and figures (PNG, SVG or WebP, with size, SHA-256 and caption) per recipe; at dataset level, the quality control summary per recipe (counts, distributions, `observed_range`, not-processed list), which replaces nemar-process `qc-summary.v1`. Each entry carries the SHA-256 of the signalJourney record it came from.
 - `signalJourney`: the placeholder fields `pipeline_id`, `processing_status` and `sj_version` at the namespace root are removed. The namespace now requires `recipes`, one link per recipe with `recipe_version`, `processing_status` (`in_progress`, `completed`, `failed`; `pending` is gone), `location`, `sha256` and `sj_version`.
 - Every `$ref` below the root schema names its folder (for example `../extensions/dataQuality.schema.json`); resolution targets are unchanged.
 

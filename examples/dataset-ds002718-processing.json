@@ -239,7 +239,7 @@
               }
             }
           },
-          "bounds": {
+          "observed_range": {
             "nGoodChannels": {
               "min": 63,
               "max": 74
@@ -307,7 +307,7 @@
               }
             }
           },
-          "bounds": {
+          "observed_range": {
             "nBrainComponents": {
               "min": 14,
               "max": 40
