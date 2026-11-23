@@ -24,6 +24,12 @@
       "name": "nemar.view-digest.v1",
       "spec": "docs/views/view-digest.md",
       "vectors": "views/vectors/view-digest.v1.json"
+    },
+    {
+      "name": "nemar.sensor-labels.v1",
+      "spec": "docs/views/sensor-labels.md",
+      "vectors": "views/vectors/sensor-labels.v1.json",
+      "montages": "views/montages/PROVENANCE.json"
     }
   ],
   "formats": {
