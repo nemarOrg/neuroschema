@@ -50,11 +50,14 @@ A declared base is a claim: the schema cannot check an unknown kind's data again
 An unknown kind is never an error, and neither is a base the renderer does not know or a view that misses its base's contract.
 `neuroschema.views.draw_as` implements the rule against the registry, and `neuroschema.views.meets_role_contract` the contract.
 
+In the registry, each kind lists its roles: `roles.<role>.formats` are the formats the role may take, and `roles.<role>.dims` are the dimensions it may carry, where an empty list means the role carries none.
+The kind's schema admits exactly these roles, formats and dimensions, and a test holds the two to each other.
+
 ### `nemar.table` version 1
 
 One stored TSV file, read as the role `table`, with its `columns` declared.
 A renderer shows the declared columns in the order declared, one row per data row, each cell as its stored text, and offers the file for download.
-It is a generic kind: it has no base, no inputs, no transform and no parameters.
+It is a generic kind: it has no base, no inputs, no transform, no parameters and no dimensions.
 
 ## Data roles
 

@@ -335,6 +335,11 @@ class TestTableKind:
         view["parameters"] = {"sort": "name"}
         assert view_errors(view) == {("maxProperties", "parameters")}
 
+    def test_table_role_carries_no_dims(self):
+        view = table()
+        view["data"][0]["dims"] = [_dim(coords={"column": "name"})]
+        assert view_errors(view) == {("not", "data/0/dims")}
+
     def test_table_is_one_tsv_file_with_columns(self):
         view = table()
         view["data"].append(copy.deepcopy(view["data"][0]))
@@ -385,7 +390,7 @@ class TestViewData:
         [{"column": "freq_hz"}, {"header": True}, {"role": "layout", "column": "name"}],
     )
     def test_coords_forms(self, coords):
-        view = table()
+        view = unknown_kind()
         view["data"][0]["dims"] = [_dim(coords=coords)]
         assert view_errors(view) == set()
 
@@ -400,12 +405,12 @@ class TestViewData:
         ],
     )
     def test_bad_coords(self, coords):
-        view = table()
+        view = unknown_kind()
         view["data"][0]["dims"] = [_dim(coords=coords)]
         assert view_errors(view) == {("oneOf", "data/0/dims/0/coords")}
 
     def test_time_is_in_seconds(self):
-        view = table()
+        view = unknown_kind()
         view["data"][0]["dims"] = [_dim(name="time", unit="s", coords={"column": "t"})]
         assert view_errors(view) == set()
         view["data"][0]["dims"][0]["unit"] = "ms"
@@ -414,7 +419,7 @@ class TestViewData:
         assert view_errors(view) == {("required", "data/0/dims/0")}
 
     def test_bad_axis(self):
-        view = table()
+        view = unknown_kind()
         view["data"][0]["dims"] = [_dim(axis="depth", coords={"column": "f"})]
         assert view_errors(view) == {("enum", "data/0/dims/0/axis")}
 
@@ -505,6 +510,34 @@ KIND_FILE = re.compile(
 )
 
 
+def _allowed(node: dict) -> set:
+    """The values a const or enum admits."""
+    return {node["const"]} if "const" in node else set(node["enum"])
+
+
+def _schema_roles(schema: dict) -> dict[str, dict[str, set]]:
+    """Each role a kind schema admits in data, with its formats and its dims.
+
+    Reads data.items, or each branch of its oneOf or anyOf for a kind with
+    several roles. A role's dims must be constrained: {"not": {}} admits none,
+    otherwise dims.items.properties.name lists the admitted names.
+    """
+    items = schema["properties"]["data"]["items"]
+    roles: dict[str, dict[str, set]] = {}
+    for branch in items.get("oneOf") or items.get("anyOf") or [items]:
+        props = branch["properties"]
+        dims = props["dims"]
+        names = (
+            set()
+            if dims.get("not") == {}
+            else _allowed(dims["items"]["properties"]["name"])
+        )
+        for role in _allowed(props["role"]):
+            assert role not in roles, role
+            roles[role] = {"formats": _allowed(props["format"]), "dims": names}
+    return roles
+
+
 def _dispatch() -> dict[tuple[str, int], str]:
     """The (kind, kind_version) -> $ref pairs view.schema.json checks."""
     view = json.loads(VIEW_SCHEMA.read_text())["$defs"]["view"]
@@ -572,6 +605,31 @@ class TestRegistry:
         }
         for name, spec in REGISTRY["formats"].items():
             assert by_format[name] == re.escape(spec["extension"]) + "$(?!\n)"
+
+    def test_registry_roles_match_each_kind_schema(self):
+        """The registry's roles, formats and dims are what the kind schema admits."""
+        for entry in REGISTRY["kinds"]:
+            schema = json.loads((ROOT / entry["schema"]).read_text())
+            assert _schema_roles(schema) == {
+                role: {"formats": set(spec["formats"]), "dims": set(spec["dims"])}
+                for role, spec in entry["roles"].items()
+            }, entry["kind"]
+
+    def test_reserved_dim_units_match_the_schema(self):
+        """A reserved dimension's registered unit is the unit the schema requires."""
+        rules = json.loads(VIEW_SCHEMA.read_text())["$defs"]["dim"]["allOf"]
+        required = {
+            r["if"]["properties"]["name"]["const"]: r["then"]["properties"]["unit"][
+                "const"
+            ]
+            for r in rules
+        }
+        registered = {
+            name: dim["unit"]
+            for name, dim in REGISTRY["reserved_dims"].items()
+            if dim["unit"] is not None
+        }
+        assert required == registered == {"time": "s"}
 
     def test_reserved_dims(self):
         reserved = REGISTRY["reserved_dims"]
