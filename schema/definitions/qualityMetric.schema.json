@@ -31,11 +31,11 @@
       "description": "One-sentence description of what the metric measures."
     },
     "bounds": {
-      "$ref": "processingTypes.schema.json#/$defs/range",
+      "$ref": "../definitions/processingTypes.schema.json#/$defs/range",
       "description": "The valid range the plugin declares for this value (not a quality threshold)."
     },
     "plugin": {
-      "$ref": "processingTypes.schema.json#/$defs/plugin",
+      "$ref": "../definitions/processingTypes.schema.json#/$defs/plugin",
       "description": "The plugin that produced this value."
     }
   },
