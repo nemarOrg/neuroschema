@@ -69,6 +69,6 @@ A view's files, their formats and their caps are described in [views.md](views.m
 Other schemas reference these by path (`../definitions/...`, `../extensions/...`, `../views/...`); in nemar-cli's vendored bundle they become `nsc:/definitions/...`, `nsc:/extensions/...` and `nsc:/views/...`:
 
 - `checkpointCounts.schema.json`: the counts shape nemar-cli's live progress object reuses;
-- `qualityMetric.schema.json`: the metric shape a plugin manifest declares for each metric output, with its producer (a plugin or a recipe);
+- `qualityMetric.schema.json`: one metric and its single producer. A plugin manifest declares each metric output with this shape and the producer `plugin`; `recipe` is for a metric a recipe writes into its own records;
 - `view.schema.json#/$defs/view`: one view declaration, which a recipe or plugin writes into its signalJourney record;
 - `dataQuality.schema.json#/$defs/datasetRecipeSummary`: the dataset quality summary the backend projects from a recipe run.

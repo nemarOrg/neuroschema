@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "qualityMetric.schema.json",
   "title": "Quality Metric",
-  "description": "One quality metric computed for a recording, with exactly one producer: the plugin or the recipe that computed it. Plugin manifests (nemar-cli shared/contract) declare each metric output with this shape.",
+  "description": "One quality metric computed for a recording, with exactly one producer. A plugin manifest (nemar-cli shared/contract) declares each of its metric outputs with this shape and names the producer with plugin; recipe is for a metric a recipe writes into its own records.",
   "type": "object",
   "required": [
     "value",
@@ -35,11 +35,11 @@
     },
     "plugin": {
       "$ref": "../definitions/processingTypes.schema.json#/$defs/plugin",
-      "description": "The plugin that produced this value; exactly one of plugin and recipe."
+      "description": "The plugin that produced this value; the producer of every metric a plugin manifest declares. Exactly one of plugin and recipe."
     },
     "recipe": {
       "$ref": "../definitions/processingTypes.schema.json#/$defs/recipe",
-      "description": "The recipe that produced this value; exactly one of plugin and recipe."
+      "description": "The recipe that produced this value, for a metric a recipe writes into its own records. Exactly one of plugin and recipe."
     }
   },
   "oneOf": [
