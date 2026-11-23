@@ -8,6 +8,7 @@ from neuroschema.views.digest import (
     VIEW_DIGEST_FORMAT,
     CanonicalizationError,
     canonicalize,
+    parse_declaration,
     view_digest,
 )
 from neuroschema.views.registry import (
@@ -33,5 +34,6 @@ __all__ = [
     "known_kinds",
     "load_registry",
     "meets_role_contract",
+    "parse_declaration",
     "view_digest",
 ]

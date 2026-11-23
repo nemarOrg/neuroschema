@@ -26,6 +26,7 @@ from neuroschema.views import (
     known_kinds,
     load_registry,
     meets_role_contract,
+    parse_declaration,
     view_digest,
 )
 from tests.helpers import failures
@@ -62,7 +63,20 @@ def test_vector_digest_is_the_sha256_of_its_canonical_text(case):
 @pytest.mark.parametrize("refusal", REFUSALS, ids=[r["name"] for r in REFUSALS])
 def test_digest_refusals(refusal):
     with pytest.raises(CanonicalizationError):
-        view_digest(json.loads(refusal["json"]))
+        view_digest(parse_declaration(refusal["json"]))
+
+
+@pytest.mark.parametrize("case", CASES, ids=[c["name"] for c in CASES])
+def test_digest_from_text_matches_the_vector(case):
+    text = json.dumps(case["declaration"], indent=1)
+    assert view_digest(parse_declaration(text)) == case["sha256"]
+
+
+def test_duplicate_member_name_is_refused_at_any_depth():
+    with pytest.raises(CanonicalizationError, match="duplicate member name 'k'"):
+        parse_declaration('{"k":1,"k":1}')
+    with pytest.raises(CanonicalizationError, match="duplicate member name 'name'"):
+        parse_declaration('{"a":[{"b":{"name":"x","name":"x"}}]}')
 
 
 def test_vector_file_header():

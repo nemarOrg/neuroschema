@@ -8,7 +8,9 @@ This page is normative; [`views/vectors/view-digest.v1.json`](../../views/vector
 
 The input is one view declaration, a JSON object, exactly as written in the record (the signalJourney record's `extensions.nemar.views`, or the record-level `dataQuality` entry projected from it).
 A field that a reader adds, such as an address a route attaches, is not part of it: a reader digests the declaration before it adds anything.
-The declaration is parsed with a standard JSON parser, so each number is the Institute of Electrical and Electronics Engineers (IEEE) 754 binary64 value nearest its text, as JavaScript's `JSON.parse` reads it; an integer beyond 2^53 becomes the nearest binary64 (9007199254740993 reads as 9007199254740992).
+The declaration is Internet JSON (I-JSON, RFC 7493): in particular, no object has two members with one name, at any depth.
+An implementation that reads the declaration from text refuses a duplicate name while it parses, because a standard parser keeps the last member silently (Python's `json.loads` and JavaScript's `JSON.parse` both do): Python passes an `object_pairs_hook` that refuses a repeated name (`neuroschema.views.parse_declaration`), and JavaScript needs a parser or a scan that reports one.
+Otherwise the declaration is parsed with a standard JSON parser, so each number is the Institute of Electrical and Electronics Engineers (IEEE) 754 binary64 value nearest its text, as JavaScript's `JSON.parse` reads it; an integer beyond 2^53 becomes the nearest binary64 (9007199254740993 reads as 9007199254740992).
 
 ## Canonical form
 
@@ -33,6 +35,8 @@ In Python, `json.dumps` is not enough: it prints `100.0` and `1e-07`, sorts by c
 A declaration has no digest, and an implementation raises an error rather than guess, when:
 
 - it is not a JSON object;
+- an object in it has two members with one name;
+- its text is not JSON, such as the `NaN` and `Infinity` literals Python's `json.loads` accepts;
 - a string or a member name holds a lone surrogate (a code unit from U+D800 to U+DFFF that is not part of a pair);
 - a number is not finite (a parser reads `1e400` as infinite).
 
@@ -46,6 +50,6 @@ The digest is not a signature: it shows that two copies agree, not who wrote the
 
 Each case of the vectors file gives a `declaration`, its `canonical` text and its `sha256`.
 An implementation parses the vectors file with its standard JSON parser, canonicalizes each declaration, and compares the UTF-8 bytes with `canonical` and their SHA-256 with `sha256`.
-Each refusal gives JSON text in `json`, which the implementation parses the same way and must refuse.
+Each refusal gives text in `json`, which the implementation parses with its duplicate-name check and must refuse, while parsing or while canonicalizing.
 The cases cover member order (at every depth, and UTF-16 against code point order), number printing (the ECMAScript boundaries and the RFC 8785 Appendix B values), integers beyond binary64 precision, string escapes, and two declarations of the kind a recipe or plugin writes.
 The canonical texts were computed with ECMAScript's own `JSON.stringify` and checked against the Python reference.

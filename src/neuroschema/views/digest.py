@@ -11,6 +11,7 @@ implementation must reproduce.
 from __future__ import annotations
 
 import hashlib
+import json
 import math
 from collections.abc import Mapping
 
@@ -41,6 +42,32 @@ def canonicalize(value: object) -> bytes:
     parts: list[str] = []
     _write(value, parts)
     return "".join(parts).encode("utf-8")
+
+
+def parse_declaration(text: str | bytes) -> object:
+    """Parse a declaration from JSON text as Internet JSON (I-JSON, RFC 7493).
+
+    Refuses, with :class:`CanonicalizationError`, a duplicate member name at any
+    depth (``json.loads`` would keep the last one silently) and the ``NaN``,
+    ``Infinity`` and ``-Infinity`` literals Python accepts and JSON does not.
+    Digest a declaration read from text through this function.
+    """
+    return json.loads(
+        text, object_pairs_hook=_unique_members, parse_constant=_refuse_constant
+    )
+
+
+def _unique_members(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    obj: dict[str, object] = {}
+    for key, value in pairs:
+        if key in obj:
+            raise CanonicalizationError(f"duplicate member name {key!r}")
+        obj[key] = value
+    return obj
+
+
+def _refuse_constant(literal: str) -> object:
+    raise CanonicalizationError(f"{literal} is not a JSON number")
 
 
 def view_digest(declaration: Mapping[str, object]) -> str:
