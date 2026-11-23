@@ -1,0 +1,621 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "view.schema.json",
+  "title": "View Declaration",
+  "description": "A quality view: data that a browser draws, declared by the recipe or plugin that wrote it. A library of $defs; the root constrains nothing, and $defs/view is the declaration. Every view is checked against this envelope. A kind and version that views/registry.json lists is also checked against its schema in schema/views/; any other kind passes on the envelope alone, and a renderer draws it by its base or as a table (docs/views.md).",
+  "$defs": {
+    "view": {
+      "type": "object",
+      "description": "One view declaration.",
+      "required": [
+        "key",
+        "kind",
+        "kind_version",
+        "caption",
+        "source"
+      ],
+      "properties": {
+        "key": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/viewKey",
+          "description": "The view's key, unique within its recipe entry."
+        },
+        "kind": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/kindName",
+          "description": "The view's kind. Open: a kind this schema does not know is valid."
+        },
+        "kind_version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 999,
+          "description": "Version of the kind; a change to a kind is a new version."
+        },
+        "base": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/kindName",
+          "description": "The generic kind a preset draws over. Required for a preset, absent for a generic kind (each kind's schema says which); always given with base_version."
+        },
+        "base_version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 999,
+          "description": "Version of the base kind; always given with base."
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "description": "Caption shown with the view."
+        },
+        "source": {
+          "$ref": "../definitions/view.schema.json#/$defs/viewSource",
+          "description": "What wrote the view."
+        },
+        "scope": {
+          "type": "string",
+          "enum": [
+            "recording",
+            "subject",
+            "dataset",
+            "collection"
+          ],
+          "default": "recording",
+          "description": "What the view describes; absent means recording. subject, dataset and collection are reserved: they require sources, and nothing writes or reads them yet."
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "description": "The records a view of a reserved scope summarizes. Required for a scope other than recording and absent for a recording view.",
+          "items": {
+            "$ref": "../definitions/view.schema.json#/$defs/scopeSource"
+          }
+        },
+        "parameters": {
+          "type": "object",
+          "description": "How the data were computed or are to be drawn. Open here; each kind's schema constrains it."
+        },
+        "data": {
+          "type": "array",
+          "description": "Stored data files, one per role.",
+          "items": {
+            "$ref": "../definitions/view.schema.json#/$defs/viewData"
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "description": "Inputs a transform computes the view from, named by digest.",
+          "items": {
+            "$ref": "../definitions/view.schema.json#/$defs/viewInput"
+          }
+        },
+        "transform": {
+          "$ref": "../definitions/view.schema.json#/$defs/transform",
+          "description": "The named, versioned computation over the inputs; required exactly when the kind's schema requires it."
+        }
+      },
+      "dependentRequired": {
+        "base": [
+          "base_version"
+        ],
+        "base_version": [
+          "base"
+        ]
+      },
+      "anyOf": [
+        {
+          "required": [
+            "data"
+          ],
+          "properties": {
+            "data": {
+              "minItems": 1
+            }
+          }
+        },
+        {
+          "required": [
+            "inputs"
+          ],
+          "properties": {
+            "inputs": {
+              "minItems": 1
+            }
+          }
+        }
+      ],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "scope": {
+                "enum": [
+                  "subject",
+                  "dataset",
+                  "collection"
+                ]
+              }
+            },
+            "required": [
+              "scope"
+            ]
+          },
+          "then": {
+            "required": [
+              "sources"
+            ]
+          },
+          "else": {
+            "properties": {
+              "sources": {
+                "not": {},
+                "description": "A recording view has no sources."
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "nemar.table"
+              },
+              "kind_version": {
+                "const": 1
+              }
+            },
+            "required": [
+              "kind",
+              "kind_version"
+            ]
+          },
+          "then": {
+            "$ref": "../views/kind.nemar.table.v1.schema.json"
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "viewSource": {
+      "type": "object",
+      "description": "What wrote a view: exactly one of a plugin or a recipe, by name and version.",
+      "properties": {
+        "plugin": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/plugin",
+          "description": "The plugin that wrote the view."
+        },
+        "recipe": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/recipe",
+          "description": "The recipe that wrote the view."
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "plugin"
+          ]
+        },
+        {
+          "required": [
+            "recipe"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "scopeSource": {
+      "type": "object",
+      "description": "One record a view of a reserved scope summarizes.",
+      "required": [
+        "record_sha256"
+      ],
+      "properties": {
+        "record_sha256": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/sha256",
+          "description": "SHA-256 of the bytes of the signalJourney record."
+        }
+      },
+      "additionalProperties": false
+    },
+    "viewData": {
+      "type": "object",
+      "description": "One stored data file of a view, read as one role. A role reads only the columns it declares, so one file can serve two roles.",
+      "required": [
+        "role",
+        "location",
+        "format",
+        "size",
+        "sha256"
+      ],
+      "properties": {
+        "role": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/roleName",
+          "description": "The role this file plays in the view's kind."
+        },
+        "location": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/relativeLocation",
+          "description": "Path of the file inside the run's product; the same string as its signalJourney outputTargets location."
+        },
+        "format": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/formatName",
+          "description": "The file's format; views/registry.json gives its grammar. A tsv or json file's location ends in .tsv or .json."
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Size of the file in bytes."
+        },
+        "sha256": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/sha256",
+          "description": "SHA-256 of the file's bytes."
+        },
+        "columns": {
+          "type": "array",
+          "minItems": 1,
+          "description": "The columns this role reads, by header name.",
+          "items": {
+            "$ref": "../definitions/view.schema.json#/$defs/column"
+          }
+        },
+        "dims": {
+          "type": "array",
+          "minItems": 1,
+          "description": "The dimensions of this role's data and where their coordinates come from.",
+          "items": {
+            "$ref": "../definitions/view.schema.json#/$defs/dim"
+          }
+        },
+        "coordinate_system": {
+          "type": "string",
+          "description": "For a role of sensor positions: the BIDS name of the coordinate system, or n/a.",
+          "pattern": "^(n/a|[A-Za-z0-9][A-Za-z0-9_-]{0,63})$(?!\n)"
+        },
+        "position_source": {
+          "type": "string",
+          "enum": [
+            "measured",
+            "template"
+          ],
+          "description": "For a role of sensor positions: measured (taken from the dataset's own files, which NEMAR does not verify) or template (a standard montage matched by label)."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "format": {
+                "const": "tsv"
+              }
+            },
+            "required": [
+              "format"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "location": {
+                "type": "string",
+                "pattern": "\\.tsv$(?!\n)"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "format": {
+                "const": "json"
+              }
+            },
+            "required": [
+              "format"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "location": {
+                "type": "string",
+                "pattern": "\\.json$(?!\n)"
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "columnName": {
+      "type": "string",
+      "description": "A header name in a tabular file: no TAB, CR or LF.",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[^\\t\\r\\n]+$(?!\n)"
+    },
+    "column": {
+      "type": "object",
+      "description": "One column a role reads.",
+      "required": [
+        "name",
+        "type"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "../definitions/view.schema.json#/$defs/columnName",
+          "description": "The column's header name."
+        },
+        "type": {
+          "$ref": "../definitions/view.schema.json#/$defs/valueType",
+          "description": "Type of the column's cells."
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32,
+          "description": "Unit of the column's values."
+        }
+      },
+      "additionalProperties": false
+    },
+    "valueType": {
+      "type": "string",
+      "description": "Type of a cell or coordinate: number (finite, JSON number grammar), integer, or string.",
+      "enum": [
+        "number",
+        "integer",
+        "string"
+      ]
+    },
+    "dim": {
+      "type": "object",
+      "description": "One dimension of a role's data. Reserved names (views/registry.json) have fixed meanings; time is in seconds.",
+      "required": [
+        "name",
+        "axis",
+        "type",
+        "coords"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/dimName",
+          "description": "The dimension's name."
+        },
+        "axis": {
+          "type": "string",
+          "enum": [
+            "rows",
+            "columns"
+          ],
+          "description": "Whether the dimension runs along the file's rows or its columns."
+        },
+        "type": {
+          "$ref": "../definitions/view.schema.json#/$defs/valueType",
+          "description": "Type of the coordinates."
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32,
+          "description": "Unit of the coordinates."
+        },
+        "coords": {
+          "$ref": "../definitions/view.schema.json#/$defs/coords",
+          "description": "Where the coordinates come from."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "time"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "required": [
+              "unit"
+            ],
+            "properties": {
+              "unit": {
+                "const": "s"
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "coords": {
+      "type": "object",
+      "description": "Where a dimension's coordinates come from: a column of this file ({column}), this file's header names ({header: true}), or, by position, a column of another role ({role, column}).",
+      "oneOf": [
+        {
+          "required": [
+            "column"
+          ],
+          "properties": {
+            "column": {
+              "$ref": "../definitions/view.schema.json#/$defs/columnName"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "required": [
+            "header"
+          ],
+          "properties": {
+            "header": {
+              "const": true
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "required": [
+            "role",
+            "column"
+          ],
+          "properties": {
+            "role": {
+              "$ref": "../definitions/processingTypes.schema.json#/$defs/roleName"
+            },
+            "column": {
+              "$ref": "../definitions/view.schema.json#/$defs/columnName"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "viewInput": {
+      "type": "object",
+      "description": "One input of a computed view: exactly one of a derivative file or a serving store, each named by its digest.",
+      "required": [
+        "role"
+      ],
+      "properties": {
+        "role": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/roleName",
+          "description": "The role this input plays in the view's transform."
+        },
+        "file": {
+          "$ref": "../definitions/view.schema.json#/$defs/fileInput",
+          "description": "A file of the run's product."
+        },
+        "store": {
+          "$ref": "../definitions/view.schema.json#/$defs/storeInput",
+          "description": "A recording's store in NEMAR's serving copy."
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "file"
+          ]
+        },
+        {
+          "required": [
+            "store"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "fileInput": {
+      "type": "object",
+      "description": "A file of the run's product, named by its digest.",
+      "required": [
+        "location",
+        "sha256",
+        "size"
+      ],
+      "properties": {
+        "location": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/relativeLocation",
+          "description": "Path of the file inside the run's product; the same string as its signalJourney outputTargets location."
+        },
+        "sha256": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/sha256",
+          "description": "SHA-256 of the file's bytes."
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Size of the file in bytes."
+        }
+      },
+      "additionalProperties": false
+    },
+    "storeInput": {
+      "type": "object",
+      "description": "A recording's store in NEMAR's serving copy, named by its nemar.store-content.v1 digest.",
+      "required": [
+        "recording",
+        "group",
+        "content_sha256",
+        "profile"
+      ],
+      "properties": {
+        "recording": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/relativeLocation",
+          "description": "BIDS path of the recording."
+        },
+        "path": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/relativeLocation",
+          "description": "The store's path, as in the record's stores_content rows, when it is not the recording path."
+        },
+        "group": {
+          "type": "string",
+          "description": "The channel group the transform reads (for example eeg).",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$(?!\n)"
+        },
+        "content_sha256": {
+          "anyOf": [
+            {
+              "$ref": "../definitions/processingTypes.schema.json#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The group's nemar.store-content.v1 digest; null only when the run read the archive (profile archive), which records no digest of the serving store."
+        },
+        "profile": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/profile",
+          "description": "Which copy of the data the run that declared the view read."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "profile": {
+                "const": "serving"
+              }
+            },
+            "required": [
+              "profile"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "content_sha256": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "transform": {
+      "type": "object",
+      "description": "A named, versioned computation over a view's inputs, with its parameters.",
+      "required": [
+        "name",
+        "parameters"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/transformName",
+          "description": "The transform's name and version."
+        },
+        "parameters": {
+          "type": "object",
+          "description": "The transform's parameters; the transform's schema constrains them."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

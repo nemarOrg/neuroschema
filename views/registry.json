@@ -1,0 +1,72 @@
+{
+  "format": "neuroschema.views-registry.v1",
+  "description": "The view vocabulary neuroschema defines: kinds (each with its base, roles, dimensions and schema), transforms and algorithms (each with its specification and vectors), data formats, reserved dimension names and size caps. A kind or format not listed here is still valid in a declaration; docs/views.md gives the renderer rule for it.",
+  "kinds": [
+    {
+      "kind": "nemar.table",
+      "kind_version": 1,
+      "base": null,
+      "base_version": null,
+      "schema": "schema/views/kind.nemar.table.v1.schema.json",
+      "roles": {
+        "table": {
+          "formats": [
+            "tsv"
+          ],
+          "dims": []
+        }
+      }
+    }
+  ],
+  "transforms": [],
+  "algorithms": [
+    {
+      "name": "nemar.view-digest.v1",
+      "spec": "docs/views/view-digest.md",
+      "vectors": "views/vectors/view-digest.v1.json"
+    }
+  ],
+  "formats": {
+    "tsv": {
+      "extension": ".tsv",
+      "media_type": "text/tab-separated-values",
+      "grammar": "docs/views.md#tsv"
+    },
+    "json": {
+      "extension": ".json",
+      "media_type": "application/json",
+      "grammar": "docs/views.md#json"
+    }
+  },
+  "reserved_dims": {
+    "time": {
+      "unit": "s",
+      "meaning": "Time, in seconds."
+    },
+    "epoch": {
+      "unit": null,
+      "meaning": "An epoch of the recording, by its index."
+    },
+    "recording": {
+      "unit": null,
+      "meaning": "A recording, by its BIDS path."
+    },
+    "subject": {
+      "unit": null,
+      "meaning": "A participant, by BIDS subject label."
+    },
+    "contact": {
+      "unit": null,
+      "meaning": "An intracranial electrode contact, by its name."
+    },
+    "sensor": {
+      "unit": null,
+      "meaning": "A sensor, by its name; the coordinates are the name column of a layout role, in that role's row order."
+    }
+  },
+  "caps": {
+    "bytes_per_role": 4194304,
+    "entries_per_dim": 1024,
+    "cells_per_role": 262144
+  }
+}

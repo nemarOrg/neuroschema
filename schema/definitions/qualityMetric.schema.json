@@ -2,13 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "qualityMetric.schema.json",
   "title": "Quality Metric",
-  "description": "One quality metric a plugin computed for a recording. Plugin manifests (nemar-cli shared/contract) declare each metric output with this shape.",
+  "description": "One quality metric computed for a recording, with exactly one producer. A plugin manifest (nemar-cli shared/contract) declares each of its metric outputs with this shape and names the producer with plugin; recipe is for a metric a recipe writes into its own records.",
   "type": "object",
   "required": [
     "value",
     "unit",
-    "description",
-    "plugin"
+    "description"
   ],
   "properties": {
     "value": {
@@ -32,12 +31,28 @@
     },
     "bounds": {
       "$ref": "../definitions/processingTypes.schema.json#/$defs/range",
-      "description": "The valid range the plugin declares for this value (for example 0 to 100 for a percentage), not a quality threshold and not the range observed across recordings (that is the dataset summary's observed_range)."
+      "description": "The valid range the producer declares for this value (for example 0 to 100 for a percentage), not a quality threshold and not the range observed across recordings (that is the dataset summary's observed_range)."
     },
     "plugin": {
       "$ref": "../definitions/processingTypes.schema.json#/$defs/plugin",
-      "description": "The plugin that produced this value."
+      "description": "The plugin that produced this value; the producer of every metric a plugin manifest declares. Exactly one of plugin and recipe."
+    },
+    "recipe": {
+      "$ref": "../definitions/processingTypes.schema.json#/$defs/recipe",
+      "description": "The recipe that produced this value, for a metric a recipe writes into its own records. Exactly one of plugin and recipe."
     }
   },
+  "oneOf": [
+    {
+      "required": [
+        "plugin"
+      ]
+    },
+    {
+      "required": [
+        "recipe"
+      ]
+    }
+  ],
   "additionalProperties": false
 }
