@@ -625,9 +625,13 @@ def test_heatmap_orientation():
 
 
 def test_caps_cases_override_only_their_own_caps():
-    """Every cap the vectors override is a registry cap."""
-    overridden = {k for c in [*CASES, *REFUSALS] for k in c.get("caps", {})}
-    assert overridden == set(REGISTRY["caps"])
+    """Every cap the vectors override is a registry cap, lowered, never raised."""
+    overrides = [
+        (k, v) for c in [*CASES, *REFUSALS] for k, v in c.get("caps", {}).items()
+    ]
+    assert {k for k, _v in overrides} == set(REGISTRY["caps"])
+    for name, value in overrides:
+        assert 0 < value <= REGISTRY["caps"][name], name
 
 
 def test_a_kind_without_a_reference_model_is_named(tmp_path):
