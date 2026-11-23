@@ -2,25 +2,458 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "dataQuality.schema.json",
   "title": "Data Quality Extension",
-  "description": "Namespace for data quality metrics and indicators. Placeholder for future data quality assessment projects.",
+  "description": "Quality results the NEMAR backend projects from the signalJourney records of its recipe runs. `level` selects the shape: `record` (one recording's metrics and figures per recipe) or `dataset` (the dataset quality control summary per recipe; replaces nemar-process qc-summary.v1). Each entry carries the SHA-256 of the signalJourney record it came from; the record stays the source.",
   "type": "object",
+  "required": [
+    "level"
+  ],
   "properties": {
-    "quality_score": {
-      "type": ["number", "null"],
-      "description": "Overall quality score (0-1 scale).",
-      "minimum": 0,
-      "maximum": 1
-    },
-    "quality_flags": {
-      "type": "array",
-      "description": "List of quality flags or issues identified.",
-      "items": { "type": "string" }
-    },
-    "assessed_at": {
-      "type": ["string", "null"],
-      "description": "ISO 8601 timestamp of when the quality assessment was performed.",
-      "format": "date-time"
+    "level": {
+      "type": "string",
+      "enum": [
+        "record",
+        "dataset"
+      ],
+      "description": "Which document this entry belongs to: record (one recording) or dataset (the whole dataset)."
     }
   },
-  "additionalProperties": true
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "level": {
+            "const": "record"
+          }
+        },
+        "required": [
+          "level"
+        ]
+      },
+      "then": {
+        "$ref": "../extensions/dataQuality.schema.json#/$defs/record"
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "level": {
+            "const": "dataset"
+          }
+        },
+        "required": [
+          "level"
+        ]
+      },
+      "then": {
+        "$ref": "../extensions/dataQuality.schema.json#/$defs/dataset"
+      }
+    }
+  ],
+  "additionalProperties": true,
+  "$defs": {
+    "record": {
+      "type": "object",
+      "description": "Record-level shape.",
+      "required": [
+        "recipes"
+      ],
+      "properties": {
+        "recipes": {
+          "type": "object",
+          "description": "Results per recipe, keyed by recipe id.",
+          "propertyNames": {
+            "$ref": "../definitions/processingTypes.schema.json#/$defs/recipeId"
+          },
+          "additionalProperties": {
+            "$ref": "../extensions/dataQuality.schema.json#/$defs/recordRecipeResults"
+          }
+        }
+      }
+    },
+    "dataset": {
+      "type": "object",
+      "description": "Dataset-level shape.",
+      "required": [
+        "recipes"
+      ],
+      "properties": {
+        "recipes": {
+          "type": "object",
+          "description": "Quality control summary per recipe, keyed by recipe id.",
+          "propertyNames": {
+            "$ref": "../definitions/processingTypes.schema.json#/$defs/recipeId"
+          },
+          "additionalProperties": {
+            "$ref": "../extensions/dataQuality.schema.json#/$defs/datasetRecipeSummary"
+          }
+        }
+      }
+    },
+    "recordRecipeResults": {
+      "type": "object",
+      "description": "One recording's quality results from one recipe run.",
+      "required": [
+        "recipe_version",
+        "input_kind",
+        "profile",
+        "record_sha256",
+        "metrics",
+        "figures"
+      ],
+      "properties": {
+        "recipe_version": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/version",
+          "description": "Version of the recipe that produced these results."
+        },
+        "input_kind": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/inputKind",
+          "description": "What the run read."
+        },
+        "profile": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/profile",
+          "description": "Which copy of the data the results describe."
+        },
+        "record_sha256": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/sha256",
+          "description": "SHA-256 of the bytes of the recording's signalJourney record these values were projected from."
+        },
+        "metrics": {
+          "type": "object",
+          "description": "Metrics keyed by metric name.",
+          "propertyNames": {
+            "$ref": "../definitions/processingTypes.schema.json#/$defs/metricName"
+          },
+          "additionalProperties": {
+            "$ref": "../definitions/qualityMetric.schema.json"
+          }
+        },
+        "figures": {
+          "type": "array",
+          "description": "Display figures for this recording.",
+          "items": {
+            "$ref": "../extensions/dataQuality.schema.json#/$defs/figure"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/inputProfilePairing"
+        }
+      ],
+      "additionalProperties": false
+    },
+    "datasetRecipeSummary": {
+      "type": "object",
+      "description": "The dataset quality control summary from one recipe run.",
+      "required": [
+        "recipe_version",
+        "dataset_version",
+        "input_kind",
+        "profile",
+        "record_sha256",
+        "counts",
+        "distributions",
+        "observed_range",
+        "not_processed",
+        "not_processed_truncated"
+      ],
+      "properties": {
+        "recipe_version": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/version",
+          "description": "Version of the recipe that produced this summary."
+        },
+        "dataset_version": {
+          "anyOf": [
+            {
+              "$ref": "../definitions/processingTypes.schema.json#/$defs/version"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Dataset version the run processed; null when unversioned."
+        },
+        "input_kind": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/inputKind",
+          "description": "What the run read."
+        },
+        "profile": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/profile",
+          "description": "Which copy of the data the summary describes."
+        },
+        "record_sha256": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/sha256",
+          "description": "SHA-256 of the bytes of the dataset-level signalJourney record this summary was derived from."
+        },
+        "counts": {
+          "$ref": "../definitions/checkpointCounts.schema.json",
+          "description": "Recordings passed, failed, skipped and discovered by the run."
+        },
+        "distributions": {
+          "type": "object",
+          "description": "Distribution of each metric over the recordings that passed, keyed by metric name. Bins are [e_i, e_i+1), the last bin closed.",
+          "propertyNames": {
+            "$ref": "../definitions/processingTypes.schema.json#/$defs/metricName"
+          },
+          "additionalProperties": {
+            "$ref": "../extensions/dataQuality.schema.json#/$defs/distribution"
+          }
+        },
+        "observed_range": {
+          "type": "object",
+          "description": "Lowest and highest value of each metric observed across the recordings that passed (for example good channels, good data, brain components), keyed by metric name. Not a metric's bounds, which is the valid range its plugin declares.",
+          "propertyNames": {
+            "$ref": "../definitions/processingTypes.schema.json#/$defs/metricName"
+          },
+          "additionalProperties": {
+            "$ref": "../definitions/processingTypes.schema.json#/$defs/range"
+          }
+        },
+        "not_processed": {
+          "type": "array",
+          "maxItems": 200,
+          "description": "Recordings that failed or were skipped, at most 200.",
+          "items": {
+            "$ref": "../extensions/dataQuality.schema.json#/$defs/notProcessed"
+          }
+        },
+        "not_processed_truncated": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of not-processed recordings left out of not_processed by its cap."
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/inputProfilePairing"
+        }
+      ],
+      "additionalProperties": false
+    },
+    "figure": {
+      "type": "object",
+      "description": "A display figure. Size caps and the rule that time-series figures are raster only are enforced by signalJourney's nemar namespace, not here.",
+      "required": [
+        "location",
+        "format",
+        "size",
+        "sha256",
+        "caption",
+        "plugin"
+      ],
+      "properties": {
+        "location": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/relativeLocation",
+          "description": "Path of the figure inside the run's product; the same string as its signalJourney outputTargets location."
+        },
+        "format": {
+          "type": "string",
+          "enum": [
+            "png",
+            "svg",
+            "webp"
+          ],
+          "description": "Image format; must match the location's extension."
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Size of the figure file in bytes."
+        },
+        "sha256": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/sha256",
+          "description": "SHA-256 of the figure file's bytes."
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "description": "Caption shown with the figure."
+        },
+        "plugin": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/plugin",
+          "description": "The plugin that produced the figure."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "format": {
+                "const": "png"
+              }
+            },
+            "required": [
+              "format"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "location": {
+                "type": "string",
+                "pattern": "\\.png$(?!\n)"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "format": {
+                "const": "svg"
+              }
+            },
+            "required": [
+              "format"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "location": {
+                "type": "string",
+                "pattern": "\\.svg$(?!\n)"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "format": {
+                "const": "webp"
+              }
+            },
+            "required": [
+              "format"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "location": {
+                "type": "string",
+                "pattern": "\\.webp$(?!\n)"
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "distribution": {
+      "type": "object",
+      "description": "Summary of one metric's values over the recordings that passed.",
+      "required": [
+        "n",
+        "min",
+        "median",
+        "max",
+        "histogram"
+      ],
+      "properties": {
+        "n": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of values summarized."
+        },
+        "min": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Smallest value; null when n is 0."
+        },
+        "median": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Median value; null when n is 0."
+        },
+        "max": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Largest value; null when n is 0."
+        },
+        "histogram": {
+          "type": "object",
+          "description": "Fixed-edge histogram of the values.",
+          "required": [
+            "edges",
+            "counts",
+            "underflow",
+            "overflow"
+          ],
+          "properties": {
+            "edges": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "type": "number"
+              },
+              "description": "Bin edges, ascending."
+            },
+            "counts": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "description": "Count per bin; one fewer than the edges."
+            },
+            "underflow": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Values below the first edge."
+            },
+            "overflow": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Values above the last edge."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "notProcessed": {
+      "type": "object",
+      "description": "A recording the run did not process to the end.",
+      "required": [
+        "path",
+        "status",
+        "code"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/relativeLocation",
+          "description": "BIDS-relative path of the recording."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "failed",
+            "skipped"
+          ],
+          "description": "Whether the recording failed or was skipped."
+        },
+        "code": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/failureCode",
+          "description": "The recording's first failure or skip code."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
 }

@@ -2,22 +2,164 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "signalJourney.schema.json",
   "title": "signalJourney Extension",
-  "description": "Namespace for linking to signalJourney processing pipeline records. References processing provenance tracked in signalJourney's own schema.",
+  "description": "Links from a dataset or recording to the signalJourney records of NEMAR recipe runs, one per recipe, written by the NEMAR backend. The same shape at both levels. A link describes the latest run: `in_progress` while reports arrive (no record yet), `completed` when the run wrote this record, `failed` when the run ended without writing it (the reason is in the processing extension). dataQuality keeps the last completed results.",
   "type": "object",
+  "required": [
+    "recipes"
+  ],
   "properties": {
-    "pipeline_id": {
-      "type": ["string", "null"],
-      "description": "Identifier for the signalJourney pipeline associated with this record/dataset."
-    },
-    "processing_status": {
-      "type": ["string", "null"],
-      "description": "Status of processing (e.g., 'pending', 'completed', 'failed').",
-      "enum": ["pending", "in_progress", "completed", "failed", null]
-    },
-    "sj_version": {
-      "type": ["string", "null"],
-      "description": "Version of the signalJourney specification used."
+    "recipes": {
+      "type": "object",
+      "description": "Record link per recipe, keyed by recipe id.",
+      "propertyNames": {
+        "$ref": "../definitions/processingTypes.schema.json#/$defs/recipeId"
+      },
+      "additionalProperties": {
+        "$ref": "../extensions/signalJourney.schema.json#/$defs/recordLink"
+      }
     }
   },
-  "additionalProperties": true
+  "additionalProperties": true,
+  "$defs": {
+    "recordLink": {
+      "type": "object",
+      "description": "Link to one recipe run's signalJourney record. location, sha256 and sj_version are set when completed and null otherwise: null while in_progress (no record yet) and null when failed (the run ended without writing this record).",
+      "required": [
+        "recipe_version",
+        "processing_status",
+        "location",
+        "sha256",
+        "sj_version"
+      ],
+      "properties": {
+        "recipe_version": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/version",
+          "description": "Version of the recipe whose run this link describes."
+        },
+        "processing_status": {
+          "type": "string",
+          "enum": [
+            "in_progress",
+            "completed",
+            "failed"
+          ],
+          "description": "State of the latest run of this recipe."
+        },
+        "location": {
+          "anyOf": [
+            {
+              "$ref": "../definitions/processingTypes.schema.json#/$defs/relativeLocation"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Path of the signalJourney record inside the run's product."
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "$ref": "../definitions/processingTypes.schema.json#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "SHA-256 of the signalJourney record's bytes."
+        },
+        "sj_version": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$(?!\n)",
+          "description": "Version of the signalJourney specification the record follows."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "processing_status": {
+                "const": "completed"
+              }
+            },
+            "required": [
+              "processing_status"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "location": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              },
+              "sj_version": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "processing_status": {
+                "const": "in_progress"
+              }
+            },
+            "required": [
+              "processing_status"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "location": {
+                "type": "null"
+              },
+              "sha256": {
+                "type": "null"
+              },
+              "sj_version": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "processing_status": {
+                "const": "failed"
+              }
+            },
+            "required": [
+              "processing_status"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "location": {
+                "type": "null"
+              },
+              "sha256": {
+                "type": "null"
+              },
+              "sj_version": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    }
+  }
 }
