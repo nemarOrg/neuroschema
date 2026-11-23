@@ -21,6 +21,20 @@ dev = [
     "ruff>=0.8",
     "coverage>=7.0",
 ]
+# The Python reference renderer for the view algorithms (neuroschema.views.sensor_field,
+# neuroschema.views.sensor_layout): numpy only.
+views = [
+    "numpy>=1.26",
+]
+
+[dependency-groups]
+# Regenerates the view vectors from eegprep at the reference commit
+# (scripts/generate_view_vectors.py). eegprep needs Python 3.12 or later.
+vectors = [
+    "eegprep @ git+https://github.com/sccn/eegprep@edf694c8344b9c4c68672eac3acf9a819f1462a8 ; python_full_version >= '3.12'",
+    "numpy>=2.1",
+    "scipy>=1.14.1",
+]
 
 [tool.ruff]
 target-version = "py311"
