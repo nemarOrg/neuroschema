@@ -132,7 +132,9 @@ def read_json(data: bytes) -> Any:
     """Read a JSON file under the grammar of docs/views.md (``json_invalid``).
 
     Strict UTF-8 with no byte order mark, no repeated member name, no ``NaN``
-    or ``Infinity`` literal, and every number finite (``1e400`` is not).
+    or ``Infinity`` literal, and every number finite as a binary64: ``1e400``
+    is not, and neither is an integer literal beyond binary64 range, which
+    Python reads exactly and JavaScript reads as ``Infinity``.
     """
     try:
         value = parse_declaration(data)
@@ -144,6 +146,12 @@ def read_json(data: bytes) -> Any:
 
 
 def _all_finite(value: Any) -> bool:
+    if isinstance(value, int):  # a bool is an int, and converts
+        try:
+            float(value)
+        except OverflowError:
+            return False
+        return True
     if isinstance(value, float):
         return math.isfinite(value)
     if isinstance(value, dict):

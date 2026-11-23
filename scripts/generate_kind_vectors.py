@@ -41,6 +41,7 @@ HISTOGRAM_CONTENT = "content.nemar.histogram.v1.schema.json"
 PLUGIN = {"plugin": {"name": "nemar-quality", "version": "0.1.0"}}
 RECIPE = {"recipe": {"name": "nemar-ica", "version": "1.0.0"}}
 PREFIX = "sub-01/eeg/sub-01_task-rest_desc-nemarica"
+HUGE = "1" + "0" * 400  # an integer literal beyond binary64 range
 
 
 # ── Building declarations and files ───────────────────────────────────────
@@ -812,6 +813,21 @@ def histogram_cases() -> list[Case]:
             "histogram_duplicate_member",
             b'{"categories": ["a"], "counts": [1], "counts": [2]}\n',
             "A member named twice: json_invalid.",
+        ),
+        (
+            "histogram_edge_beyond_binary64",
+            b'{"edges": [0, ' + HUGE.encode() + b'], "counts": [1], '
+            b'"underflow": 0, "overflow": 0}\n',
+            "An integer edge of 401 digits: Python reads it exactly, JSON.parse "
+            "as Infinity, so it is not finite: json_invalid.",
+        ),
+        (
+            "histogram_member_beyond_binary64",
+            b'{"categories": ["a"], "counts": [1], "n_components": '
+            + HUGE.encode()
+            + b"}\n",
+            "A member this kind does not read is still a number past binary64: "
+            "json_invalid.",
         ),
         (
             "histogram_byte_order_mark",

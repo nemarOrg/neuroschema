@@ -472,9 +472,26 @@ def test_read_tsv_refusals(data, word):
 
 
 def test_read_json():
-    assert read_json(b'{"a": [1, 2.5]}') == {"a": [1, 2.5]}
+    assert read_json(b'{"a": [1, 2.5, true, null]}') == {"a": [1, 2.5, True, None]}
     with pytest.raises(KindRefused, match="not finite"):
         read_json(b'{"a": {"b": 1e400}}')
+
+
+@pytest.mark.parametrize(
+    "number",
+    ["1" + "0" * 400, "-1" + "0" * 400, "1" + "0" * 5000],
+    ids=["401-digits", "negative", "5001-digits"],
+)
+def test_an_integer_beyond_binary64_is_not_finite(number):
+    """Python reads these exactly; JSON.parse reads Infinity, so both refuse."""
+    with pytest.raises(KindRefused) as raised:
+        read_json(b'{"n": ' + number.encode() + b"}")
+    assert raised.value.word == "json_invalid"
+
+
+def test_the_largest_binary64_integer_is_finite():
+    largest = int(1.7976931348623157e308)
+    assert read_json(b'{"n": ' + str(largest).encode() + b"}") == {"n": largest}
 
 
 def test_number_text_is_ecmascript():

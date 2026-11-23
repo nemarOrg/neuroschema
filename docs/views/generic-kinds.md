@@ -58,8 +58,10 @@ The text is kept as well: a readout prints the stored text and never prints a nu
 
 ### JSON
 
-A JSON file is read as Internet JSON (I-JSON): UTF-8 with no byte order mark, no object with two members of one name, no `NaN` or `Infinity` literal, and every number finite (`json_invalid`).
-These are the rules for the [view digest's input](view-digest.md#input), plus the finite rule, because a parser reads `1e400` as infinite.
+A JSON file is read as Internet JSON (I-JSON): UTF-8 with no byte order mark, no object with two members of one name, no `NaN` or `Infinity` literal, and every number finite as a binary64 (`json_invalid`).
+These are the rules for the [view digest's input](view-digest.md#input), plus the finite rule.
+`1e400` is not finite, and neither is an integer literal beyond binary64 range, such as 1 followed by 400 zeros: JavaScript's `JSON.parse` reads it as `Infinity`, and Python reads it exactly but cannot make it a binary64.
+The rule covers every number in the file, members the kind does not read included.
 
 ## Coordinates
 

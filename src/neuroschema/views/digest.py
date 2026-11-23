@@ -52,8 +52,9 @@ def parse_declaration(text: str | bytes) -> object:
     UTF-8 byte order mark, which I-JSON forbids. Refuses, with
     :class:`CanonicalizationError`, any other input, text that is not JSON, a
     duplicate member name at any depth (``json.loads`` would keep the last one
-    silently) and the ``NaN``, ``Infinity`` and ``-Infinity`` literals Python
-    accepts and JSON does not. Digest a declaration read from text through
+    silently), the ``NaN``, ``Infinity`` and ``-Infinity`` literals Python
+    accepts and JSON does not, and an integer literal longer than Python's
+    ``int_max_str_digits``. Digest a declaration read from text through
     this function.
     """
     if isinstance(text, bytes | bytearray):
@@ -69,9 +70,15 @@ def parse_declaration(text: str | bytes) -> object:
         return json.loads(
             text, object_pairs_hook=_unique_members, parse_constant=_refuse_constant
         )
+    except CanonicalizationError:
+        raise
     except json.JSONDecodeError as exc:
         # A byte order mark lands here too: json.loads refuses one in a str.
         raise CanonicalizationError(f"declaration text is not JSON: {exc}") from exc
+    except ValueError as exc:
+        # An integer literal longer than Python's int_max_str_digits (4,300 by
+        # default): far beyond binary64, where JSON.parse reads Infinity.
+        raise CanonicalizationError(f"declaration text has no digest: {exc}") from exc
 
 
 def _unique_members(pairs: list[tuple[str, object]]) -> dict[str, object]:

@@ -7399,6 +7399,114 @@
       }
     },
     {
+      "name": "histogram_edge_beyond_binary64",
+      "covers": "An integer edge of 401 digits: Python reads it exactly, JSON.parse as Infinity, so it is not finite: json_invalid.",
+      "view": {
+        "key": "hist",
+        "kind": "nemar.histogram",
+        "kind_version": 1,
+        "caption": "Recordings by share of good samples.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "format": "json",
+            "size": 464,
+            "sha256": "2f6b0cacb3198d2f39d195bc6601b1a7a796788a8fa09ebb46c103df2197b7f4"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json": {
+          "text": "{\"edges\": [0, 10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000], \"counts\": [1], \"underflow\": 0, \"overflow\": 0}\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "table",
+          "kind": null,
+          "kind_version": null
+        },
+        "refused": {
+          "kind": "nemar.histogram",
+          "kind_version": 1,
+          "word": "json_invalid"
+        },
+        "downloads": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "size": 464,
+            "sha256": "2f6b0cacb3198d2f39d195bc6601b1a7a796788a8fa09ebb46c103df2197b7f4"
+          }
+        ],
+        "model": {
+          "type": "fallback",
+          "tables": []
+        }
+      }
+    },
+    {
+      "name": "histogram_member_beyond_binary64",
+      "covers": "A member this kind does not read is still a number past binary64: json_invalid.",
+      "view": {
+        "key": "hist",
+        "kind": "nemar.histogram",
+        "kind_version": 1,
+        "caption": "Recordings by share of good samples.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "format": "json",
+            "size": 456,
+            "sha256": "308256f97e6b18ebf5a7cc7692eff7ae8ff08c69a5be1cc302bade1b8cfae4f3"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json": {
+          "text": "{\"categories\": [\"a\"], \"counts\": [1], \"n_components\": 10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000}\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "table",
+          "kind": null,
+          "kind_version": null
+        },
+        "refused": {
+          "kind": "nemar.histogram",
+          "kind_version": 1,
+          "word": "json_invalid"
+        },
+        "downloads": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "size": 456,
+            "sha256": "308256f97e6b18ebf5a7cc7692eff7ae8ff08c69a5be1cc302bade1b8cfae4f3"
+          }
+        ],
+        "model": {
+          "type": "fallback",
+          "tables": []
+        }
+      }
+    },
+    {
       "name": "histogram_byte_order_mark",
       "covers": "A byte order mark: json_invalid.",
       "view": {
