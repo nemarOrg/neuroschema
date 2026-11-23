@@ -23,7 +23,7 @@
   "$defs": {
     "recordLink": {
       "type": "object",
-      "description": "Link to one recipe run's signalJourney record. location, sha256 and sj_version are null while in_progress and set when completed.",
+      "description": "Link to one recipe run's signalJourney record. location, sha256 and sj_version are set when completed and null otherwise: null while in_progress (no record yet) and null when failed (the run ended without writing this record).",
       "required": [
         "recipe_version",
         "processing_status",
@@ -107,6 +107,31 @@
             "properties": {
               "processing_status": {
                 "const": "in_progress"
+              }
+            },
+            "required": [
+              "processing_status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "location": {
+                "type": "null"
+              },
+              "sha256": {
+                "type": "null"
+              },
+              "sj_version": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "processing_status": {
+                "const": "failed"
               }
             },
             "required": [

@@ -828,3 +828,13 @@ def test_sj_version_rejects_trailing_newline():
     assert errors_for(SIGNAL_JOURNEY, doc) == {
         ("pattern", "recipes/nemar-floor/sj_version")
     }
+
+
+@pytest.mark.parametrize("field", ["location", "sha256", "sj_version"])
+def test_failed_link_has_no_record(field):
+    doc = sj_links()
+    link = doc["recipes"]["nemar-floor"]
+    link.update(processing_status="failed", location=None, sha256=None, sj_version=None)
+    assert errors_for(SIGNAL_JOURNEY, doc) == set()
+    link[field] = sj_links()["recipes"]["nemar-floor"][field]
+    assert errors_for(SIGNAL_JOURNEY, doc) == {("type", f"recipes/nemar-floor/{field}")}
