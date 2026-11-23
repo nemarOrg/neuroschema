@@ -1630,6 +1630,78 @@
       ]
     },
     {
+      "name": "lines_x_from_header_numeric",
+      "covers": "Numeric x coordinates from the header.",
+      "schema": "view",
+      "instance": {
+        "key": "spectrum",
+        "kind": "nemar.lines",
+        "kind_version": 1,
+        "caption": "Power spectral density per sensor.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
+            "format": "tsv",
+            "size": 105,
+            "sha256": "a610ecf3133b1999c8a92897989dcbe14fffaa624778d9455800a630f2a19ab7",
+            "columns": [
+              {
+                "name": "freq_hz",
+                "type": "number",
+                "unit": "Hz"
+              },
+              {
+                "name": "Fp1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fp2",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
+                "type": "number",
+                "unit": "dB"
+              }
+            ],
+            "dims": [
+              {
+                "name": "freq",
+                "axis": "rows",
+                "type": "number",
+                "unit": "Hz",
+                "coords": {
+                  "header": true
+                }
+              },
+              {
+                "name": "sensor",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["const", "data/0/dims/0/type"],
+        ["contains", "data/0/dims"]
+      ]
+    },
+    {
       "name": "lines_x_from_role",
       "covers": "x coordinates from another role.",
       "schema": "view",

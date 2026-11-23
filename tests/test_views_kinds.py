@@ -21,13 +21,16 @@ import pytest
 
 from neuroschema.views import (
     MODELS_FORMAT,
+    Drawing,
     KindRefused,
     ViewRefused,
     build_model,
     cell_value,
+    draw_as,
     known_kinds,
     load_registry,
     locate_bin,
+    meets_role_contract,
     read_json,
     read_tsv,
     role_schemas,
@@ -622,6 +625,30 @@ def test_content_caps_match_the_registry():
     assert content["counts"]["maxItems"] == per_dim
     assert content["categories"]["maxItems"] == per_dim
     assert content["edges"]["maxItems"] == per_dim + 1
+
+
+def test_vectors_are_registered():
+    """Both vector files are registered algorithms with this page as their spec."""
+    algorithms = {a["name"]: a for a in REGISTRY["algorithms"]}
+    for document, path in [
+        (MODELS, "views/vectors/kinds-models.v1.json"),
+        (VERDICTS, "views/vectors/kinds-verdicts.v1.json"),
+    ]:
+        entry = algorithms[document["format"]]
+        assert entry == {
+            "name": document["format"],
+            "spec": document["spec"],
+            "vectors": path,
+        }
+
+
+def test_role_contract_refuses_x_from_another_role():
+    """Only the series may come from a preset's role; the x axis is its own column."""
+    view = by_name("lines_preset_by_base")["view"]
+    view["data"][0]["dims"][0]["coords"] = {"role": "layout", "column": "radius"}
+    entry = known_kinds(REGISTRY)[("nemar.lines", 1)]
+    assert not meets_role_contract(view, entry)
+    assert draw_as(view) == Drawing("table", None, None)
 
 
 def test_role_contract_admits_coordinates_from_a_preset_role():

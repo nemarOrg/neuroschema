@@ -1111,6 +1111,11 @@ def view_verdicts() -> list[tuple[str, str, dict]]:
             _set(lines, x_dim, FREQ | {"coords": {"header": True}, "type": "string"}),
         ),
         (
+            "lines_x_from_header_numeric",
+            "Numeric x coordinates from the header.",
+            _set(lines, f"{x_dim}/coords", {"header": True}),
+        ),
+        (
             "lines_x_from_role",
             "x coordinates from another role.",
             _set(lines, f"{x_dim}/coords", {"role": "layout", "column": "freq_hz"}),
