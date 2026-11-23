@@ -425,11 +425,20 @@ def test_ten_five_aliases_sit_on_their_targets():
 
 @pytest.mark.parametrize("name", MONTAGE_ORDER)
 def test_every_montage_label_can_be_matched(name):
-    for key in BY_NAME[name].positions:
-        assert "-" not in key
-        assert key not in FIDUCIALS
-        assert not key.startswith(NON_EEG_PREFIXES)
-        assert label_key(BY_NAME[name].positions[key][0]) == key
+    """A channel named exactly as the file labels an electrode reaches it.
+
+    Read from the raw JSON, not the loaded montage, so the loader's keys are
+    checked against the file.
+    """
+    montage = BY_NAME[name]
+    electrodes = montage_document(name)["electrodes"]
+    assert len(montage.positions) == len(electrodes)
+    for label, x, y, z in electrodes:
+        for kind in ("EEG", None):
+            (channel,) = classify([(label, kind)], MONTAGES)
+            assert channel.status == CANDIDATE, (label, kind)
+        assert "-" not in channel.key
+        assert montage.positions[channel.key] == (label, (x, y, z))
 
 
 def _write(tmp_path, name, doc):
