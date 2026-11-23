@@ -325,7 +325,8 @@ A case of `nemar.lines` also lists `snaps`, each a pointer `x` and the `row` it 
 A case or a refusal may carry `caps`, which take the place of the registry's caps of the same names for that case alone, so that small files can reach a cap.
 Each refusal has a `name`, what it `covers`, a `view`, its `files`, the `word` and the `downloads` still offered: the view is refused and nothing is drawn.
 
-An implementation parses the file with its JSON parser, builds each case's model and compares it with `model`, numbers by binary64 equality and texts exactly.
+An implementation parses the file with its JSON parser, builds each case's model and compares it with `model`, texts exactly and numbers by binary64 equality that tells -0 from 0, as JavaScript's `Object.is` does.
+A model holds no negative zero: a cell or an edge of -0 reads as 0, and a label prints it as `0`.
 
 ## The verdict corpus
 

@@ -291,6 +291,7 @@ def lines_view(entry=None, **fields) -> dict:
 
 
 SNAPS = [-1, 0, 0.1, 0.25, 0.26, 0.74, 0.75, 0.76, 1.9, 2, 10]
+PAIR = tsv("x y", "0.1 1", "0.3 2")
 
 LAYOUT = tsv(
     "name theta_deg radius sensor_type",
@@ -395,6 +396,41 @@ def lines_cases() -> list[Case]:
             preset_spectrum(),
             {f"{PREFIX}_numbered.tsv": NUMBERED, LAYOUT_AT: LAYOUT},
             snaps=[0.5],
+        ),
+        Case(
+            "lines_x_column_without_unit",
+            "The x column declares no unit, so its dimension's unit (Hz) holds: "
+            "only a declared unit must match.",
+            lines_view(
+                spectrum_entry(
+                    columns=[
+                        col("freq_hz"),
+                        *(col(n, unit="dB") for n in ("Fp1", "Cz")),
+                    ]
+                )
+            ),
+            files,
+        ),
+        Case(
+            "lines_snap_binary64",
+            "x 0.1 and 0.3, pointer 0.2: in binary64, 0.3 - 0.2 < 0.2 - 0.1, so "
+            "the pointer reads row 1, though 0.2 is the decimal midpoint.",
+            view(
+                "pair",
+                "nemar.lines",
+                "Two rows.",
+                [
+                    data_entry(
+                        "values",
+                        f"{PREFIX}_pair.tsv",
+                        PAIR,
+                        columns=[col("x"), col("y")],
+                        dims=[dim("x", "rows", "number", {"column": "x"}), SENSOR],
+                    )
+                ],
+            ),
+            {f"{PREFIX}_pair.tsv": PAIR},
+            snaps=[0.2],
         ),
         Case(
             "lines_unknown_version",
@@ -534,6 +570,7 @@ def heatmap_cases() -> list[Case]:
         dim("sensor_pair", "columns", "string", {"header": True}),
     ]
     zeros = tsv("sensor Fp1 Fp2", "Fp1 0 -0", "Fp2 0 0")
+    negative = tsv("sensor Fp1 Fp2", "Fp1 -3 1", "Fp2 0.5 -2")
     fives = tsv("sensor Fp1 Fp2", "Fp1 5 5", "Fp2 5 5.0")
     epochs = tsv("epoch Fp1 Fp2", "1 0.5 0.25", "2 0.75 1")
     epoch_dims = [dim("epoch", "rows", "integer", {"column": "epoch"}), corr_dims[1]]
@@ -572,6 +609,21 @@ def heatmap_cases() -> list[Case]:
         parameters={"limits": "absmax"},
     )
     undeclared = copy.deepcopy(preset)
+
+    def numbered_rows(numbers: bytes) -> dict:
+        """The preset, its rows labeled by an integer column of a numbers role."""
+        out = copy.deepcopy(preset)
+        out["data"][0]["dims"][0] = dim(
+            "component", "rows", "integer", {"role": "numbers", "column": "number"}
+        )
+        out["data"][1] = data_entry(
+            "numbers",
+            f"{PREFIX}_numbers.tsv",
+            numbers,
+            columns=[col("number", "integer")],
+        )
+        return out
+
     undeclared["data"][1]["columns"] = [col("class", "string")]
     coded = tsv("component c1 c2 c3", "IC1 91.5 2 6.5", "IC2 4.25 88 7.75")
     names = tsv("name description", "brain Brain", "eye Eye", "muscle Muscle")
@@ -618,6 +670,15 @@ def heatmap_cases() -> list[Case]:
             "absmax limits are minus and plus the largest absolute cell.",
             heatmap_view(corr, corr_cols, corr_dims, parameters={"limits": "absmax"}),
             {CLASSES_AT: corr},
+        ),
+        Case(
+            "heatmap_absmax_negative",
+            "The most negative cell (-3) has the largest magnitude, so absmax "
+            "limits are -3 and 3, not minus and plus the largest cell.",
+            heatmap_view(
+                negative, corr_cols, corr_dims, parameters={"limits": "absmax"}
+            ),
+            {CLASSES_AT: negative},
         ),
         Case(
             "heatmap_absmax_all_zero",
@@ -678,6 +739,16 @@ def heatmap_cases() -> list[Case]:
             {CLASSES_AT: coded, f"{PREFIX}_classes.tsv": names},
         ),
         Case(
+            "heatmap_preset_coords_cell_not_integer",
+            "Row labels from another role's integer column, one of whose cells "
+            "is 2.5: cell_not_integer.",
+            numbered_rows(tsv("number", "1", "2", "2.5")),
+            {
+                f"{PREFIX}_probabilities.tsv": probabilities,
+                f"{PREFIX}_numbers.tsv": tsv("number", "1", "2", "2.5"),
+            },
+        ),
+        Case(
             "heatmap_preset_coords_column_undeclared",
             "The components role does not declare the column its labels name: "
             "coords_unresolved.",
@@ -733,7 +804,7 @@ ICLABEL = content(
 
 
 def histogram_cases() -> list[Case]:
-    printing = b'{"edges": [-1E-7, 0, 0.1, 0.25, 1e21], "counts": [1, 2, 3, 4],' + (
+    printing = b'{"edges": [-1E-7, -0.0, 0.1, 0.25, 1e21], "counts": [1, 2, 3, 4],' + (
         b' "underflow": 0, "overflow": 0}\n'
     )
     overflowing = content(edges=[0, 1, 2], counts=[1, 2], underflow=0, overflow=5)
@@ -754,7 +825,8 @@ def histogram_cases() -> list[Case]:
         ),
         Case(
             "histogram_edge_printing",
-            "Edge labels print numbers as ECMAScript String(x): -1e-7, 0.1, 1e+21.",
+            "Edge labels print numbers as ECMAScript String(x): -1e-7, 0.1, "
+            "1e+21; the edge -0.0 reads as 0 and prints as 0.",
             histogram_view(printing),
             {HIST_AT: printing},
             locates=[-1e-7, 0.1, 1e21, 2e21],
@@ -1800,11 +1872,11 @@ def models() -> dict:
             "Cases every renderer of the generic kinds reproduces. For each case, "
             "decode files (text is UTF-8; base64 is raw bytes), use the registry's "
             "caps with the case's caps in their place, build the model of view, "
-            "and compare it with model: numbers by binary64 equality, texts "
-            "exactly. snaps give the row a pointer at x reads, and locates the bin "
-            "that holds a value (-1 underflow, the bin count overflow). Each "
-            "refusal's view is refused with word, nothing is drawn, and downloads "
-            "lists the files still offered."
+            "and compare it with model: numbers by binary64 equality that tells "
+            "-0 from 0 (Object.is), texts exactly. snaps give the row a pointer at "
+            "x reads, and locates the bin that holds a value (-1 underflow, the "
+            "bin count overflow). Each refusal's view is refused with word, "
+            "nothing is drawn, and downloads lists the files still offered."
         ),
         "cases": [_model_case(case) for case in cases],
         "refusals": [_refusal(case) for case in refusals()],

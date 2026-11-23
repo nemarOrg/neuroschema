@@ -1,7 +1,7 @@
 {
   "format": "nemar.kinds-models.v1",
   "spec": "docs/views/generic-kinds.md",
-  "description": "Cases every renderer of the generic kinds reproduces. For each case, decode files (text is UTF-8; base64 is raw bytes), use the registry's caps with the case's caps in their place, build the model of view, and compare it with model: numbers by binary64 equality, texts exactly. snaps give the row a pointer at x reads, and locates the bin that holds a value (-1 underflow, the bin count overflow). Each refusal's view is refused with word, nothing is drawn, and downloads lists the files still offered.",
+  "description": "Cases every renderer of the generic kinds reproduces. For each case, decode files (text is UTF-8; base64 is raw bytes), use the registry's caps with the case's caps in their place, build the model of view, and compare it with model: numbers by binary64 equality that tells -0 from 0 (Object.is), texts exactly. snaps give the row a pointer at x reads, and locates the bin that holds a value (-1 underflow, the bin count overflow). Each refusal's view is refused with word, nothing is drawn, and downloads lists the files still offered.",
   "cases": [
     {
       "name": "table_channels",
@@ -2538,6 +2538,231 @@
       ]
     },
     {
+      "name": "lines_x_column_without_unit",
+      "covers": "The x column declares no unit, so its dimension's unit (Hz) holds: only a declared unit must match.",
+      "view": {
+        "key": "spectrum",
+        "kind": "nemar.lines",
+        "kind_version": 1,
+        "caption": "Power spectral density per sensor.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
+            "format": "tsv",
+            "size": 105,
+            "sha256": "a610ecf3133b1999c8a92897989dcbe14fffaa624778d9455800a630f2a19ab7",
+            "columns": [
+              {
+                "name": "freq_hz",
+                "type": "number"
+              },
+              {
+                "name": "Fp1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
+                "type": "number",
+                "unit": "dB"
+              }
+            ],
+            "dims": [
+              {
+                "name": "freq",
+                "axis": "rows",
+                "type": "number",
+                "unit": "Hz",
+                "coords": {
+                  "column": "freq_hz"
+                }
+              },
+              {
+                "name": "sensor",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv": {
+          "text": "freq_hz\tFp1\tFp2\tO1\tCz\n0\t12.5\t-3.25\t7\t1.25e1\n0.5\t8\t-2\t6\t0\n1\t4.75\t-1.5\t5\t-0\n1.5\t3\t0.125\t4\t-7E-1\n2\t1\t2\t3\t-1\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "kind",
+          "kind": "nemar.lines",
+          "kind_version": 1
+        },
+        "refused": null,
+        "downloads": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
+            "size": 105,
+            "sha256": "a610ecf3133b1999c8a92897989dcbe14fffaa624778d9455800a630f2a19ab7"
+          }
+        ],
+        "model": {
+          "type": "lines",
+          "x": {
+            "dim": "freq",
+            "type": "number",
+            "unit": "Hz",
+            "column": "freq_hz",
+            "values": [0.0, 0.5, 1.0, 1.5, 2.0],
+            "text": ["0", "0.5", "1", "1.5", "2"]
+          },
+          "y": {
+            "unit": "dB",
+            "min": -1.0,
+            "max": 12.5
+          },
+          "series": {
+            "dim": "sensor",
+            "type": "string",
+            "unit": null,
+            "items": [
+              {
+                "label": "Fp1",
+                "column": "Fp1",
+                "values": [12.5, 8.0, 4.75, 3.0, 1.0],
+                "text": ["12.5", "8", "4.75", "3", "1"]
+              },
+              {
+                "label": "Cz",
+                "column": "Cz",
+                "values": [12.5, 0.0, 0.0, -0.7, -1.0],
+                "text": ["1.25e1", "0", "-0", "-7E-1", "-1"]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "lines_snap_binary64",
+      "covers": "x 0.1 and 0.3, pointer 0.2: in binary64, 0.3 - 0.2 < 0.2 - 0.1, so the pointer reads row 1, though 0.2 is the decimal midpoint.",
+      "view": {
+        "key": "pair",
+        "kind": "nemar.lines",
+        "kind_version": 1,
+        "caption": "Two rows.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_pair.tsv",
+            "format": "tsv",
+            "size": 16,
+            "sha256": "7908d5b40addf9fcd691b44e8ef3fdd746aaf80cc4130baddc3da04636a9789e",
+            "columns": [
+              {
+                "name": "x",
+                "type": "number"
+              },
+              {
+                "name": "y",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "x",
+                "axis": "rows",
+                "type": "number",
+                "coords": {
+                  "column": "x"
+                }
+              },
+              {
+                "name": "sensor",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_pair.tsv": {
+          "text": "x\ty\n0.1\t1\n0.3\t2\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "kind",
+          "kind": "nemar.lines",
+          "kind_version": 1
+        },
+        "refused": null,
+        "downloads": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_pair.tsv",
+            "size": 16,
+            "sha256": "7908d5b40addf9fcd691b44e8ef3fdd746aaf80cc4130baddc3da04636a9789e"
+          }
+        ],
+        "model": {
+          "type": "lines",
+          "x": {
+            "dim": "x",
+            "type": "number",
+            "unit": null,
+            "column": "x",
+            "values": [0.1, 0.3],
+            "text": ["0.1", "0.3"]
+          },
+          "y": {
+            "unit": null,
+            "min": 1.0,
+            "max": 2.0
+          },
+          "series": {
+            "dim": "sensor",
+            "type": "string",
+            "unit": null,
+            "items": [
+              {
+                "label": "y",
+                "column": "y",
+                "values": [1.0, 2.0],
+                "text": ["1", "2"]
+              }
+            ]
+          }
+        }
+      },
+      "snaps": [
+        {
+          "x": 0.2,
+          "row": 1
+        }
+      ]
+    },
+    {
       "name": "lines_unknown_version",
       "covers": "A version of nemar.lines the registry does not list shows as a table.",
       "view": {
@@ -4294,6 +4519,117 @@
       }
     },
     {
+      "name": "heatmap_absmax_negative",
+      "covers": "The most negative cell (-3) has the largest magnitude, so absmax limits are -3 and 3, not minus and plus the largest cell.",
+      "view": {
+        "key": "icprobabilities",
+        "kind": "nemar.heatmap",
+        "kind_version": 1,
+        "caption": "Class probabilities per component.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "parameters": {
+          "limits": "absmax"
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_icprobabilities.tsv",
+            "format": "tsv",
+            "size": 35,
+            "sha256": "83f262b0114bba621de7ca0b0c5dcdeb48c4585ee9c3f19f068dca89c7452007",
+            "columns": [
+              {
+                "name": "sensor",
+                "type": "string"
+              },
+              {
+                "name": "Fp1",
+                "type": "number"
+              },
+              {
+                "name": "Fp2",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "sensor"
+                }
+              },
+              {
+                "name": "sensor_pair",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_icprobabilities.tsv": {
+          "text": "sensor\tFp1\tFp2\nFp1\t-3\t1\nFp2\t0.5\t-2\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "kind",
+          "kind": "nemar.heatmap",
+          "kind_version": 1
+        },
+        "refused": null,
+        "downloads": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_icprobabilities.tsv",
+            "size": 35,
+            "sha256": "83f262b0114bba621de7ca0b0c5dcdeb48c4585ee9c3f19f068dca89c7452007"
+          }
+        ],
+        "model": {
+          "type": "heatmap",
+          "rows": {
+            "dim": "sensor",
+            "type": "string",
+            "unit": null,
+            "labels": ["Fp1", "Fp2"]
+          },
+          "columns": {
+            "dim": "sensor_pair",
+            "type": "string",
+            "unit": null,
+            "labels": ["Fp1", "Fp2"],
+            "names": ["Fp1", "Fp2"]
+          },
+          "unit": null,
+          "values": [
+            [-3.0, 1.0],
+            [0.5, -2.0]
+          ],
+          "text": [
+            ["-3", "1"],
+            ["0.5", "-2"]
+          ],
+          "limits": {
+            "rule": "absmax",
+            "min": -3.0,
+            "max": 3.0
+          }
+        }
+      }
+    },
+    {
       "name": "heatmap_absmax_all_zero",
       "covers": "Every cell zero (one written -0): absmax limits are 0 and 0, and -0 reads as 0.",
       "view": {
@@ -5196,6 +5532,144 @@
       }
     },
     {
+      "name": "heatmap_preset_coords_cell_not_integer",
+      "covers": "Row labels from another role's integer column, one of whose cells is 2.5: cell_not_integer.",
+      "view": {
+        "key": "icprobabilities",
+        "kind": "acme.ic-probabilities",
+        "kind_version": 1,
+        "caption": "Class probabilities per component, labeled by the components table.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "base": "nemar.heatmap",
+        "base_version": 1,
+        "parameters": {
+          "limits": "absmax"
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_probabilities.tsv",
+            "format": "tsv",
+            "size": 50,
+            "sha256": "6d58d0c6158453392ce6130591360f4237a7852b8912186d68d05309d3a187d1",
+            "columns": [
+              {
+                "name": "brain",
+                "type": "number",
+                "unit": "%"
+              },
+              {
+                "name": "eye",
+                "type": "number",
+                "unit": "%"
+              },
+              {
+                "name": "muscle",
+                "type": "number",
+                "unit": "%"
+              }
+            ],
+            "dims": [
+              {
+                "name": "component",
+                "axis": "rows",
+                "type": "integer",
+                "coords": {
+                  "role": "numbers",
+                  "column": "number"
+                }
+              },
+              {
+                "name": "class",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "numbers",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_numbers.tsv",
+            "format": "tsv",
+            "size": 15,
+            "sha256": "fd1f161e75eb7d89a3eebb87a602e535a76e0a6649b4fb9eedb5ae9501c09aab",
+            "columns": [
+              {
+                "name": "number",
+                "type": "integer"
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_probabilities.tsv": {
+          "text": "brain\teye\tmuscle\n91.5\t2\t6.5\n4.25\t88\t7.75\n30\t30\t40\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_numbers.tsv": {
+          "text": "number\n1\n2\n2.5\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "table",
+          "kind": null,
+          "kind_version": null
+        },
+        "refused": {
+          "kind": "nemar.heatmap",
+          "kind_version": 1,
+          "word": "cell_not_integer"
+        },
+        "downloads": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_probabilities.tsv",
+            "size": 50,
+            "sha256": "6d58d0c6158453392ce6130591360f4237a7852b8912186d68d05309d3a187d1"
+          },
+          {
+            "role": "numbers",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_numbers.tsv",
+            "size": 15,
+            "sha256": "fd1f161e75eb7d89a3eebb87a602e535a76e0a6649b4fb9eedb5ae9501c09aab"
+          }
+        ],
+        "model": {
+          "type": "fallback",
+          "tables": [
+            {
+              "role": "values",
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_probabilities.tsv",
+              "header": ["brain", "eye", "muscle"],
+              "rows": [
+                ["91.5", "2", "6.5"],
+                ["4.25", "88", "7.75"],
+                ["30", "30", "40"]
+              ]
+            },
+            {
+              "role": "numbers",
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_numbers.tsv",
+              "header": ["number"],
+              "rows": [
+                ["1"],
+                ["2"],
+                ["2.5"]
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
       "name": "heatmap_preset_coords_column_undeclared",
       "covers": "The components role does not declare the column its labels name: coords_unresolved.",
       "view": {
@@ -5502,7 +5976,7 @@
     },
     {
       "name": "histogram_edge_printing",
-      "covers": "Edge labels print numbers as ECMAScript String(x): -1e-7, 0.1, 1e+21.",
+      "covers": "Edge labels print numbers as ECMAScript String(x): -1e-7, 0.1, 1e+21; the edge -0.0 reads as 0 and prints as 0.",
       "view": {
         "key": "hist",
         "kind": "nemar.histogram",
@@ -5519,14 +5993,14 @@
             "role": "histogram",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
             "format": "json",
-            "size": 94,
-            "sha256": "9399a4f61634441c31d4288da7d2ecd590a52b5eec1bf8b47a9cfb4a928e8d15"
+            "size": 97,
+            "sha256": "3c6c3832def7078db59ffca37cbecfdc2b4567305d3b340b8e0e606a78818f68"
           }
         ]
       },
       "files": {
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json": {
-          "text": "{\"edges\": [-1E-7, 0, 0.1, 0.25, 1e21], \"counts\": [1, 2, 3, 4], \"underflow\": 0, \"overflow\": 0}\n"
+          "text": "{\"edges\": [-1E-7, -0.0, 0.1, 0.25, 1e21], \"counts\": [1, 2, 3, 4], \"underflow\": 0, \"overflow\": 0}\n"
         }
       },
       "model": {
@@ -5540,8 +6014,8 @@
           {
             "role": "histogram",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
-            "size": 94,
-            "sha256": "9399a4f61634441c31d4288da7d2ecd590a52b5eec1bf8b47a9cfb4a928e8d15"
+            "size": 97,
+            "sha256": "3c6c3832def7078db59ffca37cbecfdc2b4567305d3b340b8e0e606a78818f68"
           }
         ],
         "model": {

@@ -14,6 +14,7 @@ import copy
 import hashlib
 import importlib.util
 import json
+import math
 import re
 from pathlib import Path
 
@@ -83,13 +84,41 @@ def registry_for(case: dict) -> dict:
     return REGISTRY | {"caps": REGISTRY["caps"] | case.get("caps", {})}
 
 
+def same(a, b) -> bool:
+    """Equal JSON values, telling -0 from 0 as JavaScript's Object.is does."""
+    if isinstance(a, bool) or isinstance(b, bool):
+        return a is b
+    if isinstance(a, int | float) and isinstance(b, int | float):
+        return a == b and math.copysign(1.0, a) == math.copysign(1.0, b)
+    if isinstance(a, dict) and isinstance(b, dict):
+        return a.keys() == b.keys() and all(same(a[k], b[k]) for k in a)
+    if isinstance(a, list) and isinstance(b, list):
+        return len(a) == len(b) and all(same(x, y) for x, y in zip(a, b, strict=True))
+    return type(a) is type(b) and a == b
+
+
+@pytest.mark.parametrize(
+    ("a", "b", "equal"),
+    [
+        (0.0, -0.0, False),
+        ([1, {"x": 0.0}], [1, {"x": -0.0}], False),
+        (2, 2.0, True),
+        (True, 1, False),
+        ({"a": 1}, {"a": 1, "b": 2}, False),
+        ("0", 0, False),
+    ],
+)
+def test_same_tells_negative_zero(a, b, equal):
+    assert same(a, b) is equal
+
+
 # ── The model vectors ─────────────────────────────────────────────────────
 
 
 @pytest.mark.parametrize("case", CASES, ids=[c["name"] for c in CASES])
 def test_model_vectors_replay(case):
     model = build_model(case["view"], decode(case["files"]), registry_for(case))
-    assert model == case["model"]
+    assert same(model, case["model"])
 
 
 @pytest.mark.parametrize("refusal", REFUSALS, ids=[r["name"] for r in REFUSALS])
@@ -383,8 +412,20 @@ def _ceil(xs, x):
     return min(bisect.bisect_left(xs, x), len(xs) - 1)
 
 
+def _midpoint(xs, x):
+    """Nearest by the decimal midpoint, not by the two binary64 differences."""
+    i = bisect.bisect_right(xs, x) - 1
+    if i < 0:
+        return 0
+    if i >= len(xs) - 1:
+        return len(xs) - 1
+    return i + 1 if x > (xs[i] + xs[i + 1]) / 2 else i
+
+
 @pytest.mark.parametrize(
-    "wrong", [_tie_upper, _floor, _ceil], ids=lambda f: f.__name__.strip("_")
+    "wrong",
+    [_tie_upper, _floor, _ceil, _midpoint],
+    ids=lambda f: f.__name__.strip("_"),
 )
 def test_vectors_catch_a_wrong_snap_rule(wrong):
     misses = [
@@ -548,6 +589,22 @@ def test_minmax_and_absmax_limits():
     assert classes["limits"] == {"rule": "minmax", "min": 2.0, "max": 91.5}
     corr = by_name("heatmap_absmax")["model"]["model"]
     assert corr["limits"] == {"rule": "absmax", "min": -1.0, "max": 1.0}
+    negative = by_name("heatmap_absmax_negative")["model"]["model"]
+    assert negative["text"] == [["-3", "1"], ["0.5", "-2"]]
+    assert negative["limits"] == {"rule": "absmax", "min": -3.0, "max": 3.0}
+    zeros = by_name("heatmap_absmax_all_zero")["model"]["model"]["limits"]
+    assert math.copysign(1.0, zeros["min"]) == 1.0
+
+
+def test_negative_zero_reads_as_zero():
+    """The -0 cells and edge of the vectors are +0 in their models."""
+    spectrum = by_name("lines_spectrum")["model"]["model"]
+    cz = next(s for s in spectrum["series"]["items"] if s["label"] == "Cz")
+    assert cz["text"][2] == "-0"
+    assert math.copysign(1.0, cz["values"][2]) == 1.0
+    printing = by_name("histogram_edge_printing")["model"]["model"]["items"]
+    assert printing[0]["label"] == "[-1e-7, 0)"
+    assert math.copysign(1.0, printing[1]["lower"]) == 1.0
 
 
 def test_preset_by_base_ignores_its_parameters():
