@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "processingTypes.schema.json",
+  "title": "Processing Types",
+  "description": "Shared types for the dataQuality, processing and signalJourney extensions. A library of $defs; the root constrains nothing.",
+  "$defs": {
+    "recipeId": {
+      "type": "string",
+      "description": "Identifier of a NEMAR processing recipe (for example nemar-floor), lowercase letters, digits and hyphens.",
+      "pattern": "^[a-z0-9-]{1,64}$"
+    },
+    "version": {
+      "type": "string",
+      "description": "A version label (recipe, dataset or plugin version) of letters, digits and . _ + -.",
+      "pattern": "^[0-9A-Za-z._+-]{1,64}$"
+    },
+    "sha256": {
+      "type": "string",
+      "description": "Lowercase hexadecimal SHA-256 digest of a file's bytes.",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "checkpointName": {
+      "type": "string",
+      "description": "Name of a processing checkpoint: a coarse stage a recipe declares. Open vocabulary; the writer checks it against the checkpoints the recipe version declares.",
+      "pattern": "^[a-z][a-z0-9_]{0,31}$",
+      "examples": [
+        "import",
+        "preprocess",
+        "ica",
+        "iclabel",
+        "quality",
+        "figures",
+        "stored"
+      ]
+    },
+    "stepId": {
+      "type": "string",
+      "description": "Identifier of a recipe step (the step names of a recipe's step order).",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"
+    },
+    "failureCode": {
+      "type": "string",
+      "description": "Machine-readable failure or skip code, lowercase snake case.",
+      "pattern": "^[a-z][a-z0-9_]{0,63}$"
+    },
+    "metricName": {
+      "type": "string",
+      "description": "Name of a quality metric. Safe as a document key (no . or $); allows namespaced names such as eeg:lineNoise. Naming rules live in signalJourney's nemar namespace.",
+      "pattern": "^[A-Za-z][A-Za-z0-9_:-]{0,127}$"
+    },
+    "relativeLocation": {
+      "type": "string",
+      "description": "Relative POSIX path inside a run's product: no leading slash, no .. segment, no URI scheme, no backslash, no control characters.",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?!/)(?![A-Za-z][A-Za-z0-9+.-]*:)(?!(?:.*/)?\\.\\.(?:/|$))[^\\\\\\x00-\\x1f]+$"
+    },
+    "inputKind": {
+      "type": "string",
+      "description": "What a run read: a BIDS dataset directory or NEMAR's Zarr serving copy.",
+      "enum": [
+        "bids",
+        "zarr"
+      ]
+    },
+    "profile": {
+      "type": "string",
+      "description": "Which copy of the data a run's results describe: the archived recordings or the serving copy.",
+      "enum": [
+        "archive",
+        "serving"
+      ]
+    },
+    "inputProfilePairing": {
+      "description": "A zarr input always describes the serving copy and a bids input the archive.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "input_kind": {
+                "const": "zarr"
+              }
+            },
+            "required": [
+              "input_kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "profile": {
+                "const": "serving"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "input_kind": {
+                "const": "bids"
+              }
+            },
+            "required": [
+              "input_kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "profile": {
+                "const": "archive"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "range": {
+      "type": "object",
+      "description": "A closed numeric range; either end may be null when unbounded or unknown.",
+      "required": [
+        "min",
+        "max"
+      ],
+      "properties": {
+        "min": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Lower end of the range."
+        },
+        "max": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Upper end of the range."
+        }
+      },
+      "additionalProperties": false
+    },
+    "plugin": {
+      "type": "object",
+      "description": "The quality plugin, by name and version, that produced a value or figure.",
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Plugin name as declared in its manifest.",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+        },
+        "version": {
+          "$ref": "#/$defs/version",
+          "description": "Plugin version as declared in its manifest."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

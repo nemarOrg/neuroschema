@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 
 from neuroschema.validate import validate_document, validate_file
+from tests.helpers import failures as _failures
 
 ROOT = Path(__file__).resolve().parent.parent
 SCHEMA_DIR = ROOT / "schema"
@@ -949,19 +950,6 @@ class TestV040CoreFields:
 
 
 # ── v0.4.1 Core Field Tests ─────────────────────────────────────────────
-
-
-def _failures(errors) -> set[tuple[str, str]]:
-    """Reduce validation errors to (failing validator, JSON path) pairs.
-
-    Asserting the validator and the path, not just that some error exists,
-    keeps a negative test from passing for the wrong reason (for example,
-    "additional property not allowed" when the field is missing from the
-    schema altogether).
-    """
-    return {
-        (e.validator, "/".join(str(part) for part in e.absolute_path)) for e in errors
-    }
 
 
 @pytest.fixture

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "qualityMetric.schema.json",
+  "title": "Quality Metric",
+  "description": "One quality metric a plugin computed for a recording. Plugin manifests (nemar-cli shared/contract) declare each metric output with this shape.",
+  "type": "object",
+  "required": [
+    "value",
+    "unit",
+    "description",
+    "plugin"
+  ],
+  "properties": {
+    "value": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "The metric's value; null when it could not be computed."
+    },
+    "unit": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32,
+      "description": "Unit of the value (for example %, dB, count)."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "description": "One-sentence description of what the metric measures."
+    },
+    "bounds": {
+      "$ref": "processingTypes.schema.json#/$defs/range",
+      "description": "The valid range the plugin declares for this value (not a quality threshold)."
+    },
+    "plugin": {
+      "$ref": "processingTypes.schema.json#/$defs/plugin",
+      "description": "The plugin that produced this value."
+    }
+  },
+  "additionalProperties": false
+}
