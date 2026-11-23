@@ -31,6 +31,7 @@ from neuroschema.views.sensor_labels import (
     FAMILY_ALIASES,
     FIDUCIAL,
     FIDUCIALS,
+    MONTAGE_ALIASES,
     MONTAGE_FORMAT,
     MONTAGE_ORDER,
     NON_EEG_PREFIXES,
@@ -397,6 +398,12 @@ def test_the_lists_are_the_specs():
         "10-05": {"t3": "t7", "t4": "t8", "t5": "p7", "t6": "p8"},
         "GSN-HydroCel": {"vref": "cz"},
     }
+    assert MONTAGE_ALIASES == {
+        "GSN-HydroCel-32": {"e33": "cz"},
+        "GSN-HydroCel-65_1.0": {"e65": "cz"},
+        "GSN-HydroCel-129": {"e129": "cz"},
+        "GSN-HydroCel-257": {"e257": "cz"},
+    }
 
 
 @pytest.mark.parametrize("reference", SPEC_REFERENCES)
@@ -478,6 +485,36 @@ def test_aliases_belong_to_their_family():
     assert ten_five.channels[-1].electrode is None
     legacy = infer(["T3" if n == "T7" else n for n in TEN_TWENTY])
     assert legacy.channels[TEN_TWENTY.index("T7")].electrode == "T7"
+
+
+@pytest.mark.parametrize(
+    ("last", "net"),
+    [
+        (33, "GSN-HydroCel-32"),
+        (65, "GSN-HydroCel-65_1.0"),
+        (129, "GSN-HydroCel-129"),
+        (257, "GSN-HydroCel-257"),
+    ],
+)
+def test_the_number_after_a_nets_last_electrode_is_its_cz(last, net):
+    """E129 is Cz on the 129 net and electrode E129 wherever it is a label."""
+    keys_ = BY_NAME[net].positions
+    assert f"e{last}" not in keys_ and "cz" in keys_
+    names = [f"E{i}" for i in range(1, last + 1)]
+    assert infer(names, montages=(BY_NAME[net],)).channels[-1].electrode == "Cz"
+    for other in MONTAGES:
+        if other.name != net and f"e{last}" in other.positions:
+            placed = infer(names, montages=(other,)).channels[-1].electrode
+            assert placed == f"E{last}", other.name
+
+
+def test_dismissal_compares_channels_with_each_montages_aliases():
+    """E1 to E129: the 129 net matches E129 as Cz, so it dismisses the 256 net."""
+    result = infer([f"E{i}" for i in range(1, 130)])
+    assert (result.montage, result.contenders) == (
+        "GSN-HydroCel-129",
+        ("GSN-HydroCel-128", "GSN-HydroCel-129"),
+    )
 
 
 def test_placed_channels_carry_the_montages_positions():
@@ -598,6 +635,10 @@ def test_spec_names_every_list_member_and_threshold():
     for family, aliases in FAMILY_ALIASES.items():
         for source, target in aliases.items():
             assert f"`{source}` is `{target}`" in SPEC, (family, source)
+    for montage, aliases in MONTAGE_ALIASES.items():
+        for source, target in aliases.items():
+            row = f"| `{montage}` | `{source}` is `{target}` |"
+            assert row in SPEC, row
     for phrase in [
         "fewer than 8 candidates",
         "best is below 8",

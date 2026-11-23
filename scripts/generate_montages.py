@@ -32,6 +32,7 @@ from neuroschema.views.sensor_labels import (
     ALGORITHM,
     FAMILY_ALIASES,
     FIDUCIALS,
+    MONTAGE_ALIASES,
     MONTAGE_FORMAT,
     MONTAGE_ORDER,
     NON_EEG_PREFIXES,
@@ -196,6 +197,9 @@ def check_labels(name: str, family: str, keys: dict[str, str]) -> None:
         for source in aliases:
             if source in keys and family_name != family:
                 fail(f"{name}: alias {source!r} of {family_name} is a label here")
+    for source, target in MONTAGE_ALIASES.get(name, {}).items():
+        if source in keys or target not in keys:
+            fail(f"{name}: alias {source!r} is a label, or {target!r} is not")
 
 
 def check_frame(name: str, electrodes: list, fiducials: dict) -> None:
@@ -665,13 +669,19 @@ CASES = [
         ("placed", None, "GSN-HydroCel-128"),
     ),
     (
-        "egi_e129_ambiguous",
-        "E1 to E129. E129 often names the vertex reference of a 129-channel net, "
-        "but it is not an alias of Cz; it is an electrode of the 256 net, which "
-        "then matches the most names, while the 128 and 129 nets match 128 of "
-        "129 (99%) on other positions. The names do not identify a net.",
+        "egi_e129",
+        "E1 to E129, as many EGI exports name a 129-channel net: E129 is Cz on "
+        "the 129 net. The 256 and 257 nets hold E129 as an electrode of their "
+        "own, but the 129 net, of the same family and smaller, matches every "
+        "channel they match.",
         egi(129),
-        ("refused", "montage_ambiguous", None),
+        ("placed", None, "GSN-HydroCel-129"),
+    ),
+    (
+        "egi_e129_and_cz",
+        "E129 and Cz are one electrode on the 129 net.",
+        egi(128, ["Cz", "E129"]),
+        ("refused", "duplicate_label", None),
     ),
     (
         "egi_duplicate_after_zeros",
@@ -702,6 +712,26 @@ CASES = [
         "E1 to E64.",
         egi(64),
         ("placed", None, "GSN-HydroCel-64_1.0"),
+    ),
+    (
+        "egi_e257",
+        "E1 to E257: E257 is Cz on the 257 net.",
+        egi(257),
+        ("placed", None, "GSN-HydroCel-257"),
+    ),
+    (
+        "egi_e65",
+        "E1 to E65: E65 is Cz on the 65 net. E65 is an electrode of the 128, "
+        "129, 256 and 257 nets, which the 65 net dismisses.",
+        egi(65),
+        ("placed", None, "GSN-HydroCel-65_1.0"),
+    ),
+    (
+        "egi_e33_ambiguous_with_biosemi_e_bank",
+        "E1 to E33: E33 is Cz on the 32 net, which matches all 33 names, but the "
+        "BioSemi 160 cap's E bank matches E1 to E32 (97%) on other positions.",
+        egi(33),
+        ("refused", "montage_ambiguous", None),
     ),
     (
         "egi_32_ambiguous_with_biosemi_e_bank",

@@ -97,6 +97,15 @@ FAMILY_ALIASES: Mapping[str, Mapping[str, str]] = {
     # EGI's vertex reference electrode.
     "GSN-HydroCel": {"vref": "cz"},
 }
+# Aliases of one montage. An EGI net's vertex reference, Cz, is often named by
+# the number after the net's last electrode; on a larger net that number is an
+# electrode of its own, so the alias belongs to the one net.
+MONTAGE_ALIASES: Mapping[str, Mapping[str, str]] = {
+    "GSN-HydroCel-32": {"e33": "cz"},
+    "GSN-HydroCel-65_1.0": {"e65": "cz"},
+    "GSN-HydroCel-129": {"e129": "cz"},
+    "GSN-HydroCel-257": {"e257": "cz"},
+}
 
 MIN_CHANNELS = 8
 MIN_MATCHED = 8
@@ -265,8 +274,12 @@ def _common_reference(rights: Sequence[str], pending: int) -> str | None:
     return value if count * den >= num * len(rights) else None
 
 
-def _alias(montage: Montage, key: str) -> str:
-    return FAMILY_ALIASES.get(montage.family, {}).get(key, key)
+def aliases(montage: Montage) -> Mapping[str, str]:
+    """The aliases that apply to a montage: its family's and its own."""
+    return {
+        **FAMILY_ALIASES.get(montage.family, {}),
+        **MONTAGE_ALIASES.get(montage.name, {}),
+    }
 
 
 def electrode_keys(montages: Iterable[Montage]) -> frozenset[str]:
@@ -274,7 +287,7 @@ def electrode_keys(montages: Iterable[Montage]) -> frozenset[str]:
     keys: set[str] = set()
     for montage in montages:
         keys.update(montage.positions)
-        keys.update(FAMILY_ALIASES.get(montage.family, {}))
+        keys.update(aliases(montage))
     return frozenset(keys)
 
 
@@ -325,10 +338,11 @@ def classify(
 def _hits(montage: Montage, channels: Sequence[Channel]) -> dict[int, str]:
     """Candidate index -> the montage key it matches."""
     hits: dict[int, str] = {}
+    redirect = aliases(montage)
     for i, channel in enumerate(channels):
         if channel.status != CANDIDATE:
             continue
-        key = _alias(montage, channel.key)
+        key = redirect.get(channel.key, channel.key)
         if key in montage.positions:
             hits[i] = key
     return hits
@@ -395,7 +409,7 @@ def infer_positions(
         if not any(
             s.family == m.family
             and s.size < m.size
-            and set(hits[m.name].values()) <= s.positions.keys()
+            and hits[m.name].keys() <= hits[s.name].keys()
             for s in contenders
         )
     ]
