@@ -168,9 +168,15 @@
             ]
           }
         }
-      },
-      "allOf": [
-        {
+      }
+    }
+  },
+  "allOf": [
+    {
+      "description": "A view of this kind has only the role values, so none of its coordinates comes from another role. The rule sits at the root, outside data, so a preset drawn by this kind leaves it out of the role contract it meets, and may take coordinates from one of its own roles.",
+      "properties": {
+        "data": {
+          "type": "array",
           "items": {
             "type": "object",
             "properties": {
@@ -185,8 +191,7 @@
                         "required": [
                           "role"
                         ]
-                      },
-                      "description": "A view of this kind has only the role values, so no coordinate comes from another role. A preset over this kind may take them from one of its own roles."
+                      }
                     }
                   }
                 }
@@ -194,7 +199,7 @@
             }
           }
         }
-      ]
+      }
     }
-  }
+  ]
 }

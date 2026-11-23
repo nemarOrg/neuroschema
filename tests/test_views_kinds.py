@@ -18,6 +18,7 @@ import re
 from pathlib import Path
 
 import pytest
+from jsonschema import Draft202012Validator
 
 from neuroschema.views import (
     MODELS_FORMAT,
@@ -640,6 +641,26 @@ def test_vectors_are_registered():
             "spec": document["spec"],
             "vectors": path,
         }
+
+
+@pytest.mark.parametrize(
+    ("case", "kind"),
+    [
+        ("lines_preset_by_base", "nemar.lines"),
+        ("heatmap_preset_by_base", "nemar.heatmap"),
+        ("heatmap_preset_columns_from_role", "nemar.heatmap"),
+    ],
+)
+def test_base_data_admits_a_preset_coordinate_role(case, kind):
+    """A preset's values entry, with a coordinate from another of its roles, is
+    valid under the base's whole data subschema as well as its role subschema;
+    only a view of the kind itself refuses such a coordinate (a root rule)."""
+    view = by_name(case)["view"]
+    values = [e for e in view["data"] if e["role"] == "values"]
+    schema = json.loads((SCHEMAS / f"kind.{kind}.v1.schema.json").read_text())
+    data = Draft202012Validator(schema["properties"]["data"])
+    assert data.is_valid(values)
+    assert not Draft202012Validator(schema).is_valid({"data": values})
 
 
 def test_role_contract_refuses_x_from_another_role():
