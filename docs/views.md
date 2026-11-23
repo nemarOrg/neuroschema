@@ -41,8 +41,10 @@ Any other kind or version passes on the envelope alone: an unknown kind is never
 A renderer applies this rule:
 
 1. If it knows the view's kind and version, it draws the view with that kind's renderer.
-2. Otherwise, if it knows the base and base version and the view's data meet the base's role contract, it draws the view with the generic renderer for the base.
+2. Otherwise, if it knows the base and base version and the view's data meet the base's role contract, it draws the view with the generic renderer for the base, and offers every other file in the view's `data` for download.
 3. Otherwise it shows the data as a table, with a download of each file.
+
+No view hides data: however a view is drawn, every file in its `data` is either drawn or offered for download.
 
 A view meets a kind's role contract when every role the kind's schema admits appears exactly once in its `data`, and that entry is valid under the kind schema's subschema for the role: `data.items`, or, for a kind with several roles, the branch of its `oneOf` or `anyOf` for that role.
 The format, the dimensions and every field the kind requires (a table's `columns`, a dimension a kind needs) all come from that one schema.
