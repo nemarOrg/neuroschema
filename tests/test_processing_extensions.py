@@ -1149,3 +1149,28 @@ class TestOrderMessages:
         problems = count_problems(proc)
         assert "nemar-ica/ica: passed above the earlier checkpoint" in problems
         assert not any("nemar-ica/iclabel: passed" in p for p in problems)
+
+
+class TestLastCheckpointTotals:
+    def test_quality_passed_matches_last_checkpoint(self):
+        proc = _ext(DATASET_EXAMPLE, "processing")
+        quality = _ext(DATASET_EXAMPLE, "dataQuality")
+        quality["recipes"]["nemar-ica"]["counts"].update(passed=17, failed=1)
+        assert total_problems(quality, proc) == [
+            "nemar-ica: dataQuality passed differs from the last checkpoint",
+            "nemar-ica: dataQuality failed+skipped differs from the last checkpoint",
+        ]
+
+    def test_quality_not_processed_matches_last_checkpoint(self):
+        proc = _ext(DATASET_EXAMPLE, "processing")
+        quality = _ext(DATASET_EXAMPLE, "dataQuality")
+        proc["recipes"]["nemar-floor"]["counts"]["stored"].update(passed=16, skipped=2)
+        problems = total_problems(quality, proc)
+        assert (
+            "nemar-floor: dataQuality passed differs from the last checkpoint"
+            in problems
+        )
+        assert (
+            "nemar-floor: dataQuality failed+skipped differs from the last checkpoint"
+            in problems
+        )

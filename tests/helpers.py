@@ -169,4 +169,16 @@ def total_problems(dataset_quality: dict, dataset_processing: dict) -> list[str]
         totals = {c["total"] for c in proc["counts"].values()}
         if totals != {entry["counts"]["total"]}:
             problems.append(f"{recipe}: dataQuality total differs from processing")
+        last = proc["counts"].get(proc["declared_checkpoints"][-1])
+        if last is None:
+            continue
+        quality = entry["counts"]
+        if quality["passed"] != last["passed"]:
+            problems.append(
+                f"{recipe}: dataQuality passed differs from the last checkpoint"
+            )
+        if quality["failed"] + quality["skipped"] != last["total"] - last["passed"]:
+            problems.append(
+                f"{recipe}: dataQuality failed+skipped differs from the last checkpoint"
+            )
     return problems
