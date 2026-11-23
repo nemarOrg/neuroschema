@@ -663,6 +663,11 @@ class TestRegistry:
         with pytest.raises(ValueError, match=re.escape("views-registry.v0")):
             load_registry(path)
 
+    def test_missing_registry_is_named(self, tmp_path):
+        missing = tmp_path / "views" / "registry.json"
+        with pytest.raises(FileNotFoundError, match="View registry not found"):
+            load_registry(missing)
+
     def test_a_kind_listed_twice_is_refused(self):
         twice = REGISTRY | {"kinds": REGISTRY["kinds"] * 2}
         with pytest.raises(ValueError, match="listed twice"):

@@ -4,6 +4,10 @@ The registry lists the view kinds neuroschema defines (each with its base,
 roles, dimensions and schema file), the transforms and algorithms (each with
 its specification and vectors), the data formats, the reserved dimension names
 and the size caps. ``docs/views.md`` explains each part.
+
+The registry is read from a neuroschema checkout, as ``neuroschema.validate``
+reads ``schema/``: neither is packaged, because consumers vendor both from the
+repository at their published paths.
 """
 
 from __future__ import annotations
@@ -33,6 +37,12 @@ class Drawing(NamedTuple):
 
 def load_registry(path: Path = REGISTRY_PATH) -> dict:
     """Load the registry and check its format string."""
+    if not path.is_file():
+        raise FileNotFoundError(
+            f"View registry not found: {path}. neuroschema reads views/registry.json "
+            "from a checkout of its repository (it is not packaged); install from a "
+            "checkout or pass the registry's path."
+        )
     registry = json.loads(path.read_text(encoding="utf-8"))
     if registry.get("format") != REGISTRY_FORMAT:
         raise ValueError(
