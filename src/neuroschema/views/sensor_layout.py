@@ -154,17 +154,17 @@ def sphere_center(points: np.ndarray) -> tuple[np.ndarray, str]:
     distance from it, and the algebraic fit
     ``x**2 + y**2 + z**2 = 2*a*x + 2*b*y + 2*c*z + d`` is solved from its 4-by-4
     normal equations by LU decomposition with partial pivoting. The fit is
-    degenerate, and the centroid is returned, when there are fewer than four
-    points, when they all coincide, or when a pivot is at most
-    :data:`FIT_PIVOT` times the largest normal-equation entry (coplanar
-    points). The fitted squared radius needs no check: for centered points it
-    is their mean squared distance from the center, which is positive.
+    degenerate, and the centroid is returned, when the points all coincide or
+    when a pivot is at most :data:`FIT_PIVOT` times the largest normal-equation
+    entry: the points are coplanar, as any three or fewer are. The fitted
+    squared radius needs no check: for centered points it is their mean
+    squared distance from the center, which is positive.
     """
     n = len(points)
     centroid = points.sum(axis=0) / n
     centered = points - centroid
     scale = float(np.sqrt((centered * centered).sum(axis=1)).max())
-    if n < 4 or scale == 0:
+    if scale == 0:
         return centroid, "centroid"
     u = centered / scale
     design = np.column_stack([2 * u, np.ones(n)])

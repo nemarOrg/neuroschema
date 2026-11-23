@@ -28,9 +28,9 @@ In a view, the positions are the input role `positions`, a tab-separated values 
    the centroid `c0` is their sum, in row order, divided by `n`;
    `q = p - c0`;
    and the scale `s` is the largest Euclidean length of a `q`.
-   If `n < 4` or `s = 0`, the center is the centroid.
+   If `s = 0` (the positions coincide), the center is the centroid.
    Otherwise, with `u = q / s`, fit the sphere `x*x + y*y + z*z = 2*a*x + 2*b*y + 2*c*z + d` to the `u` by least squares: each `u` gives the row `(2*ux, 2*uy, 2*uz, 1)` of a matrix `A` and the value `ux*ux + uy*uy + uz*uz` of a vector `b`, and `(a, b, c, d)` solves the 4-by-4 normal equations `(A^T A) w = A^T b` by lower-upper (LU) decomposition with partial pivoting, as `nemar.sensor-field.v1` solves its matrix.
-   The fit is degenerate, and the center is the centroid, when a pivot's magnitude is at most `1e-10` times the largest magnitude of an entry of `A^T A`: the points are coplanar, such as a single ring of sensors.
+   The fit is degenerate, and the center is the centroid, when a pivot's magnitude is at most `1e-10` times the largest magnitude of an entry of `A^T A`: the points are coplanar, such as a single ring of sensors, or any three or fewer.
    (The fitted squared radius, `a*a + b*b + c*c + d`, needs no check: for centered points it is their mean squared distance from the center.)
    Otherwise the center is `c0 + s * (a, b, c)`.
 4. **Topoplot coordinates.**
@@ -90,6 +90,6 @@ Each `cart2topo` entry gives a centered ALS point and the theta and radius it co
 [`views/vectors/sensor-layout.v1.json`](../../views/vectors/sensor-layout.v1.json) has the reference (eegprep's commit, the numpy and scipy versions, and the BIDS specification the frames come from), the tolerances above, `frames` (the ALS and RAS names, and the orientation of template positions), `cart2topo` (centered points straight to theta and radius, including the axes, the poles and points straight behind with Y = +0 and Y = -0), and the cases.
 Each case gives `coordinate_system`, `montage` for template positions, `positions` (`name`, `x`, `y`, `z`, with `null` for a number that is not finite) and either `refused` (the word) or `expected`: `center` (in ALS), `center_method`, and `theta_deg` and `radius` per row (`null` for a row without a position).
 An implementation gives the case `frame_als`'s layout for every ALS name and the case `frame_ras`'s for every RAS name.
-The cases cover a 128-sensor cap in millimeters (RAS), a 339-position 10-5 template in meters (ALS), a 32-sensor cap moved off center, the frame cases, a coplanar ring and three positions (the centroid), rows without a position, template positions from a montage (and the same positions also naming a coordinate system, refused), and eleven coordinate systems that are refused.
+The cases cover a 128-sensor cap in millimeters (RAS), a 339-position 10-5 template in meters (ALS), a 32-sensor cap moved off center, the frame cases, a coplanar ring, three positions and four coincident ones (the centroid), rows without a position, template positions from a montage (and the same positions also naming a coordinate system, refused), and eleven coordinate systems that are refused.
 
 `scripts/generate_view_vectors.py` writes this file with the sensor-field vectors; see [`sensor-field.md`](sensor-field.md#vectors).

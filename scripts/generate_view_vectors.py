@@ -198,7 +198,7 @@ def fit_center(points):
     centroid = points.sum(axis=0) / n
     centered = points - centroid
     scale = float(np.sqrt((centered**2).sum(axis=1)).max())
-    if n < 4 or scale == 0:
+    if scale == 0:
         return centroid, "centroid", scale
     u = centered / scale
     design = np.column_stack([2 * u, np.ones(n)])
@@ -810,9 +810,21 @@ def layout_cases():
     cases.append(
         layout_case(
             "three_positions",
-            "Three positions: too few for a sphere, so the center is the centroid.",
+            "Three positions, which are coplanar: the fit is degenerate, so the "
+            "center is the centroid.",
             ["A", "B", "C"],
             [[7.0, 1.0, 3.0], [-2.0, 6.0, 4.0], [0.5, -5.0, 6.5]],
+            "EEGLAB",
+        )
+    )
+    cases.append(
+        layout_case(
+            "coincident_positions",
+            "Four positions at one point: the scale is 0, so the center is the "
+            "centroid, the point itself, and each position converts as the origin "
+            "(theta 0, radius 0.5).",
+            ["A", "B", "C", "D"],
+            [[2.5, -1.0, 7.0]] * 4,
             "EEGLAB",
         )
     )

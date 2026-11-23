@@ -201,7 +201,7 @@
     },
     {
       "name": "three_positions",
-      "description": "Three positions: too few for a sphere, so the center is the centroid.",
+      "description": "Three positions, which are coplanar: the fit is degenerate, so the center is the centroid.",
       "coordinate_system": "EEGLAB",
       "positions": {
         "name": ["A", "B", "C"],
@@ -214,6 +214,23 @@
         "center_method": "centroid",
         "theta_deg": [-3.69138598645128, -125.70669140060289, 103.24051991518718],
         "radius": [0.5897631827335578, 0.5241851512271185, 0.39466322086575634]
+      }
+    },
+    {
+      "name": "coincident_positions",
+      "description": "Four positions at one point: the scale is 0, so the center is the centroid, the point itself, and each position converts as the origin (theta 0, radius 0.5).",
+      "coordinate_system": "EEGLAB",
+      "positions": {
+        "name": ["A", "B", "C", "D"],
+        "x": [2.5, 2.5, 2.5, 2.5],
+        "y": [-1.0, -1.0, -1.0, -1.0],
+        "z": [7.0, 7.0, 7.0, 7.0]
+      },
+      "expected": {
+        "center": [2.5, -1.0, 7.0],
+        "center_method": "centroid",
+        "theta_deg": [0.0, 0.0, 0.0, 0.0],
+        "radius": [0.5, 0.5, 0.5, 0.5]
       }
     },
     {
