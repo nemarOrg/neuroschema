@@ -1155,6 +1155,30 @@ CASES = [
         ("placed", None, "biosemi64"),
     ),
     (
+        "biosemi_64_at_ninety_percent",
+        "A1 to B26: 58 of the BioSemi 64 cap's electrodes, the fewest at or above 90%.",
+        biosemi_bank(58),
+        ("placed", None, "biosemi64"),
+    ),
+    (
+        "biosemi_64_below_ninety_percent",
+        "A1 to B25: 57 of 64.",
+        biosemi_bank(57),
+        ("refused", "net_coverage_low", None),
+    ),
+    (
+        "biosemi_16_at_ninety_percent",
+        "A1 to A15: 15 of the BioSemi 16 cap's electrodes, the fewest at or above 90%.",
+        biosemi_bank(15),
+        ("placed", None, "biosemi16"),
+    ),
+    (
+        "biosemi_16_below_ninety_percent",
+        "A1 to A14: 14 of 16.",
+        biosemi_bank(14),
+        ("refused", "net_coverage_low", None),
+    ),
+    (
         "biosemi_128",
         "A BioSemi 128 cap (A1 to D32) with external and status channels left "
         "untyped. The 160 and 256 caps hold the same names; the 128 cap, of the "
