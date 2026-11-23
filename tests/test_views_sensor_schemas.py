@@ -666,6 +666,19 @@ class TestOptionalRole:
             assert Draft202012Validator(branch, resolver=resolver).is_valid(entry)
         assert draw_as(view, REGISTRY) == Drawing("table", None, None)
 
+    def test_a_role_twice_misses_the_contract_whatever_the_schema_says(self, tmp_path):
+        """Roles are unique within a view: the contract counts them itself, so
+        a kind schema that does not bound a role's count cannot admit two."""
+        schema = json.loads(KIND.read_text())
+        del schema["properties"]["data"]["allOf"][1]["maxContains"]
+        path = tmp_path / KIND.name
+        path.write_text(json.dumps(schema))
+        entry = FIELD | {"schema": str(path)}
+        view = preset(field())
+        assert meets_role_contract(view, entry)
+        view["data"].append(layout_entry())
+        assert not meets_role_contract(view, entry)
+
     def test_a_contains_clause_without_min_contains_zero_is_not_optional(
         self, tmp_path
     ):
