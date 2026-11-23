@@ -896,6 +896,71 @@ class TestRendererRule:
         view["data"] = [values]
         assert draw_as(view, registry) == Drawing("table", None, None)
 
+    def test_an_enum_role_admits_each_of_its_values(self, tmp_path):
+        """A throwaway anyOf base whose first branch admits two roles by enum."""
+        registry = _fixture_registry(
+            tmp_path,
+            "acme.bands",
+            {
+                "type": "object",
+                "anyOf": [
+                    {
+                        "properties": {
+                            "role": {"enum": ["values", "errors"]},
+                            "format": {"const": "tsv"},
+                        }
+                    },
+                    {
+                        "properties": {
+                            "role": {"const": "layout"},
+                            "format": {"const": "tsv"},
+                        }
+                    },
+                ],
+            },
+        )
+        entry = known_kinds(registry)[("acme.bands", 1)]
+        branches = role_schemas(entry)
+        assert set(branches) == {"values", "errors", "layout"}
+        assert branches["values"] is branches["errors"]
+        view = self._preset(table()) | {"base": "acme.bands"}
+        view["data"] = [
+            copy.deepcopy(view["data"][0]) | {"role": role}
+            for role in ("values", "errors", "layout")
+        ]
+        assert draw_as(view, registry) == Drawing("base", "acme.bands", 1)
+        del view["data"][1]
+        assert draw_as(view, registry) == Drawing("table", None, None)
+
+    def test_a_role_that_is_neither_const_nor_enum_is_refused(self, tmp_path):
+        registry = _fixture_registry(
+            tmp_path,
+            "acme.loose",
+            {"type": "object", "properties": {"role": {"pattern": "^v"}}},
+        )
+        entry = known_kinds(registry)[("acme.loose", 1)]
+        with pytest.raises(ValueError, match="must be a const or an enum"):
+            role_schemas(entry)
+
+    @pytest.mark.parametrize(
+        "second", [{"const": "values"}, {"enum": ["layout", "values"]}]
+    )
+    def test_a_role_in_two_branches_is_refused(self, tmp_path, second):
+        registry = _fixture_registry(
+            tmp_path,
+            "acme.twice",
+            {
+                "type": "object",
+                "oneOf": [
+                    {"properties": {"role": {"const": "values"}}},
+                    {"properties": {"role": second}},
+                ],
+            },
+        )
+        entry = known_kinds(registry)[("acme.twice", 1)]
+        with pytest.raises(ValueError, match="role values has two branches"):
+            role_schemas(entry)
+
     @pytest.mark.parametrize("missing", ["base_version", "base"])
     def test_half_a_base_draws_as_a_table(self, missing):
         view = self._preset(table())
