@@ -4,3 +4,5 @@ hed = "hed"
 HED = "HED"
 # SER appears in HySER (High-density Surface Electromyogram Recordings)
 SER = "SER"
+# Iz is the inion electrode of the 10-05 system (also in OIz)
+Iz = "Iz"
