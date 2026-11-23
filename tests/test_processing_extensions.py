@@ -1138,3 +1138,14 @@ def test_anchor_check_catches_a_bare_dollar(tmp_path):
     path = tmp_path / "processingTypes.schema.json"
     path.write_text(json.dumps(schema))
     assert anchor_problems([path]) == ["processingTypes.schema.json: '^[0-9a-f]{64}$'"]
+
+
+class TestOrderMessages:
+    def test_order_message_names_the_right_checkpoint(self):
+        proc = _ext(DATASET_EXAMPLE, "processing")
+        entry = proc["recipes"]["nemar-ica"]
+        del entry["counts"]["preprocess"]
+        entry["counts"]["ica"].update(passed=18, failed=0, skipped=0)
+        problems = count_problems(proc)
+        assert "nemar-ica/ica: passed above the earlier checkpoint" in problems
+        assert not any("nemar-ica/iclabel: passed" in p for p in problems)

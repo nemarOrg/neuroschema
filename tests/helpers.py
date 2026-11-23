@@ -40,9 +40,9 @@ def count_problems(dataset_processing: dict) -> list[str]:
             totals.add(c["total"])
         if len(totals) > 1:
             problems.append(f"{recipe}: checkpoints have unequal totals")
-        ordered = [counts[name] for name in declared if name in counts]
-        for k, (here, nxt) in enumerate(pairwise(ordered)):
-            name = declared[k + 1]
+        present = [name for name in declared if name in counts]
+        for before, name in pairwise(present):
+            here, nxt = counts[before], counts[name]
             if nxt["skipped"] < here["skipped"] + here["failed"]:
                 problems.append(
                     f"{recipe}/{name}: skipped below earlier failed+skipped"
