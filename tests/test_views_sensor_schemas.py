@@ -109,6 +109,42 @@ def layout_entry() -> dict:
     }
 
 
+def positions_entry() -> dict:
+    """A recording's measured electrode positions, in centimeters."""
+    return {
+        "role": "positions",
+        "location": "views/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+        "format": "tsv",
+        "size": 2911,
+        "sha256": SHA2,
+        "columns": [
+            {"name": "name", "type": "string"},
+            {"name": "x", "type": "number", "unit": "cm"},
+            {"name": "y", "type": "number", "unit": "cm"},
+            {"name": "z", "type": "number", "unit": "cm"},
+        ],
+        "dims": [
+            {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {"column": "name"},
+            }
+        ],
+        "coordinate_system": "CapTrak",
+        "position_source": "measured",
+    }
+
+
+def positioned() -> dict:
+    """A scalp map placed by three-dimensional positions, projected in the browser."""
+    view = field()
+    view["data"][1] = positions_entry()
+    view["data"][0]["dims"][0]["coords"] = {"role": "positions", "column": "name"}
+    view["transform"] = {"name": "nemar.sensor-layout.v1", "parameters": {}}
+    return view
+
+
 def field(*, layout: bool = True) -> dict:
     view = {
         "key": "icmaps",
@@ -219,6 +255,11 @@ class TestKindDeclaration:
         if field_name == "base":
             view["base_version"] = 1
             assert view_errors(view) == {("not", "base"), ("not", "base_version")}
+        elif field_name == "transform":
+            assert view_errors(view) == {
+                ("const", "transform/name"),
+                ("not", "transform"),
+            }
         else:
             assert view_errors(view) == {("not", field_name)}
 
@@ -257,6 +298,117 @@ class TestKindDeclaration:
         view = sensors_on_columns(layout=False)
         view["data"][0]["dims"][1]["coords"] = {"role": "names", "column": "name"}
         assert view_errors(view) == {("not", "data/0/dims/1/coords")}
+
+
+class TestPositionsSource:
+    def test_valid(self):
+        assert view_errors(positioned()) == set()
+
+    def test_positions_need_the_transform(self):
+        """Fails if the kind's rule (positions -> transform) is dropped."""
+        view = positioned()
+        del view["transform"]
+        assert view_errors(view) == {("required", "")}
+
+    def test_no_transform_without_positions(self):
+        """Fails if the kind's else (no positions -> no transform) is dropped."""
+        view = field()
+        view["transform"] = {"name": "nemar.sensor-layout.v1", "parameters": {}}
+        assert view_errors(view) == {
+            ("not", "transform"),
+            ("required", ""),
+            ("required", "transform/parameters"),
+        }
+
+    def test_stored_positions_name_their_own_frame(self):
+        """The frame is declared once: on the role, not in the parameters."""
+        view = positioned()
+        view["transform"]["parameters"] = {"coordinate_system": "CapTrak"}
+        assert view_errors(view) == {("maxProperties", "transform/parameters")}
+
+    def test_stored_positions_are_not_also_an_input(self):
+        view = positioned()
+        view["inputs"] = layout_transform_view()["inputs"]
+        assert view_errors(view) == {("not", "inputs")}
+
+    def test_at_most_one_of_layout_and_positions(self):
+        """Fails if the one-source rule is dropped."""
+        view = positioned()
+        view["data"].append(layout_entry())
+        assert ("not", "data") in view_errors(view)
+
+    def test_positions_at_most_once(self):
+        view = positioned()
+        view["data"].append(positions_entry())
+        assert view_errors(view) == {("maxContains", "data")}
+
+    def test_with_positions_sensors_come_from_them(self):
+        """Fails if the cross-role rule for positions is dropped."""
+        view = positioned()
+        view["data"][0]["dims"][0]["coords"] = {"role": "layout", "column": "name"}
+        assert view_errors(view) == {("const", "data/0/dims/0/coords/role")}
+
+    def test_a_preset_with_positions_draws_as_its_base(self):
+        view = preset(positioned())
+        assert draw_as(view, REGISTRY) == Drawing("base", "nemar.sensor-field", 1)
+        view["data"].append(layout_entry())
+        assert draw_as(view, REGISTRY) == Drawing("table", None, None)
+
+
+class TestPositionsRole:
+    def test_valid(self):
+        assert role_errors(positions_entry(), "positions") == set()
+
+    @pytest.mark.parametrize(
+        "missing", ["coordinate_system", "position_source", "columns", "dims"]
+    )
+    def test_required(self, missing):
+        entry = positions_entry()
+        del entry[missing]
+        assert role_errors(entry, "positions") == {("required", "")}
+
+    @pytest.mark.parametrize("column", ["name", "x", "y", "z"])
+    def test_required_columns(self, column):
+        entry = positions_entry()
+        entry["columns"] = [c for c in entry["columns"] if c["name"] != column]
+        assert role_errors(entry, "positions") == {("contains", "columns")}
+
+    def test_a_column_twice_fails(self):
+        entry = positions_entry()
+        entry["columns"].append({"name": "z", "type": "number"})
+        assert role_errors(entry, "positions") == {("maxContains", "columns")}
+
+    def test_no_layout_columns(self):
+        entry = positions_entry()
+        entry["columns"].append({"name": "theta_deg", "type": "number", "unit": "deg"})
+        assert role_errors(entry, "positions") == {("enum", "columns/4/name")}
+
+    @pytest.mark.parametrize(
+        ("index", "change", "expected"),
+        [
+            (0, {"type": "number"}, ("const", "columns/0/type")),
+            (1, {"type": "string"}, ("const", "columns/1/type")),
+            (3, {"type": "integer"}, ("const", "columns/3/type")),
+        ],
+    )
+    def test_column_types(self, index, change, expected):
+        entry = positions_entry()
+        entry["columns"][index].update(change)
+        assert role_errors(entry, "positions") == {expected}
+
+    def test_the_sensor_dimension(self):
+        entry = positions_entry()
+        entry["dims"][0]["coords"] = {"column": "label"}
+        assert role_errors(entry, "positions") == {("const", "dims/0/coords/column")}
+
+    def test_template_positions_name_n_a(self):
+        """A montage beside a named frame is refused, never guessed. Checked on
+        the role's branch: the envelope admits montage from nemar.sensor-labels.v1."""
+        entry = positions_entry() | {"position_source": "template"}
+        entry.update(coordinate_system="n/a", montage="GSN-HydroCel-32")
+        assert role_errors(entry, "positions") == set()
+        entry["coordinate_system"] = "CapTrak"
+        assert role_errors(entry, "positions") == {("const", "coordinate_system")}
 
 
 class TestValuesRole:
@@ -578,9 +730,10 @@ class TestRegistry:
     def test_sensor_field_kind_and_algorithm(self):
         assert FIELD["schema"] == "schema/views/kind.nemar.sensor-field.v1.schema.json"
         assert FIELD["base"] is None
-        assert set(FIELD["roles"]) == {"values", "layout"}
+        assert set(FIELD["roles"]) == {"values", "layout", "positions"}
         assert FIELD["roles"]["values"]["dims"] is None, "open names"
         assert FIELD["roles"]["layout"]["dims"] == ["sensor"]
+        assert FIELD["roles"]["positions"]["dims"] == ["sensor"]
         algorithms = {a["name"]: a for a in REGISTRY["algorithms"]}
         assert algorithms["nemar.sensor-field.v1"] == {
             "name": "nemar.sensor-field.v1",
@@ -625,7 +778,7 @@ def preset(view: dict) -> dict:
 
 class TestOptionalRole:
     def test_optional_roles(self):
-        assert optional_roles(FIELD) == {"layout"}
+        assert optional_roles(FIELD) == {"layout", "positions"}
         assert optional_roles(TABLE) == set()
 
     @pytest.mark.parametrize("layout", [True, False])
@@ -637,8 +790,8 @@ class TestOptionalRole:
 
     def test_a_preset_role_the_base_does_not_admit_is_ignored(self):
         view = preset(field())
-        positions = layout_entry() | {"role": "positions", "sha256": "c" * 64}
-        view["data"].append(positions)
+        components = layout_entry() | {"role": "components", "sha256": "c" * 64}
+        view["data"].append(components)
         assert draw_as(view, REGISTRY) == Drawing("base", "nemar.sensor-field", 1)
 
     def test_an_optional_role_twice_misses_the_contract(self):
@@ -687,5 +840,5 @@ class TestOptionalRole:
         path = tmp_path / KIND.name
         path.write_text(json.dumps(schema))
         entry = FIELD | {"schema": str(path)}
-        assert optional_roles(entry) == set()
+        assert optional_roles(entry) == {"positions"}
         assert not meets_role_contract(preset(field(layout=False)), entry)

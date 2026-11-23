@@ -37,6 +37,14 @@
           "dims": [
             "sensor"
           ]
+        },
+        "positions": {
+          "formats": [
+            "tsv"
+          ],
+          "dims": [
+            "sensor"
+          ]
         }
       }
     }

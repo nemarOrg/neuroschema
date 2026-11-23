@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "kind.nemar.sensor-field.v1.schema.json",
   "title": "View Kind nemar.sensor-field, Version 1",
-  "description": "A generic scalp map, applied on top of the envelope to a view declaration whose kind is nemar.sensor-field and kind_version 1. The role values holds one or more maps, each one value per sensor; the optional role layout gives each sensor's theta and radius. With a layout, the values' sensor coordinates are the layout's name column, by position; without one, they are names in the values file, which a renderer places by nemar.sensor-labels.v1. A renderer draws each map with the algorithm nemar.sensor-field.v1 (docs/views/sensor-field.md). A generic kind: no base, no inputs and no transform.",
+  "description": "A generic scalp map, applied on top of the envelope to a view declaration whose kind is nemar.sensor-field and kind_version 1. The role values holds one or more maps, each one value per sensor. The sensors are placed by one of three sources: the role layout (each sensor's theta and radius), the role positions (each sensor's x, y and z, which the transform nemar.sensor-layout.v1 projects to a layout, and which the view then declares as its transform), or, with neither, the sensor names, which a renderer places by nemar.sensor-labels.v1. A view has at most one of layout and positions, and the values' sensor coordinates are that role's name column, by position. A renderer draws each map with the algorithm nemar.sensor-field.v1 (docs/views/sensor-field.md). A generic kind: no base and no inputs.",
   "type": "object",
   "required": [
     "data"
@@ -21,8 +21,16 @@
       "description": "A scalp map is drawn from stored data only."
     },
     "transform": {
-      "not": {},
-      "description": "A scalp map is drawn from stored data only."
+      "type": "object",
+      "description": "With the role positions, the transform nemar.sensor-layout.v1, which projects them; without it, none.",
+      "properties": {
+        "name": {
+          "const": "nemar.sensor-layout.v1"
+        }
+      },
+      "required": [
+        "name"
+      ]
     },
     "parameters": {
       "type": "object",
@@ -42,7 +50,7 @@
     },
     "data": {
       "type": "array",
-      "description": "The role values, exactly once, and the role layout, at most once.",
+      "description": "The role values, exactly once; at most one of the roles layout and positions.",
       "items": {
         "oneOf": [
           {
@@ -381,6 +389,204 @@
                 }
               }
             }
+          },
+          {
+            "type": "object",
+            "description": "The role positions: each sensor's name and three-dimensional position (x, y and z, in one unit), one row per sensor, in the frame coordinate_system names, or, for template positions, with the coordinate system n/a and the montage they came from (nemar.sensor-labels.v1). The view's transform nemar.sensor-layout.v1 projects them to a layout.",
+            "required": [
+              "role",
+              "format",
+              "columns",
+              "dims",
+              "coordinate_system",
+              "position_source"
+            ],
+            "properties": {
+              "role": {
+                "const": "positions"
+              },
+              "format": {
+                "const": "tsv"
+              },
+              "columns": {
+                "type": "array",
+                "description": "name, x, y and z, each once, and optionally sensor_type.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "enum": [
+                        "name",
+                        "x",
+                        "y",
+                        "z",
+                        "sensor_type"
+                      ]
+                    }
+                  },
+                  "allOf": [
+                    {
+                      "if": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "enum": [
+                              "name",
+                              "sensor_type"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "name"
+                        ]
+                      },
+                      "then": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "string"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "if": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "enum": [
+                              "x",
+                              "y",
+                              "z"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "name"
+                        ]
+                      },
+                      "then": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "number"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "allOf": [
+                  {
+                    "contains": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "const": "name"
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ]
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  },
+                  {
+                    "contains": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "const": "x"
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ]
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  },
+                  {
+                    "contains": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "const": "y"
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ]
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  },
+                  {
+                    "contains": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "const": "z"
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ]
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  }
+                ]
+              },
+              "dims": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "description": "The sensor dimension along the rows, named by the name column.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "const": "sensor"
+                    },
+                    "axis": {
+                      "const": "rows"
+                    },
+                    "type": {
+                      "const": "string"
+                    },
+                    "coords": {
+                      "type": "object",
+                      "required": [
+                        "column"
+                      ],
+                      "properties": {
+                        "column": {
+                          "const": "name"
+                        }
+                      },
+                      "not": {
+                        "required": [
+                          "role"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "dependentSchemas": {
+              "montage": {
+                "type": "object",
+                "description": "Template positions name their montage, whose frame is right-anterior-superior, so their coordinate system is n/a; a montage beside a named frame is inconsistent.",
+                "properties": {
+                  "coordinate_system": {
+                    "const": "n/a"
+                  }
+                }
+              }
+            }
           }
         ]
       },
@@ -417,6 +623,56 @@
           "description": "The layout is optional (minContains 0)."
         },
         {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "const": "positions"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1,
+          "description": "The positions are optional (minContains 0)."
+        },
+        {
+          "not": {
+            "type": "array",
+            "allOf": [
+              {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "const": "layout"
+                    }
+                  },
+                  "required": [
+                    "role"
+                  ]
+                }
+              },
+              {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "const": "positions"
+                    }
+                  },
+                  "required": [
+                    "role"
+                  ]
+                }
+              }
+            ]
+          },
+          "description": "At most one of layout and positions places the sensors."
+        },
+        {
           "if": {
             "type": "array",
             "contains": {
@@ -433,7 +689,6 @@
           },
           "then": {
             "type": "array",
-            "description": "With a layout, the values' sensors are the layout's rows: coordinates {role: layout, column: name}.",
             "items": {
               "if": {
                 "type": "object",
@@ -487,11 +742,120 @@
                   }
                 }
               }
+            },
+            "description": "With a layout, the values' sensors are its rows: coordinates {role: layout, column: name}."
+          }
+        },
+        {
+          "if": {
+            "type": "array",
+            "contains": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "const": "positions"
+                }
+              },
+              "required": [
+                "role"
+              ]
             }
           },
-          "else": {
+          "then": {
             "type": "array",
-            "description": "Without a layout, the values' sensors are named in the values file.",
+            "items": {
+              "if": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "const": "values"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "then": {
+                "type": "object",
+                "properties": {
+                  "dims": {
+                    "type": "array",
+                    "items": {
+                      "if": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "const": "sensor"
+                          }
+                        },
+                        "required": [
+                          "name"
+                        ]
+                      },
+                      "then": {
+                        "type": "object",
+                        "properties": {
+                          "coords": {
+                            "type": "object",
+                            "required": [
+                              "role",
+                              "column"
+                            ],
+                            "properties": {
+                              "role": {
+                                "const": "positions"
+                              },
+                              "column": {
+                                "const": "name"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "description": "With positions, the values' sensors are its rows: coordinates {role: positions, column: name}."
+          }
+        },
+        {
+          "if": {
+            "type": "array",
+            "not": {
+              "anyOf": [
+                {
+                  "contains": {
+                    "type": "object",
+                    "properties": {
+                      "role": {
+                        "const": "layout"
+                      }
+                    },
+                    "required": [
+                      "role"
+                    ]
+                  }
+                },
+                {
+                  "contains": {
+                    "type": "object",
+                    "properties": {
+                      "role": {
+                        "const": "positions"
+                      }
+                    },
+                    "required": [
+                      "role"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "then": {
+            "type": "array",
             "items": {
               "if": {
                 "type": "object",
@@ -538,10 +902,53 @@
                   }
                 }
               }
-            }
+            },
+            "description": "With neither, the values' sensors are named in the values file."
           }
         }
       ]
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "contains": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "const": "positions"
+                }
+              },
+              "required": [
+                "role"
+              ]
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "required": [
+          "transform"
+        ],
+        "description": "Positions are projected by the declared transform."
+      },
+      "else": {
+        "type": "object",
+        "properties": {
+          "transform": {
+            "not": {},
+            "description": "Without positions, a scalp map has no transform."
+          }
+        }
+      }
+    }
+  ]
 }
