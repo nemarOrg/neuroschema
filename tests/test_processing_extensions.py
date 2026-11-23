@@ -909,3 +909,187 @@ class TestHelperMutations:
         assert quality_problems(quality) == [
             "nemar-ica: not_processed does not cover failed+skipped"
         ]
+
+
+# ── Coverage tables: every closed object, every required key ──────────────
+
+
+def _at(doc, path: str):
+    node = doc
+    for part in path.split("/"):
+        node = node[int(part)] if isinstance(node, list) else node[part]
+    return node
+
+
+FIG0 = f"{FLOOR}/figures/0"
+PGS = f"{FLOOR}/distributions/percentGoodSamples"
+CLOSED = [
+    (DATA_QUALITY, dq_record, FLOOR),
+    (DATA_QUALITY, dq_record, f"{FLOOR}/metrics/percentGoodSamples"),
+    (DATA_QUALITY, dq_record, f"{FLOOR}/metrics/percentGoodSamples/plugin"),
+    (DATA_QUALITY, dq_record, FIG0),
+    (DATA_QUALITY, dq_record, f"{FIG0}/plugin"),
+    (DATA_QUALITY, dq_dataset, FLOOR),
+    (DATA_QUALITY, dq_dataset, f"{FLOOR}/counts"),
+    (DATA_QUALITY, dq_dataset, PGS),
+    (DATA_QUALITY, dq_dataset, f"{PGS}/histogram"),
+    (DATA_QUALITY, dq_dataset, f"{FLOOR}/observed_range/percentGoodChannels"),
+    (DATA_QUALITY, dq_dataset, f"{FLOOR}/not_processed/0"),
+    (PROCESSING, proc_record, ICA),
+    (PROCESSING, proc_record, f"{ICA}/checkpoints/ica"),
+    (PROCESSING, proc_dataset, FLOOR),
+    (PROCESSING, proc_dataset, f"{FLOOR}/counts/import"),
+    (SIGNAL_JOURNEY, sj_links, FLOOR),
+]
+
+
+@pytest.mark.parametrize(
+    ("schema", "builder", "path"),
+    CLOSED,
+    ids=[f"{b.__name__}:{p}" for _, b, p in CLOSED],
+)
+def test_every_closed_object_refuses_unknown_key(schema, builder, path):
+    doc = builder()
+    _at(doc, path)["unexpected_key"] = 1
+    assert errors_for(schema, doc) == {("additionalProperties", path)}
+
+
+REQUIRED_KEYS = [
+    (DATA_QUALITY, dq_record, FLOOR, "recipe_version input_kind profile"),
+    (DATA_QUALITY, dq_record, FLOOR, "record_sha256 metrics figures"),
+    (DATA_QUALITY, dq_record, f"{FLOOR}/metrics/percentGoodSamples", "value unit"),
+    (DATA_QUALITY, dq_record, f"{FLOOR}/metrics/percentGoodSamples", "description"),
+    (DATA_QUALITY, dq_record, f"{FLOOR}/metrics/percentGoodSamples", "plugin"),
+    (DATA_QUALITY, dq_record, f"{FLOOR}/metrics/percentGoodSamples/plugin", "name"),
+    (DATA_QUALITY, dq_record, f"{FLOOR}/metrics/percentGoodSamples/plugin", "version"),
+    (DATA_QUALITY, dq_record, FIG0, "location format size sha256 caption plugin"),
+    (DATA_QUALITY, dq_dataset, FLOOR, "recipe_version dataset_version input_kind"),
+    (DATA_QUALITY, dq_dataset, FLOOR, "profile record_sha256 counts distributions"),
+    (DATA_QUALITY, dq_dataset, FLOOR, "observed_range not_processed"),
+    (DATA_QUALITY, dq_dataset, FLOOR, "not_processed_truncated"),
+    (DATA_QUALITY, dq_dataset, f"{FLOOR}/counts", "passed failed skipped total"),
+    (DATA_QUALITY, dq_dataset, PGS, "n min median max histogram"),
+    (DATA_QUALITY, dq_dataset, f"{PGS}/histogram", "edges counts underflow overflow"),
+    (DATA_QUALITY, dq_dataset, f"{FLOOR}/observed_range/percentGoodChannels", "min"),
+    (DATA_QUALITY, dq_dataset, f"{FLOOR}/observed_range/percentGoodChannels", "max"),
+    (DATA_QUALITY, dq_dataset, f"{FLOOR}/not_processed/0", "path status code"),
+    (PROCESSING, proc_record, ICA, "recipe_version checkpoints"),
+    (PROCESSING, proc_record, f"{ICA}/checkpoints/ica", "status code"),
+    (PROCESSING, proc_dataset, FLOOR, "recipe_version declared_checkpoints counts"),
+    (PROCESSING, proc_dataset, f"{FLOOR}/counts/import", "passed failed skipped"),
+    (PROCESSING, proc_dataset, f"{FLOOR}/counts/import", "total"),
+    (SIGNAL_JOURNEY, sj_links, FLOOR, "recipe_version processing_status location"),
+    (SIGNAL_JOURNEY, sj_links, FLOOR, "sha256 sj_version"),
+]
+REQUIRED = [
+    (schema, builder, path, key)
+    for schema, builder, path, keys in REQUIRED_KEYS
+    for key in keys.split()
+]
+
+
+@pytest.mark.parametrize(
+    ("schema", "builder", "path", "key"),
+    REQUIRED,
+    ids=[f"{b.__name__}:{p}:{k}" for _, b, p, k in REQUIRED],
+)
+def test_every_required_key_is_required(schema, builder, path, key):
+    doc = builder()
+    del _at(doc, path)[key]
+    assert errors_for(schema, doc) == {("required", path)}
+
+
+# ── Explicit edge cases ───────────────────────────────────────────────────
+
+
+def _set(builder, path, value):
+    doc = builder()
+    parent, _, key = path.rpartition("/")
+    target = _at(doc, parent) if parent else doc
+    if isinstance(target, list):
+        target[int(key)] = value
+    else:
+        target[key] = value
+    return doc
+
+
+CASES = [
+    # (schema, builder, path set, value, expected failures)
+    (PROCESSING, proc_record, f"{ICA}/checkpoints/import/step", "load", "type"),
+    (DATA_QUALITY, dq_record, f"{FIG0}/format", "png", "pattern@location"),
+    # A nullable shared type is anyOf[pattern, null], so a bad value reports anyOf.
+    (PROCESSING, proc_record, f"{ICA}/checkpoints/ica/step", "-ica", "anyOf"),
+    (PROCESSING, proc_record, f"{ICA}/checkpoints/ica/code", "Bad", "anyOf"),
+    (DATA_QUALITY, dq_record, f"{FIG0}/plugin/name", "-x", "pattern"),
+    (DATA_QUALITY, dq_record, f"{FIG0}/location", "fig\x01.svg", "pattern"),
+    (DATA_QUALITY, dq_record, f"{FIG0}/caption", "c" * 501, "maxLength"),
+    (DATA_QUALITY, dq_record, f"{FIG0}/location", "a" * 1021 + ".svg", "maxLength"),
+    (
+        DATA_QUALITY,
+        dq_record,
+        f"{FLOOR}/metrics/percentGoodSamples/unit",
+        "u" * 33,
+        "maxLength",
+    ),
+    (
+        DATA_QUALITY,
+        dq_record,
+        f"{FLOOR}/metrics/percentGoodSamples/description",
+        "d" * 501,
+        "maxLength",
+    ),
+    (DATA_QUALITY, dq_dataset, f"{PGS}/histogram/counts/0", -1, "minimum"),
+    (DATA_QUALITY, dq_dataset, f"{FLOOR}/not_processed_truncated", -1, "minimum"),
+    (PROCESSING, proc_dataset, f"{FLOOR}/counts", {}, "minProperties"),
+    (SIGNAL_JOURNEY, sj_links, f"{FLOOR}/location", None, "type"),
+    (SIGNAL_JOURNEY, sj_links, f"{FLOOR}/sj_version", None, "type"),
+]
+
+
+@pytest.mark.parametrize(
+    ("schema", "builder", "path", "value", "expected"),
+    CASES,
+    ids=[f"{b.__name__}:{p.rsplit('/', 1)[-1]}:{e}" for _, b, p, _, e in CASES],
+)
+def test_edge_case(schema, builder, path, value, expected):
+    doc = _set(builder, path, value)
+    validator, _, at = expected.partition("@")
+    where = path.rsplit("/", 1)[0] + "/" + at if at else path
+    assert errors_for(schema, doc) == {(validator, where)}
+
+
+def test_webp_figure_at_png_location():
+    doc = dq_record()
+    _at(doc, FIG0).update(format="webp", location="figures/spectrum.png")
+    assert errors_for(DATA_QUALITY, doc) == {("pattern", f"{FIG0}/location")}
+
+
+def test_bids_needs_archive():
+    doc = dq_record()
+    _at(doc, FLOOR)["input_kind"] = "bids"
+    assert errors_for(DATA_QUALITY, doc) == {("const", f"{FLOOR}/profile")}
+
+
+@pytest.mark.parametrize("field", ["sha256", "sj_version"])
+def test_in_progress_with_value(field):
+    doc = sj_links()
+    link = _at(doc, FLOOR)
+    value = link[field]
+    link.update(
+        processing_status="in_progress", location=None, sha256=None, sj_version=None
+    )
+    link[field] = value
+    assert errors_for(SIGNAL_JOURNEY, doc) == {("type", f"{FLOOR}/{field}")}
+
+
+def test_processing_missing_level():
+    doc = proc_record()
+    del doc["level"]
+    assert errors_for(PROCESSING, doc) == {("required", "")}
+
+
+def test_null_dataset_version_and_range_min_are_allowed():
+    doc = dq_dataset()
+    _at(doc, FLOOR)["dataset_version"] = None
+    _at(doc, f"{FLOOR}/observed_range/percentGoodChannels")["min"] = None
+    assert errors_for(DATA_QUALITY, doc) == set()
