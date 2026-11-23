@@ -17,6 +17,10 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Literal, NamedTuple
 
+from jsonschema import Draft202012Validator
+
+from neuroschema.validate import load_schema
+
 REPO_ROOT = Path(__file__).resolve().parents[3]
 REGISTRY_PATH = REPO_ROOT / "views" / "registry.json"
 REGISTRY_FORMAT = "neuroschema.views-registry.v1"
@@ -71,29 +75,55 @@ def kind_schema_path(
     return None if entry is None else REPO_ROOT / entry["schema"]
 
 
+def _admitted(node: Mapping) -> list:
+    """The values a role subschema's const or enum admits."""
+    if "const" in node:
+        return [node["const"]]
+    if "enum" in node:
+        return list(node["enum"])
+    raise ValueError(f"a kind schema's role must be a const or an enum: {node}")
+
+
+def role_schemas(entry: Mapping) -> dict[str, dict]:
+    """Each role a registered kind's schema admits, with the subschema for it.
+
+    The subschema is the kind schema's ``data.items``, or, for a kind with
+    several roles, the branch of its ``oneOf`` or ``anyOf`` whose ``role``
+    admits that role. The kind's schema, not the registry's ``roles``, is the
+    source: the registry mirrors it, and a test holds the two together.
+    """
+    schema = json.loads((REPO_ROOT / entry["schema"]).read_text(encoding="utf-8"))
+    items = schema["properties"]["data"]["items"]
+    branches = items.get("oneOf") or items.get("anyOf") or [items]
+    roles: dict[str, dict] = {}
+    for branch in branches:
+        for role in _admitted(branch["properties"]["role"]):
+            if role in roles:
+                raise ValueError(f"{entry['schema']}: role {role} has two branches")
+            roles[role] = branch
+    return roles
+
+
 def meets_role_contract(view: Mapping, entry: Mapping) -> bool:
     """Whether a view's stored data meet a registered kind's role contract.
 
-    Every role the registry lists for the kind appears exactly once in the
-    view's ``data``, in a format listed for that role, carrying only dimensions
-    listed for it (an empty list allows none). Roles the kind does not list are
-    allowed; its renderer ignores them.
+    Every role the kind's schema admits appears exactly once in the view's
+    ``data``, and that entry is valid under the kind schema's subschema for the
+    role (:func:`role_schemas`), so its format, its dimensions and every field
+    the kind requires come from the one schema. Roles the kind does not admit
+    are allowed; its renderer ignores them, and the renderer offers their files
+    for download.
     """
     data = view.get("data")
     if not isinstance(data, list):
         return False
-    for role, spec in entry["roles"].items():
+    path = REPO_ROOT / entry["schema"]
+    for role, subschema in role_schemas(entry).items():
         files = [f for f in data if isinstance(f, Mapping) and f.get("role") == role]
         if len(files) != 1:
             return False
-        file = files[0]
-        if file.get("format") not in spec["formats"]:
-            return False
-        dims = file.get("dims", [])
-        if not isinstance(dims, list) or any(
-            not isinstance(dim, Mapping) or dim.get("name") not in spec["dims"]
-            for dim in dims
-        ):
+        _schema, resolver = load_schema(path)
+        if not Draft202012Validator(subschema, resolver=resolver).is_valid(files[0]):
             return False
     return True
 

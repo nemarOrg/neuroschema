@@ -27,6 +27,7 @@ from neuroschema.views import (
     load_registry,
     meets_role_contract,
     parse_declaration,
+    role_schemas,
     view_digest,
 )
 from tests.helpers import failures
@@ -701,6 +702,32 @@ class TestRegistry:
         assert kind_schema_path("nemar.table", 2, REGISTRY) is None
 
 
+def _fixture_registry(tmp_path: Path, kind: str, items: dict) -> dict:
+    """The registry plus one throwaway kind whose data.items is the given schema."""
+    path = tmp_path / f"kind.{kind}.v1.schema.json"
+    path.write_text(
+        json.dumps(
+            {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "$id": path.name,
+                "title": "Fixture kind",
+                "description": "A kind that exists only in this test.",
+                "type": "object",
+                "properties": {"data": {"type": "array", "items": items}},
+            }
+        )
+    )
+    entry = {
+        "kind": kind,
+        "kind_version": 1,
+        "base": None,
+        "base_version": None,
+        "schema": str(path),
+        "roles": {},
+    }
+    return REGISTRY | {"kinds": [*REGISTRY["kinds"], entry]}
+
+
 class TestRendererRule:
     def test_known_kind_draws_as_itself(self):
         assert draw_as(table(), REGISTRY) == Drawing("kind", "nemar.table", 1)
@@ -729,10 +756,14 @@ class TestRendererRule:
         view = self._preset(unknown_kind())
         assert draw_as(view, REGISTRY) == Drawing("table", None, None)
 
-    @pytest.mark.parametrize("breach", ["format", "twice", "dims", "no-data"])
+    @pytest.mark.parametrize(
+        "breach", ["format", "twice", "dims", "no-columns", "no-data"]
+    )
     def test_each_breach_of_the_base_contract_draws_as_a_table(self, breach):
         view = self._preset(table())
-        if breach == "format":
+        if breach == "no-columns":
+            del view["data"][0]["columns"]
+        elif breach == "format":
             view["data"][0].update(format="json", location="views/channels.json")
         elif breach == "twice":
             view["data"].append(copy.deepcopy(view["data"][0]))
@@ -748,6 +779,75 @@ class TestRendererRule:
         else:
             del view["data"]
         assert draw_as(view, REGISTRY) == Drawing("table", None, None)
+
+    def test_a_base_requiring_a_dim_refuses_a_preset_without_it(self, tmp_path):
+        """A throwaway base kind whose one role must carry a freq dimension."""
+        registry = _fixture_registry(
+            tmp_path,
+            "acme.lines",
+            {
+                "type": "object",
+                "required": ["dims"],
+                "properties": {
+                    "role": {"const": "values"},
+                    "format": {"const": "tsv"},
+                    "dims": {
+                        "type": "array",
+                        "items": {"properties": {"name": {"enum": ["freq", "sensor"]}}},
+                        "contains": {
+                            "properties": {"name": {"const": "freq"}},
+                            "required": ["name"],
+                        },
+                    },
+                },
+            },
+        )
+        view = unknown_kind() | {"base": "acme.lines", "base_version": 1}
+        view["data"][0].update(role="values", format="tsv", location="v/s.tsv")
+        sensor = _dim(name="sensor", axis="columns", coords={"header": True})
+        freq = _dim(coords={"column": "freq_hz"})
+        view["data"][0]["dims"] = [freq, sensor]
+        assert draw_as(view, registry) == Drawing("base", "acme.lines", 1)
+        view["data"][0]["dims"] = [sensor]
+        assert draw_as(view, registry) == Drawing("table", None, None)
+        del view["data"][0]["dims"]
+        assert draw_as(view, registry) == Drawing("table", None, None)
+
+    def test_a_base_with_two_roles_checks_each_against_its_branch(self, tmp_path):
+        """A throwaway base kind whose data.items has one oneOf branch per role."""
+        registry = _fixture_registry(
+            tmp_path,
+            "acme.maps",
+            {
+                "type": "object",
+                "oneOf": [
+                    {
+                        "properties": {
+                            "role": {"const": "values"},
+                            "format": {"const": "tsv"},
+                        }
+                    },
+                    {
+                        "required": ["columns"],
+                        "properties": {
+                            "role": {"const": "layout"},
+                            "format": {"const": "tsv"},
+                        },
+                    },
+                ],
+            },
+        )
+        entry = known_kinds(registry)[("acme.maps", 1)]
+        assert set(role_schemas(entry)) == {"values", "layout"}
+        view = self._preset(table()) | {"base": "acme.maps"}
+        values = copy.deepcopy(view["data"][0]) | {"role": "values"}
+        layout = copy.deepcopy(view["data"][0]) | {"role": "layout"}
+        view["data"] = [values, layout]
+        assert draw_as(view, registry) == Drawing("base", "acme.maps", 1)
+        del layout["columns"]
+        assert draw_as(view, registry) == Drawing("table", None, None)
+        view["data"] = [values]
+        assert draw_as(view, registry) == Drawing("table", None, None)
 
     @pytest.mark.parametrize("missing", ["base_version", "base"])
     def test_half_a_base_draws_as_a_table(self, missing):

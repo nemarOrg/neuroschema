@@ -44,14 +44,17 @@ A renderer applies this rule:
 2. Otherwise, if it knows the base and base version and the view's data meet the base's role contract, it draws the view with the generic renderer for the base.
 3. Otherwise it shows the data as a table, with a download of each file.
 
-A view meets a kind's role contract when every role the registry lists for that kind appears exactly once in its `data`, in a format listed for that role, carrying only dimensions listed for it.
-Roles the kind does not list are allowed, and its renderer ignores them.
+A view meets a kind's role contract when every role the kind's schema admits appears exactly once in its `data`, and that entry is valid under the kind schema's subschema for the role: `data.items`, or, for a kind with several roles, the branch of its `oneOf` or `anyOf` for that role.
+The format, the dimensions and every field the kind requires (a table's `columns`, a dimension a kind needs) all come from that one schema.
+Roles the kind does not admit are allowed, and its renderer ignores them.
 A declared base is a claim: the schema cannot check an unknown kind's data against its base, so the renderer checks the contract before it trusts the claim.
+The Python reference validates each entry with jsonschema, and a TypeScript renderer validates it against the base kind's schema with ajv.
 An unknown kind is never an error, and neither is a base the renderer does not know or a view that misses its base's contract.
-`neuroschema.views.draw_as` implements the rule against the registry, and `neuroschema.views.meets_role_contract` the contract.
+`neuroschema.views.draw_as` implements the rule against the registry, `neuroschema.views.meets_role_contract` the contract, and `neuroschema.views.role_schemas` finds each role's subschema.
 
 In the registry, each kind lists its roles: `roles.<role>.formats` are the formats the role may take, and `roles.<role>.dims` are the dimensions it may carry, where an empty list means the role carries none.
 The kind's schema admits exactly these roles, formats and dimensions, and a test holds the two to each other.
+Where they could differ, the schema decides: the role contract reads the schema, and the registry summarizes it.
 
 ### `nemar.table` version 1
 
