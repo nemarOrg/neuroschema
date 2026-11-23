@@ -40,14 +40,18 @@ schema/
     externalLinks.schema.json      # DOIs, URLs, references
     provenance.schema.json         # Dataset provenance (timestamps, version, uploader)
     recordProvenance.schema.json   # Record timestamps
+    processingTypes.schema.json    # Shared processing types ($defs library)
+    checkpointCounts.schema.json   # Recordings passed, failed, skipped, total
+    qualityMetric.schema.json      # One plugin metric (value, unit, bounds, plugin)
   extensions/
     extensionsContainer.schema.json  # Namespace registry
     dataCite.schema.json           # DOI registration fields
     dataCategories.schema.json     # Study classification
     eegdash.schema.json            # EEGDash platform
     nemar.schema.json              # NEMAR platform
-    signalJourney.schema.json      # Processing pipeline
-    dataQuality.schema.json        # Quality metrics
+    signalJourney.schema.json      # Links to signalJourney records, per recipe
+    dataQuality.schema.json        # Quality metrics and figures, per recipe
+    processing.schema.json         # Checkpoint outcomes, per recipe
     rawDetail.schema.json          # Per-channel arrays, BIDS sidecars
 ```
 
@@ -69,14 +73,17 @@ pytest tests/
 
 - [BIDS Inheritance](docs/inheritance.md) -- how dataset defaults propagate to records
 - [Extension Managers](docs/extension-managers.md) -- MongoDB collection topology and access control
+- [Processing Extensions](docs/processing-extensions.md) -- dataQuality, processing and signalJourney: levels, invariants, checkpoints
 - [EEGDash Adapter](docs/adapter-eegdash.md) -- field mapping for EEGDash migration
 - [DataCite Adapter](docs/adapter-datacite.md) -- field mapping for DOI registration
 
 ## Version
 
-Current: **0.4.1** (pre-1.0: a MINOR bump marks a breaking change or a new extension namespace; a PATCH bump marks an additive optional field or a doc fix; 1.0.0 only when the schema is completely stable)
+Current: **0.5.0** (pre-1.0: a MINOR bump marks a breaking change or a new extension namespace; a PATCH bump marks an additive optional field or a doc fix; 1.0.0 only when the schema is completely stable)
 
 JSON Schema draft: **2020-12**
+
+Changes: [CHANGELOG.md](CHANGELOG.md)
 
 ## License
 
