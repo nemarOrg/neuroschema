@@ -171,6 +171,7 @@ Every comparison of a share is between integers, so every implementation decides
 The nets of one family number their electrodes in one sequence, so a larger net holds every name of a smaller one: E1 to E128 and Cz are names on the 257-channel net as well as the 129-channel net, on other positions.
 Without step 5 every 128-channel EGI recording, and every BioSemi 16, 32, 64, 128 or 160 recording, would tie with a larger net and be refused.
 A recording carries the electrodes of its net, and E1 to E128 from a 256-channel net would be half a net, so the smallest net of the family that matches every channel the larger one matches is the one the names identify.
+Names cannot reveal banks a recording left unused, so a recording is placed on the smallest net it fills: A1 to A32 recorded on a 64-channel cap goes to `biosemi32`, and A1 to B32 recorded on a 128-channel cap goes to `biosemi64`.
 The comparison is by channel, with each montage's own aliases, so E1 to E129 is the 129-channel net (E129 is its Cz) and not the 256-channel net (where E129 is an electrode).
 Across families the rule does not apply: `A1`, `A2` and `C1` to `C6` are 10-05 names and BioSemi names on unrelated positions, and such a recording is refused.
 
@@ -181,6 +182,15 @@ The cost is that a recording on a listed net that dropped more than a tenth of t
 
 One refusal remains on a full real net, and it is deliberate in version 1:
 a 32-channel EGI recording (`E1` to `E32` with `Cz` or `E33`), because the BioSemi 160 cap's E bank matches 32 of its 33 names on unrelated positions.
+
+### Residual risks
+
+These wrong placements remain possible in version 1, and are accepted:
+
+- A recording that leaves banks of its cap unused is placed on the smallest net it fills, as above: A1 to A32 from a 64-channel cap lands on the 32-channel cap's positions.
+- A recording on an older EGI net (Geodesic Sensor Net 200, GSN 64 version 2.0) is placed on HydroCel positions, because its names are the HydroCel nets' names.
+- The `POL ` prefix is dropped from untyped names too, so an untyped Nihon Kohden recording's intracranial strip or depth contacts named like scalp electrodes or bank labels (`POL C3`, `POL A1`) are read as EEG electrodes.
+  A contact typed `SEEG` or `ECOG` is excluded by its type; an untyped set is refused only when the share, coverage or ambiguity rules refuse it.
 
 ## Output
 
