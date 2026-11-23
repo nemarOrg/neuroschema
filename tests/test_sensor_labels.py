@@ -12,6 +12,7 @@ import functools
 import hashlib
 import importlib.util
 import json
+import math
 import re
 import sys
 import tomllib
@@ -288,6 +289,78 @@ def test_cz_variants_share_every_position(small, large):
     b = {e[0]: e[1:] for e in montage_document(large)["electrodes"]}
     assert set(b) - set(a) == {"Cz"}
     assert all(a[label] == b[label] for label in a)
+
+
+BIOSEMI = ["biosemi128", "biosemi160", "biosemi256"]
+
+
+def _on_sphere(theta: float, phi: float, radius: float = 0.095) -> list[float]:
+    """MNE's spherical conversion: theta is the polar angle, phi the azimuth."""
+    t, p = math.radians(theta), math.radians(phi)
+    return [
+        radius * math.sin(t) * math.cos(p),
+        radius * math.sin(t) * math.sin(p),
+        radius * math.cos(t),
+    ]
+
+
+@pytest.mark.parametrize("name", BIOSEMI)
+def test_biosemi_angle_corrections_are_the_montage(name):
+    """Each corrected electrode sits where its angles as written put it.
+
+    The recorded distance is to where MNE's integer angles put it.
+    """
+    entry = next(m for m in PROVENANCE["montages"] if m["name"] == name)
+    table = entry["angle_corrections"]
+    assert table["columns"] == [
+        "label",
+        "theta_deg",
+        "phi_deg",
+        "mne_theta_deg",
+        "mne_phi_deg",
+        "moved_mm",
+    ]
+    rows = table["rows"]
+    assert table["electrodes"] == len(rows) > 0
+    assert table["max_moved_mm"] == max(r[-1] for r in rows)
+    positions = {e[0]: e[1:] for e in montage_document(name)["electrodes"]}
+    for label, theta, phi, mne_theta, mne_phi, moved_mm in rows:
+        assert not (float(theta).is_integer() and float(phi).is_integer()), label
+        assert (mne_theta, mne_phi) == (int(theta), int(phi)), label
+        ours = _on_sphere(theta, phi)
+        assert math.dist(ours, positions[label]) < 1e-9, label
+        moved = math.dist(ours, _on_sphere(mne_theta, mne_phi)) * 1000
+        assert abs(moved - moved_mm) <= 0.0005 + 1e-9, label
+
+
+def test_biosemi_matches_mne_where_the_angles_are_integers():
+    """Our parse of MNE's files places integer-angle electrodes where MNE does.
+
+    Needs MNE-Python (`uv run --group vectors`); the Montages CI job runs it.
+    """
+    mne = pytest.importorskip("mne")
+    from mne.channels._standard_montage_utils import MONTAGE_PATH
+
+    for name in BIOSEMI:
+        source = Path(MONTAGE_PATH) / f"{name}.txt"
+        entry = next(m for m in PROVENANCE["montages"] if m["name"] == name)
+        assert (
+            hashlib.sha256(source.read_bytes()).hexdigest()
+            == (entry["mne_source_sha256"])
+        )
+        rows = [line.split() for line in source.read_text().splitlines()[1:]]
+        angles = {r[0]: (float(r[1]), float(r[2])) for r in rows if r}
+        theirs = mne.channels.make_standard_montage(name).get_positions()["ch_pos"]
+        ours = {e[0]: e[1:] for e in montage_document(name)["electrodes"]}
+        assert list(ours) == list(theirs)
+        corrected = {r[0] for r in entry["angle_corrections"]["rows"]}
+        for label, position in ours.items():
+            theta, phi = angles[label]
+            if theta.is_integer() and phi.is_integer():
+                assert label not in corrected
+                assert position == [round(float(v), 9) + 0.0 for v in theirs[label]]
+            else:
+                assert label in corrected
 
 
 def test_ten_five_aliases_sit_on_their_targets():

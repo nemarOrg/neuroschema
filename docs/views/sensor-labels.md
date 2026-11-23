@@ -36,21 +36,22 @@ The recording's channels in recording order, each a name (a string) and a Brain 
 | `GSN-HydroCel-129` | `GSN-HydroCel` | 129 | same name | EGI, via FieldTrip |
 | `GSN-HydroCel-256` | `GSN-HydroCel` | 256 | same name | EGI, via FieldTrip |
 | `GSN-HydroCel-257` | `GSN-HydroCel` | 257 | same name | EGI, via FieldTrip |
-| `biosemi128` | `BioSemi` | 128 | same name | BioSemi head caps |
-| `biosemi160` | `BioSemi` | 160 | same name | BioSemi head caps |
-| `biosemi256` | `BioSemi` | 256 | same name | BioSemi head caps |
+| `biosemi128` | `BioSemi` | 128 | same name, angles as written | BioSemi head caps |
+| `biosemi160` | `BioSemi` | 160 | same name, angles as written | BioSemi head caps |
+| `biosemi256` | `BioSemi` | 256 | same name, angles as written | BioSemi head caps |
 
 The table's order is the montage order, which breaks ties.
-Each file holds the positions MNE-Python 1.13.2 returns from `make_standard_montage(...).get_positions()`, in meters, rounded to 9 decimal places, in a right-anterior-superior (RAS) frame: +x toward the right preauricular point, +y toward the nasion, +z up.
-`scripts/generate_montages.py` writes them (`uv run --group vectors python scripts/generate_montages.py`, and `--check` to compare), and refuses any other MNE-Python version.
+Each file holds the positions MNE-Python 1.13.2 returns from `make_standard_montage(...).get_positions()` (for the BioSemi caps, from MNE-Python's own files as the list below says), in meters, rounded to 9 decimal places, in a right-anterior-superior (RAS) frame: +x toward the right preauricular point, +y toward the nasion, +z up.
+`scripts/generate_montages.py` writes them (`uv run --group vectors python scripts/generate_montages.py`, and `--check` to compare), and refuses any other MNE-Python version or any source file whose SHA-256 differs from the one it was written for.
 
 - `standard_1005` is MNE-Python's `colin27_1005` (MNE-Python 1.13 renamed `standard_1005`, which leaves in 1.14): FieldTrip's 10-05 positions on the Colin27 head, in Montreal Neurological Institute (MNI) coordinates, unscaled.
   It lists T3, T4, T5 and T6 on the positions of T7, T8, P7 and P8.
 - The HydroCel nets are read with `head_size=None`, the file's own geometry in centimeters, converted to meters.
   Each net and its Cz variant (64 and 65, 128 and 129, 256 and 257) then share every electrode position exactly; MNE-Python's default rescales each file by its own median radius, which moves the 64/65 and 256/257 pairs apart by up to 0.14 mm.
 - The BioSemi caps lie on a sphere of radius 0.095 m (MNE-Python's default).
-  MNE-Python reads their angles as integers, so an angle written as 11.5 becomes 11; `PROVENANCE.json` gives the effect per cap (up to 1.8 mm).
-  The positions are MNE-Python's.
+  `make_standard_montage` reads their angles as integers, so an angle written as 11.5 becomes 11 and the electrode moves by up to 1.8 mm.
+  The generator instead reads the angles in MNE-Python's `biosemi*.txt` as written and places them with MNE-Python's own spherical conversion.
+  An electrode whose angles are integers sits exactly where MNE-Python puts it; `PROVENANCE.json` lists every other electrode (`angle_corrections`) with its angles as written, MNE-Python's integer angles and the distance between the two positions.
 
 A montage file is `{"format": "nemar.montage.v1", "name", "family", "orientation": "RAS", "unit": "m", "fiducials": {"nasion", "lpa", "rpa"}, "electrodes": [[label, x, y, z], ...]}`, with the electrodes in MNE-Python's order.
 A montage label's key is the label normalized as a channel name is (steps 1 to 7 below); no two labels of one montage share a key.

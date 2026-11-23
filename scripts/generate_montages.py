@@ -5,7 +5,8 @@
 
 Writes ``views/montages/<name>.json`` (one per montage), ``views/montages/
 PROVENANCE.json`` (MNE-Python's version and license, each montage's MNE source
-file and its upstream origin) and ``views/vectors/sensor-labels.v1.json`` (the
+file and its upstream origin, and the BioSemi angle corrections) and
+``views/vectors/sensor-labels.v1.json`` (the
 cases every implementation reproduces, computed by the Python reference from the
 montages written here). ``--check`` regenerates everything in memory and exits
 with status 1 when a file on disk differs, is missing or is not generated here.
@@ -53,6 +54,42 @@ DECIMALS = 9
 FIELDTRIP_STANDARD_1005_SHA256 = (
     "1ee59197946d62de872db2ac7f2243a596662c231427366f6dc5d84ed237f853"
 )
+
+# SHA-256 of each MNE-Python 1.13.2 source file the montages are read from. A
+# new MNE version that changes one fails here before anything is written.
+SOURCE_SHA256 = {
+    "colin27_1005.elc": FIELDTRIP_STANDARD_1005_SHA256,
+    "GSN-HydroCel-32.sfp": (
+        "057297752812a986a0fc5d72791ccb6a24da812544939c1de2b92225aa8ac5cd"
+    ),
+    "GSN-HydroCel-64_1.0.sfp": (
+        "fb3834991fc06b297ccbedef907d408df74bba48caa8b077008ab33de21f1a51"
+    ),
+    "GSN-HydroCel-65_1.0.sfp": (
+        "64e08a26b38867982acf6e0976653661ff69a11c5da4eea40df6d439b8cf96ab"
+    ),
+    "GSN-HydroCel-128.sfp": (
+        "edd0bd8e690ed4ff6bbdafd73342c69d1ad39096c1ed7f0c76bd6dd997d767a2"
+    ),
+    "GSN-HydroCel-129.sfp": (
+        "9751d2e6407ed091a42249fc41b4aee9cef44cc3666db0f0be7e94eae0e4ffa1"
+    ),
+    "GSN-HydroCel-256.sfp": (
+        "63d3de763f3bd36bb9096989a828068edcb60fea81607ddb96022d3bd2126e1c"
+    ),
+    "GSN-HydroCel-257.sfp": (
+        "70d629847d9053491237d1f52e4a9fc2e56bfd68a2929ee2ace546daf2c92f91"
+    ),
+    "biosemi128.txt": (
+        "3adbfb01f4ebcb77b70f85dcd373ad10a626122f8891455be917bfc78c594e0e"
+    ),
+    "biosemi160.txt": (
+        "d161ccac60c0ae26f6c266cc95eff689c44f60093fcfa907e34c4c48ff4e95f3"
+    ),
+    "biosemi256.txt": (
+        "3cc6adf82abe2d32e8d6485543a45b3f62a40fc54ca1a26421ddc4168bdd4380"
+    ),
+}
 
 UPSTREAM = {
     "FieldTrip": (
@@ -106,8 +143,13 @@ HYDROCEL_WHY = (
     "0.14 mm."
 )
 BIOSEMI_WHY = (
-    "MNE places the caps on a sphere of head_size, its default 0.095 m; the "
-    "spherical layout has no head size of its own."
+    "The angles are read from MNE's file as written, with decimals, and placed "
+    "with MNE's own spherical conversion on a sphere of 0.095 m (MNE's default "
+    "head_size; the spherical layout has no head size of its own). MNE's "
+    "make_standard_montage reads the angles as integers, so an angle written "
+    "as 11.5 becomes 11; angle_corrections lists every electrode that moves, "
+    "with the angles as written, MNE's integer angles and the distance between "
+    "the two positions. Every other electrode is MNE's position exactly."
 )
 SOURCES = (
     Source(
@@ -219,33 +261,58 @@ def check_frame(name: str, electrodes: list, fiducials: dict) -> None:
         fail(f"{name}: median radius {median} m is not a head's")
 
 
-def biosemi_truncation(
-    source_file: Path, head_size: float, mne_positions: dict
-) -> dict:
-    """How far MNE's integer reading of decimal angles moves the electrodes.
+def biosemi_angles(source_file: Path, head_size: float) -> dict:
+    """Electrode positions from a biosemi*.txt file, its angles read as written.
 
-    MNE-Python 1.13.2 reads biosemi*.txt with integer columns, so an angle
-    written as 11.5 becomes 11. This recomputes each position from the angles
-    as written, with MNE's own spherical conversion, and reports the effect.
+    Returns {label: (theta, phi, xyz)} in file order, with MNE's own spherical
+    conversion (theta is the polar angle and phi the azimuth, in degrees).
     """
+    import numpy as np
     from mne.transforms import _sph_to_cart
 
-    moved, worst = 0, 0.0
-    lines = source_file.read_text().splitlines()[1:]
-    for line in lines:
-        if not line.strip():
+    rows = []
+    for line in source_file.read_text().splitlines()[1:]:
+        if line.strip():
+            label, theta, phi = line.split()
+            rows.append((label, float(theta), float(phi)))
+    angles = np.array([[head_size, np.deg2rad(p), np.deg2rad(t)] for _, t, p in rows])
+    xyz = _sph_to_cart(angles)
+    return {label: (t, p, xyz[i]) for i, (label, t, p) in enumerate(rows)}
+
+
+def biosemi_positions(source: Source, source_file: Path, mne_positions: dict):
+    """Positions with the angles as written, and where they differ from MNE's.
+
+    An electrode whose angles are integers must sit exactly where MNE puts it;
+    the generator fails otherwise.
+    """
+    from mne.channels._standard_montage_utils import _safe_np_loadtxt, _str
+
+    names, mne_theta, mne_phi = _safe_np_loadtxt(
+        source_file, skip_header=1, dtype=(_str, "i4", "i4")
+    )
+    mne_angles = {
+        n: (int(t), int(p)) for n, t, p in zip(names, mne_theta, mne_phi, strict=True)
+    }
+    parsed = biosemi_angles(source_file, source.head_size)
+    ours = {k: v for k, v in parsed.items() if k not in ("Nz", "LPA", "RPA")}
+    if list(ours) != list(mne_positions["ch_pos"]):
+        fail(f"{source.name}: the electrodes are not MNE's, in MNE's order")
+    corrections = []
+    for label, (theta, phi, xyz) in ours.items():
+        distance = math.dist(xyz, mne_positions["ch_pos"][label])
+        if theta.is_integer() and phi.is_integer():
+            if distance > 1e-12:
+                fail(f"{source.name}: {label} has integer angles but is not MNE's")
             continue
-        label, theta, phi = line.split()
-        if label not in mne_positions:
-            continue
-        exact = _sph_to_cart(
-            [[head_size, math.radians(float(phi)), math.radians(float(theta))]]
-        )[0]
-        distance = math.dist(exact, mne_positions[label])
-        if distance > 1e-12:
-            moved += 1
-            worst = max(worst, distance)
-    return {"electrodes_moved": moved, "max_mm": round(worst * 1000, 3)}
+        corrections.append(
+            [label, theta, phi, *mne_angles[label], round(distance * 1000, 3)]
+        )
+    fiducials = {
+        name: parsed[label][2]
+        for name, label in (("nasion", "Nz"), ("lpa", "LPA"), ("rpa", "RPA"))
+    }
+    return {k: v[2] for k, v in ours.items()}, fiducials, corrections
 
 
 def build_montage(source: Source) -> tuple[str, dict]:
@@ -265,19 +332,23 @@ def build_montage(source: Source) -> tuple[str, dict]:
     basename = standard_montage_look_up_table[source.mne_kind].keywords["basename"]
     source_file = Path(MONTAGE_PATH) / basename
     source_sha = sha256(source_file.read_bytes())
-    if (
-        source.mne_kind == "colin27_1005"
-        and source_sha != FIELDTRIP_STANDARD_1005_SHA256
-    ):
-        fail("colin27_1005.elc is no longer FieldTrip's standard_1005.elc")
+    if source_sha != SOURCE_SHA256.get(basename):
+        fail(f"{basename} is not the file this generator was written for")
 
+    ch_pos = positions["ch_pos"]
+    fiducial_pos = {name: positions[name] for name in ("nasion", "lpa", "rpa")}
+    corrections = None
+    if source.family == "BioSemi":
+        ch_pos, fiducial_pos, corrections = biosemi_positions(
+            source, source_file, positions
+        )
     electrodes = [
         [label, *(meters(v, source.scale_to_m) for v in xyz)]
-        for label, xyz in positions["ch_pos"].items()
+        for label, xyz in ch_pos.items()
     ]
     fiducials = {
-        name: [meters(v, source.scale_to_m) for v in positions[name]]
-        for name in ("nasion", "lpa", "rpa")
+        name: [meters(v, source.scale_to_m) for v in xyz]
+        for name, xyz in fiducial_pos.items()
     }
     keys = {label_key(e[0]): e[0] for e in electrodes}
     if len(keys) != len(electrodes):
@@ -312,14 +383,26 @@ def build_montage(source: Source) -> tuple[str, dict]:
         "upstream": source.upstream,
         "notes": [source.why],
     }
-    if source.family == "BioSemi":
-        effect = biosemi_truncation(source_file, source.head_size, positions["ch_pos"])
-        provenance["notes"].append(
-            "MNE-Python reads the angles in this file as integers, so an angle "
-            f"written with a decimal (11.5) becomes 11: {effect['electrodes_moved']} "
-            f"of {len(electrodes)} electrodes sit up to {effect['max_mm']} mm from "
-            "where the angles as written put them. The positions here are MNE's."
+    if corrections is not None:
+        provenance["mne_call"] = (
+            f"angles from {basename} as written; mne.transforms._sph_to_cart on a "
+            f"sphere of {source.head_size} m, as make_standard_montage"
+            f"({source.mne_kind!r}, head_size={source.head_size!r}) does with "
+            "integer angles"
         )
+        provenance["angle_corrections"] = {
+            "columns": [
+                "label",
+                "theta_deg",
+                "phi_deg",
+                "mne_theta_deg",
+                "mne_phi_deg",
+                "moved_mm",
+            ],
+            "electrodes": len(corrections),
+            "max_moved_mm": max(row[-1] for row in corrections),
+            "rows": corrections,
+        }
     return text, provenance
 
 
