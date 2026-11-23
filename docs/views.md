@@ -50,7 +50,7 @@ A view meets a kind's role contract when every role the kind's schema admits app
 The format, the dimensions and every field the kind requires (a table's `columns`, a dimension a kind needs) all come from that one schema.
 Roles the kind does not admit are allowed, and its renderer ignores them.
 A declared base is a claim: the schema cannot check an unknown kind's data against its base, so the renderer checks the contract before it trusts the claim.
-The Python reference validates each entry with jsonschema, and a TypeScript renderer validates it against the base kind's schema with ajv.
+The Python reference validates each entry with jsonschema, and a TypeScript renderer validates it against the base kind's schema with ajv, or with guards held to neuroschema's verdict corpus.
 An unknown kind is never an error, and neither is a base the renderer does not know or a view that misses its base's contract.
 `neuroschema.views.draw_as` implements the rule against the registry, `neuroschema.views.meets_role_contract` the contract, and `neuroschema.views.role_schemas` finds each role's subschema.
 
