@@ -9,3 +9,5 @@ als = "als"
 ALS = "ALS"
 # Trak appears in CapTrak, a BIDS coordinate system
 Trak = "Trak"
+# Iz is the inion electrode of the 10-05 system (also in OIz)
+Iz = "Iz"

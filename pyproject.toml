@@ -28,9 +28,12 @@ views = [
 ]
 
 [dependency-groups]
-# Regenerates the view vectors from eegprep at the reference commit
-# (scripts/generate_view_vectors.py). eegprep needs Python 3.12 or later.
+# Generators of reference data, run with `uv run --group vectors`; never a
+# runtime dependency. mne is pinned exactly: scripts/generate_montages.py
+# refuses any other version. eegprep, at the reference commit, is the reference
+# for scripts/generate_view_vectors.py, and needs Python 3.12 or later.
 vectors = [
+    "mne==1.13.2",
     "eegprep @ git+https://github.com/sccn/eegprep@edf694c8344b9c4c68672eac3acf9a819f1462a8 ; python_full_version >= '3.12'",
     "numpy>=2.1",
     "scipy>=1.14.1",

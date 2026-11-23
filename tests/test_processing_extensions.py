@@ -744,6 +744,10 @@ VENDOR_REF = re.compile(r'"\$ref":\s*"([^"#]+)(#[^"]*)?"')
 NEW_OR_CHANGED = {
     "view.schema.json",
     "kind.nemar.table.v1.schema.json",
+    "kind.nemar.lines.v1.schema.json",
+    "kind.nemar.heatmap.v1.schema.json",
+    "kind.nemar.histogram.v1.schema.json",
+    "content.nemar.histogram.v1.schema.json",
     "processingTypes.schema.json",
     "checkpointCounts.schema.json",
     "qualityMetric.schema.json",

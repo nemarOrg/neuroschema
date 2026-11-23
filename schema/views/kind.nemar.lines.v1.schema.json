@@ -1,0 +1,205 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kind.nemar.lines.v1.schema.json",
+  "title": "View Kind nemar.lines, Version 1",
+  "description": "Generic line chart, applied on top of the envelope to a view declaration whose kind is nemar.lines and kind_version 1. One stored TSV file is read as the role values. One dimension runs along the rows: its coordinates are a numeric column of the file, strictly increasing, and they form the x axis. The other runs along the columns: each declared column other than the x column is one series. The series labels are the column names, or, for a preset over this kind, a column of another of the preset's roles. A renderer builds the model in docs/views/generic-kinds.md. This is a generic kind, so it has no base, no inputs, no transform and no parameters.",
+  "type": "object",
+  "required": [
+    "data"
+  ],
+  "properties": {
+    "base": {
+      "not": {},
+      "description": "A generic kind has no base."
+    },
+    "base_version": {
+      "not": {},
+      "description": "A generic kind has no base."
+    },
+    "inputs": {
+      "not": {},
+      "description": "A line chart is stored data only."
+    },
+    "transform": {
+      "not": {},
+      "description": "A line chart is stored data only."
+    },
+    "parameters": {
+      "type": "object",
+      "maxProperties": 0,
+      "description": "Version 1 takes no parameters."
+    },
+    "data": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "description": "Exactly one file, read as the role values.",
+      "items": {
+        "type": "object",
+        "description": "The role values: the x column and one numeric column per series. A preset drawn over this kind meets this subschema with its own values entry (docs/views.md, the role contract).",
+        "required": [
+          "role",
+          "format",
+          "columns",
+          "dims"
+        ],
+        "properties": {
+          "role": {
+            "const": "values"
+          },
+          "format": {
+            "const": "tsv"
+          },
+          "columns": {
+            "type": "array",
+            "minItems": 2,
+            "description": "The x column and the series columns, all numeric. The series are the declared columns other than the x column, in declared order.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "enum": [
+                    "number",
+                    "integer"
+                  ]
+                }
+              }
+            }
+          },
+          "dims": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "description": "Exactly two dimensions with open names: the x dimension along the rows, with its coordinates in a numeric column of this file, and the series dimension along the columns, with its coordinates in the header or in another role.",
+            "items": {
+              "type": "object",
+              "if": {
+                "type": "object",
+                "properties": {
+                  "coords": {
+                    "type": "object",
+                    "required": [
+                      "header"
+                    ]
+                  }
+                },
+                "required": [
+                  "coords"
+                ]
+              },
+              "then": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "string",
+                    "description": "Header names are text."
+                  }
+                }
+              }
+            },
+            "allOf": [
+              {
+                "contains": {
+                  "type": "object",
+                  "description": "The x dimension.",
+                  "required": [
+                    "axis",
+                    "type",
+                    "coords"
+                  ],
+                  "properties": {
+                    "axis": {
+                      "const": "rows"
+                    },
+                    "type": {
+                      "enum": [
+                        "number",
+                        "integer"
+                      ]
+                    },
+                    "coords": {
+                      "type": "object",
+                      "required": [
+                        "column"
+                      ],
+                      "not": {
+                        "required": [
+                          "role"
+                        ]
+                      }
+                    }
+                  }
+                },
+                "minContains": 1,
+                "maxContains": 1
+              },
+              {
+                "contains": {
+                  "type": "object",
+                  "description": "The series dimension.",
+                  "required": [
+                    "axis",
+                    "coords"
+                  ],
+                  "properties": {
+                    "axis": {
+                      "const": "columns"
+                    },
+                    "coords": {
+                      "type": "object",
+                      "anyOf": [
+                        {
+                          "required": [
+                            "header"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "role"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                },
+                "minContains": 1,
+                "maxContains": 1
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "description": "A view of this kind has only the role values, so none of its coordinates comes from another role. The rule sits at the root, outside data, so a preset drawn by this kind leaves it out of the role contract it meets, and may take coordinates from one of its own roles.",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "dims": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "coords": {
+                      "type": "object",
+                      "not": {
+                        "required": [
+                          "role"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
