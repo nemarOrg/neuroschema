@@ -16,6 +16,52 @@
           "dims": []
         }
       }
+    },
+    {
+      "kind": "nemar.lines",
+      "kind_version": 1,
+      "base": null,
+      "base_version": null,
+      "schema": "schema/views/kind.nemar.lines.v1.schema.json",
+      "roles": {
+        "values": {
+          "formats": [
+            "tsv"
+          ],
+          "dims": null
+        }
+      }
+    },
+    {
+      "kind": "nemar.heatmap",
+      "kind_version": 1,
+      "base": null,
+      "base_version": null,
+      "schema": "schema/views/kind.nemar.heatmap.v1.schema.json",
+      "roles": {
+        "values": {
+          "formats": [
+            "tsv"
+          ],
+          "dims": null
+        }
+      }
+    },
+    {
+      "kind": "nemar.histogram",
+      "kind_version": 1,
+      "base": null,
+      "base_version": null,
+      "schema": "schema/views/kind.nemar.histogram.v1.schema.json",
+      "roles": {
+        "histogram": {
+          "formats": [
+            "json"
+          ],
+          "dims": [],
+          "content": "schema/views/content.nemar.histogram.v1.schema.json"
+        }
+      }
     }
   ],
   "transforms": [],
@@ -24,6 +70,16 @@
       "name": "nemar.view-digest.v1",
       "spec": "docs/views/view-digest.md",
       "vectors": "views/vectors/view-digest.v1.json"
+    },
+    {
+      "name": "nemar.kinds-models.v1",
+      "spec": "docs/views/generic-kinds.md",
+      "vectors": "views/vectors/kinds-models.v1.json"
+    },
+    {
+      "name": "nemar.kinds-verdicts.v1",
+      "spec": "docs/views/generic-kinds.md",
+      "vectors": "views/vectors/kinds-verdicts.v1.json"
     },
     {
       "name": "nemar.sensor-labels.v1",

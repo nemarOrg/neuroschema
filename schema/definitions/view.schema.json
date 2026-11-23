@@ -171,6 +171,66 @@
           "then": {
             "$ref": "../views/kind.nemar.table.v1.schema.json"
           }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "nemar.lines"
+              },
+              "kind_version": {
+                "const": 1
+              }
+            },
+            "required": [
+              "kind",
+              "kind_version"
+            ]
+          },
+          "then": {
+            "$ref": "../views/kind.nemar.lines.v1.schema.json"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "nemar.heatmap"
+              },
+              "kind_version": {
+                "const": 1
+              }
+            },
+            "required": [
+              "kind",
+              "kind_version"
+            ]
+          },
+          "then": {
+            "$ref": "../views/kind.nemar.heatmap.v1.schema.json"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "nemar.histogram"
+              },
+              "kind_version": {
+                "const": 1
+              }
+            },
+            "required": [
+              "kind",
+              "kind_version"
+            ]
+          },
+          "then": {
+            "$ref": "../views/kind.nemar.histogram.v1.schema.json"
+          }
         }
       ],
       "additionalProperties": false
