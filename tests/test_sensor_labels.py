@@ -492,6 +492,10 @@ def test_loader_refuses_a_missing_or_misnamed_file(tmp_path):
         ("EEGFp1", "eegfp1"),  # a letter is not a separator
         ("EEG1", "eeg1"),  # nor is a digit
         ("EEG", "eeg"),
+        ("POL Fp1", "fp1"),  # Nihon Kohden
+        ("pol  Fp1", "fp1"),
+        ("POLFp1", "polfp1"),
+        ("POL_Fp1", "pol_fp1"),  # POL takes only spaces
         ("Cz..", "cz"),
         ("Fc5.", "fc5"),
         ('"Fp1"', "fp1"),

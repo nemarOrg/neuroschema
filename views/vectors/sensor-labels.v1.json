@@ -285,6 +285,47 @@
       }
     },
     {
+      "name": "nihon_kohden_pol_prefix",
+      "description": "Nihon Kohden names carry POL and a space, in any case; POL directly followed by a letter is not a prefix.",
+      "channels": [
+        ["POL Fp1", "EEG"],
+        ["POL Fp2", "EEG"],
+        ["POL F3", "EEG"],
+        ["POL F4", "EEG"],
+        ["POL C3", "EEG"],
+        ["POL C4", "EEG"],
+        ["POL P3", "EEG"],
+        ["POL P4", "EEG"],
+        ["POL O1", "EEG"],
+        ["POL O2", "EEG"],
+        ["pol Fz", "EEG"],
+        ["POLCz", "EEG"]
+      ],
+      "result": {
+        "outcome": "placed",
+        "reason": null,
+        "montage": "standard_1005",
+        "candidates": 12,
+        "matched": 11,
+        "contenders": ["standard_1005"],
+        "duplicates": [],
+        "channels": [
+          {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
+          {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
+          {"status": "candidate", "key": "f3", "electrode": "F3"},
+          {"status": "candidate", "key": "f4", "electrode": "F4"},
+          {"status": "candidate", "key": "c3", "electrode": "C3"},
+          {"status": "candidate", "key": "c4", "electrode": "C4"},
+          {"status": "candidate", "key": "p3", "electrode": "P3"},
+          {"status": "candidate", "key": "p4", "electrode": "P4"},
+          {"status": "candidate", "key": "o1", "electrode": "O1"},
+          {"status": "candidate", "key": "o2", "electrode": "O2"},
+          {"status": "candidate", "key": "fz", "electrode": "Fz"},
+          {"status": "candidate", "key": "polcz", "electrode": null}
+        ]
+      }
+    },
+    {
       "name": "trailing_dots_untyped",
       "description": "Untyped names padded with dots to four characters.",
       "channels": [

@@ -144,7 +144,8 @@ REASONS = (
 
 _WHITESPACE = "\t\n\v\f\r "
 _WHITESPACE_RUN = re.compile(r"[\t\n\v\f\r ]+")
-_EEG_PREFIX = re.compile(r"[Ee][Ee][Gg][ \-_:]+")
+# A type prefix: EEG and a separator, or Nihon Kohden's POL and a space.
+_TYPE_PREFIX = re.compile(r"[Ee][Ee][Gg][ \-_:]+|[Pp][Oo][Ll] +")
 _LEADING_ZEROS = re.compile(r"([a-z]+)0+([0-9]+)")
 _UPPER = str.maketrans("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")
 
@@ -229,10 +230,10 @@ def ascii_lower(text: str) -> str:
 
 
 def clean(name: str) -> str:
-    """Steps 1 to 3: NFKC, trim and collapse whitespace, drop an EEG prefix."""
+    """Steps 1 to 3: NFKC, trim and collapse whitespace, drop a type prefix."""
     text = unicodedata.normalize("NFKC", name)
     text = _WHITESPACE_RUN.sub(" ", text.strip(_WHITESPACE))
-    prefix = _EEG_PREFIX.match(text)
+    prefix = _TYPE_PREFIX.match(text)
     return text[prefix.end() :] if prefix else text
 
 

@@ -755,6 +755,20 @@ CASES = [
         ("placed", None, "standard_1005"),
     ),
     (
+        "nihon_kohden_pol_prefix",
+        "Nihon Kohden names carry POL and a space, in any case; POL directly "
+        "followed by a letter is not a prefix.",
+        eeg(
+            [
+                *(f"POL {n}" for n in ["Fp1", "Fp2", "F3", "F4", "C3", "C4"]),
+                *(f"POL {n}" for n in ["P3", "P4", "O1", "O2"]),
+                "pol Fz",
+                "POLCz",
+            ]
+        ),
+        ("placed", None, "standard_1005"),
+    ),
+    (
         "trailing_dots_untyped",
         "Untyped names padded with dots to four characters.",
         [[n, None] for n in PHYSIONET],

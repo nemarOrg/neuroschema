@@ -66,8 +66,8 @@ A montage label's key is the label normalized as a channel name is (steps 1 to 7
 
 1. Apply Unicode Normalization Form KC (NFKC), which turns full-width letters and digits and the no-break space into their plain forms.
 2. Trim whitespace (TAB, LF, VT, FF, CR and space) from both ends, and replace each run of whitespace inside the name with one space.
-3. Drop a leading EEG prefix: the letters E, E, G in any case, followed by one or more of space, hyphen, underscore and colon (`EEG Fp1`, `EEG-Fp1`, `eeg:_Fp1`).
-   `EEG1` and `EEGFp1` keep theirs.
+3. Drop a leading type prefix: the letters E, E, G in any case, followed by one or more of space, hyphen, underscore and colon (`EEG Fp1`, `EEG-Fp1`, `eeg:_Fp1`), or the letters P, O, L in any case, followed by one or more spaces (Nihon Kohden's `POL Fp1`).
+   `EEG1`, `EEGFp1` and `POLFp1` keep theirs.
 4. Split at the last hyphen, as [Reference suffixes and bipolar names](#reference-suffixes-and-bipolar-names) says.
 5. Strip spaces from both ends, dots from the end, and straight quotation marks (`"` and `'`) from both ends, repeating until none is left (`Cz..` is `Cz`, `'P3.'` is `P3`).
 6. Fold A to Z to lowercase and leave every other character.
