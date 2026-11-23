@@ -82,9 +82,9 @@
                 "min": 0,
                 "max": 100
               },
-              "plugin": {
-                "name": "nemar-dataqual",
-                "version": "0.1.0"
+              "recipe": {
+                "name": "nemar-floor",
+                "version": "1.0.0-b1"
               }
             },
             "percentGoodSamples": {
@@ -95,27 +95,27 @@
                 "min": 0,
                 "max": 100
               },
-              "plugin": {
-                "name": "nemar-dataqual",
-                "version": "0.1.0"
+              "recipe": {
+                "name": "nemar-floor",
+                "version": "1.0.0-b1"
               }
             },
             "lineNoiseBeforeDb": {
               "value": 14.2,
               "unit": "dB",
               "description": "Line-noise magnitude at the power-line frequency before line-noise removal.",
-              "plugin": {
-                "name": "nemar-dataqual",
-                "version": "0.1.0"
+              "recipe": {
+                "name": "nemar-floor",
+                "version": "1.0.0-b1"
               }
             },
             "lineNoiseAfterDb": {
               "value": 2.8,
               "unit": "dB",
               "description": "Line-noise magnitude at the power-line frequency after line-noise removal.",
-              "plugin": {
-                "name": "nemar-dataqual",
-                "version": "0.1.0"
+              "recipe": {
+                "name": "nemar-floor",
+                "version": "1.0.0-b1"
               }
             }
           },

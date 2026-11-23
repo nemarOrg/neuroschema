@@ -691,3 +691,48 @@ class TestDataQualityViews:
         view = _floor_quality(_record())["views"][0]
         assert view == vector("table_view")
         assert view_errors(view) == set()
+
+
+# ── qualityMetric: exactly one producer ───────────────────────────────────
+
+
+METRIC = SCHEMA_DIR / "definitions" / "qualityMetric.schema.json"
+
+
+def _metric(**producers) -> dict:
+    return {
+        "value": 93.2,
+        "unit": "%",
+        "description": "Share of samples kept after bad-window rejection.",
+    } | producers
+
+
+PLUGIN = {"name": "nemar-quality", "version": "0.1.0"}
+RECIPE = {"name": "nemar-floor", "version": "1.0.0-b1"}
+
+
+class TestMetricProducer:
+    @pytest.mark.parametrize("producer", ["plugin", "recipe"])
+    def test_one_producer(self, producer):
+        metric = _metric(**{producer: PLUGIN if producer == "plugin" else RECIPE})
+        assert failures(validate_document(metric, METRIC)) == set()
+
+    def test_both_producers_fail(self):
+        """Fails if oneOf becomes anyOf."""
+        metric = _metric(plugin=PLUGIN, recipe=RECIPE)
+        assert failures(validate_document(metric, METRIC)) == {("oneOf", "")}
+
+    def test_no_producer_fails(self):
+        assert failures(validate_document(_metric(), METRIC)) == {("oneOf", "")}
+
+    def test_recipe_name_is_a_recipe_id(self):
+        metric = _metric(recipe=RECIPE | {"name": "Nemar Floor"})
+        assert failures(validate_document(metric, METRIC)) == {
+            ("pattern", "recipe/name")
+        }
+
+    def test_recipe_is_closed(self):
+        metric = _metric(recipe=RECIPE | {"commit": "abc"})
+        assert failures(validate_document(metric, METRIC)) == {
+            ("additionalProperties", "recipe")
+        }

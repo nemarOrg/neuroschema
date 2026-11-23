@@ -95,10 +95,10 @@ class TestQualityMetric:
     def test_null_value(self):
         assert errors_for(METRIC, self.valid() | {"value": None}) == set()
 
-    def test_missing_plugin(self):
+    def test_missing_producer(self):
         doc = self.valid()
         del doc["plugin"]
-        assert errors_for(METRIC, doc) == {("required", "")}
+        assert errors_for(METRIC, doc) == {("oneOf", "")}
 
     def test_empty_unit(self):
         assert errors_for(METRIC, self.valid() | {"unit": ""}) == {
@@ -171,7 +171,7 @@ def metric(value, unit, description):
         "value": value,
         "unit": unit,
         "description": description,
-        "plugin": dict(PLUGIN),
+        "recipe": dict(RECIPE),
     }
 
 
@@ -335,11 +335,11 @@ class TestDataQualityRecord:
         doc["recipes"]["nemar-floor"]["quality_score"] = 0.9
         assert errors_for(DATA_QUALITY, doc) == {("additionalProperties", FLOOR)}
 
-    def test_metric_without_plugin(self):
+    def test_metric_without_producer(self):
         doc = dq_record()
-        del doc["recipes"]["nemar-floor"]["metrics"]["lineNoiseAfterDb"]["plugin"]
+        del doc["recipes"]["nemar-floor"]["metrics"]["lineNoiseAfterDb"]["recipe"]
         assert errors_for(DATA_QUALITY, doc) == {
-            ("required", f"{FLOOR}/metrics/lineNoiseAfterDb")
+            ("oneOf", f"{FLOOR}/metrics/lineNoiseAfterDb")
         }
 
 
@@ -940,7 +940,7 @@ PGS = f"{FLOOR}/distributions/percentGoodSamples"
 CLOSED = [
     (DATA_QUALITY, dq_record, FLOOR),
     (DATA_QUALITY, dq_record, f"{FLOOR}/metrics/percentGoodSamples"),
-    (DATA_QUALITY, dq_record, f"{FLOOR}/metrics/percentGoodSamples/plugin"),
+    (DATA_QUALITY, dq_record, f"{FLOOR}/metrics/percentGoodSamples/recipe"),
     (DATA_QUALITY, dq_record, V0),
     (DATA_QUALITY, dq_record, f"{V0}/source"),
     (DATA_QUALITY, dq_record, f"{V0}/source/recipe"),
@@ -976,9 +976,8 @@ REQUIRED_KEYS = [
     (DATA_QUALITY, dq_record, FLOOR, "record_sha256 metrics views"),
     (DATA_QUALITY, dq_record, f"{FLOOR}/metrics/percentGoodSamples", "value unit"),
     (DATA_QUALITY, dq_record, f"{FLOOR}/metrics/percentGoodSamples", "description"),
-    (DATA_QUALITY, dq_record, f"{FLOOR}/metrics/percentGoodSamples", "plugin"),
-    (DATA_QUALITY, dq_record, f"{FLOOR}/metrics/percentGoodSamples/plugin", "name"),
-    (DATA_QUALITY, dq_record, f"{FLOOR}/metrics/percentGoodSamples/plugin", "version"),
+    (DATA_QUALITY, dq_record, f"{FLOOR}/metrics/percentGoodSamples/recipe", "name"),
+    (DATA_QUALITY, dq_record, f"{FLOOR}/metrics/percentGoodSamples/recipe", "version"),
     (DATA_QUALITY, dq_record, V0, "key kind kind_version caption source"),
     (DATA_QUALITY, dq_record, V0D, "role location format size sha256 columns"),
     (DATA_QUALITY, dq_record, f"{V0D}/columns/0", "name type"),

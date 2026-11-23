@@ -2,13 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "qualityMetric.schema.json",
   "title": "Quality Metric",
-  "description": "One quality metric a plugin computed for a recording. Plugin manifests (nemar-cli shared/contract) declare each metric output with this shape.",
+  "description": "One quality metric computed for a recording, with exactly one producer: the plugin or the recipe that computed it. Plugin manifests (nemar-cli shared/contract) declare each metric output with this shape.",
   "type": "object",
   "required": [
     "value",
     "unit",
-    "description",
-    "plugin"
+    "description"
   ],
   "properties": {
     "value": {
@@ -32,12 +31,28 @@
     },
     "bounds": {
       "$ref": "../definitions/processingTypes.schema.json#/$defs/range",
-      "description": "The valid range the plugin declares for this value (for example 0 to 100 for a percentage), not a quality threshold and not the range observed across recordings (that is the dataset summary's observed_range)."
+      "description": "The valid range the producer declares for this value (for example 0 to 100 for a percentage), not a quality threshold and not the range observed across recordings (that is the dataset summary's observed_range)."
     },
     "plugin": {
       "$ref": "../definitions/processingTypes.schema.json#/$defs/plugin",
-      "description": "The plugin that produced this value."
+      "description": "The plugin that produced this value; exactly one of plugin and recipe."
+    },
+    "recipe": {
+      "$ref": "../definitions/processingTypes.schema.json#/$defs/recipe",
+      "description": "The recipe that produced this value; exactly one of plugin and recipe."
     }
   },
+  "oneOf": [
+    {
+      "required": [
+        "plugin"
+      ]
+    },
+    {
+      "required": [
+        "recipe"
+      ]
+    }
+  ],
   "additionalProperties": false
 }
