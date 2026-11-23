@@ -1027,6 +1027,13 @@ def order_cases() -> list[Case]:
     hz, db = col("freq_hz", unit="Hz"), col("Fp1", unit="dB")
     short = tsv("name theta_deg radius", "Fp1 -18 0.51", "Fp2 18 0.51")
     unnamed = LAYOUT.replace(b"name\t", b"label\t", 1)
+    ragged_layout = LAYOUT + b"O1\t90\n"
+    ragged_unnamed = unnamed + b"O1\t90\n"
+    undeclared_layout = preset_spectrum(ragged_layout)
+    undeclared_layout["data"][1]["columns"] = [
+        col("theta_deg", unit="deg"),
+        col("radius"),
+    ]
     probabilities = tsv("brain eye muscle", "91.5 2 6.5", "4.25 88 7.75", "30 30 40")
     two_rows = tsv("label", "IC1", "IC2")
     two_numbers = tsv("number", "1", "2.5")
@@ -1197,6 +1204,22 @@ def order_cases() -> list[Case]:
                 f"{PREFIX}_probabilities.tsv": probabilities,
                 f"{PREFIX}_components.tsv": two_rows,
             },
+        ),
+        Case(
+            "order_role_unresolved_before_file",
+            "The layout does not declare name, and its file has a ragged row: "
+            "coords_unresolved, before the layout's file is read. (A changed "
+            "file would not tell the orders apart: the fallback reads every TSV "
+            "and refuses the view either way.)",
+            undeclared_layout,
+            {f"{PREFIX}_numbered.tsv": NUMBERED, LAYOUT_AT: ragged_layout},
+        ),
+        Case(
+            "order_role_grammar_before_column_missing",
+            "The layout's file has a ragged row, and its header lacks the "
+            "declared name: tsv_ragged.",
+            preset_spectrum(ragged_unnamed),
+            {f"{PREFIX}_numbered.tsv": NUMBERED, LAYOUT_AT: ragged_unnamed},
         ),
         Case(
             "order_role_column_missing_before_mismatch",
