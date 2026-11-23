@@ -459,6 +459,7 @@ def _histogram(reader: _Reader, own: bool) -> dict:
     if "categories" in content:
         if len(counts) != len(content["categories"]):
             raise KindRefused("counts_length")
+        _check_total(sum(counts))
         return {
             "type": "histogram",
             "bins": "categories",
@@ -478,6 +479,7 @@ def _histogram(reader: _Reader, own: bool) -> dict:
     if len(counts) != len(edges) - 1:
         raise KindRefused("counts_length")
     under, over = int(content["underflow"]), int(content["overflow"])
+    _check_total(sum(counts) + under + over)
     last = len(counts) - 1
     items = []
     for i, count in enumerate(counts):
@@ -502,6 +504,12 @@ def _histogram(reader: _Reader, own: bool) -> dict:
         "total": sum(counts) + under + over,
         "max_count": max([*counts, under, over]),
     }
+
+
+def _check_total(total: int) -> None:
+    """A total a binary64 sum holds exactly: at most 2^53 - 1."""
+    if total > MAX_SAFE_INTEGER:
+        raise KindRefused("cap_exceeded", f"total {total}")
 
 
 def _fallback(reader: _Reader) -> dict:

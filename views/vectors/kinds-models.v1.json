@@ -7507,6 +7507,114 @@
       }
     },
     {
+      "name": "histogram_total_beyond_2_53",
+      "covers": "Counts whose total passes 2^53 - 1, which a binary64 sum would not hold exactly: cap_exceeded.",
+      "view": {
+        "key": "hist",
+        "kind": "nemar.histogram",
+        "kind_version": 1,
+        "caption": "Recordings by share of good samples.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "format": "json",
+            "size": 78,
+            "sha256": "5080e76880d086b47d160743ef865e03178e9b58c3e53681c693024f2d84fa09"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json": {
+          "text": "{\n \"categories\": [\n  \"a\",\n  \"b\"\n ],\n \"counts\": [\n  9007199254740991,\n  1\n ]\n}\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "table",
+          "kind": null,
+          "kind_version": null
+        },
+        "refused": {
+          "kind": "nemar.histogram",
+          "kind_version": 1,
+          "word": "cap_exceeded"
+        },
+        "downloads": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "size": 78,
+            "sha256": "5080e76880d086b47d160743ef865e03178e9b58c3e53681c693024f2d84fa09"
+          }
+        ],
+        "model": {
+          "type": "fallback",
+          "tables": []
+        }
+      }
+    },
+    {
+      "name": "histogram_total_with_underflow_beyond_2_53",
+      "covers": "The underflow counts in the total: cap_exceeded.",
+      "view": {
+        "key": "hist",
+        "kind": "nemar.histogram",
+        "kind_version": 1,
+        "caption": "Recordings by share of good samples.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "format": "json",
+            "size": 97,
+            "sha256": "36b2fe1dd7d806a9571f04214d8cd7feee784990ca5960d874ebd12af7b4325f"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json": {
+          "text": "{\n \"edges\": [\n  0,\n  1\n ],\n \"counts\": [\n  9007199254740991\n ],\n \"underflow\": 1,\n \"overflow\": 0\n}\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "table",
+          "kind": null,
+          "kind_version": null
+        },
+        "refused": {
+          "kind": "nemar.histogram",
+          "kind_version": 1,
+          "word": "cap_exceeded"
+        },
+        "downloads": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "size": 97,
+            "sha256": "36b2fe1dd7d806a9571f04214d8cd7feee784990ca5960d874ebd12af7b4325f"
+          }
+        ],
+        "model": {
+          "type": "fallback",
+          "tables": []
+        }
+      }
+    },
+    {
       "name": "histogram_byte_order_mark",
       "covers": "A byte order mark: json_invalid.",
       "view": {

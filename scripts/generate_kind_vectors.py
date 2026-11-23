@@ -830,6 +830,17 @@ def histogram_cases() -> list[Case]:
             "json_invalid.",
         ),
         (
+            "histogram_total_beyond_2_53",
+            content(categories=["a", "b"], counts=[2**53 - 1, 1]),
+            "Counts whose total passes 2^53 - 1, which a binary64 sum would not "
+            "hold exactly: cap_exceeded.",
+        ),
+        (
+            "histogram_total_with_underflow_beyond_2_53",
+            content(edges=[0, 1], counts=[2**53 - 1], underflow=1, overflow=0),
+            "The underflow counts in the total: cap_exceeded.",
+        ),
+        (
             "histogram_byte_order_mark",
             b"\xef\xbb\xbf" + ICLABEL,
             "A byte order mark: json_invalid.",

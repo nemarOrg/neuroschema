@@ -106,7 +106,7 @@ For `nemar.table`, `nemar.lines` and `nemar.heatmap`, the checks run in this ord
 7. The kind's own rule (`x_not_increasing` for `nemar.lines`).
 8. Coordinates from another role, the rows' dimension before the columns' (`coords_unresolved`, then that role's file and grammar, `column_missing`, `coords_mismatch`, `coords_length` and its cells).
 
-For `nemar.histogram`, they run in this order: the file and the cap on bytes, `json_invalid`, `content_invalid`, `edges_not_increasing`, `counts_length`.
+For `nemar.histogram`, they run in this order: the file and the cap on bytes, `json_invalid`, `content_invalid`, `edges_not_increasing`, `counts_length`, then the cap on the total (`cap_exceeded`).
 
 ## `nemar.table` version 1
 
@@ -257,7 +257,8 @@ A renderer draws the counts it is given and never bins values itself; when it ma
 - Each bin's label is `[a, b)`, or `[a, b]` for the last bin; the underflow's is `< e` with the first edge, and the overflow's `> e` with the last.
   A number in a label is printed as ECMAScript's `String(x)` prints it (`0.1`, `100`, `1e-7`, `1e+21`), as the [view digest](view-digest.md#canonical-form) prints numbers.
 - With bins by category, `bins` is `categories`, each item is `{"label", "count"}` with the category as its label, and `unit`, `underflow` and `overflow` are `null`.
-- `total` is the sum of all the counts, underflow and overflow included, and `max_count` is the largest of them.
+- `total` is the sum of all the counts, underflow and overflow included, summed in binary64, and `max_count` is the largest of them.
+  A content whose total would pass 2^53 - 1 is refused with `cap_exceeded`, so that sum is exact.
 
 A renderer draws one bar per bin, in order, whose height is its count, never a density.
 Bins by edges sit on a numeric axis from the first edge to the last, each bar spanning its bin; bins by category are bars of equal width.
@@ -290,7 +291,7 @@ When a kind refused the files, `refused` is `{"kind", "kind_version", "word"}`, 
 | `file_missing` | nothing drawn | A file the model reads is not there. |
 | `file_size_mismatch` | nothing drawn | A file's length is not its declared `size`. |
 | `file_digest_mismatch` | nothing drawn | A file's SHA-256 is not its declared `sha256`. |
-| `cap_exceeded` | fallback | A file, the rows, the value columns or the cells exceed the registry's caps. |
+| `cap_exceeded` | fallback | A file, the rows, the value columns or the cells exceed the registry's caps, or a histogram's total passes 2^53 - 1. |
 | `tsv_encoding` | fallback | Not UTF-8, or a byte order mark. |
 | `tsv_line_endings` | fallback | A CR, or no final LF. |
 | `tsv_header_repeated` | fallback | Two header names are equal. |
