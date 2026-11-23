@@ -514,3 +514,74 @@ class TestProcessingDataset:
         assert errors_for(PROCESSING, doc) == {
             ("additionalProperties", f"{FLOOR}/counts/import")
         }
+
+
+# ── signalJourney ─────────────────────────────────────────────────────────
+
+
+SIGNAL_JOURNEY = EXTENSIONS / "signalJourney.schema.json"
+
+
+def sj_links():
+    return {
+        "recipes": {
+            "nemar-floor": {
+                "recipe_version": "1.0.0-b1",
+                "processing_status": "completed",
+                "location": "sub-013/eeg/sub-013_desc-nemarfloor_signalJourney.json",
+                "sha256": SHA,
+                "sj_version": "0.1.0",
+            }
+        }
+    }
+
+
+class TestSignalJourney:
+    def _link(self, doc):
+        return doc["recipes"]["nemar-floor"]
+
+    def test_valid(self):
+        assert errors_for(SIGNAL_JOURNEY, sj_links()) == set()
+
+    def test_in_progress_all_null(self):
+        doc = sj_links()
+        self._link(doc).update(
+            processing_status="in_progress", location=None, sha256=None, sj_version=None
+        )
+        assert errors_for(SIGNAL_JOURNEY, doc) == set()
+
+    def test_completed_without_sha(self):
+        doc = sj_links()
+        self._link(doc)["sha256"] = None
+        assert errors_for(SIGNAL_JOURNEY, doc) == {("type", f"{FLOOR}/sha256")}
+
+    def test_in_progress_with_location(self):
+        doc = sj_links()
+        self._link(doc).update(
+            processing_status="in_progress", sha256=None, sj_version=None
+        )
+        assert errors_for(SIGNAL_JOURNEY, doc) == {("type", f"{FLOOR}/location")}
+
+    def test_pending_is_gone(self):
+        doc = sj_links()
+        self._link(doc)["processing_status"] = "pending"
+        assert errors_for(SIGNAL_JOURNEY, doc) == {
+            ("enum", f"{FLOOR}/processing_status")
+        }
+
+    def test_bad_sj_version(self):
+        doc = sj_links()
+        self._link(doc)["sj_version"] = "0.1"
+        assert errors_for(SIGNAL_JOURNEY, doc) == {("pattern", f"{FLOOR}/sj_version")}
+
+    def test_missing_recipe_version(self):
+        doc = sj_links()
+        del self._link(doc)["recipe_version"]
+        assert errors_for(SIGNAL_JOURNEY, doc) == {("required", FLOOR)}
+
+    def test_missing_recipes(self):
+        assert errors_for(SIGNAL_JOURNEY, {}) == {("required", "")}
+
+    def test_open_root_keeps_legacy_key(self):
+        doc = sj_links() | {"pipeline_id": "legacy"}
+        assert errors_for(SIGNAL_JOURNEY, doc) == set()
