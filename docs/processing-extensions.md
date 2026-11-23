@@ -26,7 +26,9 @@ JSON Schema cannot compare one value with another, so the writer enforces:
 - after a recording's first non-passed checkpoint, every later declared checkpoint is `skipped` with the same `code` and `step`;
 - each checkpoint name is one the recipe version declares in the registry;
 - a histogram has one count fewer than its edges, its edges strictly increase, and `n` = sum(counts) + underflow + overflow;
-- every range (a metric's `bounds`, each `observed_range` entry) has min <= max when both are set.
+- every range (a metric's `bounds`, each `observed_range` entry) has min <= max when both are set;
+- an `observed_range` entry equals the min and max of the same metric's distribution when both exist;
+- the `dataQuality` dataset `counts.passed` equals the last declared checkpoint's `passed`, and its `failed` + `skipped` equals that checkpoint's `total` - `passed`.
 
 `tests/helpers.py` checks the examples against these rules; the package does not ship them.
 

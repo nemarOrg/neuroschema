@@ -21,6 +21,7 @@ from tests.helpers import (
     failures,
     histogram_problems,
     quality_problems,
+    range_problems,
     total_problems,
 )
 
@@ -1174,3 +1175,39 @@ class TestLastCheckpointTotals:
             "nemar-floor: dataQuality failed+skipped differs from the last checkpoint"
             in problems
         )
+
+
+class TestRanges:
+    def test_examples_hold(self):
+        for path in (DATASET_EXAMPLE, RECORD_EXAMPLE):
+            assert range_problems(_example(path)) == []
+
+    def test_metric_bounds_order(self):
+        doc = _example(RECORD_EXAMPLE)
+        metric = doc["extensions"]["dataQuality"]["recipes"]["nemar-floor"]["metrics"][
+            "percentGoodSamples"
+        ]
+        metric["bounds"] = {"min": 100, "max": 0}
+        assert range_problems(doc) == [
+            "nemar-floor/metrics/percentGoodSamples/bounds: min > max"
+        ]
+
+    def test_observed_range_order(self):
+        doc = _example(DATASET_EXAMPLE)
+        entry = doc["extensions"]["dataQuality"]["recipes"]["nemar-ica"]
+        entry["observed_range"]["icaRank"] = {"min": 64, "max": 55}
+        problems = range_problems(doc)
+        assert "nemar-ica/observed_range/icaRank: min > max" in problems
+
+    def test_observed_range_matches_distribution(self):
+        doc = _example(DATASET_EXAMPLE)
+        entry = doc["extensions"]["dataQuality"]["recipes"]["nemar-floor"]
+        entry["observed_range"]["percentGoodSamples"]["max"] = 99.0
+        where = "nemar-floor/observed_range/percentGoodSamples"
+        assert range_problems(doc) == [f"{where}: differs from its distribution"]
+
+    def test_null_end_is_not_ordered(self):
+        doc = _example(DATASET_EXAMPLE)
+        entry = doc["extensions"]["dataQuality"]["recipes"]["nemar-floor"]
+        entry["observed_range"]["snrDb"] = {"min": None, "max": -50}
+        assert range_problems(doc) == []

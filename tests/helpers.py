@@ -182,3 +182,38 @@ def total_problems(dataset_quality: dict, dataset_processing: dict) -> list[str]
                 f"{recipe}: dataQuality failed+skipped differs from the last checkpoint"
             )
     return problems
+
+
+def _range_order(where: str, rng: dict) -> list[str]:
+    lo, hi = rng.get("min"), rng.get("max")
+    if lo is not None and hi is not None and lo > hi:
+        return [f"{where}: min > max"]
+    return []
+
+
+def range_problems(document: dict) -> list[str]:
+    """Range checks for a full record or dataset document's dataQuality entries.
+
+    Every metric `bounds` and every `observed_range` entry has min <= max when
+    both are set, and `observed_range[m]` equals the min and max of
+    `distributions[m]` when both exist.
+    """
+    problems: list[str] = []
+    quality = document.get("extensions", {}).get("dataQuality", {})
+    for recipe, entry in quality.get("recipes", {}).items():
+        for name, metric in entry.get("metrics", {}).items():
+            if "bounds" in metric:
+                problems += _range_order(
+                    f"{recipe}/metrics/{name}/bounds", metric["bounds"]
+                )
+        for name, rng in entry.get("observed_range", {}).items():
+            problems += _range_order(f"{recipe}/observed_range/{name}", rng)
+            dist = entry.get("distributions", {}).get(name)
+            if dist is not None and (rng["min"], rng["max"]) != (
+                dist["min"],
+                dist["max"],
+            ):
+                problems.append(
+                    f"{recipe}/observed_range/{name}: differs from its distribution"
+                )
+    return problems
