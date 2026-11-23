@@ -293,6 +293,49 @@ def test_cz_variants_share_every_position(small, large):
 
 
 BIOSEMI = ["biosemi128", "biosemi160", "biosemi256"]
+BANKED = ["biosemi16", "biosemi32", "biosemi64"]
+# Anchors read off BioSemi's layout drawings (biosemi.com/pics/cap_N_layout_large.jpg).
+DRAWN = {
+    "biosemi16": {"A1": "Fp1", "A3": "F4", "A8": "Cz", "A13": "P3", "A16": "O2"},
+    "biosemi32": {"A1": "Fp1", "A7": "T7", "A13": "Pz", "A30": "Fp2", "A32": "Cz"},
+    "biosemi64": {
+        "A1": "Fp1",
+        "A28": "Iz",
+        "A32": "CPz",
+        "B1": "Fpz",
+        "B16": "Cz",
+        "B29": "P10",
+        "B32": "O2",
+    },
+}
+
+
+@pytest.mark.parametrize("name", BANKED)
+def test_bank_labels_follow_biosemis_drawing(name):
+    """A recording's bank labels map to the 10-20 electrodes BioSemi draws.
+
+    Each 10-20 name also sits on its side of the head: odd numbers left
+    (x < 0), even numbers right (x > 0), z on the midline.
+    """
+    entry = next(m for m in PROVENANCE["montages"] if m["name"] == name)
+    table = entry["bank_labels"]
+    assert table["columns"] == ["label", "mne_label"]
+    assert "biosemi.com/pics/" in table["source"]
+    rows = dict(table["rows"])
+    electrodes = montage_document(name)["electrodes"]
+    assert [e[0] for e in electrodes] == list(rows)
+    assert len(rows) == int(name.removeprefix("biosemi"))
+    for label, drawn in DRAWN[name].items():
+        assert rows[label] == drawn, label
+    for label, x, _y, _z in electrodes:
+        ten_twenty = rows[label]
+        if ten_twenty[-1] == "z":
+            assert abs(x) < 1e-6, label
+        elif int(re.search(r"[0-9]+$", ten_twenty)[0]) % 2:
+            assert x < 0, label
+        else:
+            assert x > 0, label
+    assert "angle_corrections" not in entry
 
 
 def _on_sphere(theta: float, phi: float, radius: float = 0.095) -> list[float]:
@@ -362,6 +405,16 @@ def test_biosemi_matches_mne_where_the_angles_are_integers():
                 assert position == [round(float(v), 9) + 0.0 for v in theirs[label]]
             else:
                 assert label in corrected
+    for name in BANKED:
+        entry = next(m for m in PROVENANCE["montages"] if m["name"] == name)
+        theirs = mne.channels.make_standard_montage(name).get_positions()["ch_pos"]
+        ours = montage_document(name)["electrodes"]
+        assert [r[1] for r in entry["bank_labels"]["rows"]] == [
+            label.strip() for label in theirs
+        ]
+        assert [e[1:] for e in ours] == [
+            [round(float(v), 9) + 0.0 for v in xyz] for xyz in theirs.values()
+        ]
 
 
 def test_ten_five_aliases_sit_on_their_targets():

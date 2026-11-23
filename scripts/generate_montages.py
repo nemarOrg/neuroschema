@@ -80,6 +80,15 @@ SOURCE_SHA256 = {
     "GSN-HydroCel-257.sfp": (
         "70d629847d9053491237d1f52e4a9fc2e56bfd68a2929ee2ace546daf2c92f91"
     ),
+    "biosemi16.txt": (
+        "7b12f0eebcab3df2a07e9b72844d92891094f5216eb6326406907690895dd13e"
+    ),
+    "biosemi32.txt": (
+        "eb3041379bef6f98eab77fdb22dd0ed9853344e3680f066e110b3e4a992f58b2"
+    ),
+    "biosemi64.txt": (
+        "8bd39ec923854853c1d6830c46cd4942f700d90ba9112541e21e45ea2a6fd7af"
+    ),
     "biosemi128.txt": (
         "3adbfb01f4ebcb77b70f85dcd373ad10a626122f8891455be917bfc78c594e0e"
     ),
@@ -116,10 +125,159 @@ UPSTREAM = {
         "in MNE-Python's biosemi*.txt. MNE's montage README does not name their "
         "origin. BioSemi publishes the position coordinates of its standard head "
         "caps (biosemi.com/download/Cap_coords_all.xls, linked from "
-        "biosemi.com/headcap.htm) with no license statement; they were not "
-        "compared with MNE's files. MNE-Python ships them under BSD-3-Clause."
+        "biosemi.com/headcap.htm) with no license statement; its 16, 32 and 64 "
+        "channel sheets list the same 10-20 names and angles as MNE's "
+        "biosemi16/32/64.txt, in the same order (spreadsheet SHA-256 "
+        "38304148957c86b16622a7511c972f268ecbe2a7da2288edd3d59718ab82e2fa); the "
+        "128, 160 and 256 channel sheets were not compared. MNE-Python ships the "
+        "files under BSD-3-Clause."
     ),
 }
+
+# A BioSemi 16, 32 or 64 channel recording names its channels by amplifier
+# bank (A1 to A16, A1 to A32, A1 to B32); MNE's files name the same electrodes
+# by the 10-20 system. Each list below is the 10-20 name of A1, A2, ... (then
+# B1, ...) as BioSemi's own layout drawings label them; the generator relabels
+# MNE's electrodes in file order and fails unless the file order is this one.
+BIOSEMI_DRAWINGS = {
+    "biosemi16": (
+        "biosemi.com/pics/cap_16_layout_large.jpg (SHA-256 "
+        "13244c52743a574cc2c71c43d107b9c0a5fb662cb5655064c433eb1fc9196554)"
+    ),
+    "biosemi32": (
+        "biosemi.com/pics/cap_32_layout_large.jpg (SHA-256 "
+        "b062d157d087c617749cc010a7881eca928f49613d34708bc636212d80b910c1)"
+    ),
+    "biosemi64": (
+        "biosemi.com/pics/cap_64_layout_large.jpg (SHA-256 "
+        "10412c6cf8013551294ed70bd6c6926031a25b4c9fadceb6732b09417a5d79f5)"
+    ),
+}
+BIOSEMI_BANKS = {
+    "biosemi16": [
+        "Fp1",
+        "Fp2",
+        "F4",
+        "Fz",
+        "F3",
+        "T7",
+        "C3",
+        "Cz",
+        "C4",
+        "T8",
+        "P4",
+        "Pz",
+        "P3",
+        "O1",
+        "Oz",
+        "O2",
+    ],
+    "biosemi32": [
+        "Fp1",
+        "AF3",
+        "F7",
+        "F3",
+        "FC1",
+        "FC5",
+        "T7",
+        "C3",
+        "CP1",
+        "CP5",
+        "P7",
+        "P3",
+        "Pz",
+        "PO3",
+        "O1",
+        "Oz",
+        "O2",
+        "PO4",
+        "P4",
+        "P8",
+        "CP6",
+        "CP2",
+        "C4",
+        "T8",
+        "FC6",
+        "FC2",
+        "F4",
+        "F8",
+        "AF4",
+        "Fp2",
+        "Fz",
+        "Cz",
+    ],
+    "biosemi64": [
+        "Fp1",
+        "AF7",
+        "AF3",
+        "F1",
+        "F3",
+        "F5",
+        "F7",
+        "FT7",
+        "FC5",
+        "FC3",
+        "FC1",
+        "C1",
+        "C3",
+        "C5",
+        "T7",
+        "TP7",
+        "CP5",
+        "CP3",
+        "CP1",
+        "P1",
+        "P3",
+        "P5",
+        "P7",
+        "P9",
+        "PO7",
+        "PO3",
+        "O1",
+        "Iz",
+        "Oz",
+        "POz",
+        "Pz",
+        "CPz",
+        "Fpz",
+        "Fp2",
+        "AF8",
+        "AF4",
+        "AFz",
+        "Fz",
+        "F2",
+        "F4",
+        "F6",
+        "F8",
+        "FT8",
+        "FC6",
+        "FC4",
+        "FC2",
+        "FCz",
+        "Cz",
+        "C2",
+        "C4",
+        "C6",
+        "T8",
+        "TP8",
+        "CP6",
+        "CP4",
+        "CP2",
+        "P2",
+        "P4",
+        "P6",
+        "P8",
+        "P10",
+        "PO8",
+        "PO4",
+        "O2",
+    ],
+}
+
+
+def bank_labels(count: int) -> list[str]:
+    """A1 to A32, then B1 to B32, for the first count electrodes."""
+    return [f"{'AB'[i // 32]}{i % 32 + 1}" for i in range(count)]
 
 
 @dataclass(frozen=True)
@@ -141,6 +299,12 @@ HYDROCEL_WHY = (
     "electrode positions exactly; MNE's default rescales each file by its own "
     "median radius, which moves the 64/65 and 256/257 pairs apart by up to "
     "0.14 mm."
+)
+BANK_WHY = (
+    "MNE's file names the electrodes by the 10-20 system; this montage names "
+    "them by BioSemi amplifier bank, as a recording does, in MNE's file order, "
+    "which BioSemi's layout drawing confirms (bank_labels). The angles are "
+    "integers, so every position is MNE's."
 )
 BIOSEMI_WHY = (
     "The angles are read from MNE's file as written, with decimals, and placed "
@@ -174,6 +338,10 @@ SOURCES = (
             HYDROCEL_WHY,
         )
         for n in ("32", "64_1.0", "65_1.0", "128", "129", "256", "257")
+    ),
+    *(
+        Source(f"biosemi{n}", f"biosemi{n}", 0.095, 1.0, "BioSemi", "BioSemi", BANK_WHY)
+        for n in ("16", "32", "64")
     ),
     *(
         Source(
@@ -342,6 +510,16 @@ def build_montage(source: Source) -> tuple[str, dict]:
         ch_pos, fiducial_pos, corrections = biosemi_positions(
             source, source_file, positions
         )
+    banks = None
+    if source.name in BIOSEMI_BANKS:
+        names = [label.strip() for label in ch_pos]
+        if names != BIOSEMI_BANKS[source.name]:
+            fail(f"{source.name}: MNE's file order is not BioSemi's drawing")
+        banks = list(zip(bank_labels(len(names)), names, strict=True))
+        ch_pos = {
+            bank: ch_pos[label]
+            for bank, label in zip(bank_labels(len(names)), ch_pos, strict=True)
+        }
     electrodes = [
         [label, *(meters(v, source.scale_to_m) for v in xyz)]
         for label, xyz in ch_pos.items()
@@ -383,7 +561,14 @@ def build_montage(source: Source) -> tuple[str, dict]:
         "upstream": source.upstream,
         "notes": [source.why],
     }
-    if corrections is not None:
+    provenance["mne_montage"] = source.mne_kind
+    if banks is not None:
+        provenance["bank_labels"] = {
+            "source": BIOSEMI_DRAWINGS[source.name],
+            "columns": ["label", "mne_label"],
+            "rows": [list(row) for row in banks],
+        }
+    if corrections:
         provenance["mne_call"] = (
             f"angles from {basename} as written; mne.transforms._sph_to_cart on a "
             f"sphere of {source.head_size} m, as make_standard_montage"
@@ -511,6 +696,10 @@ def eeg(names, kind="EEG"):
 
 def egi(n, extra=(), width=0):
     return eeg([f"E{i:0{width}d}" for i in range(1, n + 1)] + list(extra))
+
+
+def biosemi_bank(count):
+    return eeg(bank_labels(count))
 
 
 def biosemi(banks):
@@ -880,6 +1069,45 @@ CASES = [
         "names (97%), on other positions, so the names do not identify a net.",
         egi(32, ["Cz"]),
         ("refused", "montage_ambiguous", None),
+    ),
+    (
+        "biosemi_16",
+        "A BioSemi 16 cap, named by bank as a recording names it (A1 to A16).",
+        biosemi_bank(16),
+        ("placed", None, "biosemi16"),
+    ),
+    (
+        "biosemi_32",
+        "A BioSemi 32 cap (A1 to A32). The 128 cap's A bank holds the same names "
+        "on other positions; the 32 cap, smaller, dismisses it.",
+        biosemi_bank(32),
+        ("placed", None, "biosemi32"),
+    ),
+    (
+        "biosemi_64",
+        "A BioSemi 64 cap (A1 to B32).",
+        biosemi_bank(64),
+        ("placed", None, "biosemi64"),
+    ),
+    (
+        "biosemi_64_zero_padded",
+        "A01 to B32: zero-padded bank numbers.",
+        eeg([f"{n[0]}{int(n[1:]):02d}" for n, _ in biosemi_bank(64)]),
+        ("placed", None, "biosemi64"),
+    ),
+    (
+        "biosemi_64_with_exg",
+        "A1 to B32 and the eight external channels, all typed EEG: the external "
+        "channels stay unplaced.",
+        [*biosemi_bank(64), *eeg([f"EXG{i}" for i in range(1, 9)])],
+        ("placed", None, "biosemi64"),
+    ),
+    (
+        "biosemi_64_cms_suffix",
+        "A1-CMS to B32-CMS: the shared suffix names BioSemi's common mode sense "
+        "reference and is stripped.",
+        eeg([f"{n}-CMS" for n, _ in biosemi_bank(64)]),
+        ("placed", None, "biosemi64"),
     ),
     (
         "biosemi_128",

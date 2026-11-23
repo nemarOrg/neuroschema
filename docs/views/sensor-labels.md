@@ -36,6 +36,9 @@ The recording's channels in recording order, each a name (a string) and a Brain 
 | `GSN-HydroCel-129` | `GSN-HydroCel` | 129 | same name | EGI, via FieldTrip |
 | `GSN-HydroCel-256` | `GSN-HydroCel` | 256 | same name | EGI, via FieldTrip |
 | `GSN-HydroCel-257` | `GSN-HydroCel` | 257 | same name | EGI, via FieldTrip |
+| `biosemi16` | `BioSemi` | 16 | `biosemi16`, relabeled A1 to A16 | BioSemi head caps |
+| `biosemi32` | `BioSemi` | 32 | `biosemi32`, relabeled A1 to A32 | BioSemi head caps |
+| `biosemi64` | `BioSemi` | 64 | `biosemi64`, relabeled A1 to B32 | BioSemi head caps |
 | `biosemi128` | `BioSemi` | 128 | same name, angles as written | BioSemi head caps |
 | `biosemi160` | `BioSemi` | 160 | same name, angles as written | BioSemi head caps |
 | `biosemi256` | `BioSemi` | 256 | same name, angles as written | BioSemi head caps |
@@ -49,6 +52,9 @@ Each file holds the positions MNE-Python 1.13.2 returns from `make_standard_mont
 - The HydroCel nets are read with `head_size=None`, the file's own geometry in centimeters, converted to meters.
   Each net and its Cz variant (64 and 65, 128 and 129, 256 and 257) then share every electrode position exactly; MNE-Python's default rescales each file by its own median radius, which moves the 64/65 and 256/257 pairs apart by up to 0.14 mm.
 - The BioSemi caps lie on a sphere of radius 0.095 m (MNE-Python's default).
+  A BioSemi recording names its channels by amplifier bank (A1 to A32, then B1 to B32, and so on), while MNE-Python names the electrodes of the 16, 32 and 64 channel caps by the 10-20 system.
+  The montages of those caps carry the bank labels, given to MNE-Python's electrodes in file order; BioSemi's own layout drawings label the electrodes in that order, and the generator fails unless the file order is the drawings' (`bank_labels` in `PROVENANCE.json` lists each label with its 10-20 name).
+  The angles of the 16, 32 and 64 channel caps are integers, so their positions are MNE-Python's.
   `make_standard_montage` reads their angles as integers, so an angle written as 11.5 becomes 11 and the electrode moves by up to 1.8 mm.
   The generator instead reads the angles in MNE-Python's `biosemi*.txt` as written and places them with MNE-Python's own spherical conversion.
   An electrode whose angles are integers sits exactly where MNE-Python puts it; `PROVENANCE.json` lists every other electrode (`angle_corrections`) with its angles as written, MNE-Python's integer angles and the distance between the two positions.
@@ -157,7 +163,7 @@ Every comparison of a share is between integers, so every implementation decides
 ### Why nested nets are dismissed, and why a net needs coverage
 
 The nets of one family number their electrodes in one sequence, so a larger net holds every name of a smaller one: E1 to E128 and Cz are names on the 257-channel net as well as the 129-channel net, on other positions.
-Without step 5 every 128-channel EGI recording, and every BioSemi 128 or 160 recording, would tie with a larger net and be refused.
+Without step 5 every 128-channel EGI recording, and every BioSemi 16, 32, 64, 128 or 160 recording, would tie with a larger net and be refused.
 A recording carries the electrodes of its net, and E1 to E128 from a 256-channel net would be half a net, so the smallest net of the family that matches every channel the larger one matches is the one the names identify.
 The comparison is by channel, with each montage's own aliases, so E1 to E129 is the 129-channel net (E129 is its Cz) and not the 256-channel net (where E129 is an electrode).
 Across families the rule does not apply: `A1`, `A2` and `C1` to `C6` are 10-05 names and BioSemi names on unrelated positions, and such a recording is refused.

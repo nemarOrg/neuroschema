@@ -10,7 +10,7 @@
   "upstream": {
     "FieldTrip": "FieldTrip template/electrode/standard_1005.elc: 10-05 positions constructed by Robert Oostenveld (Oostenveld and Praamstra 2001, The five percent electrode system for high-resolution EEG and ERP measurements), in millimeters in Montreal Neurological Institute (MNI) coordinates on FieldTrip's template head (Colin27). The FieldTrip repository is GPL-3.0 and its website CC BY-SA 4.0; neither states a license for the template electrode files. MNE-Python ships the file under its BSD-3-Clause license.",
     "EGI": "Electrical Geodesics, Inc. (EGI) HydroCel Geodesic Sensor Net layouts. FieldTrip states its template/electrode/GSN-HydroCel-*.sfp files were downloaded from the EGI FTP server, and MNE-Python's montage README says its GSN-HydroCel files are taken from FieldTrip. MNE's files hold the same numbers as FieldTrip's (FieldTrip names the 64 and 65 nets without _1.0); the bytes differ in whitespace. No license is stated for the layouts by EGI or FieldTrip; MNE-Python ships them under BSD-3-Clause.",
-    "BioSemi": "BioSemi head cap layouts (ABC labels, A1 to H32), as spherical angles in MNE-Python's biosemi*.txt. MNE's montage README does not name their origin. BioSemi publishes the position coordinates of its standard head caps (biosemi.com/download/Cap_coords_all.xls, linked from biosemi.com/headcap.htm) with no license statement; they were not compared with MNE's files. MNE-Python ships them under BSD-3-Clause."
+    "BioSemi": "BioSemi head cap layouts (ABC labels, A1 to H32), as spherical angles in MNE-Python's biosemi*.txt. MNE's montage README does not name their origin. BioSemi publishes the position coordinates of its standard head caps (biosemi.com/download/Cap_coords_all.xls, linked from biosemi.com/headcap.htm) with no license statement; its 16, 32 and 64 channel sheets list the same 10-20 names and angles as MNE's biosemi16/32/64.txt, in the same order (spreadsheet SHA-256 38304148957c86b16622a7511c972f268ecbe2a7da2288edd3d59718ab82e2fa); the 128, 160 and 256 channel sheets were not compared. MNE-Python ships the files under BSD-3-Clause."
   },
   "montages": [
     {
@@ -27,7 +27,8 @@
       "upstream": "FieldTrip",
       "notes": [
         "MNE-Python 1.13 renamed the standard_1005 montage colin27_1005 (standard_1005 is deprecated and leaves in MNE 1.14); it reads the same file, in meters in MNI coordinates, unscaled."
-      ]
+      ],
+      "mne_montage": "colin27_1005"
     },
     {
       "name": "GSN-HydroCel-32",
@@ -43,7 +44,8 @@
       "upstream": "EGI",
       "notes": [
         "head_size=None keeps the net file's own geometry, in centimeters, so each net and its Cz variant (64 and 65, 128 and 129, 256 and 257) share their electrode positions exactly; MNE's default rescales each file by its own median radius, which moves the 64/65 and 256/257 pairs apart by up to 0.14 mm."
-      ]
+      ],
+      "mne_montage": "GSN-HydroCel-32"
     },
     {
       "name": "GSN-HydroCel-64_1.0",
@@ -59,7 +61,8 @@
       "upstream": "EGI",
       "notes": [
         "head_size=None keeps the net file's own geometry, in centimeters, so each net and its Cz variant (64 and 65, 128 and 129, 256 and 257) share their electrode positions exactly; MNE's default rescales each file by its own median radius, which moves the 64/65 and 256/257 pairs apart by up to 0.14 mm."
-      ]
+      ],
+      "mne_montage": "GSN-HydroCel-64_1.0"
     },
     {
       "name": "GSN-HydroCel-65_1.0",
@@ -75,7 +78,8 @@
       "upstream": "EGI",
       "notes": [
         "head_size=None keeps the net file's own geometry, in centimeters, so each net and its Cz variant (64 and 65, 128 and 129, 256 and 257) share their electrode positions exactly; MNE's default rescales each file by its own median radius, which moves the 64/65 and 256/257 pairs apart by up to 0.14 mm."
-      ]
+      ],
+      "mne_montage": "GSN-HydroCel-65_1.0"
     },
     {
       "name": "GSN-HydroCel-128",
@@ -91,7 +95,8 @@
       "upstream": "EGI",
       "notes": [
         "head_size=None keeps the net file's own geometry, in centimeters, so each net and its Cz variant (64 and 65, 128 and 129, 256 and 257) share their electrode positions exactly; MNE's default rescales each file by its own median radius, which moves the 64/65 and 256/257 pairs apart by up to 0.14 mm."
-      ]
+      ],
+      "mne_montage": "GSN-HydroCel-128"
     },
     {
       "name": "GSN-HydroCel-129",
@@ -107,7 +112,8 @@
       "upstream": "EGI",
       "notes": [
         "head_size=None keeps the net file's own geometry, in centimeters, so each net and its Cz variant (64 and 65, 128 and 129, 256 and 257) share their electrode positions exactly; MNE's default rescales each file by its own median radius, which moves the 64/65 and 256/257 pairs apart by up to 0.14 mm."
-      ]
+      ],
+      "mne_montage": "GSN-HydroCel-129"
     },
     {
       "name": "GSN-HydroCel-256",
@@ -123,7 +129,8 @@
       "upstream": "EGI",
       "notes": [
         "head_size=None keeps the net file's own geometry, in centimeters, so each net and its Cz variant (64 and 65, 128 and 129, 256 and 257) share their electrode positions exactly; MNE's default rescales each file by its own median radius, which moves the 64/65 and 256/257 pairs apart by up to 0.14 mm."
-      ]
+      ],
+      "mne_montage": "GSN-HydroCel-256"
     },
     {
       "name": "GSN-HydroCel-257",
@@ -139,7 +146,189 @@
       "upstream": "EGI",
       "notes": [
         "head_size=None keeps the net file's own geometry, in centimeters, so each net and its Cz variant (64 and 65, 128 and 129, 256 and 257) share their electrode positions exactly; MNE's default rescales each file by its own median radius, which moves the 64/65 and 256/257 pairs apart by up to 0.14 mm."
-      ]
+      ],
+      "mne_montage": "GSN-HydroCel-257"
+    },
+    {
+      "name": "biosemi16",
+      "file": "views/montages/biosemi16.json",
+      "sha256": "2b4d7e508eea7d8f5713a028597bedefed3fdd358c5f2a35f904d1a3265c7f8b",
+      "electrodes": 16,
+      "family": "BioSemi",
+      "mne_call": "mne.channels.make_standard_montage('biosemi16', head_size=0.095).get_positions()",
+      "mne_source": "mne/channels/data/montages/biosemi16.txt",
+      "mne_source_sha256": "7b12f0eebcab3df2a07e9b72844d92891094f5216eb6326406907690895dd13e",
+      "mne_coord_frame": "unknown",
+      "scale_to_m": 1.0,
+      "upstream": "BioSemi",
+      "notes": [
+        "MNE's file names the electrodes by the 10-20 system; this montage names them by BioSemi amplifier bank, as a recording does, in MNE's file order, which BioSemi's layout drawing confirms (bank_labels). The angles are integers, so every position is MNE's."
+      ],
+      "mne_montage": "biosemi16",
+      "bank_labels": {
+        "source": "biosemi.com/pics/cap_16_layout_large.jpg (SHA-256 13244c52743a574cc2c71c43d107b9c0a5fb662cb5655064c433eb1fc9196554)",
+        "columns": ["label", "mne_label"],
+        "rows": [
+          ["A1", "Fp1"],
+          ["A2", "Fp2"],
+          ["A3", "F4"],
+          ["A4", "Fz"],
+          ["A5", "F3"],
+          ["A6", "T7"],
+          ["A7", "C3"],
+          ["A8", "Cz"],
+          ["A9", "C4"],
+          ["A10", "T8"],
+          ["A11", "P4"],
+          ["A12", "Pz"],
+          ["A13", "P3"],
+          ["A14", "O1"],
+          ["A15", "Oz"],
+          ["A16", "O2"]
+        ]
+      }
+    },
+    {
+      "name": "biosemi32",
+      "file": "views/montages/biosemi32.json",
+      "sha256": "5ed78f3ec65b520009c7df7ac8da7b138c916d8d561c6c1bc3230b65b371c728",
+      "electrodes": 32,
+      "family": "BioSemi",
+      "mne_call": "mne.channels.make_standard_montage('biosemi32', head_size=0.095).get_positions()",
+      "mne_source": "mne/channels/data/montages/biosemi32.txt",
+      "mne_source_sha256": "eb3041379bef6f98eab77fdb22dd0ed9853344e3680f066e110b3e4a992f58b2",
+      "mne_coord_frame": "unknown",
+      "scale_to_m": 1.0,
+      "upstream": "BioSemi",
+      "notes": [
+        "MNE's file names the electrodes by the 10-20 system; this montage names them by BioSemi amplifier bank, as a recording does, in MNE's file order, which BioSemi's layout drawing confirms (bank_labels). The angles are integers, so every position is MNE's."
+      ],
+      "mne_montage": "biosemi32",
+      "bank_labels": {
+        "source": "biosemi.com/pics/cap_32_layout_large.jpg (SHA-256 b062d157d087c617749cc010a7881eca928f49613d34708bc636212d80b910c1)",
+        "columns": ["label", "mne_label"],
+        "rows": [
+          ["A1", "Fp1"],
+          ["A2", "AF3"],
+          ["A3", "F7"],
+          ["A4", "F3"],
+          ["A5", "FC1"],
+          ["A6", "FC5"],
+          ["A7", "T7"],
+          ["A8", "C3"],
+          ["A9", "CP1"],
+          ["A10", "CP5"],
+          ["A11", "P7"],
+          ["A12", "P3"],
+          ["A13", "Pz"],
+          ["A14", "PO3"],
+          ["A15", "O1"],
+          ["A16", "Oz"],
+          ["A17", "O2"],
+          ["A18", "PO4"],
+          ["A19", "P4"],
+          ["A20", "P8"],
+          ["A21", "CP6"],
+          ["A22", "CP2"],
+          ["A23", "C4"],
+          ["A24", "T8"],
+          ["A25", "FC6"],
+          ["A26", "FC2"],
+          ["A27", "F4"],
+          ["A28", "F8"],
+          ["A29", "AF4"],
+          ["A30", "Fp2"],
+          ["A31", "Fz"],
+          ["A32", "Cz"]
+        ]
+      }
+    },
+    {
+      "name": "biosemi64",
+      "file": "views/montages/biosemi64.json",
+      "sha256": "3f9b29cf37ff89465fc117ca9a6a8c843ecf78418b32e4e04905949e6b4f991e",
+      "electrodes": 64,
+      "family": "BioSemi",
+      "mne_call": "mne.channels.make_standard_montage('biosemi64', head_size=0.095).get_positions()",
+      "mne_source": "mne/channels/data/montages/biosemi64.txt",
+      "mne_source_sha256": "8bd39ec923854853c1d6830c46cd4942f700d90ba9112541e21e45ea2a6fd7af",
+      "mne_coord_frame": "unknown",
+      "scale_to_m": 1.0,
+      "upstream": "BioSemi",
+      "notes": [
+        "MNE's file names the electrodes by the 10-20 system; this montage names them by BioSemi amplifier bank, as a recording does, in MNE's file order, which BioSemi's layout drawing confirms (bank_labels). The angles are integers, so every position is MNE's."
+      ],
+      "mne_montage": "biosemi64",
+      "bank_labels": {
+        "source": "biosemi.com/pics/cap_64_layout_large.jpg (SHA-256 10412c6cf8013551294ed70bd6c6926031a25b4c9fadceb6732b09417a5d79f5)",
+        "columns": ["label", "mne_label"],
+        "rows": [
+          ["A1", "Fp1"],
+          ["A2", "AF7"],
+          ["A3", "AF3"],
+          ["A4", "F1"],
+          ["A5", "F3"],
+          ["A6", "F5"],
+          ["A7", "F7"],
+          ["A8", "FT7"],
+          ["A9", "FC5"],
+          ["A10", "FC3"],
+          ["A11", "FC1"],
+          ["A12", "C1"],
+          ["A13", "C3"],
+          ["A14", "C5"],
+          ["A15", "T7"],
+          ["A16", "TP7"],
+          ["A17", "CP5"],
+          ["A18", "CP3"],
+          ["A19", "CP1"],
+          ["A20", "P1"],
+          ["A21", "P3"],
+          ["A22", "P5"],
+          ["A23", "P7"],
+          ["A24", "P9"],
+          ["A25", "PO7"],
+          ["A26", "PO3"],
+          ["A27", "O1"],
+          ["A28", "Iz"],
+          ["A29", "Oz"],
+          ["A30", "POz"],
+          ["A31", "Pz"],
+          ["A32", "CPz"],
+          ["B1", "Fpz"],
+          ["B2", "Fp2"],
+          ["B3", "AF8"],
+          ["B4", "AF4"],
+          ["B5", "AFz"],
+          ["B6", "Fz"],
+          ["B7", "F2"],
+          ["B8", "F4"],
+          ["B9", "F6"],
+          ["B10", "F8"],
+          ["B11", "FT8"],
+          ["B12", "FC6"],
+          ["B13", "FC4"],
+          ["B14", "FC2"],
+          ["B15", "FCz"],
+          ["B16", "Cz"],
+          ["B17", "C2"],
+          ["B18", "C4"],
+          ["B19", "C6"],
+          ["B20", "T8"],
+          ["B21", "TP8"],
+          ["B22", "CP6"],
+          ["B23", "CP4"],
+          ["B24", "CP2"],
+          ["B25", "P2"],
+          ["B26", "P4"],
+          ["B27", "P6"],
+          ["B28", "P8"],
+          ["B29", "P10"],
+          ["B30", "PO8"],
+          ["B31", "PO4"],
+          ["B32", "O2"]
+        ]
+      }
     },
     {
       "name": "biosemi128",
@@ -156,6 +345,7 @@
       "notes": [
         "The angles are read from MNE's file as written, with decimals, and placed with MNE's own spherical conversion on a sphere of 0.095 m (MNE's default head_size; the spherical layout has no head size of its own). MNE's make_standard_montage reads the angles as integers, so an angle written as 11.5 becomes 11; angle_corrections lists every electrode that moves, with the angles as written, MNE's integer angles and the distance between the two positions. Every other electrode is MNE's position exactly."
       ],
+      "mne_montage": "biosemi128",
       "angle_corrections": {
         "columns": ["label", "theta_deg", "phi_deg", "mne_theta_deg", "mne_phi_deg", "moved_mm"],
         "electrodes": 66,
@@ -245,6 +435,7 @@
       "notes": [
         "The angles are read from MNE's file as written, with decimals, and placed with MNE's own spherical conversion on a sphere of 0.095 m (MNE's default head_size; the spherical layout has no head size of its own). MNE's make_standard_montage reads the angles as integers, so an angle written as 11.5 becomes 11; angle_corrections lists every electrode that moves, with the angles as written, MNE's integer angles and the distance between the two positions. Every other electrode is MNE's position exactly."
       ],
+      "mne_montage": "biosemi160",
       "angle_corrections": {
         "columns": ["label", "theta_deg", "phi_deg", "mne_theta_deg", "mne_phi_deg", "moved_mm"],
         "electrodes": 72,
@@ -340,6 +531,7 @@
       "notes": [
         "The angles are read from MNE's file as written, with decimals, and placed with MNE's own spherical conversion on a sphere of 0.095 m (MNE's default head_size; the spherical layout has no head size of its own). MNE's make_standard_montage reads the angles as integers, so an angle written as 11.5 becomes 11; angle_corrections lists every electrode that moves, with the angles as written, MNE's integer angles and the distance between the two positions. Every other electrode is MNE's position exactly."
       ],
+      "mne_montage": "biosemi256",
       "angle_corrections": {
         "columns": ["label", "theta_deg", "phi_deg", "mne_theta_deg", "mne_phi_deg", "moved_mm"],
         "electrodes": 223,
