@@ -72,6 +72,13 @@ def test_digest_from_text_matches_the_vector(case):
     assert view_digest(parse_declaration(text)) == case["sha256"]
 
 
+@pytest.mark.parametrize("literal", ["NaN", "Infinity", "-Infinity"])
+def test_parse_declaration_refuses_non_json_literals(literal):
+    """Python's json.loads accepts these; parse_declaration reads I-JSON only."""
+    with pytest.raises(CanonicalizationError, match="not a JSON number"):
+        parse_declaration('{"x":' + literal + "}")
+
+
 def test_duplicate_member_name_is_refused_at_any_depth():
     with pytest.raises(CanonicalizationError, match="duplicate member name 'k'"):
         parse_declaration('{"k":1,"k":1}')
