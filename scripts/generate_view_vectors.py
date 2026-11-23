@@ -675,6 +675,107 @@ def field_cases():
             -np.abs(np.array(cases[2]["sensors"]["value"])) * 2 + 3,
         )
     )
+    return cases + positions_cases()
+
+
+def positions_case(name, description, labels, xyz, frame, values, montage=None):
+    """A map placed by 3D positions: projected (sensor-layout), then drawn."""
+    xyz = np.asarray(xyz, dtype=float)
+    case = {
+        "name": name,
+        "description": description,
+        "coordinate_system": frame,
+        **({"montage": montage} if montage is not None else {}),
+        "sensors": {
+            "name": list(labels),
+            "x": _numbers(xyz[:, 0]),
+            "y": _numbers(xyz[:, 1]),
+            "z": _numbers(xyz[:, 2]),
+            "value": _numbers(values),
+        },
+    }
+    if to_als(xyz, frame, montage) is None:
+        case["refused"] = "frame_unknown"
+        return case
+    theta, radius, center, method, _scale = layout_of(xyz, frame, montage)
+    nan = math.nan
+    drawn = field_case(
+        name,
+        description,
+        labels,
+        [nan if t is None else t for t in theta],
+        [nan if r is None else r for r in radius],
+        values,
+    )
+    if "refused" in drawn:
+        case["refused"] = drawn["refused"]
+        return case
+    layout = {
+        "center": center,
+        "center_method": method,
+        "theta_deg": theta,
+        "radius": radius,
+    }
+    case["expected"] = {"layout": layout} | drawn["expected"]
+    return case
+
+
+def positions_cases():
+    labels, xyz, frame = montage("egi-gsn-65-v2.sfp", 64)
+    holes = xyz.copy()
+    holes[10, 0] = math.nan
+    values = field_values(xyz, frame, 11)
+    cases = [
+        positions_case(
+            "positions_measured",
+            "Measured positions: 64 sensors of eegprep's GSN 65 cap in centimeters "
+            "(CapTrak), row 10 without a finite x (written null; that sensor is "
+            "dropped). They are projected by nemar.sensor-layout.v1 (expected."
+            "layout), and the projected layout is drawn.",
+            labels,
+            holes,
+            frame,
+            values,
+        )
+    ]
+    labels, xyz, _frame = montage("egi-gsn-hydrocell-32.sfp", 33)
+    meters = np.round(xyz / 100, 9)
+    values = field_values(xyz, "CapTrak", 12)
+    cases.append(
+        positions_case(
+            "positions_template",
+            "Template positions: HydroCel 32 in meters, RAS, as the montage "
+            "GSN-HydroCel-32 gives them, with the coordinate system n/a.",
+            labels,
+            meters,
+            "n/a",
+            values,
+            montage="GSN-HydroCel-32",
+        )
+    )
+    cases.append(
+        positions_case(
+            "positions_frame_unknown",
+            "The same positions in the coordinate system Other: the projection is "
+            "refused, and a renderer places the sensors by name instead.",
+            labels,
+            meters,
+            "Other",
+            values,
+        )
+    )
+    cases.append(
+        positions_case(
+            "positions_montage_beside_a_frame",
+            "Template positions that name a montage and also CapTrak: inconsistent, "
+            "so refused, never guessed.",
+            labels,
+            meters,
+            "CapTrak",
+            values,
+            montage="GSN-HydroCel-32",
+        )
+    )
     return cases
 
 
@@ -689,7 +790,12 @@ def sensor_field_vectors(ref):
             "refused with. z[i][j] is the value at (x[i], y[j]); null is a masked "
             "cell. Sensor indices are input rows from 0; merged lists each merge "
             "group, the kept sensor first. The expected maps are eegprep's topoplot "
-            "of the merged, finite sensors."
+            "of the merged, finite sensors. A case whose sensors give x, y and z "
+            "instead of theta_deg and radius places them by 3D positions in the "
+            "frame coordinate_system names (or n/a with a montage): "
+            "nemar.sensor-layout.v1 projects them (expected.layout, compared as in "
+            "sensor-layout.v1.json), then the map is drawn; frame_unknown is the "
+            "projection's refusal."
         ),
         "reference": ref,
         "tolerance": {
@@ -969,16 +1075,57 @@ def dumps(value, depth=0):
     return json.dumps(value, allow_nan=False, ensure_ascii=False)
 
 
+LAYOUT_KEYS = {"theta_deg", "radius", "center", "center_method"}
+
+
+def layout_differences(new, old, path):
+    """A layout's rows, compared as the parity rule compares them: radius
+    absolutely and theta through the planar point, since theta is undefined at
+    the pole and a vertex sensor's theta moves with the last bit of the center;
+    the center absolutely, against its largest component."""
+    if len(new["theta_deg"]) != len(old["theta_deg"]):
+        return [f"{path}: {len(old['theta_deg'])} rows -> {len(new['theta_deg'])}"]
+    out = []
+    columns = (new["theta_deg"], new["radius"], old["theta_deg"], old["radius"])
+    rows = zip(*columns, strict=True)
+    for i, (tn, rn, to, ro) in enumerate(rows):
+        if None in (tn, rn, to, ro):
+            if (tn, rn) != (to, ro):
+                out.append(f"{path}/{i}: ({to!r}, {ro!r}) -> ({tn!r}, {rn!r})")
+            continue
+        an, ao = math.radians(tn), math.radians(to)
+        gap = math.hypot(
+            math.cos(an) * rn - math.cos(ao) * ro, math.sin(an) * rn - math.sin(ao) * ro
+        )
+        if abs(rn - ro) > CHECK_SCALARS or gap > CHECK_SCALARS:
+            out.append(f"{path}/{i}: ({to!r}, {ro!r}) -> ({tn!r}, {rn!r})")
+    if "center" in new:
+        bound = CHECK_SCALARS * max(abs(v) for v in old["center"] + new["center"])
+        pairs = zip(new["center"], old["center"], strict=True)
+        if any(abs(a - b) > bound for a, b in pairs):
+            out.append(f"{path}/center: {old['center']!r} -> {new['center']!r}")
+        if new["center_method"] != old["center_method"]:
+            out.append(
+                f"{path}/center_method: {old['center_method']} -> "
+                f"{new['center_method']}"
+            )
+    return out
+
+
 def differences(new, old, path="", scale=None):
     """Where two vector documents differ beyond the regeneration tolerance."""
     if isinstance(new, dict) and isinstance(old, dict):
         if set(new) != set(old):
             return [f"{path}: keys {sorted(set(new) ^ set(old))}"]
+        out = []
+        if isinstance(new.get("theta_deg"), list):
+            out += layout_differences(new, old, path)
+            new = {k: v for k, v in new.items() if k not in LAYOUT_KEYS}
+            old = {k: v for k, v in old.items() if k not in LAYOUT_KEYS}
         grid = new.get("z")
         if isinstance(grid, list) and grid and isinstance(grid[0], list):
             finite = [v for row in grid for v in row if v is not None]
             scale = max(finite) - min(finite) or 1.0
-        out = []
         for key in new:
             tol = scale if key in {"z", "limits", "color_axis", "contours"} else None
             out += differences(new[key], old[key], f"{path}/{key}", tol)

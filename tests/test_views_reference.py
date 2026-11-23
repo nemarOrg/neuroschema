@@ -50,21 +50,29 @@ def close(a, b, rel: float) -> bool:
 def field_mismatches(case: dict) -> list[str]:
     """Where the reference renderer misses a vector case (empty: it matches)."""
     sensors = case["sensors"]
+    values = numbers(sensors["value"])
     try:
-        drawn = sf.sensor_field(
-            numbers(sensors["theta_deg"]),
-            numbers(sensors["radius"]),
-            numbers(sensors["value"]),
-        )
-    except sf.SensorFieldRefusal as exc:
+        if "x" in sensors:
+            xyz = np.column_stack([numbers(sensors[axis]) for axis in "xyz"])
+            drawn = sf.sensor_field_from_positions(
+                xyz, case["coordinate_system"], values, montage=case.get("montage")
+            )
+        else:
+            theta = numbers(sensors["theta_deg"])
+            drawn = sf.sensor_field(theta, numbers(sensors["radius"]), values)
+    except (sf.SensorFieldRefusal, sl.SensorLayoutRefusal) as exc:
         return [] if case.get("refused") == exc.word else [f"refused {exc.word}"]
     if "refused" in case:
         return [f"drew a map; the vector refuses it ({case['refused']})"]
     expected = case["expected"]
+    problems = []
+    if "layout" in expected:
+        positions = {axis: sensors[axis] for axis in "xyz"}
+        projected = case | {"positions": positions, "expected": expected["layout"]}
+        problems += [f"layout {p}" for p in layout_mismatches(projected)]
     z = np.array([numbers(row) for row in expected["z"]])
     if drawn.z.shape != z.shape:
         return [f"grid {drawn.z.shape}, not {z.shape}"]
-    problems = []
     if not np.array_equal(np.isnan(drawn.z), np.isnan(z)):
         problems.append("mask")
     cells = z[~np.isnan(z)]
@@ -115,7 +123,17 @@ def test_sensor_field_vector_file():
     assert (ROOT / FIELD["spec"]).is_file()
     assert FIELD["reference"]["commit"] == LAYOUT["reference"]["commit"]
     words = {c["refused"] for c in FIELD["cases"] if "refused" in c}
-    assert words == {"too_few_sensors", "head_outside_grid", "interpolation_failed"}
+    assert words == {
+        "too_few_sensors",
+        "head_outside_grid",
+        "interpolation_failed",
+        "frame_unknown",
+    }
+
+
+def test_vectors_project_positions_to_a_map():
+    drawn = [c for c in FIELD["cases"] if "x" in c["sensors"] and "expected" in c]
+    assert {c.get("montage") for c in drawn} == {None, "GSN-HydroCel-32"}
 
 
 def test_vectors_cover_the_sizes_in_the_plan():
@@ -487,6 +505,31 @@ def test_check_tolerates_rounding_and_catches_changes():
     moved["expected"]["interpolated"] = moved["expected"]["interpolated"][1:]
     assert gen.differences(moved, case)
     assert gen.differences({"refused": "too_few_sensors"}, {"refused": "x"})
+
+
+def test_check_compares_layouts_by_planar_point():
+    """A vertex sensor's theta may move freely; a sensor off the pole may not."""
+    gen = _generator()
+    case = json.loads(json.dumps(LAYOUT_CASES["biosemi_128_ras"]))
+    expected = case["expected"]
+    vertex = min(range(len(expected["radius"])), key=lambda i: expected["radius"][i])
+    assert expected["radius"][vertex] < 1e-12
+    moved = json.loads(json.dumps(case))
+    moved["expected"]["theta_deg"][vertex] += 65.0
+    assert gen.differences(moved, case) == []
+    off = next(i for i, r in enumerate(expected["radius"]) if r > 0.3)
+    moved["expected"]["theta_deg"][off] += 1e-9
+    theta, radius = expected["theta_deg"][off], expected["radius"][off]
+    now = moved["expected"]["theta_deg"][off]
+    assert gen.differences(moved, case) == [
+        f"/expected/{off}: ({theta!r}, {radius!r}) -> ({now!r}, {radius!r})"
+    ]
+    moved = json.loads(json.dumps(case))
+    moved["expected"]["center"][0] += 1e-6
+    assert gen.differences(moved, case)
+    moved = json.loads(json.dumps(case))
+    moved["expected"]["theta_deg"][off] = None
+    assert gen.differences(moved, case)
 
 
 def test_generator_refuses_decisions_near_a_threshold():

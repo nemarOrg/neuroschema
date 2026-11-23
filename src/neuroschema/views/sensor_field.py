@@ -20,6 +20,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from neuroschema.views.linalg import lu_solve
+from neuroschema.views.sensor_layout import sensor_layout
 
 SENSOR_FIELD = "nemar.sensor-field.v1"
 
@@ -261,3 +262,25 @@ def sensor_field(
         color_axis={name: color_axis(pair) for name, pair in lim.items()},
         contours=contour_levels(z),
     )
+
+
+def sensor_field_from_positions(
+    xyz: np.ndarray,
+    coordinate_system: str,
+    values: np.ndarray,
+    *,
+    montage: str | None = None,
+) -> SensorField:
+    """Draw a map whose sensors are placed by three-dimensional positions.
+
+    The view's role ``positions`` gives ``xyz`` (n by 3) with its
+    ``coordinate_system``, or ``n/a`` and the ``montage`` for template
+    positions. ``nemar.sensor-layout.v1`` projects them to theta and radius,
+    and :func:`sensor_field` draws the map; a row without a finite position is
+    dropped like any sensor without a place. Raises
+    :class:`~neuroschema.views.sensor_layout.SensorLayoutRefusal`
+    (``frame_unknown``), after which a renderer places the sensors by name,
+    or :class:`SensorFieldRefusal`.
+    """
+    layout = sensor_layout(xyz, coordinate_system, montage=montage)
+    return sensor_field(layout.theta_deg, layout.radius, values)
