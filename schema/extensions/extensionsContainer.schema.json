@@ -10,7 +10,7 @@
       "$ref": "../extensions/eegdash.schema.json"
     },
     "signalJourney": {
-      "description": "Namespace for signalJourney processing pipeline metadata.",
+      "description": "Namespace for links to the signalJourney records of NEMAR recipe runs, one per recipe.",
       "$ref": "../extensions/signalJourney.schema.json"
     },
     "nemar": {
@@ -18,7 +18,7 @@
       "$ref": "../extensions/nemar.schema.json"
     },
     "dataQuality": {
-      "description": "Namespace for data quality metrics and indicators.",
+      "description": "Namespace for quality results (metrics and figures) projected from the signalJourney records of NEMAR recipe runs, per recording and per dataset.",
       "$ref": "../extensions/dataQuality.schema.json"
     },
     "processing": {
@@ -49,7 +49,7 @@
       "collection": "ext_eegdash"
     },
     "signalJourney": {
-      "manager": "signal-journey",
+      "manager": "nemar-api",
       "collection": "ext_signalJourney"
     },
     "nemar": {
@@ -57,7 +57,7 @@
       "collection": "ext_nemar"
     },
     "dataQuality": {
-      "manager": "nemar-pipeline",
+      "manager": "nemar-api",
       "collection": "ext_dataQuality"
     },
     "processing": {

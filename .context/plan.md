@@ -29,7 +29,7 @@
 ## Phase 4: Integration
 - [ ] Update EEGDash `schemas.py` to align with neuroschema
 - [ ] Add signalJourney cross-references
-- [ ] Define data quality extension fields based on quality assessment needs
+- [x] Define data quality extension fields based on quality assessment needs (0.5.0: dataQuality, processing, signalJourney links; ADR 0134 in nemar-cli)
 
 ## Phase 5: Documentation
 - [ ] Schema documentation site (MkDocs)

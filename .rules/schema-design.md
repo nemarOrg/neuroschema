@@ -20,6 +20,10 @@
 - Extension schemas live in `schema/extensions/`.
 - Each extension gets a `$id` matching its filename.
 - Extensions can reference definitions from `schema/definitions/`.
+- Objects nested inside an extension may be closed (`additionalProperties: false`); only the namespace root must stay open.
+- Never declare `$id` below a file's root: vendoring rewrites only root `$id`s, and the validator's store maps only root `$id`s.
+- Write every `$ref` below the root schema with its folder (`../definitions/x.schema.json`, `../extensions/x.schema.json`, `../core/x.schema.json`), including a ref into the same file (`../extensions/processing.schema.json#/$defs/x`, not `#/$defs/x`). jsonschema's legacy `RefResolver` pushes a resolution scope for every schema with an `$id` it enters and never pops it, so a bare or fragment-only ref can resolve against the wrong file; a folder-qualified ref resolves the same from any subfolder. `tests/test_processing_extensions.py` enforces this.
+- Patterns must be valid JavaScript regular expressions with the `u` flag (no identity escapes such as `\-` or `\_`), because nemar-cli validates with ajv. Use `pattern` rather than `format` when a check must hold in every validator: this repository's validator passes no format checker.
 
 ## Versioning
 

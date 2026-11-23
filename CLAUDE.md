@@ -49,10 +49,10 @@ python -m neuroschema.validate examples/schema1.json
 ## Key Files
 - `schema/neuroschema.schema.json` - Root schema definition
 - `schema/core/` - Core field definitions (dataset + record level)
-- `schema/definitions/` - Shared type definitions (demographics, BIDS entities, person, inheritable signal properties, etc.)
-- `schema/extensions/` - Extension namespace definitions (dataCite, dataCategories, eegdash, nemar, signalJourney, dataQuality, rawDetail)
+- `schema/definitions/` - Shared type definitions (demographics, BIDS entities, person, inheritable signal properties, processing types, checkpoint counts, quality metric, etc.)
+- `schema/extensions/` - Extension namespace definitions (dataCite, dataCategories, eegdash, nemar, signalJourney, dataQuality, processing, rawDetail)
 - `examples/` - Example JSON documents and API responses
-- `docs/` - Adapter mappings, inheritance rules, extension topology
+- `docs/` - Adapter mappings, inheritance rules, extension topology, processing extensions (`docs/processing-extensions.md`)
 
 ## Rules & Context (tracked in git)
 - `.rules/schema-design.md` - Core vs extension rules, versioning policy

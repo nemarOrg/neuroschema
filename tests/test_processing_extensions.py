@@ -759,3 +759,24 @@ def _reachable(start: Path) -> set[str]:
 def test_new_files_reachable_from_core(core):
     reachable = _reachable(SCHEMA_DIR / "core" / f"{core}.schema.json")
     assert reachable >= NEW_OR_CHANGED
+
+
+# ── Manager table: docs and x-extension-managers agree ────────────────────
+
+
+def test_manager_table_matches_container():
+    container = json.loads((EXTENSIONS / "extensionsContainer.schema.json").read_text())
+    managers = {
+        ns: (entry["manager"], entry["collection"])
+        for ns, entry in container["x-extension-managers"].items()
+        if ns not in ("description", "core")
+    }
+    rows = re.findall(
+        r"^\| (\w+) \| ([\w-]+) \| `(\w+)` \|",
+        (ROOT / "docs" / "extension-managers.md").read_text(),
+        flags=re.MULTILINE,
+    )
+    table = {ns: (manager, collection) for ns, manager, collection in rows}
+    assert table == managers
+    for ns in ("dataQuality", "processing", "signalJourney"):
+        assert managers[ns][0] == "nemar-api"

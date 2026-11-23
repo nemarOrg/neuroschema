@@ -9,9 +9,10 @@ Each extension namespace in neuroschema maps to a separate MongoDB collection. T
 | core (dataset) | nemar-api | `datasets` | `dataset_id` |
 | core (record) | nemar-api | `records` | `dataset` + `bids_relpath` |
 | eegdash | eegdash | `ext_eegdash` | `dataset` [+ `bids_relpath`] |
-| signalJourney | signal-journey | `ext_signalJourney` | `dataset` + `bids_relpath` |
+| signalJourney | nemar-api | `ext_signalJourney` | `dataset` [+ `bids_relpath`] |
 | nemar | nemar-api | `ext_nemar` | `dataset_id` |
-| dataQuality | nemar-pipeline | `ext_dataQuality` | `dataset` + `bids_relpath` |
+| dataQuality | nemar-api | `ext_dataQuality` | `dataset` [+ `bids_relpath`] |
+| processing | nemar-api | `ext_processing` | `dataset` [+ `bids_relpath`] |
 | rawDetail | nemar-api | `ext_rawDetail` | `dataset` + `bids_relpath` |
 | dataCite | nemar-tools | `ext_dataCite` | `dataset_id` |
 | dataCategories | nemar-api | `ext_dataCategories` | `dataset_id` |
@@ -20,10 +21,8 @@ Each extension namespace in neuroschema maps to a separate MongoDB collection. T
 
 Each manager service has write access only to its own extension collection(s):
 
-- **nemar-api**: Writes core documents and manages nemar, rawDetail, and dataCategories extensions
+- **nemar-api** (the NEMAR backend Worker, nemar-cli `backend/`): Writes core documents and manages the nemar, rawDetail, dataCategories, dataQuality, processing and signalJourney extensions
 - **eegdash**: Writes eegdash extension (storage paths, tags, ages)
-- **signal-journey**: Writes signalJourney extension (pipeline status)
-- **nemar-pipeline**: Writes dataQuality extension (quality scores)
 - **nemar-tools**: Writes dataCite extension (DOI registration metadata)
 
 All services have read access to all collections.
