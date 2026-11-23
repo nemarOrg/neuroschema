@@ -381,3 +381,136 @@ class TestDataQualityDataset:
         assert ("required", FLOOR) in found
         assert ("additionalProperties", FLOOR) in found
         assert {path for _, path in found} == {FLOOR}
+
+
+# ── processing ────────────────────────────────────────────────────────────
+
+
+PROCESSING = EXTENSIONS / "processing.schema.json"
+ICA = "recipes/nemar-ica"
+
+
+def proc_record():
+    passed = {"status": "passed", "code": None, "step": None}
+    failed = {"status": "failed", "code": "ica_degenerate", "step": "ica"}
+    skipped = {"status": "skipped", "code": "ica_degenerate", "step": "ica"}
+    return {
+        "level": "record",
+        "recipes": {
+            "nemar-ica": {
+                "recipe_version": "1.0.0-b1",
+                "checkpoints": {
+                    "import": dict(passed),
+                    "preprocess": dict(passed),
+                    "ica": failed,
+                    "iclabel": dict(skipped),
+                    "stored": dict(skipped),
+                },
+            }
+        },
+    }
+
+
+def proc_dataset():
+    def c(p, f, s):
+        return {"passed": p, "failed": f, "skipped": s, "total": 18}
+
+    return {
+        "level": "dataset",
+        "recipes": {
+            "nemar-floor": {
+                "recipe_version": "1.0.0-b1",
+                "declared_checkpoints": ["import", "preprocess", "quality", "stored"],
+                "counts": {
+                    "import": c(17, 1, 0),
+                    "preprocess": c(17, 0, 1),
+                    "quality": c(17, 0, 1),
+                    "stored": c(17, 0, 1),
+                },
+            }
+        },
+    }
+
+
+class TestProcessingRecord:
+    def _cp(self, doc, name):
+        return doc["recipes"]["nemar-ica"]["checkpoints"][name]
+
+    def test_valid(self):
+        assert errors_for(PROCESSING, proc_record()) == set()
+
+    def test_unknown_status(self):
+        doc = proc_record()
+        self._cp(doc, "import")["status"] = "ok"
+        # A status that is not "passed" takes the else branch, so the null code
+        # of this formerly passed checkpoint is also reported.
+        assert errors_for(PROCESSING, doc) == {
+            ("enum", f"{ICA}/checkpoints/import/status"),
+            ("type", f"{ICA}/checkpoints/import/code"),
+        }
+
+    def test_passed_with_code(self):
+        doc = proc_record()
+        self._cp(doc, "import")["code"] = "load_failed"
+        assert errors_for(PROCESSING, doc) == {
+            ("type", f"{ICA}/checkpoints/import/code")
+        }
+
+    def test_failed_without_code(self):
+        doc = proc_record()
+        del self._cp(doc, "ica")["code"]
+        assert errors_for(PROCESSING, doc) == {("required", f"{ICA}/checkpoints/ica")}
+
+    def test_skipped_with_null_code(self):
+        doc = proc_record()
+        self._cp(doc, "iclabel")["code"] = None
+        assert errors_for(PROCESSING, doc) == {
+            ("type", f"{ICA}/checkpoints/iclabel/code")
+        }
+
+    def test_bad_checkpoint_name(self):
+        doc = proc_record()
+        cps = doc["recipes"]["nemar-ica"]["checkpoints"]
+        cps["Import"] = cps.pop("import")
+        assert errors_for(PROCESSING, doc) == {("pattern", f"{ICA}/checkpoints")}
+
+    def test_empty_checkpoints(self):
+        doc = proc_record()
+        doc["recipes"]["nemar-ica"]["checkpoints"] = {}
+        assert errors_for(PROCESSING, doc) == {("minProperties", f"{ICA}/checkpoints")}
+
+
+class TestProcessingDataset:
+    def _entry(self, doc):
+        return doc["recipes"]["nemar-floor"]
+
+    def test_valid(self):
+        assert errors_for(PROCESSING, proc_dataset()) == set()
+
+    def test_duplicate_declared(self):
+        doc = proc_dataset()
+        self._entry(doc)["declared_checkpoints"].append("import")
+        assert errors_for(PROCESSING, doc) == {
+            ("uniqueItems", f"{FLOOR}/declared_checkpoints")
+        }
+
+    def test_empty_declared(self):
+        doc = proc_dataset()
+        self._entry(doc)["declared_checkpoints"] = []
+        assert errors_for(PROCESSING, doc) == {
+            ("minItems", f"{FLOOR}/declared_checkpoints")
+        }
+
+    def test_negative_count(self):
+        doc = proc_dataset()
+        self._entry(doc)["counts"]["import"]["failed"] = -1
+        assert errors_for(PROCESSING, doc) == {
+            ("minimum", f"{FLOOR}/counts/import/failed")
+        }
+
+    def test_extra_count_key(self):
+        doc = proc_dataset()
+        self._entry(doc)["counts"]["import"]["remaining"] = 0
+        assert errors_for(PROCESSING, doc) == {
+            ("additionalProperties", f"{FLOOR}/counts/import")
+        }

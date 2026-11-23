@@ -21,6 +21,10 @@
       "description": "Namespace for data quality metrics and indicators.",
       "$ref": "dataQuality.schema.json"
     },
+    "processing": {
+      "description": "Namespace for checkpoint outcomes of NEMAR recipe runs (per recording and per dataset).",
+      "$ref": "processing.schema.json"
+    },
     "rawDetail": {
       "description": "Namespace for detailed per-channel arrays (channel names, types, TSV data). Separated from core to keep core documents lean.",
       "$ref": "rawDetail.schema.json"
@@ -55,6 +59,10 @@
     "dataQuality": {
       "manager": "nemar-pipeline",
       "collection": "ext_dataQuality"
+    },
+    "processing": {
+      "manager": "nemar-api",
+      "collection": "ext_processing"
     },
     "rawDetail": {
       "manager": "nemar-api",

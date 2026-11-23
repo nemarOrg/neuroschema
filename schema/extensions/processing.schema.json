@@ -1,0 +1,226 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "processing.schema.json",
+  "title": "Processing Extension",
+  "description": "Checkpoint outcomes of NEMAR recipe runs, written by the NEMAR backend. `level` selects the shape: `record` (per recipe, each checkpoint's outcome for one recording) or `dataset` (per recipe, the declared checkpoints and the reconciled counts). Not schema-enforced, enforced by the writer: after a recording's first non-passed checkpoint every later declared checkpoint is `skipped` with the same `code` and `step`; `declared_checkpoints` is the recipe version's registry list in order followed by `stored`, which the backend sets; the keys of `counts` equal `declared_checkpoints`; every checkpoint's counts sum to the same total.",
+  "type": "object",
+  "required": [
+    "level"
+  ],
+  "properties": {
+    "level": {
+      "type": "string",
+      "enum": [
+        "record",
+        "dataset"
+      ],
+      "description": "Which document this entry belongs to: record (one recording) or dataset (the whole dataset)."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "level": {
+            "const": "record"
+          }
+        },
+        "required": [
+          "level"
+        ]
+      },
+      "then": {
+        "$ref": "../extensions/processing.schema.json#/$defs/record"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "level": {
+            "const": "dataset"
+          }
+        },
+        "required": [
+          "level"
+        ]
+      },
+      "then": {
+        "$ref": "../extensions/processing.schema.json#/$defs/dataset"
+      }
+    }
+  ],
+  "additionalProperties": true,
+  "$defs": {
+    "record": {
+      "type": "object",
+      "description": "Record-level shape.",
+      "required": [
+        "recipes"
+      ],
+      "properties": {
+        "recipes": {
+          "type": "object",
+          "description": "Checkpoint outcomes per recipe, keyed by recipe id.",
+          "propertyNames": {
+            "$ref": "../definitions/processingTypes.schema.json#/$defs/recipeId"
+          },
+          "additionalProperties": {
+            "$ref": "../extensions/processing.schema.json#/$defs/recordRecipeOutcome"
+          }
+        }
+      }
+    },
+    "dataset": {
+      "type": "object",
+      "description": "Dataset-level shape.",
+      "required": [
+        "recipes"
+      ],
+      "properties": {
+        "recipes": {
+          "type": "object",
+          "description": "Declared checkpoints and reconciled counts per recipe, keyed by recipe id.",
+          "propertyNames": {
+            "$ref": "../definitions/processingTypes.schema.json#/$defs/recipeId"
+          },
+          "additionalProperties": {
+            "$ref": "../extensions/processing.schema.json#/$defs/datasetRecipeCounts"
+          }
+        }
+      }
+    },
+    "recordRecipeOutcome": {
+      "type": "object",
+      "description": "One recording's checkpoint outcomes from one recipe run.",
+      "required": [
+        "recipe_version",
+        "checkpoints"
+      ],
+      "properties": {
+        "recipe_version": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/version",
+          "description": "Version of the recipe that ran."
+        },
+        "checkpoints": {
+          "type": "object",
+          "minProperties": 1,
+          "description": "Outcome per checkpoint, keyed by checkpoint name.",
+          "propertyNames": {
+            "$ref": "../definitions/processingTypes.schema.json#/$defs/checkpointName"
+          },
+          "additionalProperties": {
+            "$ref": "../extensions/processing.schema.json#/$defs/checkpointOutcome"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "checkpointOutcome": {
+      "type": "object",
+      "description": "A recording's outcome at one checkpoint. A passed checkpoint has no code or step; a failed or skipped one carries its code.",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "passed",
+            "failed",
+            "skipped"
+          ],
+          "description": "Whether the recording passed, failed or was skipped at this checkpoint."
+        },
+        "code": {
+          "anyOf": [
+            {
+              "$ref": "../definitions/processingTypes.schema.json#/$defs/failureCode"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Failure or skip code (the recording's first code, carried to later skipped checkpoints); null when passed."
+        },
+        "step": {
+          "anyOf": [
+            {
+              "$ref": "../definitions/processingTypes.schema.json#/$defs/stepId"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The recipe step that failed; null when passed or unknown."
+        }
+      },
+      "if": {
+        "properties": {
+          "status": {
+            "const": "passed"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "code": {
+            "type": "null"
+          },
+          "step": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "required": [
+          "code"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "datasetRecipeCounts": {
+      "type": "object",
+      "description": "A dataset's checkpoint counts from one recipe run, reconciled from the run's recordings table.",
+      "required": [
+        "recipe_version",
+        "declared_checkpoints",
+        "counts"
+      ],
+      "properties": {
+        "recipe_version": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/version",
+          "description": "Version of the recipe that ran."
+        },
+        "declared_checkpoints": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "The recipe version's checkpoints in order, followed by stored.",
+          "items": {
+            "$ref": "../definitions/processingTypes.schema.json#/$defs/checkpointName"
+          }
+        },
+        "counts": {
+          "type": "object",
+          "minProperties": 1,
+          "description": "Reconciled counts per checkpoint, keyed by checkpoint name.",
+          "propertyNames": {
+            "$ref": "../definitions/processingTypes.schema.json#/$defs/checkpointName"
+          },
+          "additionalProperties": {
+            "$ref": "../definitions/checkpointCounts.schema.json"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
