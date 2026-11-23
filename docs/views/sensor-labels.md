@@ -65,14 +65,17 @@ A montage label's key is the label normalized as a channel name is (steps 1 to 7
 ## Normalizing a name
 
 1. Apply Unicode Normalization Form KC (NFKC), which turns full-width letters and digits and the no-break space into their plain forms.
-2. Trim whitespace (TAB, LF, VT, FF, CR and space) from both ends, and replace each run of whitespace inside the name with one space.
-3. Drop a leading type prefix: the letters E, E, G in any case, followed by one or more of space, hyphen, underscore and colon (`EEG Fp1`, `EEG-Fp1`, `eeg:_Fp1`), or the letters P, O, L in any case, followed by one or more spaces (Nihon Kohden's `POL Fp1`).
+2. Trim whitespace from both ends, and replace each run of whitespace inside the name with one space.
+   Whitespace here is exactly TAB, LF, VT, FF and CR (U+0009 to U+000D) and space (U+0020).
+   NFKC has already turned the no-break space and the other compatibility spaces into U+0020; U+0085, U+2028, U+2029 and U+FEFF are not whitespace here and stay in the name (so `Cz` followed by U+0085 matches nothing).
+3. Drop a leading type prefix: the letters E, E, G in any case, followed by one or more of space, hyphen-minus (U+002D), underscore and colon (`EEG Fp1`, `EEG-Fp1`, `eeg:_Fp1`), or the letters P, O, L in any case, followed by one or more spaces (Nihon Kohden's `POL Fp1`).
    `EEG1`, `EEGFp1` and `POLFp1` keep theirs.
-4. Split at the last hyphen, as [Reference suffixes and bipolar names](#reference-suffixes-and-bipolar-names) says.
+4. Split at the last hyphen-minus (U+002D), as [Reference suffixes and bipolar names](#reference-suffixes-and-bipolar-names) says.
+   No other dash is a split point: U+2010 (hyphen), which NFKC keeps, stays in the name, so `Fp1‐REF` written with U+2010 matches nothing.
 5. Strip spaces from both ends, dots from the end, and straight quotation marks (`"` and `'`) from both ends, repeating until none is left (`Cz..` is `Cz`, `'P3.'` is `P3`).
-6. Fold A to Z to lowercase and leave every other character.
+6. Fold the ASCII letters A to Z to a to z and leave every other character.
    Every montage label is ASCII, so full Unicode case folding could not change a match, and ASCII folding keeps implementations identical.
-7. Drop the leading zeros of the number in a name that is letters followed by digits (`E001` is `e1`, `A01` is `a1`, `E000` is `e0`).
+7. Drop the leading zeros of the number in a name that is ASCII letters a-z followed by ASCII digits 0-9 (`E001` is `e1`, `A01` is `a1`, `E000` is `e0`).
 
 The result is the channel's key.
 Steps 5 to 7 also normalize each side of a split.
@@ -82,7 +85,8 @@ A space inside a name stays (`P 4` matches nothing).
 
 Each channel is decided in this order:
 
-1. A channel whose type, trimmed and folded to lowercase, is `eeg` is in play.
+1. A channel's type is trimmed of the step-2 whitespace at both ends and its ASCII letters A to Z are folded to a to z; it is not NFKC-normalized (a type written with full-width letters, or with U+FEFF before it, is another type).
+   A channel whose type is then `eeg` is in play.
    A channel with no type, an empty type or `n/a` is untyped, and is in play unless its name after steps 1 to 3, folded to lowercase, starts with one of `eog`, `heog`, `veog`, `ecg`, `ekg`, `emg`, `trig`, `status`, `stim`, `event`, `marker`, `resp`, `gsr`, `photic`, `exg`, `spo2`, `pleth`, `pulse`, `position` and `light` (status `excluded_name`).
    A channel of any other type is excluded (status `excluded_type`).
 2. A channel in play gets its key (with the split below).
@@ -93,7 +97,7 @@ Excluded channels and fiducials are not counted anywhere.
 
 ## Reference suffixes and bipolar names
 
-For a name in play with a hyphen, the right part is what follows the last hyphen, normalized by steps 5 to 7.
+For a name in play with a hyphen-minus (U+002D), the right part is what follows the last one, normalized by steps 5 to 7.
 
 - **The common reference.** Among the names in play, take those with a hyphen, and their most frequent right part R.
   R is the recording's common reference when at least 90% of the names with a hyphen have it (10 × its count ≥ 9 × their number) and the names with a hyphen are more than half of the names in play.

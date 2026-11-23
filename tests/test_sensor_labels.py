@@ -586,7 +586,21 @@ def test_a_typed_non_eeg_channel_is_excluded(kind):
     assert statuses([("Cz", kind)]) == [EXCLUDED_TYPE]
 
 
-@pytest.mark.parametrize("kind", ["EEG", "eeg", " EEG "])
+@pytest.mark.parametrize("kind", ["\ufeffEEG", "EEG\u0085", "\uff25\uff25\uff27"])
+def test_a_type_is_trimmed_of_ascii_whitespace_only_and_not_normalized(kind):
+    assert statuses([("Cz", kind)]) == [EXCLUDED_TYPE]
+
+
+@pytest.mark.parametrize("char", ["\u0085", "\u2028", "\u2029", "\ufeff"])
+def test_other_line_breaks_are_not_whitespace(char):
+    assert keys([f"{char}Cz", f"Cz{char}"]) == [f"{char}cz", f"cz{char}"]
+
+
+def test_only_hyphen_minus_splits():
+    assert keys(["Fp1\u2010REF", "Fp1\u2212REF"]) == ["fp1\u2010ref", "fp1\u2212ref"]
+
+
+@pytest.mark.parametrize("kind", ["EEG", "eeg", " EEG ", "\tEEG\r\n"])
 def test_an_eeg_channel_is_in_play(kind):
     assert statuses([("Cz", kind)]) == [CANDIDATE]
 

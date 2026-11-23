@@ -326,6 +326,141 @@
       }
     },
     {
+      "name": "channel_types",
+      "description": "Types are trimmed of the step-2 whitespace and folded A to Z, without NFKC: empty and N/A are untyped, ' EEG ' and eeg are EEG, and U+FEFF before EEG, U+0085 after it, or full-width letters make another type.",
+      "channels": [
+        ["Fp1", "EEG"],
+        ["Fp2", "EEG"],
+        ["F7", "EEG"],
+        ["F3", "EEG"],
+        ["Fz", "EEG"],
+        ["F4", "EEG"],
+        ["F8", "EEG"],
+        ["T7", "EEG"],
+        ["C3", "EEG"],
+        ["Fpz", ""],
+        ["Oz", "N/A"],
+        ["AFz", " EEG "],
+        ["POz", "eeg"],
+        ["CPz", "\ufeffEEG"],
+        ["FCz", "EEG\u0085"],
+        ["Iz", "\uff25\uff25\uff27"]
+      ],
+      "result": {
+        "outcome": "placed",
+        "reason": null,
+        "montage": "standard_1005",
+        "candidates": 13,
+        "matched": 13,
+        "contenders": ["standard_1005"],
+        "duplicates": [],
+        "channels": [
+          {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
+          {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
+          {"status": "candidate", "key": "f7", "electrode": "F7"},
+          {"status": "candidate", "key": "f3", "electrode": "F3"},
+          {"status": "candidate", "key": "fz", "electrode": "Fz"},
+          {"status": "candidate", "key": "f4", "electrode": "F4"},
+          {"status": "candidate", "key": "f8", "electrode": "F8"},
+          {"status": "candidate", "key": "t7", "electrode": "T7"},
+          {"status": "candidate", "key": "c3", "electrode": "C3"},
+          {"status": "candidate", "key": "fpz", "electrode": "Fpz"},
+          {"status": "candidate", "key": "oz", "electrode": "Oz"},
+          {"status": "candidate", "key": "afz", "electrode": "AFz"},
+          {"status": "candidate", "key": "poz", "electrode": "POz"},
+          {"status": "excluded_type", "key": null, "electrode": null},
+          {"status": "excluded_type", "key": null, "electrode": null},
+          {"status": "excluded_type", "key": null, "electrode": null}
+        ]
+      }
+    },
+    {
+      "name": "names_with_other_line_breaks",
+      "description": "U+0085, U+2028 and U+FEFF are not whitespace here: names carrying them keep them and match nothing.",
+      "channels": [
+        ["Fp1", "EEG"],
+        ["Fp2", "EEG"],
+        ["F7", "EEG"],
+        ["F3", "EEG"],
+        ["Fz", "EEG"],
+        ["F4", "EEG"],
+        ["F8", "EEG"],
+        ["T7", "EEG"],
+        ["C3", "EEG"],
+        ["Cz", "EEG"],
+        ["C4", "EEG"],
+        ["T8", "EEG"],
+        ["P7", "EEG"],
+        ["Pz\u0085", "EEG"],
+        ["\u2028Fz", "EEG"],
+        ["\ufeffCz", "EEG"]
+      ],
+      "result": {
+        "outcome": "placed",
+        "reason": null,
+        "montage": "standard_1005",
+        "candidates": 16,
+        "matched": 13,
+        "contenders": ["standard_1005"],
+        "duplicates": [],
+        "channels": [
+          {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
+          {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
+          {"status": "candidate", "key": "f7", "electrode": "F7"},
+          {"status": "candidate", "key": "f3", "electrode": "F3"},
+          {"status": "candidate", "key": "fz", "electrode": "Fz"},
+          {"status": "candidate", "key": "f4", "electrode": "F4"},
+          {"status": "candidate", "key": "f8", "electrode": "F8"},
+          {"status": "candidate", "key": "t7", "electrode": "T7"},
+          {"status": "candidate", "key": "c3", "electrode": "C3"},
+          {"status": "candidate", "key": "cz", "electrode": "Cz"},
+          {"status": "candidate", "key": "c4", "electrode": "C4"},
+          {"status": "candidate", "key": "t8", "electrode": "T8"},
+          {"status": "candidate", "key": "p7", "electrode": "P7"},
+          {"status": "candidate", "key": "pz\u0085", "electrode": null},
+          {"status": "candidate", "key": "\u2028fz", "electrode": null},
+          {"status": "candidate", "key": "\ufeffcz", "electrode": null}
+        ]
+      }
+    },
+    {
+      "name": "unicode_hyphen_is_not_a_split",
+      "description": "Fp1-REF written with U+2010 (hyphen), not U+002D: no split, so the name matches nothing.",
+      "channels": [
+        ["Fp2", "EEG"],
+        ["F7", "EEG"],
+        ["F3", "EEG"],
+        ["Fz", "EEG"],
+        ["F4", "EEG"],
+        ["F8", "EEG"],
+        ["T7", "EEG"],
+        ["C3", "EEG"],
+        ["Cz", "EEG"],
+        ["Fp1\u2010REF", "EEG"]
+      ],
+      "result": {
+        "outcome": "placed",
+        "reason": null,
+        "montage": "standard_1005",
+        "candidates": 10,
+        "matched": 9,
+        "contenders": ["standard_1005"],
+        "duplicates": [],
+        "channels": [
+          {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
+          {"status": "candidate", "key": "f7", "electrode": "F7"},
+          {"status": "candidate", "key": "f3", "electrode": "F3"},
+          {"status": "candidate", "key": "fz", "electrode": "Fz"},
+          {"status": "candidate", "key": "f4", "electrode": "F4"},
+          {"status": "candidate", "key": "f8", "electrode": "F8"},
+          {"status": "candidate", "key": "t7", "electrode": "T7"},
+          {"status": "candidate", "key": "c3", "electrode": "C3"},
+          {"status": "candidate", "key": "cz", "electrode": "Cz"},
+          {"status": "candidate", "key": "fp1\u2010ref", "electrode": null}
+        ]
+      }
+    },
+    {
       "name": "trailing_dots_untyped",
       "description": "Untyped names padded with dots to four characters.",
       "channels": [

@@ -769,6 +769,37 @@ CASES = [
         ("placed", None, "standard_1005"),
     ),
     (
+        "channel_types",
+        "Types are trimmed of the step-2 whitespace and folded A to Z, without "
+        "NFKC: empty and N/A are untyped, ' EEG ' and eeg are EEG, and U+FEFF "
+        "before EEG, U+0085 after it, or full-width letters make another type.",
+        [
+            *eeg(TEN_TWENTY[:9]),
+            ["Fpz", ""],
+            ["Oz", "N/A"],
+            ["AFz", " EEG "],
+            ["POz", "eeg"],
+            ["CPz", "\ufeffEEG"],
+            ["FCz", "EEG\u0085"],
+            ["Iz", "\uff25\uff25\uff27"],
+        ],
+        ("placed", None, "standard_1005"),
+    ),
+    (
+        "names_with_other_line_breaks",
+        "U+0085, U+2028 and U+FEFF are not whitespace here: names carrying them "
+        "keep them and match nothing.",
+        eeg([*TEN_TWENTY[:13], "Pz\u0085", "\u2028Fz", "\ufeffCz"]),
+        ("placed", None, "standard_1005"),
+    ),
+    (
+        "unicode_hyphen_is_not_a_split",
+        "Fp1-REF written with U+2010 (hyphen), not U+002D: no split, so the "
+        "name matches nothing.",
+        eeg([*TEN_TWENTY[1:10], "Fp1\u2010REF"]),
+        ("placed", None, "standard_1005"),
+    ),
+    (
         "trailing_dots_untyped",
         "Untyped names padded with dots to four characters.",
         [[n, None] for n in PHYSIONET],
