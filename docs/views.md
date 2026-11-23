@@ -123,7 +123,7 @@ These names are reserved, with fixed meanings (`reserved_dims` in the registry):
 | `recording` | A recording, by its BIDS path. |
 | `subject` | A participant, by BIDS subject label. |
 | `contact` | An intracranial electrode contact, by its name. |
-| `sensor` | A sensor, by its name; with a layout role, the coordinates are that role's `name` column, in its row order, and without one, names a renderer places with `nemar.sensor-labels.v1`. |
+| `sensor` | A sensor, by its name; with a layout or positions role, that role's `name` column in row order; with neither, names placed by `nemar.sensor-labels.v1`. |
 
 No name is banned.
 A view does not carry a recording's samples: its declared derivation (the step and parameters that wrote it, or its inputs by digest and a named transform), the caps below and the review of every plugin hold that together.
@@ -195,7 +195,7 @@ JSON Schema cannot compare one value with another, so the writer enforces:
 - a `{role, column}` coordinate names a role of the same view and a column that role declares;
 - `size` and `sha256` are those of the file, and `location` is the `outputTargets` location of the step that wrote it;
 - each file, dimension and role is within the caps;
-- the reserved dimensions keep their meanings (a `sensor` dimension's coordinates are a layout role's names, in order, or, without a layout, the sensors' names);
+- the reserved dimensions keep their meanings (a `sensor` dimension's coordinates are, with a layout or positions role, that role's `name` column in row order; with neither, names placed by `nemar.sensor-labels.v1`);
 - a view that declares a base meets that base's role contract, so a renderer that knows only the base can draw it.
 
 A renderer does not rely on the writer for the last rule: before it draws a view by its base, it checks the contract, and it shows the data as a table when the view misses it.

@@ -233,10 +233,12 @@ class TestKindDeclaration:
         assert ("contains", "data") in view_errors(view)
 
     def test_unknown_role_fails(self):
-        """The kind admits only values and layout; positions is a preset's role."""
-        view = field()
-        view["data"][1]["role"] = "positions"
-        assert ("oneOf", "data/1") in view_errors(view)
+        """The kind admits only values, layout and positions: a view of the kind
+        itself with any other role fails. (A preset drawn by this base may carry
+        other roles; the role contract ignores them.)"""
+        view = field(layout=False)
+        view["data"].append(layout_entry() | {"role": "names"})
+        assert view_errors(view) == {("oneOf", "data/1")}
 
     @pytest.mark.parametrize("field_name", ["base", "inputs", "transform"])
     def test_generic_and_stored(self, field_name):
@@ -401,14 +403,25 @@ class TestPositionsRole:
         entry["dims"][0]["coords"] = {"column": "label"}
         assert role_errors(entry, "positions") == {("const", "dims/0/coords/column")}
 
-    def test_template_positions_name_n_a(self):
-        """A montage beside a named frame is refused, never guessed. Checked on
-        the role's branch: the envelope admits montage from nemar.sensor-labels.v1."""
-        entry = positions_entry() | {"position_source": "template"}
-        entry.update(coordinate_system="n/a", montage="GSN-HydroCel-32")
-        assert role_errors(entry, "positions") == set()
-        entry["coordinate_system"] = "CapTrak"
-        assert role_errors(entry, "positions") == {("const", "coordinate_system")}
+    def test_template_positions_in_a_full_view(self):
+        """Template positions name their montage and n/a; the envelope's rule for
+        a template role (nemar.sensor-labels.v1) refuses a montage beside a named
+        frame, never guessed, and a template role without a montage."""
+        view = positioned()
+        positions = view["data"][1]
+        positions.update(
+            position_source="template",
+            coordinate_system="n/a",
+            montage="GSN-HydroCel-32",
+        )
+        assert view_errors(view) == set()
+        positions["coordinate_system"] = "CapTrak"
+        assert view_errors(view) == {("const", "data/1/coordinate_system")}
+        positions["coordinate_system"] = "n/a"
+        del positions["montage"]
+        assert view_errors(view) == {("required", "data/1")}
+        positions.update(position_source="measured", montage="GSN-HydroCel-32")
+        assert view_errors(view) == {("const", "data/1/position_source")}
 
 
 class TestValuesRole:
@@ -769,9 +782,12 @@ class TestRegistry:
             "sensor"
         }
 
-    def test_sensor_meaning_names_the_label_fallback(self):
-        meaning = REGISTRY["reserved_dims"]["sensor"]["meaning"]
-        assert "nemar.sensor-labels.v1" in meaning
+    def test_sensor_meaning(self):
+        assert REGISTRY["reserved_dims"]["sensor"]["meaning"] == (
+            "A sensor, by its name; with a layout or positions role, that role's "
+            "name column in row order; with neither, names placed by "
+            "nemar.sensor-labels.v1."
+        )
 
 
 # ── The role contract: an optional role ────────────────────────────────────

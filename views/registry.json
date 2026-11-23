@@ -166,7 +166,7 @@
     },
     "sensor": {
       "unit": null,
-      "meaning": "A sensor, by its name; with a layout role, the coordinates are that role's name column, in its row order, and without one, names a renderer places with nemar.sensor-labels.v1."
+      "meaning": "A sensor, by its name; with a layout or positions role, that role's name column in row order; with neither, names placed by nemar.sensor-labels.v1."
     }
   },
   "caps": {

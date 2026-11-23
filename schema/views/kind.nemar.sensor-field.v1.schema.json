@@ -392,7 +392,7 @@
           },
           {
             "type": "object",
-            "description": "The role positions: each sensor's name and three-dimensional position (x, y and z, in one unit), one row per sensor, in the frame coordinate_system names, or, for template positions, with the coordinate system n/a and the montage they came from (nemar.sensor-labels.v1). The view's transform nemar.sensor-layout.v1 projects them to a layout.",
+            "description": "The role positions: each sensor's name and three-dimensional position (x, y and z, in one unit), one row per sensor, in the frame coordinate_system names, or, for template positions, with the coordinate system n/a and the montage they came from (the envelope's rule for a template role). The view's transform nemar.sensor-layout.v1 projects them to a layout.",
             "required": [
               "role",
               "format",
@@ -572,17 +572,6 @@
                         ]
                       }
                     }
-                  }
-                }
-              }
-            },
-            "dependentSchemas": {
-              "montage": {
-                "type": "object",
-                "description": "Template positions name their montage, whose frame is right-anterior-superior, so their coordinate system is n/a; a montage beside a named frame is inconsistent.",
-                "properties": {
-                  "coordinate_system": {
-                    "const": "n/a"
                   }
                 }
               }
