@@ -235,10 +235,9 @@ def sensor_field(
     # 8. Biharmonic interpolation: solve G w = v.
     d = np.hypot(px[:, None] - px[None, :], py[:, None] - py[None, :])
     w = lu_solve(green(d), v)
-    if not np.isfinite(w).all():
-        raise SensorFieldRefusal("interpolation_failed", "a weight is not finite")
 
-    # 9. Evaluation, and 10. the mask.
+    # 9. Evaluation, and 10. the mask. A weight that is not finite (a zero
+    # pivot, or an overflow) makes the cells not finite, so one check serves.
     dq = np.hypot(qx[:, :, None] - px, qy[:, :, None] - py)
     with np.errstate(over="ignore", invalid="ignore"):
         z = green(dq) @ w

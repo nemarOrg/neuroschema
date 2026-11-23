@@ -49,15 +49,13 @@ Version 1 takes no override of the radii, the grid or the head.
    For the interpolated sensors at grid positions `p` with values `v` (merged values for kept sensors that absorbed others), build the matrix `G[k][l] = d * d * (ln(d) - 1)` with `d` the distance between `p[k]` and `p[l]`, and `G[k][k] = 0`.
    There is no regularization term.
    Solve `G w = v` by lower-upper (LU) decomposition with partial pivoting: at step `k`, the pivot is the entry of largest magnitude in column `k` at or below the diagonal, the first such row on a tie; rows are swapped, the rows below are eliminated, and `w` follows by back substitution.
-   Every pivot is used as it is.
-   If a weight is not finite (an exactly zero pivot divides by zero, and values near the binary64 limit overflow), the map is refused with `interpolation_failed`.
+   Every pivot is used as it is: an exactly zero pivot divides by zero, and values near the binary64 limit overflow, and either gives weights that are not finite, which step 10 catches.
 9. **Evaluation.**
    `z[i][j]` is the sum over interpolated sensors `k` of `g(d) * w[k]`, with `d` the distance from `(x[i], y[j])` to `p[k]`, `g(d) = d * d * (ln(d) - 1)` and `g(0) = 0`.
 10. **Mask.**
     A cell is masked, with no value, when `sqrt(x[i] * x[i] + y[j] * y[j]) > 0.5`, computed in that order.
     A renderer leaves masked cells undrawn; the vectors write them `null`.
-    If an unmasked cell is not finite, the map is refused with `interpolation_failed`.
-    With finite weights this happens only when a partial sum overflows, which depends on the order of summation, so no vector case reaches it; it is a guard, and an implementation keeps it.
+    If an unmasked cell is not finite, the map is refused with `interpolation_failed`: a weight that is not finite makes every cell so.
 11. **Limits.**
     Over the unmasked cells, with their smallest value `min` and largest `max`:
     `absmax` gives `(-M, M)` with `M = max(|min|, |max|)`, and `minmax` gives `(min, max)`.
@@ -76,7 +74,7 @@ A refused map draws nothing; the renderer shows a sentence for its word in the m
 |---|---|
 | `too_few_sensors` | Fewer than 3 sensors are interpolated, after dropping and merging (step 5). |
 | `head_outside_grid` | No grid cell lies inside the head circle (step 7). |
-| `interpolation_failed` | A weight (step 8) or an unmasked cell (step 10) is not finite. |
+| `interpolation_failed` | An unmasked cell is not finite (step 10), as it is when a weight is not (step 8). |
 
 ## The kind `nemar.sensor-field` version 1
 
