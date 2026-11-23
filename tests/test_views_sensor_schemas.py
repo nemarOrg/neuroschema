@@ -669,6 +669,20 @@ class TestLayoutTransform:
         view["transform"]["parameters"] = parameters
         assert view_errors(view) == {("pattern", "transform/parameters/montage")}
 
+    def test_stored_positions_in_any_kind(self):
+        """The stored form holds for a kind neuroschema does not know: the role
+        names the frame, so no parameters and no positions input."""
+        view = layout_transform_view()
+        view["data"] = [positions_entry()]
+        del view["inputs"]
+        view["transform"]["parameters"] = {}
+        assert view_errors(view) == set()
+        view["inputs"] = layout_transform_view()["inputs"]
+        assert view_errors(view) == {("not", "inputs")}
+        del view["inputs"]
+        view["transform"]["parameters"] = {"coordinate_system": "CapTrak"}
+        assert view_errors(view) == {("maxProperties", "transform/parameters")}
+
     def test_another_transform_is_not_checked_here(self):
         view = layout_transform_view()
         view["transform"] = {"name": "acme.layout.v2", "parameters": {"any": 1}}
