@@ -268,6 +268,18 @@ Bins by edges sit on a numeric axis from the first edge to the last, each bar sp
 An underflow or overflow bar is drawn at its end only when its count is not zero.
 A pointer over a bar reads its label and its count, with the unit for bins by edges.
 
+## Keyboard, data table and text alternative
+
+A renderer offers each drawing three other ways, each built from the model alone.
+
+- **Keyboard.** One step moves the selection to the next or previous stored row (`nemar.lines`), cell (`nemar.heatmap`, by row or by column) or bar (`nemar.histogram`), in model order, and shows the readout a pointer on it would show.
+  It never stops between stored rows.
+- **Data table.** A toggle shows the model as a table built from its text arrays.
+  For `nemar.lines`, there is one row per stored row, with `x.text` and each series' `text`; for `nemar.heatmap`, one row per row label, with that row of `text`; for `nemar.histogram`, one row per item with its label and count, then the underflow and the overflow for bins by edges.
+  A count is printed as the integer it is, and no other number is printed again.
+- **Text alternative.** The text alternative of a drawing is the view's caption followed by text from the model: its axes or dimensions with their units, and the stored texts through the data table.
+  It states no number the model does not hold.
+
 ## The fallback
 
 A view of a kind the renderer cannot draw, by itself or by its base, shows as tables with downloads; so does a view whose kind refused its files.
