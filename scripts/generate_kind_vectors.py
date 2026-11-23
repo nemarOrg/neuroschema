@@ -724,6 +724,7 @@ def histogram_cases() -> list[Case]:
     printing = b'{"edges": [-1E-7, 0, 0.1, 0.25, 1e21], "counts": [1, 2, 3, 4],' + (
         b' "underflow": 0, "overflow": 0}\n'
     )
+    overflowing = content(edges=[0, 1, 2], counts=[1, 2], underflow=0, overflow=5)
     preset = content(
         categories=["Brain", "Other"],
         counts=[30, 5],
@@ -745,6 +746,13 @@ def histogram_cases() -> list[Case]:
             histogram_view(printing),
             {HIST_AT: printing},
             locates=[-1e-7, 0.1, 1e21, 2e21],
+        ),
+        Case(
+            "histogram_overflow_largest",
+            "The overflow is the largest count, so max_count is the overflow's.",
+            histogram_view(overflowing),
+            {HIST_AT: overflowing},
+            locates=[2, 2.5],
         ),
         Case(
             "histogram_categories",

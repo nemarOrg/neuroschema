@@ -6728,6 +6728,93 @@
       ]
     },
     {
+      "name": "histogram_overflow_largest",
+      "covers": "The overflow is the largest count, so max_count is the overflow's.",
+      "view": {
+        "key": "hist",
+        "kind": "nemar.histogram",
+        "kind_version": 1,
+        "caption": "Recordings by share of good samples.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "format": "json",
+            "size": 92,
+            "sha256": "513a7ae8630eb3fa720fbc79006b6b12b88563f0a62c8c9c9444bae4d05acdb7"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json": {
+          "text": "{\n \"edges\": [\n  0,\n  1,\n  2\n ],\n \"counts\": [\n  1,\n  2\n ],\n \"underflow\": 0,\n \"overflow\": 5\n}\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "kind",
+          "kind": "nemar.histogram",
+          "kind_version": 1
+        },
+        "refused": null,
+        "downloads": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "size": 92,
+            "sha256": "513a7ae8630eb3fa720fbc79006b6b12b88563f0a62c8c9c9444bae4d05acdb7"
+          }
+        ],
+        "model": {
+          "type": "histogram",
+          "bins": "edges",
+          "unit": null,
+          "items": [
+            {
+              "label": "[0, 1)",
+              "lower": 0.0,
+              "upper": 1.0,
+              "upper_closed": false,
+              "count": 1
+            },
+            {
+              "label": "[1, 2]",
+              "lower": 1.0,
+              "upper": 2.0,
+              "upper_closed": true,
+              "count": 2
+            }
+          ],
+          "underflow": {
+            "label": "< 0",
+            "count": 0
+          },
+          "overflow": {
+            "label": "> 2",
+            "count": 5
+          },
+          "total": 8,
+          "max_count": 5
+        }
+      },
+      "locates": [
+        {
+          "value": 2,
+          "bin": 1
+        },
+        {
+          "value": 2.5,
+          "bin": 2
+        }
+      ]
+    },
+    {
       "name": "histogram_categories",
       "covers": "Bins by category, in order; no unit, underflow or overflow.",
       "view": {
