@@ -3,9 +3,10 @@
 The Python reference for the transform ``docs/views/sensor-layout.md``
 specifies: rotate the positions into the ALS frame (x anterior, y left, z
 superior) from the frame their Brain Imaging Data Structure (BIDS) coordinate
-system names, center them on an algebraic least-squares sphere (the centroid
-when that fit is degenerate), and convert each to EEGLAB's ``topoplot`` theta
-and radius as eegprep's ``convertlocs(..., 'cart2topo')`` does.
+system names, center them on an algebraic least-squares sphere (on their
+circle when they are coplanar and lie on one; flat positions are refused), and
+convert each to EEGLAB's ``topoplot`` theta and radius as eegprep's
+``convertlocs(..., 'cart2topo')`` does.
 ``views/vectors/sensor-layout.v1.json`` holds the cases every implementation
 reproduces.
 
@@ -71,8 +72,12 @@ RAS_FRAMES = frozenset(
 """BIDS coordinate systems with RAS orientation (x right, y anterior, z superior)."""
 
 FIT_PIVOT = 1e-10
-"""A sphere-fit pivot at most this share of the largest normal-equation entry
-is degenerate."""
+"""A fit pivot at most this share of the largest normal-equation entry is
+degenerate: for the sphere, the positions are coplanar."""
+
+CONCYCLIC = 1e-9
+"""Coplanar positions lie on one circle when each is within this share of their
+scale of the fitted circle."""
 
 RAD = 180 / np.pi
 """Radians to degrees: 180 divided by the binary64 nearest pi."""
@@ -92,14 +97,14 @@ class SensorLayout:
 
     Rows without a finite position have NaN theta and radius. ``center`` is
     the ALS point the positions were centered on, and ``center_method`` says
-    how it was found (``sphere`` or ``centroid``); both are None when no row
-    has a finite position.
+    how it was found: ``sphere``, or ``circle`` for coplanar positions that lie
+    on one circle.
     """
 
     theta_deg: np.ndarray
     radius: np.ndarray
-    center: tuple[float, float, float] | None
-    center_method: str | None
+    center: tuple[float, float, float]
+    center_method: str
 
 
 def orientation(coordinate_system: str, montage: str | None = None) -> str:
@@ -147,25 +152,31 @@ def to_als(
     return np.stack([xyz[:, 1], -xyz[:, 0], xyz[:, 2]], axis=1)
 
 
+def _flat(detail: str) -> SensorLayoutRefusal:
+    return SensorLayoutRefusal("positions_flat", detail)
+
+
 def sphere_center(points: np.ndarray) -> tuple[np.ndarray, str]:
     """Center of the least-squares sphere through ``points`` (n by 3, finite).
 
     The points are translated to their centroid and scaled by the largest
     distance from it, and the algebraic fit
     ``x**2 + y**2 + z**2 = 2*a*x + 2*b*y + 2*c*z + d`` is solved from its 4-by-4
-    normal equations by LU decomposition with partial pivoting. The fit is
-    degenerate, and the centroid is returned, when the points all coincide or
-    when a pivot is at most :data:`FIT_PIVOT` times the largest normal-equation
-    entry: the points are coplanar, as any three or fewer are. The fitted
-    squared radius needs no check: for centered points it is their mean
-    squared distance from the center, which is positive.
+    normal equations by LU decomposition with partial pivoting. A pivot at most
+    :data:`FIT_PIVOT` times the largest normal-equation entry means the points
+    are coplanar: their center is then that of the circle they lie on
+    (:func:`circle_center`). Raises :class:`SensorLayoutRefusal`
+    (``positions_flat``) for three or fewer points, for points that coincide,
+    and for coplanar points not on one circle: no center is guessed.
     """
     n = len(points)
+    if n <= 3:
+        raise _flat(f"{n} finite position(s); a sphere needs at least 4")
     centroid = points.sum(axis=0) / n
     centered = points - centroid
     scale = float(np.sqrt((centered * centered).sum(axis=1)).max())
     if scale == 0:
-        return centroid, "centroid"
+        raise _flat("the positions coincide")
     u = centered / scale
     design = np.column_stack([2 * u, np.ones(n)])
     normal = design.T @ design
@@ -175,8 +186,48 @@ def sphere_center(points: np.ndarray) -> tuple[np.ndarray, str]:
             normal, rhs, tiny=FIT_PIVOT * float(np.abs(normal).max())
         )
     except SingularMatrix:
-        return centroid, "centroid"
+        return centroid + scale * circle_center(u), "circle"
     return centroid + scale * np.array([a, b, c]), "sphere"
+
+
+def circle_center(u: np.ndarray) -> np.ndarray:
+    """Center of the circle through coplanar, centered, scaled points ``u``.
+
+    The plane's basis comes from cross products, not an eigenvector: ``e1``
+    points to the farthest point ``p`` (the first, on a tie), the normal is the
+    largest ``p x q`` over the points ``q`` (the first, on a tie), and
+    ``e2 = normal x e1``. In that basis, the algebraic fit
+    ``s**2 + t**2 = 2*a*s + 2*b*t + c`` is solved from its 3-by-3 normal
+    equations by LU decomposition with partial pivoting, as for the sphere.
+    Raises ``positions_flat`` when the points are collinear or when one lies
+    farther than :data:`CONCYCLIC` from the fitted circle.
+    """
+    lengths = np.sqrt((u * u).sum(axis=1))
+    far = u[int(np.argmax(lengths))]
+    e1 = far / np.sqrt(far @ far)
+    crosses = np.cross(far, u)
+    sizes = np.sqrt((crosses * crosses).sum(axis=1))
+    widest = int(np.argmax(sizes))
+    if sizes[widest] == 0:
+        raise _flat("the positions are collinear")
+    normal = crosses[widest] / sizes[widest]
+    e2 = np.cross(normal, e1)
+    s, t = u @ e1, u @ e2
+    design = np.column_stack([2 * s, 2 * t, np.ones(len(u))])
+    system = design.T @ design
+    try:
+        a, b, c = lu_solve(
+            system,
+            design.T @ (s * s + t * t),
+            tiny=FIT_PIVOT * float(np.abs(system).max()),
+        )
+    except SingularMatrix as exc:
+        raise _flat("the positions are collinear") from exc
+    rho = np.sqrt(c + a * a + b * b)
+    miss = float(np.abs(np.hypot(s - a, t - b) - rho).max())
+    if not miss <= CONCYCLIC:
+        raise _flat(f"the positions are coplanar and {miss:.3g} off one circle")
+    return a * e1 + b * e2
 
 
 def cart2topo(xyz: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -201,7 +252,9 @@ def sensor_layout(
 
     The positions are in the BIDS frame ``coordinate_system`` names, or, for
     template positions, in the frame of the ``montage`` they came from (with
-    ``coordinate_system`` ``n/a``); see :func:`orientation`.
+    ``coordinate_system`` ``n/a``); see :func:`orientation`. Raises
+    :class:`SensorLayoutRefusal` with ``frame_unknown`` or ``positions_flat``
+    (:func:`sphere_center`), after which a renderer places the sensors by name.
     """
     xyz = np.asarray(xyz, dtype=np.float64)
     if xyz.ndim != 2 or xyz.shape[1] != 3:
@@ -210,8 +263,6 @@ def sensor_layout(
     finite = np.isfinite(als).all(axis=1)
     theta = np.full(len(als), np.nan)
     radius = np.full(len(als), np.nan)
-    if not finite.any():
-        return SensorLayout(theta, radius, None, None)
     center, method = sphere_center(als[finite])
     theta[finite], radius[finite] = cart2topo(als[finite] - center)
     return SensorLayout(theta, radius, tuple(float(v) for v in center), method)
