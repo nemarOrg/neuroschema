@@ -1,6 +1,7 @@
-"""The view vocabulary: the view digest.
+"""The view vocabulary: the registry of kinds and the view digest.
 
-See ``docs/views/view-digest.md``.
+See ``docs/views.md``. The schemas live in ``schema/definitions/view.schema.json``
+and ``schema/views/``; this package reads the registry and computes digests.
 """
 
 from neuroschema.views.digest import (
@@ -9,10 +10,26 @@ from neuroschema.views.digest import (
     canonicalize,
     view_digest,
 )
+from neuroschema.views.registry import (
+    REGISTRY_FORMAT,
+    REGISTRY_PATH,
+    Drawing,
+    draw_as,
+    kind_schema_path,
+    known_kinds,
+    load_registry,
+)
 
 __all__ = [
+    "REGISTRY_FORMAT",
+    "REGISTRY_PATH",
     "VIEW_DIGEST_FORMAT",
     "CanonicalizationError",
+    "Drawing",
     "canonicalize",
+    "draw_as",
+    "kind_schema_path",
+    "known_kinds",
+    "load_registry",
     "view_digest",
 ]

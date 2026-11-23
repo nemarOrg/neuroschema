@@ -29,6 +29,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SCHEMA_DIR = ROOT / "schema"
 DEFINITIONS = SCHEMA_DIR / "definitions"
 EXTENSIONS = SCHEMA_DIR / "extensions"
+VIEWS = SCHEMA_DIR / "views"
 EXAMPLES_DIR = ROOT / "examples"
 
 SHA = "a" * 64
@@ -608,17 +609,34 @@ def test_refs_are_folder_qualified(path):
     """jsonschema's legacy RefResolver pushes a resolution scope for every
     schema with an $id it enters and never pops it (Validator.evolve), so a
     bare or fragment-only $ref can resolve against the wrong file. A ref that
-    names its folder (../definitions/x, ../extensions/x, ../core/x) resolves
-    the same from any subfolder, so every ref below the root takes that form.
+    names its folder (../definitions/x, ../extensions/x, ../core/x, ../views/x)
+    resolves the same from any subfolder, so every ref below the root takes
+    that form.
     """
-    bad = [
-        ref
-        for ref in _refs(json.loads(path.read_text()))
-        if not re.match(
-            r"^\.\./(core|definitions|extensions)/[A-Za-z]+\.schema\.json(#.*)?$", ref
-        )
+    assert folder_ref_problems(path) == []
+
+
+FOLDER_REF = re.compile(
+    r"^\.\./(?:(?:core|definitions|extensions)/[A-Za-z]+"
+    r"|views/(?:kind|content|transform)(?:\.[a-z0-9-]+)+\.v[0-9]+)"
+    r"\.schema\.json(?:#.*)?$"
+)
+
+
+def folder_ref_problems(path: Path) -> list[str]:
+    return [
+        ref for ref in _refs(json.loads(path.read_text())) if not FOLDER_REF.match(ref)
     ]
-    assert bad == []
+
+
+def test_folder_ref_check_catches_a_bare_view_ref(tmp_path):
+    schema = json.loads((DEFINITIONS / "view.schema.json").read_text())
+    schema["$defs"]["view"]["allOf"][1]["then"]["$ref"] = (
+        "kind.nemar.table.v1.schema.json"
+    )
+    path = tmp_path / "view.schema.json"
+    path.write_text(json.dumps(schema))
+    assert folder_ref_problems(path) == ["kind.nemar.table.v1.schema.json"]
 
 
 # ── Examples: embedded in full documents ──────────────────────────────────
@@ -797,6 +815,12 @@ VALID_BY_DEF = {
     "failureCode": "load_failed",
     "metricName": "percentGoodSamples",
     "relativeLocation": "figures/spectrum.svg",
+    "viewKey": "icmaps",
+    "kindName": "nemar.sensor-field",
+    "transformName": "nemar.ic-activity.v1",
+    "roleName": "values",
+    "dimName": "freq",
+    "formatName": "tsv",
 }
 
 
@@ -1128,8 +1152,13 @@ def anchor_problems(paths) -> list[str]:
 
 def test_anchored_patterns_close_the_newline_gap():
     paths = sorted(
-        [*EXTENSIONS.glob("*.schema.json"), *DEFINITIONS.glob("*.schema.json")]
+        [
+            *EXTENSIONS.glob("*.schema.json"),
+            *DEFINITIONS.glob("*.schema.json"),
+            *VIEWS.glob("*.schema.json"),
+        ]
     )
+    assert VIEWS.is_dir() and any(p.parent == VIEWS for p in paths)
     assert anchor_problems(paths) == []
 
 

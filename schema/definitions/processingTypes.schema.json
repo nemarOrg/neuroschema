@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "processingTypes.schema.json",
   "title": "Processing Types",
-  "description": "Shared types for the dataQuality, processing and signalJourney extensions. A library of $defs; the root constrains nothing.",
+  "description": "Shared types for the dataQuality, processing and signalJourney extensions and the view declaration. A library of $defs; the root constrains nothing.",
   "$defs": {
     "recipeId": {
       "type": "string",
@@ -162,6 +162,57 @@
         }
       },
       "additionalProperties": false
+    },
+    "recipe": {
+      "type": "object",
+      "description": "The NEMAR processing recipe, by id and version, that produced a value or view.",
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/recipeId",
+          "description": "Recipe id (for example nemar-ica)."
+        },
+        "version": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/version",
+          "description": "Recipe version."
+        }
+      },
+      "additionalProperties": false
+    },
+    "viewKey": {
+      "type": "string",
+      "description": "Key of a view declaration, unique within its recipe entry: lowercase letters, digits and underscores, starting with a letter.",
+      "pattern": "^[a-z][a-z0-9_]{0,63}$(?!\n)"
+    },
+    "kindName": {
+      "type": "string",
+      "description": "Namespaced name of a view kind (for example nemar.table): a lowercase namespace, then one or more dot-separated segments of lowercase letters, digits and hyphens. Open vocabulary; views/registry.json lists the kinds neuroschema defines.",
+      "maxLength": 128,
+      "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9-]*)+$(?!\n)"
+    },
+    "transformName": {
+      "type": "string",
+      "description": "Namespaced, versioned name of a view transform (for example nemar.ic-activity.v1): a name shaped like a kind name, then .v and the version number (1 to 999).",
+      "maxLength": 128,
+      "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9-]*)+\\.v[1-9][0-9]{0,2}$(?!\n)"
+    },
+    "roleName": {
+      "type": "string",
+      "description": "Name of a data role or input role in a view (for example values, layout): lowercase letters, digits and underscores, starting with a letter.",
+      "pattern": "^[a-z][a-z0-9_]{0,63}$(?!\n)"
+    },
+    "dimName": {
+      "type": "string",
+      "description": "Name of a dimension of a view's data (for example sensor, freq). Open vocabulary; views/registry.json lists the reserved names and their fixed meanings.",
+      "pattern": "^[a-z][a-z0-9_]{0,63}$(?!\n)"
+    },
+    "formatName": {
+      "type": "string",
+      "description": "Name of a view data format (tsv or json today). Open vocabulary; views/registry.json lists the formats and their grammars.",
+      "pattern": "^[a-z][a-z0-9]{0,15}$(?!\n)"
     }
   }
 }
