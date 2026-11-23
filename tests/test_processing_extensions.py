@@ -1093,3 +1093,48 @@ def test_null_dataset_version_and_range_min_are_allowed():
     _at(doc, FLOOR)["dataset_version"] = None
     _at(doc, f"{FLOOR}/observed_range/percentGoodChannels")["min"] = None
     assert errors_for(DATA_QUALITY, doc) == set()
+
+
+# ── Every anchored pattern in extensions and definitions closes the gap ───
+
+
+# Older patterns with a bare $, tracked in nemarOrg/neuroschema#20.
+NEWLINE_GAP_ALLOWLIST = {("dataPaper.schema.json", "^10\\.\\d{4,9}/\\S+$")}
+
+
+def _patterns(node):
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key == "pattern" and isinstance(value, str):
+                yield value
+            else:
+                yield from _patterns(value)
+    elif isinstance(node, list):
+        for item in node:
+            yield from _patterns(item)
+
+
+def anchor_problems(paths) -> list[str]:
+    problems = []
+    for path in paths:
+        for pattern in _patterns(json.loads(path.read_text())):
+            if (path.name, pattern) in NEWLINE_GAP_ALLOWLIST:
+                continue
+            if "$" in pattern and not pattern.endswith("$(?!\n)"):
+                problems.append(f"{path.name}: {pattern!r}")
+    return problems
+
+
+def test_anchored_patterns_close_the_newline_gap():
+    paths = sorted(
+        [*EXTENSIONS.glob("*.schema.json"), *DEFINITIONS.glob("*.schema.json")]
+    )
+    assert anchor_problems(paths) == []
+
+
+def test_anchor_check_catches_a_bare_dollar(tmp_path):
+    schema = json.loads((DEFINITIONS / "processingTypes.schema.json").read_text())
+    schema["$defs"]["sha256"]["pattern"] = "^[0-9a-f]{64}$"
+    path = tmp_path / "processingTypes.schema.json"
+    path.write_text(json.dumps(schema))
+    assert anchor_problems([path]) == ["processingTypes.schema.json: '^[0-9a-f]{64}$'"]
