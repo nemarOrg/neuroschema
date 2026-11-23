@@ -127,6 +127,26 @@ def test_parse_declaration_refuses_non_text_and_non_json(text):
         parse_declaration(text)
 
 
+@pytest.mark.parametrize(
+    ("text", "message"),
+    [
+        ('{"k":1,"k":1}', "duplicate member name 'k'"),
+        ('{"x":NaN}', "NaN is not a JSON number"),
+    ],
+)
+def test_refusals_raised_while_parsing_keep_their_message(text, message):
+    """parse_declaration re-raises its own refusals rather than wrapping them."""
+    with pytest.raises(CanonicalizationError) as raised:
+        parse_declaration(text)
+    assert str(raised.value) == message
+
+
+def test_an_integer_past_python_int_digits_is_refused():
+    """json.loads raises a bare ValueError past int_max_str_digits (4,300)."""
+    with pytest.raises(CanonicalizationError, match="no digest"):
+        parse_declaration('{"n":1' + "0" * 5000 + "}")
+
+
 def test_duplicate_member_name_is_refused_at_any_depth():
     with pytest.raises(CanonicalizationError, match="duplicate member name 'k'"):
         parse_declaration('{"k":1,"k":1}')
@@ -584,23 +604,25 @@ def _allowed(node: dict) -> set:
     return {node["const"]} if "const" in node else set(node["enum"])
 
 
-def _schema_roles(schema: dict) -> dict[str, dict[str, set]]:
+def _schema_roles(schema: dict) -> dict[str, dict[str, set | None]]:
     """Each role a kind schema admits in data, with its formats and its dims.
 
     Reads data.items, or each branch of its oneOf or anyOf for a kind with
-    several roles. A role's dims must be constrained: {"not": {}} admits none,
-    otherwise dims.items.properties.name lists the admitted names.
+    several roles. A role's dims must be constrained: {"not": {}} admits none;
+    otherwise dims.items.properties.name lists the admitted names, and a dims
+    array whose items leave the name open admits any name (None, the
+    registry's null).
     """
     items = schema["properties"]["data"]["items"]
-    roles: dict[str, dict[str, set]] = {}
+    roles: dict[str, dict[str, set | None]] = {}
     for branch in items.get("oneOf") or items.get("anyOf") or [items]:
         props = branch["properties"]
         dims = props["dims"]
-        names = (
-            set()
-            if dims.get("not") == {}
-            else _allowed(dims["items"]["properties"]["name"])
-        )
+        if dims.get("not") == {}:
+            names = set()
+        else:
+            name = dims["items"].get("properties", {}).get("name")
+            names = None if name is None else _allowed(name)
         for role in _allowed(props["role"]):
             assert role not in roles, role
             roles[role] = {"formats": _allowed(props["format"]), "dims": names}
@@ -660,7 +682,7 @@ class TestRegistry:
             for role, spec in entry["roles"].items():
                 assert re.fullmatch(r"[a-z][a-z0-9_]{0,63}", role)
                 assert set(spec["formats"]) <= set(REGISTRY["formats"])
-                for dim in spec["dims"]:
+                for dim in spec["dims"] or []:
                     assert re.fullmatch(r"[a-z][a-z0-9_]{0,63}", dim)
 
     def test_formats_and_their_extension_rules(self):
@@ -680,7 +702,10 @@ class TestRegistry:
         for entry in REGISTRY["kinds"]:
             schema = json.loads((ROOT / entry["schema"]).read_text())
             assert _schema_roles(schema) == {
-                role: {"formats": set(spec["formats"]), "dims": set(spec["dims"])}
+                role: {
+                    "formats": set(spec["formats"]),
+                    "dims": None if spec["dims"] is None else set(spec["dims"]),
+                }
                 for role, spec in entry["roles"].items()
             }, entry["kind"]
 

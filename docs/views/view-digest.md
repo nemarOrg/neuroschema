@@ -39,7 +39,7 @@ A declaration has no digest, and an implementation raises an error rather than g
 - an object in it has two members with one name;
 - its text is not JSON, such as the `NaN` and `Infinity` literals Python's `json.loads` accepts;
 - a string or a member name holds a lone surrogate (a code unit from U+D800 to U+DFFF that is not part of a pair);
-- a number is not finite (a parser reads `1e400` as infinite).
+- a number is not finite as a binary64: a JavaScript parser reads `1e400`, and an integer literal beyond binary64 range such as 1 followed by 400 zeros, as `Infinity`; Python reads that integer exactly, and refuses it when it makes it a binary64 (an integer literal of more than 4,300 digits Python refuses while it parses).
 
 ## What the digest shows
 
