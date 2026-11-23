@@ -8,6 +8,7 @@ pairs so a negative test cannot pass for the wrong reason.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -585,3 +586,28 @@ class TestSignalJourney:
     def test_open_root_keeps_legacy_key(self):
         doc = sj_links() | {"pipeline_id": "legacy"}
         assert errors_for(SIGNAL_JOURNEY, doc) == set()
+
+
+# ── Ref convention: every $ref is a path from the schema's subfolder ──────
+
+
+@pytest.mark.parametrize(
+    "path",
+    [p for p in ALL_SCHEMAS if p.parent != SCHEMA_DIR],
+    ids=lambda p: p.name,
+)
+def test_refs_are_folder_qualified(path):
+    """jsonschema's legacy RefResolver pushes a resolution scope for every
+    schema with an $id it enters and never pops it (Validator.evolve), so a
+    bare or fragment-only $ref can resolve against the wrong file. A ref that
+    names its folder (../definitions/x, ../extensions/x, ../core/x) resolves
+    the same from any subfolder, so every ref below the root takes that form.
+    """
+    bad = [
+        ref
+        for ref in _refs(json.loads(path.read_text()))
+        if not re.match(
+            r"^\.\./(core|definitions|extensions)/[A-Za-z]+\.schema\.json(#.*)?$", ref
+        )
+    ]
+    assert bad == []
