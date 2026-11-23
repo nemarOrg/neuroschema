@@ -761,6 +761,20 @@ def test_a_montage_needs_template_positions():
     assert data_errors(positions_role(montage="biosemi128")) == {("required", "")}
 
 
+def test_a_template_role_names_its_montage_with_no_frame():
+    """A template role carries montage and coordinate_system n/a (RAS meters)."""
+    assert data_errors(positions_role(position_source="template")) == {("required", "")}
+    framed = positions_role(
+        position_source="template", montage="biosemi128", coordinate_system="CTF"
+    )
+    assert data_errors(framed) == {("const", "coordinate_system")}
+    unframed = positions_role(position_source="template", montage="biosemi128")
+    del unframed["coordinate_system"]
+    assert data_errors(unframed) == {("required", "")}
+    measured = positions_role(position_source="measured", coordinate_system="CTF")
+    assert data_errors(measured) == set()
+
+
 @pytest.mark.parametrize("name", ["", "-biosemi", "a b", "biosemi128\n", "x" * 65])
 def test_a_montage_name_is_a_plain_name(name):
     entry = positions_role(position_source="template", montage=name)

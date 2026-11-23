@@ -118,7 +118,6 @@ On a larger net that number is an electrode of its own, so these aliases belong 
 | `GSN-HydroCel-129` | `e129` is `cz` |
 | `GSN-HydroCel-257` | `e257` is `cz` |
 
-
 A family's alias applies only to the montages of its family, and a montage's alias only to that montage: `VREF` is Cz on an EGI net and matches nothing on the 10-05 montage, and `E129` is Cz on the 129-channel net and electrode E129 on the 256-channel net.
 A new alias is a new version of the algorithm.
 
@@ -178,7 +177,8 @@ a 32-channel EGI recording (`E1` to `E32` with `Cz` or `E33`), because the BioSe
 | `channels` | Per channel, in input order: `status`, `key` (null for an excluded channel) and `electrode` (the montage's label, for a placed channel; otherwise null). |
 
 A consumer takes each placed channel's position from the montage file.
-A sensor role that stores such positions sets `position_source` to `template` and `montage` to the montage's name.
+A sensor role that stores such positions sets `position_source` to `template`, `montage` to the montage's name and `coordinate_system` to `n/a`, and a reader reads its positions as RAS meters, the montage's frame.
+The schema requires all three together.
 
 ## Versioning
 

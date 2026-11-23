@@ -18,7 +18,7 @@ Quality views replace figures: a view is data a browser draws, declared with a n
 - `docs/views.md`: the view vocabulary, the renderer rule, data roles, dimensions, inputs, scope, formats, caps, versioning and what digests prove.
 - `nemar.sensor-labels.v1`, sensor positions inferred from channel names, refusing with a reason when the names do not identify one montage: `docs/views/sensor-labels.md`, vectors in `views/vectors/sensor-labels.v1.json`, the pure-Python reference `neuroschema.views.sensor_labels`, and a registry entry.
 - `views/montages/`: eleven standard montages (10-05, seven Electrical Geodesics (EGI) HydroCel nets, three BioSemi caps) in right-anterior-superior (RAS) meters, generated from MNE-Python 1.13.2 by `scripts/generate_montages.py` (uv group `vectors`, with a `--check` mode run in CI; the BioSemi angles are read as written, where MNE-Python truncates them to integers), and `PROVENANCE.json` with each file's MNE source and digest, MNE-Python's license, each montage's upstream origin (FieldTrip, EGI, BioSemi) and the BioSemi angle corrections.
-- `viewData`: optional `montage`, the montage of a role of `template` positions; it requires `position_source` `template`.
+- `viewData`: optional `montage`, the montage of a role of `template` positions. `montage` requires `position_source` `template`, and a `template` role requires `montage` and `coordinate_system` `n/a` (its positions are RAS meters).
 
 ### Changed (breaking)
 
