@@ -6,6 +6,12 @@ it regenerates both in memory and fails if they differ from the committed
 files beyond the regeneration tolerance (numbers may move in the last bits
 between linear algebra libraries; everything else must match exactly).
 
+The cases' inputs (each sensor's theta, radius and value, or position) are
+frozen in ``scripts/view_vector_inputs.json``: they are read from there, so a
+platform's sine or a library's rounding cannot move them, and only the expected
+outputs are computed. ``--refresh-inputs`` recomputes the inputs from eegprep's
+packaged caps and rewrites that file; review its diff like any other.
+
 Run with the ``vectors`` dependency group, which installs eegprep at the
 pinned commit (Python 3.12 or later)::
 
@@ -100,6 +106,26 @@ UNKNOWN_FRAMES = ["Other", "n/a", "", "Pixels", "individual", "study", "scanner"
 UNKNOWN_FRAMES += ["eeglab", "captrak", "MNI", "CapTrak "]
 
 
+INPUTS = Path(__file__).resolve().parent / "view_vector_inputs.json"
+FROZEN: dict | None = None  # the stored inputs; None while refreshing them
+FRESH: dict = {"sensor-field": {}, "sensor-layout": {}}
+
+
+def frozen(family, name, computed):
+    """A case's inputs: the stored ones, or, while refreshing, the computed."""
+    FRESH[family][name] = computed
+    if FROZEN is None:
+        return computed
+    stored = FROZEN[family].get(name)
+    if stored is None:
+        sys.exit(f"no frozen inputs for {family} {name}: run --refresh-inputs")
+    return stored
+
+
+def _floats(values):
+    return np.array([math.nan if v is None else v for v in values], dtype=float)
+
+
 # ── The reference ─────────────────────────────────────────────────────────
 
 
@@ -124,8 +150,13 @@ def reference() -> dict:
     }
 
 
-def eegprep_topoplot(theta, radius, values):
-    """eegprep's map: (Zi, plotrad, x axis, y axis), drawn with noplot."""
+def eegprep_topoplot(theta, radius, values, plotrad=None):
+    """eegprep's map: (Zi, plotrad, x axis, y axis), drawn with noplot.
+
+    ``plotrad``, when given, is passed as eegprep's own option: the spec takes
+    it from every usable sensor before the merge, as EEGLAB's topoplot.m takes
+    its radii before it interpolates, and eegprep is given only the merged
+    sensors."""
     from eegprep.functions.sigprocfunc.topoplot import topoplot
 
     locs = [
@@ -134,8 +165,9 @@ def eegprep_topoplot(theta, radius, values):
     ]
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
+        options = {} if plotrad is None else {"plotrad": plotrad}
         _handle, zi, plotrad, xi, yi = topoplot(
-            np.asarray(values, dtype=float), locs, noplot="on"
+            np.asarray(values, dtype=float), locs, noplot="on", **options
         )
     return zi, float(plotrad), xi[:, 0].copy(), yi[0, :].copy()
 
@@ -192,33 +224,52 @@ def to_als(xyz, frame, montage=None):
 
 
 def fit_center(points):
-    """Sphere-fit center by SVD least squares (the spec solves the normal
-    equations by LU; the two agree far inside the tolerance)."""
+    """The center by SVD least squares (the spec solves normal equations by
+    LU; the two agree far inside the tolerance), or None for flat positions:
+    three or fewer, coincident, collinear, or coplanar and off one circle."""
     n = len(points)
+    if n <= 3:
+        return None
     centroid = points.sum(axis=0) / n
     centered = points - centroid
     scale = float(np.sqrt((centered**2).sum(axis=1)).max())
     if scale == 0:
-        return centroid, "centroid", scale
+        return None
     u = centered / scale
     design = np.column_stack([2 * u, np.ones(n)])
     target = (u**2).sum(axis=1)
     solution, _res, rank, singular = np.linalg.lstsq(design, target, rcond=None)
     # The normal equations square the condition number, so their pivot
     # threshold of 1e-10 is a singular-value ratio near 1e-5.
-    if rank < 4 or singular[-1] <= 1e-5 * singular[0]:
-        return centroid, "centroid", scale
-    a, b, c, _d = solution
-    return centroid + scale * np.array([a, b, c]), "sphere", scale
+    if rank == 4 and singular[-1] > 1e-5 * singular[0]:
+        a, b, c, _d = solution
+        return centroid + scale * np.array([a, b, c]), "sphere", scale
+    # Coplanar: the plane from the SVD of the points, then a circle in it.
+    _u, _s, vt = np.linalg.svd(u, full_matrices=False)
+    e1, e2 = vt[0], vt[1]
+    s_, t_ = u @ e1, u @ e2
+    design = np.column_stack([2 * s_, 2 * t_, np.ones(n)])
+    solution, _res, rank, singular = np.linalg.lstsq(design, s_**2 + t_**2, rcond=None)
+    if rank < 3 or singular[-1] <= 1e-5 * singular[0]:
+        return None
+    a, b, c = solution
+    rho = math.sqrt(c + a * a + b * b)
+    if np.abs(np.hypot(s_ - a, t_ - b) - rho).max() > 1e-9:
+        return None
+    return centroid + scale * (a * e1 + b * e2), "circle", scale
 
 
 def layout_of(xyz, frame, montage=None):
-    """Theta, radius, center and method for positions in a BIDS frame."""
+    """Theta, radius, center and method for positions in a BIDS frame, or
+    None for positions the spec refuses as flat."""
     als = to_als(xyz, frame, montage)
     finite = np.isfinite(als).all(axis=1)
     theta = [None] * len(als)
     radius = [None] * len(als)
-    center, method, scale = fit_center(als[finite])
+    fit = fit_center(als[finite])
+    if fit is None:
+        return None
+    center, method, scale = fit
     t, r = eegprep_cart2topo(als[finite] - center)
     for k, row in enumerate(np.flatnonzero(finite)):
         theta[row], radius[row] = t[k], r[k]
@@ -265,28 +316,36 @@ def merged_inputs(theta, radius, values):
 
 def field_case(name, description, labels, theta, radius, values, extra=None):
     """One sensor-field case: inputs, then eegprep's map of the merged inputs."""
-    theta = np.asarray(theta, dtype=float)
-    radius = np.asarray(radius, dtype=float)
-    values = np.asarray(values, dtype=float)
-    case = {
-        "name": name,
-        "description": description,
-        "sensors": {
-            "name": list(labels),
-            "theta_deg": _numbers(theta),
-            "radius": _numbers(radius),
-            "value": _numbers(values),
-        },
+    sensors = {
+        "name": list(labels),
+        "theta_deg": _numbers(theta),
+        "radius": _numbers(radius),
+        "value": _numbers(values),
     }
+    sensors = frozen("sensor-field", name, sensors)
+    return field_case_from(name, description, sensors, extra)
+
+
+def field_case_from(name, description, sensors, extra=None):
+    """A sensor-field case from its inputs: eegprep's map of the merged inputs."""
+    theta = _floats(sensors["theta_deg"])
+    radius = _floats(sensors["radius"])
+    values = _floats(sensors["value"])
+    case = {"name": name, "description": description, "sensors": sensors}
     usable, groups, kept, means = merged_inputs(theta, radius, values)
-    outer = max(radius[k] for k in kept) if kept else math.nan
+    outer = max(radius[i] for i in usable) if usable else math.nan
+    plotrad_all = max(min(1.0, outer * 1.02), 0.5)
     intrad = min(1.0, outer * 1.02)
     x, y = planar(np.nan_to_num(theta), np.nan_to_num(radius))
     interpolated = [k for k in kept if x[k] <= intrad and y[k] <= intrad]
     if len(interpolated) < 3:
         case["refused"] = "too_few_sensors"
         return case
-    zi, plotrad, gx, gy = eegprep_topoplot(theta[kept], radius[kept], means)
+    outer_kept = max(radius[k] for k in kept)
+    option = None if outer_kept == outer else plotrad_all
+    zi, plotrad, gx, gy = eegprep_topoplot(theta[kept], radius[kept], means, option)
+    if plotrad != plotrad_all:
+        sys.exit(f"{name}: eegprep's plotrad {plotrad!r} is not {plotrad_all!r}")
     inside_head = np.sqrt(gx[:, None] * gx[:, None] + gy[None, :] * gy[None, :]) <= 0.5
     if not inside_head.any():
         case["refused"] = "head_outside_grid"
@@ -428,7 +487,7 @@ def misalignment_check(theta, radius, values, zi):
     same_mask = bool((np.isfinite(raw) == np.isfinite(zi)).all())
     error = np.abs(raw - zi)[np.isfinite(zi)]
     agrees = same_mask and bool(np.isfinite(error).all()) and error.max() <= 1e-6 * span
-    return {"eegprep_raw_agrees": agrees}
+    return {"eegprep_raw_agrees": bool(agrees)}
 
 
 def field_cases():
@@ -663,6 +722,34 @@ def field_cases():
             np.sign(base) * 1e308,
         )
     )
+    cases.append(
+        field_case(
+            "boundary_ties",
+            "montage_32 plus three sensors on exact ties: EDGE at theta 0, radius "
+            "1.0 (the largest radius, so plotrad = intrad = 1.0, and x = 1.0 = "
+            "intrad: plotted and interpolated, because both tests are <=), and "
+            "NEAR at theta 0, radius 1e-3, exactly 1e-3 from ORIGIN at radius 0 "
+            "(merged, because the merge test is <=).",
+            [*labels, "ORIGIN", "NEAR", "EDGE"],
+            [*theta, 0.0, 0.0, 0.0],
+            [*radius, 0.0, 1e-3, 1.0],
+            [*base, 1.0, 3.0, -2.0],
+        )
+    )
+    outer = int(np.argmax(radius))
+    cases.append(
+        field_case(
+            "merged_outermost",
+            f"montage_32 plus a sensor 5e-4 outside row {outer}, the outermost: it "
+            "merges into that sensor, and the radii come from every usable sensor "
+            "before the merge (EEGLAB), so from it. The reference passes eegprep "
+            "that plotrad, since eegprep sees only the merged sensors.",
+            [*labels, "OUT"],
+            [*theta, theta[outer]],
+            [*radius, radius[outer] + 5e-4],
+            [*base, base[outer] + 4.0],
+        )
+    )
     labels, theta, radius = layouts[128]
     cases.append(
         field_case(
@@ -681,31 +768,42 @@ def field_cases():
 def positions_case(name, description, labels, xyz, frame, values, montage=None):
     """A map placed by 3D positions: projected (sensor-layout), then drawn."""
     xyz = np.asarray(xyz, dtype=float)
-    case = {
-        "name": name,
-        "description": description,
-        "coordinate_system": frame,
-        **({"montage": montage} if montage is not None else {}),
-        "sensors": {
+    sensors = frozen(
+        "sensor-field",
+        name,
+        {
             "name": list(labels),
             "x": _numbers(xyz[:, 0]),
             "y": _numbers(xyz[:, 1]),
             "z": _numbers(xyz[:, 2]),
             "value": _numbers(values),
         },
+    )
+    case = {
+        "name": name,
+        "description": description,
+        "coordinate_system": frame,
+        **({"montage": montage} if montage is not None else {}),
+        "sensors": sensors,
     }
+    xyz = np.column_stack([_floats(sensors[axis]) for axis in "xyz"])
     if to_als(xyz, frame, montage) is None:
         case["refused"] = "frame_unknown"
         return case
-    theta, radius, center, method, _scale = layout_of(xyz, frame, montage)
-    nan = math.nan
-    drawn = field_case(
+    projected = layout_of(xyz, frame, montage)
+    if projected is None:
+        case["refused"] = "positions_flat"
+        return case
+    theta, radius, center, method, _scale = projected
+    drawn = field_case_from(
         name,
         description,
-        labels,
-        [nan if t is None else t for t in theta],
-        [nan if r is None else r for r in radius],
-        values,
+        {
+            "name": sensors["name"],
+            "theta_deg": theta,
+            "radius": radius,
+            "value": sensors["value"],
+        },
     )
     if "refused" in drawn:
         case["refused"] = drawn["refused"]
@@ -764,6 +862,42 @@ def positions_cases():
             values,
         )
     )
+    disk = flat_disk()
+    cases.append(
+        positions_case(
+            "positions_flat_disk",
+            "Thirty-two positions on a disk in the plane z = 0 (EEGLAB): flat, "
+            "so the projection is refused (positions_flat), and a renderer places "
+            "the sensors by name instead.",
+            [f"D{i}" for i in range(32)],
+            disk,
+            "EEGLAB",
+            np.round(disk[:, 0] - 0.5 * disk[:, 1], 6),
+        )
+    )
+    cases.append(
+        positions_case(
+            "positions_three",
+            "Three positions: refused (positions_flat).",
+            ["A", "B", "C"],
+            [[7.0, 1.0, 3.0], [-2.0, 6.0, 4.0], [0.5, -5.0, 6.5]],
+            "EEGLAB",
+            [1.0, -2.0, 0.5],
+        )
+    )
+    ring = uneven_ring()
+    cases.append(
+        positions_case(
+            "positions_ring",
+            "Nine positions on one tilted circle (EEGLAB): coplanar but "
+            "concyclic, so they are centered on the circle, every radius is 0.5, "
+            "and the map is drawn.",
+            [f"R{i}" for i in range(9)],
+            ring,
+            "EEGLAB",
+            [3.0, 1.0, -1.0, -2.5, 0.5, 2.0, -0.5, 1.5, -3.0],
+        )
+    )
     cases.append(
         positions_case(
             "positions_montage_beside_a_frame",
@@ -813,22 +947,32 @@ def sensor_field_vectors(ref):
 
 def layout_case(name, description, labels, xyz, frame, montage=None):
     xyz = np.asarray(xyz, dtype=float)
-    case = {
-        "name": name,
-        "description": description,
-        "coordinate_system": frame,
-        **({"montage": montage} if montage is not None else {}),
-        "positions": {
+    positions = frozen(
+        "sensor-layout",
+        name,
+        {
             "name": list(labels),
             "x": _numbers(xyz[:, 0]),
             "y": _numbers(xyz[:, 1]),
             "z": _numbers(xyz[:, 2]),
         },
+    )
+    case = {
+        "name": name,
+        "description": description,
+        "coordinate_system": frame,
+        **({"montage": montage} if montage is not None else {}),
+        "positions": positions,
     }
+    xyz = np.column_stack([_floats(positions[axis]) for axis in "xyz"])
     if to_als(xyz, frame, montage) is None:
         case["refused"] = "frame_unknown"
         return case
-    theta, radius, center, method, _scale = layout_of(xyz, frame, montage)
+    projected = layout_of(xyz, frame, montage)
+    if projected is None:
+        case["refused"] = "positions_flat"
+        return case
+    theta, radius, center, method, _scale = projected
     case["expected"] = {
         "center": center,
         "center_method": method,
@@ -836,6 +980,27 @@ def layout_case(name, description, labels, xyz, frame, montage=None):
         "radius": radius,
     }
     return case
+
+
+def uneven_ring():
+    """Nine positions on one circle, unevenly spaced (so the circle's center
+    is not their centroid) and tilted 25 degrees out of the axes' planes."""
+    angles = np.deg2rad([0, 20, 50, 90, 150, 200, 260, 300, 330])
+    flat = np.column_stack(
+        [np.cos(angles) * 8 + 1.0, np.sin(angles) * 8 - 2.0, np.full(9, 4.0)]
+    )
+    tilt = np.deg2rad(25.0)
+    return flat @ np.array(
+        [[1, 0, 0], [0, np.cos(tilt), np.sin(tilt)], [0, -np.sin(tilt), np.cos(tilt)]]
+    )
+
+
+def flat_disk():
+    """Thirty-two positions scattered over a disk in the plane z = 0."""
+    rng = np.random.default_rng(32)
+    r = 8 * np.sqrt(rng.uniform(0, 1, 32))
+    a = rng.uniform(0, 2 * np.pi, 32)
+    return np.column_stack([np.cos(a) * r, np.sin(a) * r, np.zeros(32)])
 
 
 def layout_cases():
@@ -896,28 +1061,53 @@ def layout_cases():
             "EEGLAB",
         )
     )
-    angles = np.deg2rad(np.arange(0, 360, 30))
-    flat = np.column_stack([np.cos(angles) * 8, np.sin(angles) * 8, np.full(12, 4.0)])
-    tilt = np.deg2rad(25.0)
-    ring = flat @ np.array(
-        [[1, 0, 0], [0, np.cos(tilt), np.sin(tilt)], [0, -np.sin(tilt), np.cos(tilt)]]
-    )
     cases.append(
         layout_case(
             "ring_coplanar",
-            "Twelve positions on one ring, tilted 25 degrees (coplanar, but not in "
-            "a plane of the axes, so rounding leaves a pivot near zero rather than "
-            "at it): the sphere fit is degenerate, so the center is the centroid.",
-            [f"R{i}" for i in range(12)],
-            ring,
+            "Nine positions on one circle, unevenly spaced and tilted 25 degrees: "
+            "coplanar, so the sphere fit is degenerate, but concyclic, so the "
+            "center is the circle's (not their centroid), and every radius is 0.5.",
+            [f"R{i}" for i in range(9)],
+            uneven_ring(),
+            "EEGLAB",
+        )
+    )
+    cases.append(
+        layout_case(
+            "disk_flat",
+            "Thirty-two positions scattered over a disk in the plane z = 0: "
+            "coplanar and not on one circle, so refused (positions_flat).",
+            [f"D{i}" for i in range(32)],
+            flat_disk(),
+            "EEGLAB",
+        )
+    )
+    cases.append(
+        layout_case(
+            "collinear_positions",
+            "Five positions on one line: refused (positions_flat).",
+            [f"L{i}" for i in range(5)],
+            [[i * 2.0, 1.0 - i, 3.0 + 0.5 * i] for i in range(5)],
+            "EEGLAB",
+        )
+    )
+    bent = [[i * 2.0, 1.0 - i, 3.0 + 0.5 * i] for i in range(5)]
+    bent[2] = [bent[2][0] + 1e-12, bent[2][1] + 2e-12, bent[2][2]]
+    cases.append(
+        layout_case(
+            "nearly_collinear",
+            "Five positions on one line but for 2.2e-12 off it at the middle one: "
+            "not exactly collinear, so the circle fit's matrix is singular rather "
+            "than its cross product zero; refused (positions_flat).",
+            [f"B{i}" for i in range(5)],
+            bent,
             "EEGLAB",
         )
     )
     cases.append(
         layout_case(
             "three_positions",
-            "Three positions, which are coplanar: the fit is degenerate, so the "
-            "center is the centroid.",
+            "Three positions: too few to fit a sphere, so refused (positions_flat).",
             ["A", "B", "C"],
             [[7.0, 1.0, 3.0], [-2.0, 6.0, 4.0], [0.5, -5.0, 6.5]],
             "EEGLAB",
@@ -926,9 +1116,7 @@ def layout_cases():
     cases.append(
         layout_case(
             "coincident_positions",
-            "Four positions at one point: the scale is 0, so the center is the "
-            "centroid, the point itself, and each position converts as the origin "
-            "(theta 0, radius 0.5).",
+            "Four positions at one point: refused (positions_flat).",
             ["A", "B", "C", "D"],
             [[2.5, -1.0, 7.0]] * 4,
             "EEGLAB",
@@ -1186,7 +1374,16 @@ def differences(new, old, path="", scale=None, extent=None):
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--check", action="store_true", help="compare, write nothing")
+    parser.add_argument(
+        "--refresh-inputs",
+        action="store_true",
+        help=f"recompute the cases' inputs from eegprep and rewrite {INPUTS.name}",
+    )
     args = parser.parse_args()
+    if args.check and args.refresh_inputs:
+        parser.error("--check compares against frozen inputs; drop --refresh-inputs")
+    global FROZEN
+    FROZEN = None if args.refresh_inputs else json.loads(INPUTS.read_text())
     ref = reference()
     documents = {
         VECTORS / "sensor-field.v1.json": sensor_field_vectors(ref),
@@ -1212,6 +1409,20 @@ def main() -> int:
                 print(f"  {line}")
         else:
             print(f"{path.relative_to(ROOT)}: matches")
+    if args.refresh_inputs:
+        stored = {
+            "description": (
+                "The frozen inputs of the view vectors: each case's sensors (theta, "
+                "radius and value, or position and value) and positions, computed "
+                "once from eegprep's packaged caps by `generate_view_vectors.py "
+                "--refresh-inputs`. The generator reads them, so the vectors' inputs "
+                "never move with a platform's math; only the expected outputs are "
+                "computed."
+            ),
+            **FRESH,
+        }
+        INPUTS.write_text(dumps(stored) + "\n", encoding="utf-8")
+        print(f"wrote {INPUTS.relative_to(ROOT)}")
     return 1 if failed else 0
 
 
