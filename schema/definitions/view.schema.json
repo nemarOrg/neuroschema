@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "view.schema.json",
   "title": "View Declaration",
-  "description": "A quality view: data that a browser draws, declared by the recipe or plugin that wrote it. A library of $defs; the root constrains nothing, and $defs/view is the declaration. Every view is checked against this envelope. A kind and version that views/registry.json lists is also checked against its schema in schema/views/; any other kind passes on the envelope alone, and a renderer draws it by its base or as a table (docs/views.md).",
+  "description": "A quality view: data that a browser draws, declared by the recipe or plugin that wrote it. A library of $defs; the root constrains nothing, and $defs/view is the declaration. Every view is checked against this envelope. A kind and version that views/registry.json lists is also checked against its schema in schema/views/, and so is a transform it lists; any other kind or transform passes on the envelope alone, and a renderer draws it by its base or as a table (docs/views.md).",
   "$defs": {
     "view": {
       "type": "object",
@@ -170,6 +170,50 @@
           },
           "then": {
             "$ref": "../views/kind.nemar.table.v1.schema.json"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "nemar.sensor-field"
+              },
+              "kind_version": {
+                "const": 1
+              }
+            },
+            "required": [
+              "kind",
+              "kind_version"
+            ]
+          },
+          "then": {
+            "$ref": "../views/kind.nemar.sensor-field.v1.schema.json"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "transform": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "const": "nemar.sensor-layout.v1"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            },
+            "required": [
+              "transform"
+            ]
+          },
+          "then": {
+            "$ref": "../views/transform.nemar.sensor-layout.v1.schema.json"
           }
         }
       ],

@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "transform.nemar.sensor-layout.v1.schema.json",
+  "title": "View Transform nemar.sensor-layout, Version 1",
+  "description": "Applied on top of the envelope to a view declaration whose transform is nemar.sensor-layout.v1 (docs/views/sensor-layout.md): three-dimensional sensor positions to a layout of theta and radius. The view's one input is the role positions, a file of the run's product: a TSV file with the columns name, x, y and z. The transform's one parameter names the positions' frame.",
+  "type": "object",
+  "required": [
+    "inputs",
+    "transform"
+  ],
+  "properties": {
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "description": "The role positions, a TSV file of the run's product.",
+      "items": {
+        "type": "object",
+        "required": [
+          "role",
+          "file"
+        ],
+        "properties": {
+          "role": {
+            "const": "positions"
+          },
+          "file": {
+            "type": "object",
+            "properties": {
+              "location": {
+                "type": "string",
+                "pattern": "\\.tsv$(?!\n)"
+              }
+            }
+          }
+        }
+      }
+    },
+    "transform": {
+      "type": "object",
+      "properties": {
+        "parameters": {
+          "type": "object",
+          "required": [
+            "coordinate_system"
+          ],
+          "properties": {
+            "coordinate_system": {
+              "type": "string",
+              "pattern": "^(n/a|[A-Za-z0-9][A-Za-z0-9_-]{0,63})$(?!\n)",
+              "description": "The Brain Imaging Data Structure (BIDS) name of the positions' coordinate system, or n/a for template positions that name their montage. Any name passes the schema; the transform refuses one whose orientation it does not know (frame_unknown), and a renderer then places the sensors by name."
+            },
+            "montage": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$(?!\n)",
+              "description": "For template positions: the montage of views/montages they were taken from (nemar.sensor-labels.v1). Every montage file is in a right-anterior-superior frame, in meters, so the coordinate system is then n/a."
+            }
+          },
+          "dependentSchemas": {
+            "montage": {
+              "type": "object",
+              "properties": {
+                "coordinate_system": {
+                  "const": "n/a"
+                }
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  }
+}

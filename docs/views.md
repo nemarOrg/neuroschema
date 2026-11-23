@@ -46,13 +46,15 @@ A renderer applies this rule:
 
 No view hides data: however a view is drawn, every file in its `data` is either drawn or offered for download.
 
-A view meets a kind's role contract when every role the kind's schema admits appears exactly once in its `data`, and that entry is valid under the kind schema's subschema for the role: `data.items`, or, for a kind with several roles, the branch of its `oneOf` or `anyOf` for that role.
+A view meets a kind's role contract when every role the kind's schema requires appears exactly once in its `data`, every role the schema marks optional appears at most once, and the view's entries in the roles the kind admits, in their order, are valid under the kind schema's `data` subschema.
+So each entry is valid under the subschema for its role (`data.items`, or, for a kind with several roles, the branch of its `oneOf` or `anyOf` for that role), and a rule across roles (such as `nemar.sensor-field`'s sensor coordinates, which depend on whether a layout is present) holds too.
+A kind marks a role optional with a `contains` clause on `data` (or in `data.allOf`) whose subschema names the role and whose `minContains` is 0; every other role it admits is required.
 The format, the dimensions and every field the kind requires (a table's `columns`, a dimension a kind needs) all come from that one schema.
 Roles the kind does not admit are allowed, and its renderer ignores them.
 A declared base is a claim: the schema cannot check an unknown kind's data against its base, so the renderer checks the contract before it trusts the claim.
 The Python reference validates each entry with jsonschema, and a TypeScript renderer validates it against the base kind's schema with ajv, or with guards held to neuroschema's verdict corpus.
 An unknown kind is never an error, and neither is a base the renderer does not know or a view that misses its base's contract.
-`neuroschema.views.draw_as` implements the rule against the registry, `neuroschema.views.meets_role_contract` the contract, and `neuroschema.views.role_schemas` finds each role's subschema.
+`neuroschema.views.draw_as` implements the rule against the registry, `neuroschema.views.meets_role_contract` the contract, `neuroschema.views.role_schemas` finds each role's subschema, and `neuroschema.views.optional_roles` the roles a kind marks optional.
 
 In the registry, each kind lists its roles: `roles.<role>.formats` are the formats the role may take, and `roles.<role>.dims` are the dimensions it may carry, where an empty list means the role carries none.
 The kind's schema admits exactly these roles, formats and dimensions, and a test holds the two to each other.
@@ -63,6 +65,15 @@ Where they could differ, the schema decides: the role contract reads the schema,
 One stored TSV file, read as the role `table`, with its `columns` declared.
 A renderer shows the declared columns in the order declared, one row per data row, each cell as its stored text, and offers the file for download.
 It is a generic kind: it has no base, no inputs, no transform, no parameters and no dimensions.
+
+### `nemar.sensor-field` version 1
+
+This release also defines the generic kind `nemar.sensor-field` version 1, a scalp map: the role `values` holds one or more maps, each one value per sensor, and the optional role `layout` gives each sensor's place (`name`, `theta_deg`, `radius`).
+With a layout, the values' `sensor` coordinates are the layout's `name` column, by position; without one, they are names in the values file, and a renderer places them with `nemar.sensor-labels.v1`.
+A renderer draws each map with the algorithm `nemar.sensor-field.v1`; [`views/sensor-field.md`](views/sensor-field.md) specifies the algorithm, the roles, how a renderer reads the maps, and parity.
+It is a generic kind: it has no base, no inputs and no transform, and its one parameter, `limits`, chooses `absmax` (the default) or `minmax` color limits.
+In the registry, the `values` role's dimensions are `null`, open names: its schema requires one `sensor` dimension (with `contains`) and admits one more of any name, which labels the maps; the `layout` role carries `sensor` only.
+A registry entry lists the dimensions a role may carry; which of them it must carry, the kind's schema says, and the role contract reads it there.
 
 ## Data roles
 
@@ -100,7 +111,7 @@ These names are reserved, with fixed meanings (`reserved_dims` in the registry):
 | `recording` | A recording, by its BIDS path. |
 | `subject` | A participant, by BIDS subject label. |
 | `contact` | An intracranial electrode contact, by its name. |
-| `sensor` | A sensor, by its name; the coordinates are the `name` column of a layout role, in that role's row order. |
+| `sensor` | A sensor, by its name; with a layout role, the coordinates are that role's `name` column, in its row order, and without one, names a renderer places with `nemar.sensor-labels.v1`. |
 
 No name is banned.
 A view does not carry a recording's samples: its declared derivation (the step and parameters that wrote it, or its inputs by digest and a named transform), the caps below and the review of every plugin hold that together.
@@ -116,7 +127,9 @@ Each input has a `role` and exactly one of:
   `profile` is the copy the declaring run read; `content_sha256` is `null` only when that is `archive`, because a run that read the archive recorded no digest of the serving store.
 
 A transform is `{name, parameters}`; its name is namespaced and versioned (`nemar.ic-activity.v1`).
-The registry lists the transforms neuroschema specifies, with their specifications and vectors.
+The registry lists the transforms neuroschema specifies, each with its specification, its vectors and its schema, `schema/views/transform.<name>.schema.json`.
+`view.schema.json` applies a listed transform's schema to every view that names it, whatever the view's kind: the schema checks the view's inputs and the transform's parameters.
+This release specifies `nemar.sensor-layout.v1` ([views/sensor-layout.md](views/sensor-layout.md)), three-dimensional sensor positions to a layout, whose one input is the role `positions` and whose one parameter is the positions' `coordinate_system`.
 A view's files are its `data` files and its `file` inputs.
 
 ## Scope
@@ -162,7 +175,7 @@ Two declarations with one digest are the same declaration; the digest is not a s
 
 ## What the schema checks and what the writer must check
 
-The schema checks the envelope, each registered kind, identifier patterns, the extension of a `tsv` or `json` file, the unit of `time`, a store digest for a serving run, and the scope rule.
+The schema checks the envelope, each registered kind and transform, identifier patterns, the extension of a `tsv` or `json` file, the unit of `time`, a store digest for a serving run, and the scope rule.
 JSON Schema cannot compare one value with another, so the writer enforces:
 
 - view keys are unique within a recipe entry, and roles are unique within a view;
@@ -170,7 +183,7 @@ JSON Schema cannot compare one value with another, so the writer enforces:
 - a `{role, column}` coordinate names a role of the same view and a column that role declares;
 - `size` and `sha256` are those of the file, and `location` is the `outputTargets` location of the step that wrote it;
 - each file, dimension and role is within the caps;
-- the reserved dimensions keep their meanings (a `sensor` dimension's coordinates are a layout role's names, in order);
+- the reserved dimensions keep their meanings (a `sensor` dimension's coordinates are a layout role's names, in order, or, without a layout, the sensors' names);
 - a view that declares a base meets that base's role contract, so a renderer that knows only the base can draw it.
 
 A renderer does not rely on the writer for the last rule: before it draws a view by its base, it checks the contract, and it shows the data as a table when the view misses it.

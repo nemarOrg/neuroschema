@@ -1,0 +1,547 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kind.nemar.sensor-field.v1.schema.json",
+  "title": "View Kind nemar.sensor-field, Version 1",
+  "description": "A generic scalp map, applied on top of the envelope to a view declaration whose kind is nemar.sensor-field and kind_version 1. The role values holds one or more maps, each one value per sensor; the optional role layout gives each sensor's theta and radius. With a layout, the values' sensor coordinates are the layout's name column, by position; without one, they are names in the values file, which a renderer places by nemar.sensor-labels.v1. A renderer draws each map with the algorithm nemar.sensor-field.v1 (docs/views/sensor-field.md). A generic kind: no base, no inputs and no transform.",
+  "type": "object",
+  "required": [
+    "data"
+  ],
+  "properties": {
+    "base": {
+      "not": {},
+      "description": "A generic kind has no base."
+    },
+    "base_version": {
+      "not": {},
+      "description": "A generic kind has no base."
+    },
+    "inputs": {
+      "not": {},
+      "description": "A scalp map is drawn from stored data only."
+    },
+    "transform": {
+      "not": {},
+      "description": "A scalp map is drawn from stored data only."
+    },
+    "parameters": {
+      "type": "object",
+      "description": "How the maps are drawn.",
+      "properties": {
+        "limits": {
+          "type": "string",
+          "enum": [
+            "absmax",
+            "minmax"
+          ],
+          "default": "absmax",
+          "description": "The color limits: absmax is symmetric about zero (plus and minus the largest magnitude, for a diverging map); minmax is the smallest and largest value (for a sequential map). Absent means absmax."
+        }
+      },
+      "additionalProperties": false
+    },
+    "data": {
+      "type": "array",
+      "description": "The role values, exactly once, and the role layout, at most once.",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "description": "The role values: one or more maps over the sensor dimension. With the sensor dimension along the rows, each declared number column is a map; along the columns, each data row is a map, and the declared number columns are the sensors. A second dimension, of any name, along the other axis labels the maps.",
+            "required": [
+              "role",
+              "format",
+              "columns",
+              "dims"
+            ],
+            "properties": {
+              "role": {
+                "const": "values"
+              },
+              "format": {
+                "const": "tsv"
+              },
+              "dims": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 2,
+                "description": "The sensor dimension, and at most one more along the other axis.",
+                "items": {
+                  "type": "object",
+                  "if": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "const": "sensor"
+                      }
+                    },
+                    "required": [
+                      "name"
+                    ]
+                  },
+                  "then": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "string",
+                        "description": "Sensors are named."
+                      }
+                    },
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "description": "Sensors along the rows: names in a column of this file, or the layout's rows.",
+                        "properties": {
+                          "axis": {
+                            "const": "rows"
+                          },
+                          "coords": {
+                            "type": "object",
+                            "not": {
+                              "required": [
+                                "header"
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "description": "Sensors along the columns: names in this file's header, or the layout's rows.",
+                        "properties": {
+                          "axis": {
+                            "const": "columns"
+                          },
+                          "coords": {
+                            "type": "object",
+                            "anyOf": [
+                              {
+                                "required": [
+                                  "header"
+                                ]
+                              },
+                              {
+                                "required": [
+                                  "role"
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "const": "sensor"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ]
+                },
+                "minContains": 1,
+                "maxContains": 1,
+                "allOf": [
+                  {
+                    "if": {
+                      "type": "array",
+                      "minItems": 2
+                    },
+                    "then": {
+                      "type": "array",
+                      "description": "Two dimensions run along different axes.",
+                      "allOf": [
+                        {
+                          "contains": {
+                            "type": "object",
+                            "properties": {
+                              "axis": {
+                                "const": "rows"
+                              }
+                            },
+                            "required": [
+                              "axis"
+                            ]
+                          }
+                        },
+                        {
+                          "contains": {
+                            "type": "object",
+                            "properties": {
+                              "axis": {
+                                "const": "columns"
+                              }
+                            },
+                            "required": [
+                              "axis"
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "The role layout: each sensor's name, theta in degrees and radius (EEGLAB's topoplot coordinates: theta 0 at the nose and 90 at the right ear, radius 0.5 at the head's equator), one row per sensor, with the frame the layout came from and whether its positions were measured or taken from a template.",
+            "required": [
+              "role",
+              "format",
+              "columns",
+              "dims",
+              "coordinate_system",
+              "position_source"
+            ],
+            "properties": {
+              "role": {
+                "const": "layout"
+              },
+              "format": {
+                "const": "tsv"
+              },
+              "columns": {
+                "type": "array",
+                "description": "name, theta_deg and radius, each once, and optionally sensor_type.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "enum": [
+                        "name",
+                        "theta_deg",
+                        "radius",
+                        "sensor_type"
+                      ]
+                    }
+                  },
+                  "allOf": [
+                    {
+                      "if": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "enum": [
+                              "name",
+                              "sensor_type"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "name"
+                        ]
+                      },
+                      "then": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "string"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "if": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "const": "theta_deg"
+                          }
+                        },
+                        "required": [
+                          "name"
+                        ]
+                      },
+                      "then": {
+                        "type": "object",
+                        "required": [
+                          "unit"
+                        ],
+                        "properties": {
+                          "type": {
+                            "const": "number"
+                          },
+                          "unit": {
+                            "const": "deg"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "if": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "const": "radius"
+                          }
+                        },
+                        "required": [
+                          "name"
+                        ]
+                      },
+                      "then": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "number"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "allOf": [
+                  {
+                    "contains": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "const": "name"
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ]
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  },
+                  {
+                    "contains": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "const": "theta_deg"
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ]
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  },
+                  {
+                    "contains": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "const": "radius"
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ]
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  }
+                ]
+              },
+              "dims": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "description": "The sensor dimension along the rows, named by the name column.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "const": "sensor"
+                    },
+                    "axis": {
+                      "const": "rows"
+                    },
+                    "type": {
+                      "const": "string"
+                    },
+                    "coords": {
+                      "type": "object",
+                      "required": [
+                        "column"
+                      ],
+                      "properties": {
+                        "column": {
+                          "const": "name"
+                        }
+                      },
+                      "not": {
+                        "required": [
+                          "role"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "const": "values"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "const": "layout"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1,
+          "description": "The layout is optional (minContains 0)."
+        },
+        {
+          "if": {
+            "type": "array",
+            "contains": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "const": "layout"
+                }
+              },
+              "required": [
+                "role"
+              ]
+            }
+          },
+          "then": {
+            "type": "array",
+            "description": "With a layout, the values' sensors are the layout's rows: coordinates {role: layout, column: name}.",
+            "items": {
+              "if": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "const": "values"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "then": {
+                "type": "object",
+                "properties": {
+                  "dims": {
+                    "type": "array",
+                    "items": {
+                      "if": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "const": "sensor"
+                          }
+                        },
+                        "required": [
+                          "name"
+                        ]
+                      },
+                      "then": {
+                        "type": "object",
+                        "properties": {
+                          "coords": {
+                            "type": "object",
+                            "required": [
+                              "role",
+                              "column"
+                            ],
+                            "properties": {
+                              "role": {
+                                "const": "layout"
+                              },
+                              "column": {
+                                "const": "name"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "else": {
+            "type": "array",
+            "description": "Without a layout, the values' sensors are named in the values file.",
+            "items": {
+              "if": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "const": "values"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "then": {
+                "type": "object",
+                "properties": {
+                  "dims": {
+                    "type": "array",
+                    "items": {
+                      "if": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "const": "sensor"
+                          }
+                        },
+                        "required": [
+                          "name"
+                        ]
+                      },
+                      "then": {
+                        "type": "object",
+                        "properties": {
+                          "coords": {
+                            "type": "object",
+                            "not": {
+                              "required": [
+                                "role"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

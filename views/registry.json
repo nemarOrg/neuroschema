@@ -16,14 +16,49 @@
           "dims": []
         }
       }
+    },
+    {
+      "kind": "nemar.sensor-field",
+      "kind_version": 1,
+      "base": null,
+      "base_version": null,
+      "schema": "schema/views/kind.nemar.sensor-field.v1.schema.json",
+      "roles": {
+        "values": {
+          "formats": [
+            "tsv"
+          ],
+          "dims": null
+        },
+        "layout": {
+          "formats": [
+            "tsv"
+          ],
+          "dims": [
+            "sensor"
+          ]
+        }
+      }
     }
   ],
-  "transforms": [],
+  "transforms": [
+    {
+      "name": "nemar.sensor-layout.v1",
+      "spec": "docs/views/sensor-layout.md",
+      "vectors": "views/vectors/sensor-layout.v1.json",
+      "schema": "schema/views/transform.nemar.sensor-layout.v1.schema.json"
+    }
+  ],
   "algorithms": [
     {
       "name": "nemar.view-digest.v1",
       "spec": "docs/views/view-digest.md",
       "vectors": "views/vectors/view-digest.v1.json"
+    },
+    {
+      "name": "nemar.sensor-field.v1",
+      "spec": "docs/views/sensor-field.md",
+      "vectors": "views/vectors/sensor-field.v1.json"
     }
   ],
   "formats": {
@@ -61,7 +96,7 @@
     },
     "sensor": {
       "unit": null,
-      "meaning": "A sensor, by its name; the coordinates are the name column of a layout role, in that role's row order."
+      "meaning": "A sensor, by its name; with a layout role, the coordinates are that role's name column, in its row order, and without one, names a renderer places with nemar.sensor-labels.v1."
     }
   },
   "caps": {
