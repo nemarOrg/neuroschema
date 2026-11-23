@@ -51,7 +51,17 @@ class Refusal(ValueError):
 
 
 class ViewRefused(Refusal):
-    """Nothing is drawn: an invalid declaration, or a file not the one recorded."""
+    """Nothing is drawn: an invalid declaration, or a file not the one recorded.
+
+    ``location`` names the file that failed, and ``downloads`` lists the view
+    files still offered for download: every one but that file, or none for an
+    invalid declaration (:func:`build_model` fills it in).
+    """
+
+    def __init__(self, word: str, detail: str = "", location: str | None = None):
+        super().__init__(word, detail)
+        self.location = location
+        self.downloads: list[dict] = []
 
 
 class KindRefused(Refusal):
@@ -235,12 +245,12 @@ class _Reader:
     def verified(self, entry: Mapping) -> bytes:
         location = entry["location"]
         if location not in self.files:
-            raise ViewRefused("file_missing", location)
+            raise ViewRefused("file_missing", location, location)
         data = bytes(self.files[location])
         if len(data) != entry["size"]:
-            raise ViewRefused("file_size_mismatch", location)
+            raise ViewRefused("file_size_mismatch", location, location)
         if hashlib.sha256(data).hexdigest() != entry["sha256"]:
-            raise ViewRefused("file_digest_mismatch", location)
+            raise ViewRefused("file_digest_mismatch", location, location)
         if len(data) > self.caps["bytes_per_role"]:
             raise KindRefused("cap_exceeded", f"{location}: bytes")
         return data
@@ -553,10 +563,23 @@ def build_model(
 
     Raises :class:`ViewRefused` when the declaration is invalid or a file it
     reads is missing or differs from its recorded size or SHA-256: nothing is
-    drawn. Raises ``LookupError`` for a registered kind this module has no
-    model for (``nemar.sensor-field`` has its own reference).
+    drawn, and the refusal's ``downloads`` still offer every other view file
+    (none for an invalid declaration). Raises ``LookupError`` for a registered
+    kind this module has no model for (``nemar.sensor-field`` has its own
+    reference).
     """
     registry = load_registry() if registry is None else registry
+    try:
+        return _build(view, files, registry)
+    except ViewRefused as exc:
+        if exc.word != "declaration_invalid":
+            exc.downloads = [
+                d for d in _downloads(view) if d["location"] != exc.location
+            ]
+        raise
+
+
+def _build(view: Mapping, files: Mapping[str, bytes], registry: Mapping) -> dict:
     if not view_validator().is_valid(view):
         raise ViewRefused("declaration_invalid")
     drawing = draw_as(view, registry)

@@ -92,6 +92,36 @@ def test_refusal_vectors_replay(refusal):
     with pytest.raises(ViewRefused) as raised:
         build_model(refusal["view"], decode(refusal["files"]))
     assert raised.value.word == refusal["word"]
+    assert raised.value.downloads == refusal["downloads"]
+
+
+def _all_downloads(view: dict) -> list[str]:
+    locations = [e["location"] for e in view.get("data", [])]
+    return locations + [
+        i["file"]["location"] for i in view.get("inputs", []) if "file" in i
+    ]
+
+
+@pytest.mark.parametrize("refusal", REFUSALS, ids=[r["name"] for r in REFUSALS])
+def test_a_refused_view_still_offers_its_other_files(refusal):
+    """No view hides data: a refusal offers every file but the one that failed.
+
+    An invalid declaration offers none.
+    """
+    offered = [d["location"] for d in refusal["downloads"]]
+    every = _all_downloads(refusal["view"])
+    if refusal["word"] == "declaration_invalid":
+        assert offered == []
+    else:
+        failed = set(every) - set(offered)
+        assert len(failed) == 1
+        assert offered == [location for location in every if location not in failed]
+
+
+def test_a_refused_view_offers_files_it_has_not_read():
+    """The npy file of an unknown kind is never read, and is still offered."""
+    refusal = next(r for r in REFUSALS if r["name"].startswith("refusal_fallback"))
+    assert any(d["location"].endswith(".npy") for d in refusal["downloads"])
 
 
 SNAP_CASES = [c for c in CASES if "snaps" in c]

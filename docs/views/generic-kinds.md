@@ -23,6 +23,8 @@ A renderer builds a view's model in four steps.
 A renderer reads only the files its model needs, and it checks each one before it parses it.
 The file must be present (`file_missing`), its length must be the declared `size` (`file_size_mismatch`), and its Secure Hash Algorithm 256 (SHA-256) digest must be the declared `sha256` (`file_digest_mismatch`).
 A failed check refuses the whole view and nothing is drawn, because the bytes are not the bytes NEMAR recorded.
+Because no view hides data, the renderer still offers every other file of the view for download, and it checks a file it has not read when that file is downloaded.
+An invalid declaration offers no file, because the declaration that names the files is itself invalid.
 A file longer than `caps.bytes_per_role` in the registry (4,194,304 bytes) is refused with `cap_exceeded`, and the view falls back.
 
 Every model lists the view's files under `downloads`: each `data` entry, then each `file` input, in declaration order, with its role, location, size and SHA-256.
@@ -316,7 +318,7 @@ When a kind refused the files, `refused` is `{"kind", "kind_version", "word"}`, 
 Each case has a `name`, what it `covers`, a `view` declaration, its `files` and the expected `model`, which is the whole output of `build_model`: `drawing`, `refused`, `downloads` and `model`.
 `files` maps each location to `{"text": …}`, the file's UTF-8 text, or to `{"base64": …}` for bytes that are not UTF-8; the declaration's `size` and `sha256` are those of the bytes.
 A case of `nemar.lines` also lists `snaps`, each a pointer `x` and the `row` it reads, and a case of bins by edges lists `locates`, each a `value` and the `bin` that holds it (-1 for underflow, the number of bins for overflow).
-Each refusal has a `name`, what it `covers`, a `view`, its `files` and the `word`: the view is refused and nothing is drawn.
+Each refusal has a `name`, what it `covers`, a `view`, its `files`, the `word` and the `downloads` still offered: the view is refused and nothing is drawn.
 
 An implementation parses the file with its JSON parser, builds each case's model and compares it with `model`, numbers by binary64 equality and texts exactly.
 

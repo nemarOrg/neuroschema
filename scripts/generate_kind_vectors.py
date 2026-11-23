@@ -1404,7 +1404,7 @@ def _refusal(name: str, covers: str, the_view: dict, files: dict) -> dict:
     try:
         build_model(the_view, files)
     except ViewRefused as exc:
-        word = exc.word
+        word, downloads = exc.word, exc.downloads
     else:
         raise AssertionError(f"{name}: not refused")
     return {
@@ -1413,6 +1413,7 @@ def _refusal(name: str, covers: str, the_view: dict, files: dict) -> dict:
         "view": the_view,
         "files": _encoded(files),
         "word": word,
+        "downloads": downloads,
     }
 
 
@@ -1436,7 +1437,8 @@ def models() -> dict:
             "view, and compare it with model: numbers by binary64 equality, texts "
             "exactly. snaps give the row a pointer at x reads, and locates the bin "
             "that holds a value (-1 underflow, the bin count overflow). Each "
-            "refusal's view is refused with word and nothing is drawn."
+            "refusal's view is refused with word, nothing is drawn, and downloads "
+            "lists the files still offered."
         ),
         "cases": [_model_case(case) for case in cases],
         "refusals": [_refusal(*r) for r in refusals()],
