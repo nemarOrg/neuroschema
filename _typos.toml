@@ -4,3 +4,8 @@ hed = "hed"
 HED = "HED"
 # SER appears in HySER (High-density Surface Electromyogram Recordings)
 SER = "SER"
+# ALS = anterior-left-superior, a coordinate frame (docs/views/sensor-layout.md)
+als = "als"
+ALS = "ALS"
+# Trak appears in CapTrak, a BIDS coordinate system
+Trak = "Trak"
