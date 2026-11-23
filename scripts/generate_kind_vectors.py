@@ -307,14 +307,17 @@ NUMBERED = tsv(
 
 
 def preset_spectrum(
-    layout: bytes = LAYOUT, layout_role: str = "layout", name_type: str = "string"
+    layout: bytes = LAYOUT,
+    layout_role: str = "layout",
+    name_type: str = "string",
+    values: bytes = NUMBERED,
 ) -> dict:
     """An unknown kind over nemar.lines whose sensors are named by its layout."""
     sensor = dim("sensor", "columns", "string", {"role": "layout", "column": "name"})
     values = data_entry(
         "values",
         f"{PREFIX}_numbered.tsv",
-        NUMBERED,
+        values,
         columns=[col("freq_hz", unit="Hz")]
         + [col(n, unit="dB") for n in ("ch1", "ch2", "ch3")],
         dims=[FREQ, sensor],
@@ -937,6 +940,257 @@ def cap_cases() -> list[Case]:
     ]
 
 
+# ── The order of checks: two faults, the first check's word ──────────────
+
+
+def order_cases() -> list[Case]:
+    def lines_case(name, covers, data, columns=None, caps=None):
+        entry = spectrum_entry(data, columns)
+        return Case(name, covers, lines_view(entry), {SPECTRUM_AT: data}, caps)
+
+    def hist_case(name, covers, data, caps=None):
+        return Case(name, covers, histogram_view(data), {HIST_AT: data}, caps)
+
+    crlf = SPECTRUM.replace(b"\n", b"\r\n")
+    hz, db = col("freq_hz", unit="Hz"), col("Fp1", unit="dB")
+    short = tsv("name theta_deg radius", "Fp1 -18 0.51", "Fp2 18 0.51")
+    unnamed = LAYOUT.replace(b"name\t", b"label\t", 1)
+    probabilities = tsv("brain eye muscle", "91.5 2 6.5", "4.25 88 7.75", "30 30 40")
+    two_rows = tsv("label", "IC1", "IC2")
+    two_numbers = tsv("number", "1", "2.5")
+    heat_preset = view(
+        "icprobabilities",
+        "acme.ic-probabilities",
+        "Class probabilities, labeled from other roles.",
+        [
+            data_entry(
+                "values",
+                f"{PREFIX}_probabilities.tsv",
+                probabilities,
+                columns=CLASS_COLUMNS[1:],
+                dims=[
+                    dim(
+                        "component",
+                        "rows",
+                        "string",
+                        {"role": "components", "column": "label"},
+                    ),
+                    dim(
+                        "class",
+                        "columns",
+                        "string",
+                        {"role": "classes", "column": "name"},
+                    ),
+                ],
+            ),
+            data_entry(
+                "components",
+                f"{PREFIX}_components.tsv",
+                two_rows,
+                columns=[col("label", "string")],
+            ),
+        ],
+        base="nemar.heatmap",
+        base_version=1,
+    )
+    int_rows = copy.deepcopy(heat_preset)
+    int_rows["data"][0]["dims"] = [
+        dim("component", "rows", "integer", {"role": "numbers", "column": "number"}),
+        CLASS,
+    ]
+    int_rows["data"][1] = data_entry(
+        "numbers",
+        f"{PREFIX}_numbers.tsv",
+        two_numbers,
+        columns=[col("number", "integer")],
+    )
+    return [
+        lines_case(
+            "order_bytes_cap_before_grammar",
+            "Over the byte cap and CRLF line endings: cap_exceeded.",
+            crlf,
+            caps={"bytes_per_role": len(crlf) - 1},
+        ),
+        Case(
+            "order_byte_order_mark_before_line_endings",
+            "A byte order mark and CRLF line endings: tsv_encoding.",
+            table_view(b"\xef\xbb\xbf" + CHANNELS.replace(b"\n", b"\r\n")),
+            {CHANNELS_AT: b"\xef\xbb\xbf" + CHANNELS.replace(b"\n", b"\r\n")},
+        ),
+        Case(
+            "order_line_endings_before_header",
+            "CRLF line endings and a repeated header name, before the last "
+            "column so the CR cannot mask it: tsv_line_endings.",
+            table_view(b"name\tname\tx\r\na\tb\tc\r\n"),
+            {CHANNELS_AT: b"name\tname\tx\r\na\tb\tc\r\n"},
+        ),
+        Case(
+            "order_header_before_ragged",
+            "A repeated header name and a ragged row: tsv_header_repeated.",
+            table_view(b"name\tname\na\n"),
+            {CHANNELS_AT: b"name\tname\na\n"},
+        ),
+        lines_case(
+            "order_grammar_before_columns",
+            "A ragged row and an undeclared header name: tsv_ragged.",
+            SPECTRUM + b"3\t1\n",
+            [hz, col("nope", unit="dB")],
+        ),
+        lines_case(
+            "order_repeated_before_missing",
+            "A missing column declared before a repeated one: column_repeated.",
+            SPECTRUM,
+            [hz, col("nope", unit="dB"), db, db],
+        ),
+        lines_case(
+            "order_columns_before_coordinate",
+            "A missing column and an x column in kHz: column_missing.",
+            SPECTRUM,
+            [col("freq_hz", unit="kHz"), col("nope", unit="dB")],
+        ),
+        lines_case(
+            "order_coordinate_before_values",
+            "An x column in kHz and series in dB and uV: coords_mismatch.",
+            SPECTRUM,
+            [col("freq_hz", unit="kHz"), db, col("Fp2", unit="uV")],
+        ),
+        Case(
+            "order_value_type_before_units",
+            "A text value column among values in % and dB: value_type.",
+            heatmap_view(
+                columns=[
+                    col("component", "string"),
+                    col("brain", unit="%"),
+                    col("eye", "string"),
+                    col("muscle", unit="dB"),
+                ]
+            ),
+            {CLASSES_AT: CLASSES},
+        ),
+        lines_case(
+            "order_units_before_empty",
+            "Units that differ and no rows: value_units_differ.",
+            tsv("freq_hz Fp1 Fp2"),
+            [hz, db, col("Fp2", unit="uV")],
+        ),
+        lines_case(
+            "order_empty_before_caps",
+            "No rows and three value columns over a cap of 2: empty.",
+            tsv("freq_hz Fp1 Fp2 Cz"),
+            caps={"entries_per_dim": 2},
+        ),
+        lines_case(
+            "order_caps_before_cells",
+            "Five rows over a cap of 4 and an n/a cell: cap_exceeded.",
+            SPECTRUM.replace(b"12.5", b"n/a"),
+            caps={"entries_per_dim": 4},
+        ),
+        lines_case(
+            "order_column_by_column",
+            "An x cell 1e400 in the last row and a value n/a in the first: the x "
+            "column is checked first, column by column, so cell_not_finite.",
+            tsv("freq_hz Fp1 Fp2 Cz", "0 n/a 1 1", "1e400 1 1 1"),
+        ),
+        lines_case(
+            "order_declared_column_order",
+            "Fp1 holds 1e400 in row 1 and Fp2 n/a in row 2, and Fp2 is declared "
+            "first: cell_not_number.",
+            tsv("freq_hz Fp1 Fp2 Cz", "0 1e400 1 1", "1 1 n/a 1"),
+            [hz, col("Fp2", unit="dB"), db, col("Cz", unit="dB")],
+        ),
+        lines_case(
+            "order_cells_before_x_order",
+            "Decreasing x and an n/a cell: cell_not_number.",
+            tsv("freq_hz Fp1 Fp2 Cz", "1 1 1 1", "0 n/a 1 1"),
+        ),
+        Case(
+            "order_x_order_before_role_coordinates",
+            "Decreasing x and a layout too short for the series: x_not_increasing.",
+            preset_spectrum(
+                short, values=tsv("freq_hz ch1 ch2 ch3", "1 1 2 3", "0 2 3 4")
+            ),
+            {
+                f"{PREFIX}_numbered.tsv": tsv(
+                    "freq_hz ch1 ch2 ch3", "1 1 2 3", "0 2 3 4"
+                ),
+                LAYOUT_AT: short,
+            },
+        ),
+        Case(
+            "order_rows_before_columns",
+            "Row labels too few (coords_length) and column labels from an absent "
+            "role (coords_unresolved): the rows come first, coords_length.",
+            heat_preset,
+            {
+                f"{PREFIX}_probabilities.tsv": probabilities,
+                f"{PREFIX}_components.tsv": two_rows,
+            },
+        ),
+        Case(
+            "order_role_column_missing_before_mismatch",
+            "The layout's header lacks name, which is also declared integer: "
+            "column_missing.",
+            preset_spectrum(unnamed, name_type="integer"),
+            {f"{PREFIX}_numbered.tsv": NUMBERED, LAYOUT_AT: unnamed},
+        ),
+        Case(
+            "order_role_mismatch_before_length",
+            "The layout's name declared integer and too short: coords_mismatch.",
+            preset_spectrum(short, name_type="integer"),
+            {f"{PREFIX}_numbered.tsv": NUMBERED, LAYOUT_AT: short},
+        ),
+        Case(
+            "order_role_length_before_cells",
+            "Two integer row labels, one 2.5, for three rows: coords_length.",
+            int_rows,
+            {
+                f"{PREFIX}_probabilities.tsv": probabilities,
+                f"{PREFIX}_numbers.tsv": two_numbers,
+            },
+        ),
+        Case(
+            "order_table_columns_before_cap",
+            "A missing column and cells over the cap: column_missing.",
+            table_view(CHANNELS, [col("name", "string"), col("impedance", "string")]),
+            {CHANNELS_AT: CHANNELS},
+            caps={"cells_per_role": 5},
+        ),
+        Case(
+            "order_table_cap_before_cells",
+            "Cells over the cap and an n/a number cell: cap_exceeded.",
+            table_view(CHANNELS, [col("name", "string"), col("status_description")]),
+            {CHANNELS_AT: CHANNELS},
+            caps={"cells_per_role": 5},
+        ),
+        hist_case(
+            "order_histogram_bytes_before_json",
+            "Over the byte cap and a NaN literal: cap_exceeded.",
+            b'{"categories": ["a"], "counts": [NaN]}\n',
+            caps={"bytes_per_role": 10},
+        ),
+        hist_case(
+            "order_histogram_json_before_content",
+            "A member named twice and a negative count: json_invalid.",
+            b'{"categories": ["a"], "counts": [-1], "counts": [-1]}\n',
+        ),
+        hist_case(
+            "order_histogram_content_before_edges",
+            "A negative count and equal edges: content_invalid.",
+            content(edges=[0, 0], counts=[-1], underflow=0, overflow=0),
+        ),
+        hist_case(
+            "order_histogram_edges_before_counts",
+            "Equal edges and one count for two bins: edges_not_increasing.",
+            content(edges=[0, 0, 1], counts=[1], underflow=0, overflow=0),
+        ),
+        hist_case(
+            "order_histogram_counts_before_total",
+            "Two counts for three categories, totaling 2^53: counts_length.",
+            content(categories=["a", "b", "c"], counts=[2**53 - 1, 1]),
+        ),
+    ]
+
+
 # ── The fallback ──────────────────────────────────────────────────────────
 
 
@@ -1059,6 +1313,21 @@ def refusals() -> list[Case]:
                 f"{PREFIX}_labels.tsv": bad_layout,
                 f"{PREFIX}_broken.tsv": CHANNELS + b"x\n",
             },
+        ),
+        (
+            "order_declaration_before_files",
+            "An invalid declaration and no files: declaration_invalid, and no "
+            "file is offered, since the declaration that names them is not valid.",
+            lines_view(base="nemar.table", base_version=1),
+            {},
+        ),
+        (
+            "order_digest_before_bytes_cap",
+            "Other bytes of the declared size, over the byte cap: "
+            "file_digest_mismatch.",
+            lines_view(),
+            {SPECTRUM_AT: wrong},
+            {"bytes_per_role": 10},
         ),
     ]
     return [Case(*fields) for fields in cases]
@@ -1518,6 +1787,7 @@ def models() -> dict:
         *heatmap_cases(),
         *histogram_cases(),
         *cap_cases(),
+        *order_cases(),
         *fallback_cases(),
     ]
     names = [c.name for c in [*cases, *refusals()]]

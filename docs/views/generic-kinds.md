@@ -43,6 +43,7 @@ A tab-separated values (TSV) file is read under the grammar of [docs/views.md](.
 - A line splits at each TAB into cells.
   Header names are unique (`tsv_header_repeated`), and every data row has as many cells as the header (`tsv_ragged`).
 
+These checks run in the order of this list.
 An empty line is a row of one empty cell, and a file with only a header has no data rows.
 
 A role reads only the columns it declares in `columns`, by header name and in declared order.
@@ -98,15 +99,17 @@ When the files break more than one rule, the first rule broken gives the word.
 For `nemar.table`, `nemar.lines` and `nemar.heatmap`, the checks run in this order.
 
 1. The role's file: present, size, SHA-256, then the cap on bytes.
-2. The TSV grammar.
-3. The declared columns (`column_repeated`, `column_missing`).
-4. The coordinate column, if the role has one (`coords_unresolved`, `coords_mismatch`).
-5. The value columns (`value_type`, `value_units_differ`), then `empty`, then the caps on rows, value columns and cells.
-6. The cells: the coordinate column first, then the value columns in declared order (for a table, the declared columns in declared order), each from top to bottom.
+2. The TSV grammar, in the order of its list.
+3. The declared columns: first whether any name is declared twice (`column_repeated`), then each name in declared order (`column_missing`).
+4. The coordinate column, if the role has one (`coords_unresolved`, then `coords_mismatch`).
+5. The value columns, each in declared order (`value_type`), then their units (`value_units_differ`), then `empty`, then the caps on rows, value columns and cells.
+   A table has only the cap on cells here.
+6. The cells, column by column and never row by row: the coordinate column first, then the value columns in declared order (for a table, the declared columns in declared order), each column from top to bottom.
 7. The kind's own rule (`x_not_increasing` for `nemar.lines`).
-8. Coordinates from another role, the rows' dimension before the columns' (`coords_unresolved`, then that role's file and grammar, `column_missing`, `coords_mismatch`, `coords_length` and its cells).
+8. Coordinates from another role, the rows' dimension before the columns'; for each, `coords_unresolved`, then that role's file and grammar, `column_missing`, `coords_mismatch`, `coords_length`, and its cells.
 
 For `nemar.histogram`, they run in this order: the file and the cap on bytes, `json_invalid`, `content_invalid`, `edges_not_increasing`, `counts_length`, then the cap on the total (`cap_exceeded`).
+The vectors hold one case for each pair of neighboring checks, with two faults, so a renderer that runs two checks in the other order gives the other word.
 
 ## `nemar.table` version 1
 
