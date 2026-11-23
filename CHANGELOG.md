@@ -16,6 +16,11 @@ Quality views replace figures: a view is data a browser draws, declared with a n
 - `neuroschema.views`: the registry reader and the renderer rule (`draw_as`), which draws an unknown kind by its base only when each of the base's roles is valid under the base kind's schema (`meets_role_contract`, `role_schemas`), offering the other files for download, and otherwise shows a table.
 - `processingTypes`: `viewKey`, `kindName`, `transformName`, `roleName`, `dimName`, `formatName` and `recipe`.
 - `docs/views.md`: the view vocabulary, the renderer rule, data roles, dimensions, inputs, scope, formats, caps, versioning and what digests prove.
+- `nemar.sensor-field.v1`, the scalp map (EEGLAB's topoplot, with eegprep at `edf694c8` as the reference), and the kind `nemar.sensor-field` version 1 that draws with it (`schema/views/kind.nemar.sensor-field.v1.schema.json`: a `values` role of one or more maps over a `sensor` dimension, and an optional `layout` role of name, theta and radius; without a layout, the sensors are names placed by `nemar.sensor-labels.v1`). `docs/views/sensor-field.md` states the algorithm outright, including what eegprep leaves implicit: sensors within 1e-3 merge at their mean value, fewer than 3 interpolated sensors are refused, the interpolation matrix is solved by lower-upper (LU) decomposition with partial pivoting and no regularization, and maps with nothing to draw are refused with a word.
+- `nemar.sensor-layout.v1`, three-dimensional positions to a layout: rotation into the anterior-left-superior (ALS) frame from the Brain Imaging Data Structure (BIDS) frame table (no default frame: an unknown one is `frame_unknown`; template positions, `n/a` with a montage, are right-anterior-superior), an algebraic sphere-fit center (the centroid when coplanar), and eegprep's `cart2topo` (`docs/views/sensor-layout.md`, `schema/views/transform.nemar.sensor-layout.v1.schema.json`, which `view.schema.json` applies to every view that names the transform).
+- Vectors `views/vectors/sensor-field.v1.json` (32 to 256 sensors, duplicates, near duplicates, sensors outside the head and the interpolation square, values and places that are not finite, constant and refused maps) and `views/vectors/sensor-layout.v1.json`, written from eegprep by `scripts/generate_view_vectors.py`, whose `--check` CI runs on Python 3.12.
+- The Python reference renderers `neuroschema.views.sensor_field` and `neuroschema.views.sensor_layout` (with `neuroschema.views.linalg`), numpy only, as the optional extra `views`; the dependency group `vectors` installs eegprep at the reference commit and scipy for the generator.
+- `neuroschema.views.optional_roles`: a kind marks a role optional with a `contains` clause whose `minContains` is 0.
 
 ### Changed (breaking)
 
@@ -27,6 +32,8 @@ Quality views replace figures: a view is data a browser draws, declared with a n
 - `qualityMetric`: the producer is exactly one of `plugin` and `recipe`, so a recipe's own metric names its recipe.
 - `processingTypes`: `figures` leaves the `checkpointName` examples.
 - CI and the typo check run on pull requests into `feature/**` branches.
+- The role contract (`meets_role_contract`) requires each role a kind requires exactly once and each optional role at most once, and validates the view's entries in the kind's roles together under the kind schema's `data` subschema, so a rule across roles holds for a preset drawn by its base.
+- The reserved dimension `sensor`: without a layout role, its coordinates are names a renderer places with `nemar.sensor-labels.v1`.
 
 ## [0.5.0] - 2026-11-22
 
