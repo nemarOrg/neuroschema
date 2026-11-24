@@ -1088,13 +1088,13 @@ def test_partial_positions_carry_their_measures():
     xyz = np.column_stack([numbers(unstable["positions"][a]) for a in "xyz"])
     with pytest.raises(sl.SensorLayoutRefusal) as raised:
         sl.sensor_layout(xyz, unstable["coordinate_system"])
-    assert raised.value.word == "positions_partial"
-    assert (
-        raised.value.dilution
-        <= sl.PARTIAL_DILUTION
-        < unstable["bounds"]["dilution"] + 1
-    )
-    assert raised.value.stability > sl.PARTIAL_SHIFT
+    refusal = raised.value
+    assert refusal.word == "positions_partial"
+    for measure in ("dilution", "stability"):
+        got, want = getattr(refusal, measure), unstable["bounds"][measure]
+        assert abs(got - want) <= LTOL["bounds_absolute"], measure
+    assert refusal.dilution <= sl.PARTIAL_DILUTION  # passed, so stability refused
+    assert refusal.stability > sl.PARTIAL_SHIFT
 
 
 def test_stability_is_the_largest_move_of_a_refit_without_one_position():
