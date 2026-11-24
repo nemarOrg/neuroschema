@@ -4,7 +4,7 @@ The Python reference renderer for the algorithm ``docs/views/sensor-field.md``
 specifies: EEGLAB's ``topoplot`` map (plotting and interpolation radii, squeeze,
 a 67-by-67 grid, biharmonic interpolation, the head mask, limits and contours),
 with the rules eegprep leaves implicit stated outright (sensors within 1e-3 of
-an earlier one merge, fewer than three interpolated sensors draw no map, the
+an earlier one merge, fewer than eight interpolated sensors draw no map, the
 interpolation matrix is solved by LU decomposition with partial pivoting).
 ``views/vectors/sensor-field.v1.json`` holds the cases every implementation
 reproduces, computed by eegprep at a pinned commit.
@@ -32,8 +32,9 @@ GRID_SIZE = 67
 """Grid points along each axis."""
 MERGE_DISTANCE = 1e-3
 """Sensors this close (raw layout units) to an earlier kept sensor merge into it."""
-MIN_SENSORS = 3
-"""Fewer interpolated sensors than this draw no map."""
+MIN_SENSORS = 8
+"""Fewer interpolated sensors than this draw no map: 8, as many channels as
+``nemar.sensor-labels.v1`` needs to place sensors by name."""
 CONTOUR_COUNT = 6
 """Interior contour levels."""
 COLOR_MARGIN = 0.05

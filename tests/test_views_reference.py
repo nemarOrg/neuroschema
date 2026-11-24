@@ -215,7 +215,9 @@ FIELD_MUTATIONS = {
     "merge distance 1e-3 -> 0": ("MERGE_DISTANCE", 0.0),
     "merge distance 1e-3 -> 2e-3": ("MERGE_DISTANCE", 2e-3),
     "contours 6 -> 5": ("CONTOUR_COUNT", 5),
-    "fewest sensors 3 -> 2": ("MIN_SENSORS", 2),
+    "fewest sensors 8 -> 7": ("MIN_SENSORS", 7),
+    "fewest sensors 8 -> 9": ("MIN_SENSORS", 9),
+    "fewest sensors 8 -> 3 (the old minimum)": ("MIN_SENSORS", 3),
     "color margin 5% -> 0": ("COLOR_MARGIN", 0.0),
     "minmax margin by magnitude (EEGLAB)": ("color_axis", _eeglab_axis),
     "square with abs()": ("in_square", _abs_square),
@@ -264,6 +266,16 @@ def test_radii_from_the_kept_sensors_are_caught(monkeypatch):
     monkeypatch.setattr(sf, "outermost", lambda radius, usable: radius[kept].max())
     assert field_mismatches(FIELD_CASES["merged_outermost"])
     assert not field_mismatches(FIELD_CASES["montage_32"])
+
+
+def test_a_map_needs_as_many_sensors_as_names_need():
+    """The scalp map's minimum is sensor-labels' minimum of channels and matches."""
+    from neuroschema.views import sensor_labels
+
+    assert sf.MIN_SENSORS == sensor_labels.MIN_CHANNELS == sensor_labels.MIN_MATCHED
+    assert len(FIELD_CASES["eight_sensors"]["expected"]["interpolated"]) == 8
+    assert FIELD_CASES["seven_sensors"]["refused"] == "too_few_sensors"
+    assert FIELD_CASES["merged_to_seven"]["refused"] == "too_few_sensors"
 
 
 def test_refusals_without_usable_sensors():

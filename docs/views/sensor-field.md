@@ -37,7 +37,7 @@ Version 1 takes no override of the radii, the grid or the head.
    The plotted sensors are the usable sensors whose radius is at most `plotrad`: a renderer draws a marker for each.
    The interpolated sensors are the kept sensors with `x <= intrad` and `y <= intrad`.
    There is no absolute value: a sensor far behind the head or far to its left is interpolated, as in EEGLAB.
-   If fewer than 3 sensors are interpolated, the map is refused with `too_few_sensors`.
+   If fewer than 8 sensors are interpolated, the map is refused with `too_few_sensors`: a map needs 8, as many as `nemar.sensor-labels.v1` needs to place sensors by name, because a spline through fewer shows the spline more than the field.
 6. **Squeeze.**
    An interpolated sensor's grid position is `(x * squeezefac, y * squeezefac)`.
 7. **Grid.**
@@ -78,7 +78,7 @@ These are every word a sensor-field view can end in, each with what it means for
 
 | Word | From | Meaning |
 |---|---|---|
-| `too_few_sensors` | this algorithm, step 5 | Fewer than 3 sensors have a value and a place (after merging sensors at one place), and a map needs 3. |
+| `too_few_sensors` | this algorithm, step 5 | Fewer than 8 sensors have a value and a place inside the interpolation square (after merging sensors at one place), and a map needs 8. |
 | `head_outside_grid` | this algorithm, step 7 | A sensor lies so far outside the head that the map's grid has no point inside it. |
 | `interpolation_failed` | this algorithm, step 10 | The values could not be interpolated into finite numbers (a value near the largest a double can hold, or sensors that make the system singular). |
 | `frame_unknown` | `nemar.sensor-layout.v1` | The view's positions name a frame whose orientation is not known, or name it inconsistently, so they cannot be projected; the renderer places the sensors by name instead and says so. |
@@ -191,7 +191,7 @@ The two divergences, the unreachable pseudo-inverse fallback and the shifted val
   EEGLAB's `topoplot.m` takes its radii from every channel with a value and a place, before it interpolates; eegprep does the same and has no merge.
   The vectors' maps are eegprep's map of the merged sensors, so where a merged-away sensor is the outermost (the `merged_outermost` case), the generator passes eegprep the plotting radius from every usable sensor through eegprep's own `plotrad` option; everywhere else it checks that eegprep's radius is the spec's.
 - **Too few sensors, and maps with nothing to draw.**
-  eegprep draws any number of sensors; this page refuses fewer than 3.
+  eegprep draws any number of sensors; this page refuses fewer than 8.
   Where a sensor stretches the grid past the head, or the interpolation overflows, eegprep returns a map with no finite cell; this page refuses it with a word.
 
 ## Vectors
@@ -200,7 +200,7 @@ The two divergences, the unreachable pseudo-inverse fallback and the shifted val
 Each case gives `sensors` (`name`, `theta_deg`, `radius`, `value`, with `null` for a number that is not finite) and either `refused` (the word) or `expected`: `plotrad`, `intrad`, `squeezefac`, `plotted`, `interpolated` and `merged` (sensor rows counted from 0; each merge group lists its kept sensor first), the grid axes `x` and `y`, the cells `z` (`z[i][j]` at `(x[i], y[j])`, `null` where masked), `limits` and `color_axis` for both choices, and `contours`.
 The expected map is eegprep's `topoplot` of the usable, merged sensors; the `minmax` color axis is this page's rule, since eegprep sets none.
 A case whose `sensors` give `x`, `y` and `z` instead of `theta_deg` and `radius` is placed by positions, in the frame its `coordinate_system` names (or `n/a` with its `montage`): its `expected.layout` is the projection by `nemar.sensor-layout.v1` (`center`, `center_method`, `theta_deg`, `radius`, compared as [`sensor-layout.md`](sensor-layout.md#parity) says), and the map is drawn from that layout.
-The cases cover 32, 64, 128 and 256 sensors on eegprep's packaged caps (laid out by `nemar.sensor-layout.v1`), exact duplicates, sensors 4e-4 and 9e-4 from another (merged), two sensors 1.5e-3 apart (not merged), sensors all on the midline, sensors outside the head and outside the interpolation square, values and places that are not finite, equal values, all zeros (a constant map), exactly 3 sensors, 2 sensors and a merge down to 2 (refused), a dynamic range of 10^6, a sensor so far out that no cell is inside the head and values that overflow (refused), a field whose most negative value outweighs its most positive, exact ties at every `<=` (`boundary_ties`), a merged sensor that is the outermost (`merged_outermost`), maps of one sign whose every cell lies inside both color axes (`one_sign_positive_db`, `one_sign_negative_db`), and positions: 64 measured positions (one without a finite x), the whole GSN-HydroCel-32 montage and the standard_1005 midline as template positions, projected to maps; positions in an unknown frame and a montage beside a named frame (refused, `frame_unknown`); and a flat disk, three positions and a ring of measured positions (refused, `positions_flat`).
+The cases cover 32, 64, 128 and 256 sensors on eegprep's packaged caps (laid out by `nemar.sensor-layout.v1`), exact duplicates, sensors 4e-4 and 9e-4 from another (merged), two sensors 1.5e-3 apart (not merged), sensors all on the midline, sensors outside the head and outside the interpolation square, values and places that are not finite, equal values, all zeros (a constant map), exactly 8 sensors, 7 sensors and a merge down to 7 (refused), a dynamic range of 10^6, a sensor so far out that no cell is inside the head and values that overflow (refused), a field whose most negative value outweighs its most positive, exact ties at every `<=` (`boundary_ties`), a merged sensor that is the outermost (`merged_outermost`), maps of one sign whose every cell lies inside both color axes (`one_sign_positive_db`, `one_sign_negative_db`), and positions: 64 measured positions (one without a finite x), the whole GSN-HydroCel-32 montage and the standard_1005 midline as template positions, projected to maps; positions in an unknown frame and a montage beside a named frame (refused, `frame_unknown`); and a flat disk, three positions and a ring of measured positions (refused, `positions_flat`).
 
 Each case's inputs (names, theta, radius and value, or positions and value) are frozen in `scripts/view_vector_inputs.json`: they were computed once from eegprep's packaged caps, and the generator reads them, so a platform's sine or a library's rounding can never move an input; only the expected outputs are computed.
 `scripts/generate_view_vectors.py` writes the vectors from eegprep, with the `vectors` dependency group (Python 3.12 or later): `uv run --group vectors python scripts/generate_view_vectors.py`.

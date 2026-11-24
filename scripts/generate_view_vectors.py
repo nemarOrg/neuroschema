@@ -55,6 +55,7 @@ CHECK_SCALARS = 1e-12
 
 GRID = 67
 MERGE = 1e-3
+FEWEST = 8  # a map needs 8 interpolated sensors, as sensor-labels needs 8 channels
 
 # The BIDS frame table, from the coordinate-systems appendix (BIDS_SPEC).
 ALS = ["CTF", "4DBti", "KitYokogawa", "EEGLAB", "EEGLAB-HJ"]
@@ -368,7 +369,7 @@ def field_case_from(name, description, sensors, extra=None):
     intrad = min(1.0, outer * 1.02)
     x, y = planar(np.nan_to_num(theta), np.nan_to_num(radius))
     interpolated = [k for k in kept if x[k] <= intrad and y[k] <= intrad]
-    if len(interpolated) < 3:
+    if len(interpolated) < FEWEST:
         case["refused"] = "too_few_sensors"
         return case
     outer_kept = max(radius[k] for k in kept)
@@ -688,35 +689,40 @@ def field_cases():
             np.zeros(32),
         )
     )
+    few_names = ["A", "B", "C", "D", "E", "F", "G", "H"]
+    few_theta = [-30.0, 45.0, 170.0, -120.0, 90.0, 0.0, -75.0, 135.0]
+    few_radius = [0.3, 0.25, 0.4, 0.35, 0.45, 0.1, 0.2, 0.15]
+    few_values = [1.0, -2.0, 0.5, 1.5, -1.0, 2.0, -0.5, 0.25]
     cases.append(
         field_case(
-            "three_sensors",
-            "Exactly three sensors: the fewest that draw a map.",
-            ["A", "B", "C"],
-            [-30.0, 45.0, 170.0],
-            [0.3, 0.25, 0.4],
-            [1.0, -2.0, 0.5],
+            "eight_sensors",
+            "Exactly eight sensors: the fewest that draw a map, as "
+            "nemar.sensor-labels.v1 needs eight channels to place sensors by name.",
+            few_names,
+            few_theta,
+            few_radius,
+            few_values,
         )
     )
     cases.append(
         field_case(
-            "two_sensors",
-            "Two sensors: refused.",
-            ["A", "B"],
-            [-30.0, 45.0],
-            [0.3, 0.25],
-            [1.0, -2.0],
+            "seven_sensors",
+            "Seven sensors: refused (too_few_sensors).",
+            few_names[:7],
+            few_theta[:7],
+            few_radius[:7],
+            few_values[:7],
         )
     )
     cases.append(
         field_case(
-            "merged_to_two",
-            "Three sensors, two at one position: two remain after the merge, "
-            "so the map is refused.",
-            ["A", "B", "B2"],
-            [-30.0, 45.0, 45.0],
-            [0.3, 0.25, 0.25],
-            [1.0, -2.0, 4.0],
+            "merged_to_seven",
+            "Eight sensors, two at one position: seven remain after the merge, "
+            "so the map is refused (too_few_sensors).",
+            [*few_names[:7], "B2"],
+            [*few_theta[:7], 45.0],
+            [*few_radius[:7], 0.25],
+            [*few_values[:7], 4.0],
         )
     )
     wide = base.copy()
