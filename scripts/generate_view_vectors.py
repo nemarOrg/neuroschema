@@ -192,6 +192,36 @@ def eegprep_contours(z, flat):
     return [float(v) for v in _contour_levels(low, high, 6)]
 
 
+def eeglab_head(plotrad):
+    """EEGLAB's cartoon head over a map, written as EEGLAB's topoplot.m writes
+    it (lines 1402 to 1410 of sccn/eeglab develop at 6c238f7): rmax = 0.5, the
+    head drawn at headrad = rmax, and the nose and ears scaled by sf =
+    headrad / plotrad. EEGLAB plots the layout's y across and x up, so each
+    point here is (x, y), x to the nose. eegprep draws another nose, so the
+    outline comes from EEGLAB's own numbers, not from eegprep."""
+    rmax = 0.5
+    headrad = rmax
+    base = rmax - 0.0046
+    basex = 0.18 * rmax
+    tip = 1.15 * rmax
+    tiphw = 0.04 * rmax
+    tipr = 0.01 * rmax
+    q = 0.04
+    ear_x = [0.497 - 0.005, 0.510, 0.518, 0.5299, 0.5419, 0.54, 0.547, 0.532, 0.510]
+    ear_x += [0.489 - 0.005]
+    ear_y = [q + 0.0555, q + 0.0775, q + 0.0783, q + 0.0746, q + 0.0555, -0.0055]
+    ear_y += [-0.0932, -0.1313, -0.1384, -0.1199]
+    sf = headrad / plotrad
+    across = [basex, tiphw, 0.0, -tiphw, -basex]
+    up = [base, tip - tipr, tip, tip - tipr, base]
+    return {
+        "radius": headrad * (rmax / plotrad),
+        "nose": [[u * sf, a * sf + 0.0] for a, u in zip(across, up, strict=True)],
+        "right_ear": [[u * sf, a * sf] for a, u in zip(ear_x, ear_y, strict=True)],
+        "left_ear": [[u * sf, -a * sf] for a, u in zip(ear_x, ear_y, strict=True)],
+    }
+
+
 def eegprep_cart2topo(points):
     """eegprep's convertlocs(..., 'cart2topo') on centered ALS points."""
     from eegprep.functions.sigprocfunc.convertlocs import convertlocs
@@ -413,6 +443,7 @@ def field_case_from(name, description, sensors, extra=None):
         "contours": eegprep_contours(
             zi, len({means[kept.index(k)] for k in interpolated}) == 1
         ),
+        "head": eeglab_head(plotrad),
     }
     if extra:
         case["expected"].update(extra(theta, radius, values, zi))

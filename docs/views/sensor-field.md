@@ -72,6 +72,19 @@ Version 1 takes no override of the radii, the grid or the head.
     The field is flat when the interpolated sensors' values `v` (step 8) are all equal.
     Its interpolant is not constant, because it has no constant term, so its cells ripple about that value; the ripple is the spline's, not the data's, and contours would draw it as structure, so a flat field has no contours.
     The contour lines themselves are the renderer's own (marching squares, for example) and are not part of parity.
+13. **Head.**
+    Over the map, a renderer draws EEGLAB's cartoon head for a head of radius 0.5, squeezed as the sensors are (EEGLAB's `topoplot.m`, lines 1289 and 1402 to 1410 of the `develop` branch at commit `6c238f7`):
+    a circle about the origin of radius `0.5 * squeezefac`, and three polylines, the nose and the two ears, whose points are the model points below times `squeezefac` (EEGLAB's `sf = headrad / plotrad` with `headrad` 0.5), each product computed in binary64.
+    The circle is the layout's equator, radius 0.5, so when `plotrad` is above 0.5 the sensors below the equator are drawn in the skirt between the head and the mask, as EEGLAB draws them.
+    The model points, `(x, y)` with x to the nose and y to the right ear, are EEGLAB's numbers for a head of radius 0.5:
+
+    | Polyline | Points |
+    |---|---|
+    | nose | (0.4954, 0.09), (0.57, 0.02), (0.575, 0), (0.57, -0.02), (0.4954, -0.09) |
+    | right ear | (0.0955, 0.492), (0.1175, 0.51), (0.1183, 0.518), (0.1146, 0.5299), (0.0955, 0.5419), (-0.0055, 0.54), (-0.0932, 0.547), (-0.1313, 0.532), (-0.1384, 0.51), (-0.1199, 0.484) |
+    | left ear | the right ear's points with y negated, in the same order |
+
+    The line widths and colors are the renderer's own.
 
 ## Refusals
 
@@ -157,7 +170,8 @@ An implementation matches a vector case when:
 - each unmasked cell is within `1e-6 * (max_ref - min_ref)` of the vector's, where `max_ref` and `min_ref` are the vector's largest and smallest unmasked cells; for a constant map, within `1e-12 * max(1, |v|)` of its value `v`;
 - `plotrad`, `intrad`, `squeezefac` and each grid point are within a relative `1e-12` of the vector's;
 - the limits, the color axis and the contour levels, which follow from the cells, are within the cells' bound;
-- its plotted, interpolated and merged sensors are the vector's exactly.
+- its plotted, interpolated and merged sensors are the vector's exactly;
+- the head's radius and each point of its nose and ears are within a relative `1e-12` of the vector's.
 
 Every decision in a vector case (a merge distance against ε, a sensor against the square or `plotrad`, a cell against the head circle) is at least `1e-9` from its threshold, or an exact tie computed with no sine or cosine in doubt, so a sine or cosine that differs in its last bit cannot flip one.
 The `boundary_ties` case holds the three ties: a sensor at radius exactly `plotrad` and `x` exactly `intrad` (plotted and interpolated, because both tests are `<=`), and two sensors exactly ε apart (merged).
@@ -192,6 +206,10 @@ The two divergences, the unreachable pseudo-inverse fallback and the shifted val
 - **The radii and the merge.**
   EEGLAB's `topoplot.m` takes its radii from every channel with a value and a place, before it interpolates; eegprep does the same and has no merge.
   The vectors' maps are eegprep's map of the merged sensors, so where a merged-away sensor is the outermost (the `merged_outermost` case), the generator passes eegprep the plotting radius from every usable sensor through eegprep's own `plotrad` option; everywhere else it checks that eegprep's radius is the spec's.
+- **The head.**
+  eegprep draws the head circle at `squeezefac * rmax` and EEGLAB's ears scaled by `squeezefac`, as this page does, but its nose is a triangle of its own (0.08 wide and 0.06 tall at the scale of a head of radius 0.5); this page draws EEGLAB's nose.
+  EEGLAB itself draws the circle at `hin = squeezefac * headrad * (1 - 0.007 / 2)` (line 1289), 0.35% inside the equator, leaving room for a head ring 0.007 wide; this page draws it on the equator, as eegprep does, a difference under the width of the line.
+  The vectors' `head` is written from EEGLAB's own expressions (such as `0.497 - 0.005`), not from eegprep, and the reference's decimal points above match them within the tolerance.
 - **Too few sensors, and maps with nothing to draw.**
   eegprep draws any number of sensors; this page refuses fewer than 8.
   Where a sensor stretches the grid past the head, or the interpolation overflows, eegprep returns a map with no finite cell; this page refuses it with a word.
@@ -199,7 +217,7 @@ The two divergences, the unreachable pseudo-inverse fallback and the shifted val
 ## Vectors
 
 [`views/vectors/sensor-field.v1.json`](../../views/vectors/sensor-field.v1.json) has the reference it came from (eegprep's commit, and the numpy and scipy versions), the tolerances above, and the cases.
-Each case gives `sensors` (`name`, `theta_deg`, `radius`, `value`, with `null` for a number that is not finite) and either `refused` (the word) or `expected`: `plotrad`, `intrad`, `squeezefac`, `plotted`, `interpolated` and `merged` (sensor rows counted from 0; each merge group lists its kept sensor first), the grid axes `x` and `y`, the cells `z` (`z[i][j]` at `(x[i], y[j])`, `null` where masked), `limits` and `color_axis` for both choices, and `contours`.
+Each case gives `sensors` (`name`, `theta_deg`, `radius`, `value`, with `null` for a number that is not finite) and either `refused` (the word) or `expected`: `plotrad`, `intrad`, `squeezefac`, `plotted`, `interpolated` and `merged` (sensor rows counted from 0; each merge group lists its kept sensor first), the grid axes `x` and `y`, the cells `z` (`z[i][j]` at `(x[i], y[j])`, `null` where masked), `limits` and `color_axis` for both choices, `contours`, and `head` (`radius`, and `nose`, `right_ear` and `left_ear` as lists of `[x, y]` points).
 The expected map is eegprep's `topoplot` of the usable, merged sensors; the `minmax` color axis is this page's rule, since eegprep sets none.
 A case whose `sensors` give `x`, `y` and `z` instead of `theta_deg` and `radius` is placed by positions, in the frame its `coordinate_system` names (or `n/a` with its `montage`): its `expected.layout` is the projection by `nemar.sensor-layout.v1` (`center`, `center_method`, `theta_deg`, `radius`, compared as [`sensor-layout.md`](sensor-layout.md#parity) says), and the map is drawn from that layout.
 The cases cover 32, 64, 128 and 256 sensors on eegprep's packaged caps (laid out by `nemar.sensor-layout.v1`), exact duplicates, sensors 4e-4 and 9e-4 from another (merged), two sensors 1.5e-3 apart (not merged), sensors all on the midline, sensors outside the head and outside the interpolation square, values and places that are not finite, equal values (a flat field, with no contours), all zeros (a constant map), exactly 8 sensors, 7 sensors and a merge down to 7 (refused), a dynamic range of 10^6, a sensor so far out that no cell is inside the head and values that overflow (refused), a field whose most negative value outweighs its most positive, exact ties at every `<=` (`boundary_ties`), a merged sensor that is the outermost (`merged_outermost`), maps of one sign whose every cell lies inside both color axes (`one_sign_positive_db`, `one_sign_negative_db`), and positions: 64 measured positions (one without a finite x), the whole GSN-HydroCel-32 montage and the standard_1005 midline as template positions, projected to maps; positions in an unknown frame and a montage beside a named frame (refused, `frame_unknown`); and a flat disk, three positions and a ring of measured positions (refused, `positions_flat`).

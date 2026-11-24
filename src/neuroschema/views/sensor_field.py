@@ -2,10 +2,11 @@
 
 The Python reference renderer for the algorithm ``docs/views/sensor-field.md``
 specifies: EEGLAB's ``topoplot`` map (plotting and interpolation radii, squeeze,
-a 67-by-67 grid, biharmonic interpolation, the head mask, limits and contours),
-with the rules eegprep leaves implicit stated outright (sensors within 1e-3 of
-an earlier one merge, fewer than eight interpolated sensors draw no map, the
-interpolation matrix is solved by LU decomposition with partial pivoting).
+a 67-by-67 grid, biharmonic interpolation, the head mask, limits, contours and
+the head outline), with the rules eegprep leaves implicit stated outright
+(sensors within 1e-3 of an earlier one merge, fewer than eight interpolated
+sensors draw no map, the interpolation matrix is solved by LU decomposition
+with partial pivoting).
 ``views/vectors/sensor-field.v1.json`` holds the cases every implementation
 reproduces, computed by eegprep at a pinned commit.
 
@@ -43,6 +44,24 @@ for ``absmax`` (EEGLAB's ``caxis``), of their range for ``minmax``."""
 DEG = np.pi / 180
 """Degrees to radians: the binary64 nearest pi, divided by 180."""
 
+# EEGLAB's cartoon nose and right ear for a head of radius 0.5 (topoplot.m,
+# lines 1402 to 1409 of sccn/eeglab develop at 6c238f7), as (x, y) points in
+# layout coordinates: x to the nose, y to the right ear. The left ear is the
+# right ear with y negated. A drawn map scales them by squeezefac.
+NOSE = ((0.4954, 0.09), (0.57, 0.02), (0.575, 0.0), (0.57, -0.02), (0.4954, -0.09))
+RIGHT_EAR = (
+    (0.0955, 0.492),
+    (0.1175, 0.510),
+    (0.1183, 0.518),
+    (0.1146, 0.5299),
+    (0.0955, 0.5419),
+    (-0.0055, 0.540),
+    (-0.0932, 0.547),
+    (-0.1313, 0.532),
+    (-0.1384, 0.510),
+    (-0.1199, 0.484),
+)
+
 
 class SensorFieldRefusal(ValueError):
     """A map the algorithm refuses to draw, with the word a renderer shows."""
@@ -50,6 +69,35 @@ class SensorFieldRefusal(ValueError):
     def __init__(self, word: str, detail: str) -> None:
         super().__init__(f"{word}: {detail}")
         self.word = word
+
+
+Point = tuple[float, float]
+
+
+@dataclass(frozen=True)
+class Head:
+    """The head outline over a map, in grid coordinates (x to the nose).
+
+    EEGLAB's cartoon head of radius 0.5, squeezed as the sensors are: a circle
+    of ``radius`` ``0.5 * squeezefac`` about the origin, and the polylines
+    ``nose``, ``right_ear`` and ``left_ear``, each model point times
+    ``squeezefac`` (EEGLAB's ``sf = headrad / plotrad``, topoplot.m:1410).
+    """
+
+    radius: float
+    nose: tuple[Point, ...]
+    right_ear: tuple[Point, ...]
+    left_ear: tuple[Point, ...]
+
+
+def head_outline(squeezefac: float) -> Head:
+    """The head outline of a map whose sensors are squeezed by ``squeezefac``."""
+
+    def scale(points):
+        return tuple((x * squeezefac + 0.0, y * squeezefac + 0.0) for x, y in points)
+
+    left = tuple((x, -y) for x, y in RIGHT_EAR)
+    return Head(HEAD_RADIUS * squeezefac, scale(NOSE), scale(RIGHT_EAR), scale(left))
 
 
 @dataclass(frozen=True)
@@ -60,7 +108,8 @@ class SensorField:
     points to the nose and y to the right ear; on screen, x runs up and y runs
     right. Cells outside the head circle are NaN. Sensor indices are row
     numbers of the input, counted from 0; ``merged`` maps each kept sensor
-    that absorbed others to its whole group, itself first.
+    that absorbed others to its whole group, itself first. ``head`` is the
+    outline drawn over the map (:func:`head_outline`).
     """
 
     plotrad: float
@@ -75,6 +124,7 @@ class SensorField:
     limits: dict[str, tuple[float, float]]
     color_axis: dict[str, tuple[float, float]]
     contours: tuple[float, ...]
+    head: Head
 
 
 def planar(theta_deg: np.ndarray, radius: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -311,6 +361,7 @@ def sensor_field(
         limits=lim,
         color_axis={name: color_axis(pair, name) for name, pair in lim.items()},
         contours=contour_levels(z, v),
+        head=head_outline(squeezefac),
     )
 
 

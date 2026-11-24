@@ -40,8 +40,10 @@ def numbers(values) -> np.ndarray:
 
 def close(a, b, rel: float) -> bool:
     a, b = np.asarray(a, dtype=float), np.asarray(b, dtype=float)
+    if a.shape != b.shape:
+        return False
     scale = np.maximum(np.abs(a), np.abs(b))
-    return a.shape == b.shape and bool((np.abs(a - b) <= rel * scale).all())
+    return bool((np.abs(a - b) <= rel * scale).all())
 
 
 # ── nemar.sensor-field.v1 ─────────────────────────────────────────────────
@@ -103,6 +105,12 @@ def field_mismatches(case: dict) -> list[str]:
         or not (np.abs(np.subtract(drawn.contours, contours)) <= bound).all()
     ):
         problems.append("contours")
+    head = expected["head"]
+    if not close(drawn.head.radius, head["radius"], geometry):
+        problems.append("head radius")
+    for part in ("nose", "right_ear", "left_ear"):
+        if not close(getattr(drawn.head, part), head[part], geometry):
+            problems.append(f"head {part}")
     if list(drawn.plotted) != expected["plotted"]:
         problems.append("plotted")
     if list(drawn.interpolated) != expected["interpolated"]:
@@ -186,6 +194,31 @@ def _absmax_from_max(z):
     return {"absmax": (-cells.max(), cells.max()), "minmax": (cells.min(), cells.max())}
 
 
+_HEAD = sf.head_outline  # the reference's, before a mutation replaces it
+
+
+def _head_unsqueezed(squeezefac):
+    return sf.Head(0.5, sf.NOSE, sf.RIGHT_EAR, tuple((x, -y) for x, y in sf.RIGHT_EAR))
+
+
+def _head_at_the_mask(squeezefac):
+    head = _HEAD(squeezefac)
+    return sf.Head(0.5, head.nose, head.right_ear, head.left_ear)
+
+
+def _ears_swapped(squeezefac):
+    head = _HEAD(squeezefac)
+    return sf.Head(head.radius, head.nose, head.left_ear, head.right_ear)
+
+
+def _eegprep_nose(squeezefac):
+    """eegprep's triangle in place of EEGLAB's nose."""
+    head = _HEAD(squeezefac)
+    r, w = 0.5 * squeezefac, 0.08 * squeezefac
+    nose = ((r, w), (r + 0.06 * squeezefac, 0.0), (r, -w))
+    return sf.Head(head.radius, nose, head.right_ear, head.left_ear)
+
+
 def _eeglab_axis(pair, rule):
     """EEGLAB's caxis for every choice: 5% of each limit's magnitude away from
     zero (topoplot.m:1248-1250), the rule this page keeps for absmax only."""
@@ -216,6 +249,10 @@ FIELD_MUTATIONS = {
     "merge distance 1e-3 -> 2e-3": ("MERGE_DISTANCE", 2e-3),
     "contours 6 -> 5": ("CONTOUR_COUNT", 5),
     "contours on a flat field": ("is_flat", lambda values: False),
+    "head not squeezed": ("head_outline", _head_unsqueezed),
+    "head circle at the mask": ("head_outline", _head_at_the_mask),
+    "ears swapped": ("head_outline", _ears_swapped),
+    "eegprep's nose": ("head_outline", _eegprep_nose),
     "fewest sensors 8 -> 7": ("MIN_SENSORS", 7),
     "fewest sensors 8 -> 9": ("MIN_SENSORS", 9),
     "fewest sensors 8 -> 3 (the old minimum)": ("MIN_SENSORS", 3),
@@ -302,6 +339,22 @@ def test_color_axis_of_zero_is_zero():
         low, high = sf.color_axis((-0.0, 0.0), rule)
         assert (low, high) == (0.0, 0.0)
         assert math.copysign(1.0, low) == 1.0
+
+
+def test_the_head_sits_at_the_squeezed_equator():
+    """The head circle is the layout's equator (radius 0.5) squeezed like the
+    sensors, so with sensors below it the map's skirt reaches past the head."""
+    for case in DRAWN:
+        expected = case["expected"]
+        squeeze = expected["squeezefac"]
+        assert math.isclose(expected["head"]["radius"], 0.5 * squeeze, rel_tol=1e-15)
+        tip = max(expected["head"]["nose"], key=lambda point: point[0])
+        assert math.isclose(tip[0], 0.575 * squeeze, rel_tol=1e-12) and tip[1] == 0
+        right, left = expected["head"]["right_ear"], expected["head"]["left_ear"]
+        assert all(y > 0 for _x, y in right) and all(y < 0 for _x, y in left)
+        assert [[x, -y] for x, y in right] == left
+    outside = FIELD_CASES["outside"]["expected"]
+    assert outside["plotrad"] > 0.5 and outside["head"]["radius"] < 0.5
 
 
 def test_a_flat_field_has_no_contours():
