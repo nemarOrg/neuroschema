@@ -95,10 +95,13 @@ many times their scale."""
 
 PARTIAL_DILUTION = 4.5
 """Measured positions cover too little of the head when the dilution of their
-fitted center (:func:`dilution`) is above this. Whole-head caps measure 3.1 to
-3.9 (4.13 at most with 3 mm of noise on each position), and frontal, central
-and occipital sets and a ring with no top 5.2 and above (4.76 at least with
-that noise); see ``docs/views/sensor-layout.md``, step 3."""
+fitted center (:func:`dilution`) is above this; see
+``docs/views/sensor-layout.md``, step 3, for the sets it was measured on."""
+
+PARTIAL_SHIFT = 0.12
+"""Measured positions are too unstable to fix the head's center when leaving
+out any one of them moves the fitted center by more than this share of the
+fitted radius (:func:`stability`); see ``docs/views/sensor-layout.md``."""
 
 RAD = 180 / np.pi
 """Radians to degrees: 180 divided by the binary64 nearest pi."""
@@ -109,7 +112,7 @@ class SensorLayoutRefusal(ValueError):
 
     A ``positions_flat`` or ``positions_partial`` refusal also carries the
     measures it reached (``singular_ratio``, ``radius_ratio``, ``dilution``,
-    None where not reached).
+    ``stability``, None where not reached).
     """
 
     def __init__(
@@ -119,12 +122,14 @@ class SensorLayoutRefusal(ValueError):
         singular_ratio: float | None = None,
         radius_ratio: float | None = None,
         dilution: float | None = None,
+        stability: float | None = None,
     ) -> None:
         super().__init__(f"{word}: {detail}")
         self.word = word
         self.singular_ratio = singular_ratio
         self.radius_ratio = radius_ratio
         self.dilution = dilution
+        self.stability = stability
 
 
 @dataclass(frozen=True)
@@ -136,8 +141,8 @@ class SensorLayout:
     and ``center_method`` says how it was found: ``montage`` (template
     positions: the montage's own center) or ``sphere`` (measured positions:
     the sphere fitted to the scalp rows). For measured positions,
-    ``singular_ratio``, ``radius_ratio`` and ``dilution`` are the three
-    measures :func:`sphere_center` bounds; all are None for template
+    ``singular_ratio``, ``radius_ratio``, ``dilution`` and ``stability`` are
+    the four measures :func:`sphere_center` bounds; all are None for template
     positions.
     """
 
@@ -148,6 +153,7 @@ class SensorLayout:
     singular_ratio: float | None
     radius_ratio: float | None
     dilution: float | None
+    stability: float | None
 
 
 def orientation(coordinate_system: str, montage: str | None = None) -> str:
@@ -249,12 +255,13 @@ def dilution(directions: np.ndarray) -> float:
     the 4-by-4 matrix ``M``, the mean of ``[e, 1]`` times its transpose, the
     dilution is the square root of the sum of the first three diagonal entries
     of ``M`` inverted (each column solved by LU decomposition with partial
-    pivoting). When ``n`` positions depart from a sphere independently, along
-    its radius, by a share ``sigma`` of the radius, the fitted center's error
-    has a root mean square of about ``dilution * sigma / sqrt(n)`` radii. It is
-    3 for an even cover of a sphere, ``sqrt(18)`` (4.24) for one of a
-    hemisphere, and more as the positions bunch together or lie on one band.
-    A singular ``M`` gives a value that is not finite.
+    pivoting). It depends only on the directions from the fitted center: 3
+    for an even cover of a sphere, ``sqrt(18)`` (4.24) for one of a
+    hemisphere, and more as the directions bunch together or lie on one band.
+    For independent radial noise of a share ``sigma`` of the radius it gives
+    the center's root mean square error, about ``dilution * sigma / sqrt(n)``
+    radii; a real head departs from a sphere systematically, which it does not
+    predict. A singular ``M`` gives a value that is not finite.
     """
     n = len(directions)
     augmented = np.column_stack([directions, np.ones(n)])
@@ -268,14 +275,40 @@ def dilution(directions: np.ndarray) -> float:
         return float(np.sqrt(total))
 
 
+def stability(
+    design: np.ndarray, target: np.ndarray, solution: np.ndarray, radius: float
+) -> float:
+    """The largest move of the fitted center when one position is left out, as
+    a share of the fitted radius.
+
+    ``design`` and ``target`` are the sphere's least-squares rows and values
+    (:func:`sphere_center`), ``solution`` its ``(a, b, c, d)`` and ``radius``
+    its radius, all in the scaled coordinates. For each row ``k``, the normal
+    equations without that row, ``(AᵀA - a_k a_kᵀ) w = Aᵀb - a_k b_k``, are
+    solved by LU decomposition with partial pivoting, and the move is the
+    Euclidean length of the first three entries of ``w`` minus the
+    solution's. A set whose reduced equations are singular gives a value that
+    is not finite.
+    """
+    normal = design.T @ design
+    right = design.T @ target
+    moves = np.empty(len(design))
+    with np.errstate(invalid="ignore", divide="ignore", over="ignore"):
+        for k, row in enumerate(design):
+            left_out = lu_solve(normal - np.outer(row, row), right - row * target[k])
+            moves[k] = np.sqrt(((left_out[:3] - solution[:3]) ** 2).sum()) / radius
+    return float(np.max(moves))
+
+
 @dataclass(frozen=True)
 class Fit:
-    """A sphere fitted to measured positions, with its three measures."""
+    """A sphere fitted to measured positions, with its four measures."""
 
     center: np.ndarray
     singular_ratio: float
     radius_ratio: float
     dilution: float
+    stability: float
 
 
 def sphere_center(points: np.ndarray) -> Fit:
@@ -297,7 +330,9 @@ def sphere_center(points: np.ndarray) -> Fit:
     about 1e-5 and 16 to 1500, so the bounds refuse what fixes no head.
     Last, they cover too little of the head, and raise ``positions_partial``,
     when the :func:`dilution` of the center (from the unit vectors
-    ``u - (a, b, c)``, normalized) is above :data:`PARTIAL_DILUTION`.
+    ``u - (a, b, c)``, normalized) is above :data:`PARTIAL_DILUTION`, or when
+    leaving out one of them moves the center by more than
+    :data:`PARTIAL_SHIFT` of the radius (:func:`stability`).
     """
     n = len(points)
     centroid = points.sum(axis=0) / max(n, 1)
@@ -315,7 +350,9 @@ def sphere_center(points: np.ndarray) -> Fit:
             singular_ratio,
         )
     design = np.column_stack([2 * u, np.ones(n)])
-    a, b, c, d = lu_solve(design.T @ design, design.T @ (u * u).sum(axis=1))
+    target = (u * u).sum(axis=1)
+    solution = lu_solve(design.T @ design, design.T @ target)
+    a, b, c, d = solution
     radius_ratio = float(np.sqrt(a * a + b * b + c * c + d))
     if not radius_ratio <= RADIUS_RATIO:
         raise _flat(
@@ -337,8 +374,23 @@ def sphere_center(points: np.ndarray) -> Fit:
             radius_ratio,
             spread,
         )
+    shift = stability(design, target, solution, radius_ratio)
+    if not shift <= PARTIAL_SHIFT:
+        raise SensorLayoutRefusal(
+            "positions_partial",
+            f"the positions do not fix the head's center: leaving one out moves "
+            f"it {shift:.3g} of the radius, above {PARTIAL_SHIFT}",
+            singular_ratio,
+            radius_ratio,
+            spread,
+            shift,
+        )
     return Fit(
-        centroid + scale * np.array([a, b, c]), singular_ratio, radius_ratio, spread
+        centroid + scale * np.array([a, b, c]),
+        singular_ratio,
+        radius_ratio,
+        spread,
+        shift,
     )
 
 
@@ -433,4 +485,5 @@ def sensor_layout(
         None if fit is None else fit.singular_ratio,
         None if fit is None else fit.radius_ratio,
         None if fit is None else fit.dilution,
+        None if fit is None else fit.stability,
     )

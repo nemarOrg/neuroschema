@@ -1,7 +1,7 @@
 {
   "format": "nemar.sensor-layout.v1",
   "spec": "docs/views/sensor-layout.md",
-  "description": "Cases every implementation of nemar.sensor-layout.v1 reproduces. Each case gives positions (name, x, y, z in the frame coordinate_system names, or, for template positions that name a montage, in that montage's frame, RAS, with coordinate_system n/a; null is not finite; and sensor_type when the case has that column) and either the expected layout (center and center_method, montage or sphere, in the ALS frame, theta_deg and radius per row, null for a row that is not a scalp row or has no position: not finite, or exactly 0, 0, 0) or the word it is refused with. Template positions are centered on the montage's own center, its file's center; measured positions carry bounds, their singular_ratio, radius_ratio and dilution (null when not reached), which decide positions_flat against 0.05 and 3 and positions_partial against 4.5, within tolerance.bounds_absolute. The expected theta and radius are eegprep's convertlocs(..., 'cart2topo') of the positions minus the center, with -180 written 180. frames lists the BIDS coordinate systems of each orientation: an implementation gives frame_als's layout for every ALS name and frame_ras's for every RAS name. cart2topo gives centered ALS points and the theta and radius each converts to, with no fit (theta within tolerance.cart2topo_theta_deg degrees, with no wrapping, and radius within tolerance.radius). Tolerances for the cases: radius within tolerance.radius; theta through the planar point (cos(theta) * radius, sin(theta) * radius), within tolerance.planar of the expected one, because theta is undefined at the pole; the center within tolerance.center_relative_to_scale times the largest distance of a finite position from their centroid.",
+  "description": "Cases every implementation of nemar.sensor-layout.v1 reproduces. Each case gives positions (name, x, y, z in the frame coordinate_system names, or, for template positions that name a montage, in that montage's frame, RAS, with coordinate_system n/a; null is not finite; and sensor_type when the case has that column) and either the expected layout (center and center_method, montage or sphere, in the ALS frame, theta_deg and radius per row, null for a row that is not a scalp row or has no position: not finite, or exactly 0, 0, 0) or the word it is refused with. Template positions are centered on the montage's own center, its file's center; measured positions carry bounds, their singular_ratio, radius_ratio, dilution and stability (null when not reached), which decide positions_flat against 0.05 and 3 and positions_partial against 4.5 and 0.12, within tolerance.bounds_absolute. The expected theta and radius are eegprep's convertlocs(..., 'cart2topo') of the positions minus the center, with -180 written 180. frames lists the BIDS coordinate systems of each orientation: an implementation gives frame_als's layout for every ALS name and frame_ras's for every RAS name. cart2topo gives centered ALS points and the theta and radius each converts to, with no fit (theta within tolerance.cart2topo_theta_deg degrees, with no wrapping, and radius within tolerance.radius). Tolerances for the cases: radius within tolerance.radius; theta through the planar point (cos(theta) * radius, sin(theta) * radius), within tolerance.planar of the expected one, because theta is undefined at the pole; the center within tolerance.center_relative_to_scale times the largest distance of a finite position from their centroid.",
   "reference": {
     "implementation": "eegprep",
     "repository": "https://github.com/sccn/eegprep",
@@ -111,7 +111,8 @@
       "bounds": {
         "singular_ratio": 0.5881989925440557,
         "radius_ratio": 0.8595268815047092,
-        "dilution": 3.6093020978999086
+        "dilution": 3.6093020978999086,
+        "stability": 4.760323656273408e-15
       },
       "expected": {
         "center": [-3.552713678800501e-15, 4.499907990777736e-15, -7.105427357601002e-15],
@@ -133,7 +134,8 @@
       "bounds": {
         "singular_ratio": 0.6281350102328763,
         "radius_ratio": 0.8895638645921308,
-        "dilution": 3.3192125640178185
+        "dilution": 3.3192125640178185,
+        "stability": 1.3370597518676658e-05
       },
       "expected": {
         "center": [-1.0108719701077372e-06, -4.439437111053754e-06, 4.4796817464873295e-06],
@@ -155,7 +157,8 @@
       "bounds": {
         "singular_ratio": 0.7811854418097807,
         "radius_ratio": 0.904162414384699,
-        "dilution": 3.06260387641567
+        "dilution": 3.06260387641567,
+        "stability": 0.014349486857866914
       },
       "expected": {
         "center": [-1.2889039930813113, -3.000000000000001, 1.8202712634004579],
@@ -177,7 +180,8 @@
       "bounds": {
         "singular_ratio": 0.42196420633989223,
         "radius_ratio": 0.8371438937156133,
-        "dilution": 4.0097376568137015
+        "dilution": 4.0097376568137015,
+        "stability": 0.06748878324270192
       },
       "expected": {
         "center": [-0.07905645090084779, -1.2320814234015357e-15, 0.09919357903934367],
@@ -199,7 +203,8 @@
       "bounds": {
         "singular_ratio": 0.42196420633989223,
         "radius_ratio": 0.8371438937156133,
-        "dilution": 4.0097376568137015
+        "dilution": 4.0097376568137015,
+        "stability": 0.06748878324270192
       },
       "expected": {
         "center": [-0.07905645090084779, -1.2320814234015357e-15, 0.09919357903934367],
@@ -221,7 +226,8 @@
       "bounds": {
         "singular_ratio": 1.0683256095783204e-16,
         "radius_ratio": null,
-        "dilution": null
+        "dilution": null,
+        "stability": null
       },
       "refused": "positions_flat"
     },
@@ -238,7 +244,8 @@
       "bounds": {
         "singular_ratio": 0.0,
         "radius_ratio": null,
-        "dilution": null
+        "dilution": null,
+        "stability": null
       },
       "refused": "positions_flat"
     },
@@ -255,7 +262,8 @@
       "bounds": {
         "singular_ratio": 0.0017984919236983888,
         "radius_ratio": null,
-        "dilution": null
+        "dilution": null,
+        "stability": null
       },
       "refused": "positions_flat"
     },
@@ -272,7 +280,8 @@
       "bounds": {
         "singular_ratio": 1.984493750270452e-33,
         "radius_ratio": null,
-        "dilution": null
+        "dilution": null,
+        "stability": null
       },
       "refused": "positions_flat"
     },
@@ -289,7 +298,8 @@
       "bounds": {
         "singular_ratio": 6.392768484239789e-17,
         "radius_ratio": null,
-        "dilution": null
+        "dilution": null,
+        "stability": null
       },
       "refused": "positions_flat"
     },
@@ -306,7 +316,8 @@
       "bounds": {
         "singular_ratio": 4.084424354473371e-17,
         "radius_ratio": null,
-        "dilution": null
+        "dilution": null,
+        "stability": null
       },
       "refused": "positions_flat"
     },
@@ -323,7 +334,8 @@
       "bounds": {
         "singular_ratio": null,
         "radius_ratio": null,
-        "dilution": null
+        "dilution": null,
+        "stability": null
       },
       "refused": "positions_flat"
     },
@@ -340,7 +352,8 @@
       "bounds": {
         "singular_ratio": 0.05495933933511159,
         "radius_ratio": 0.8168990682365894,
-        "dilution": 13.180643733553564
+        "dilution": 13.180643733553564,
+        "stability": null
       },
       "refused": "positions_partial"
     },
@@ -357,7 +370,8 @@
       "bounds": {
         "singular_ratio": 0.04496673251972549,
         "radius_ratio": null,
-        "dilution": null
+        "dilution": null,
+        "stability": null
       },
       "refused": "positions_flat"
     },
@@ -374,7 +388,8 @@
       "bounds": {
         "singular_ratio": 0.10424937654664743,
         "radius_ratio": 2.8057469442705427,
-        "dilution": 52.065302879654716
+        "dilution": 52.065302879654716,
+        "stability": null
       },
       "refused": "positions_partial"
     },
@@ -391,7 +406,8 @@
       "bounds": {
         "singular_ratio": 0.09330121269022015,
         "radius_ratio": 3.1124098473582165,
-        "dilution": null
+        "dilution": null,
+        "stability": null
       },
       "refused": "positions_flat"
     },
@@ -408,7 +424,8 @@
       "bounds": {
         "singular_ratio": 0.14912474446279764,
         "radius_ratio": 1.1302458812165412,
-        "dilution": 10.910519881757132
+        "dilution": 10.910519881757132,
+        "stability": null
       },
       "refused": "positions_partial"
     },
@@ -425,7 +442,8 @@
       "bounds": {
         "singular_ratio": 7.619861640353046e-18,
         "radius_ratio": null,
-        "dilution": null
+        "dilution": null,
+        "stability": null
       },
       "refused": "positions_flat"
     },
@@ -442,7 +460,8 @@
       "bounds": {
         "singular_ratio": 0.7155433611080009,
         "radius_ratio": 0.9036484831486296,
-        "dilution": 3.1073220999912405
+        "dilution": 3.1073220999912405,
+        "stability": 0.017375415283930943
       },
       "expected": {
         "center": [0.21433431799154196, 0.003554393664268532, -0.17692494390246102],
@@ -575,7 +594,8 @@
       "bounds": {
         "singular_ratio": 0.7978230845724572,
         "radius_ratio": 0.8718793698996844,
-        "dilution": 3.0517204365641226
+        "dilution": 3.0517204365641226,
+        "stability": 0.017093418334761287
       },
       "expected": {
         "center": [0.20734941720402844, 0.007522470131999803, -0.12537655688319693],
@@ -598,7 +618,8 @@
       "bounds": {
         "singular_ratio": 0.7811854418097807,
         "radius_ratio": 0.904162414384699,
-        "dilution": 3.06260387641567
+        "dilution": 3.06260387641567,
+        "stability": 0.01434948685786712
       },
       "expected": {
         "center": [0.21109600691868874, 6.768577658489346e-17, -0.17972873659954064],
@@ -620,7 +641,8 @@
       "bounds": {
         "singular_ratio": 0.7811854418097807,
         "radius_ratio": 0.904162414384699,
-        "dilution": 3.06260387641567
+        "dilution": 3.06260387641567,
+        "stability": 0.01434948685786712
       },
       "expected": {
         "center": [0.21109600691868874, 6.768577658489346e-17, -0.17972873659954064],
@@ -643,7 +665,8 @@
       "bounds": {
         "singular_ratio": 0.5529006701136676,
         "radius_ratio": 0.8837975916213759,
-        "dilution": 3.460067173946488
+        "dilution": 3.460067173946488,
+        "stability": 0.026179050729935316
       },
       "expected": {
         "center": [-0.015585735658551347, -0.0009005837881461042, 0.004908080887141415],
@@ -665,7 +688,8 @@
       "bounds": {
         "singular_ratio": 0.5529006701136676,
         "radius_ratio": 0.8837975916213759,
-        "dilution": 3.460067173946488
+        "dilution": 3.460067173946488,
+        "stability": 0.026179050729935316
       },
       "expected": {
         "center": [-0.015585735658551347, -0.0009005837881461042, 0.004908080887141415],
@@ -687,7 +711,8 @@
       "bounds": {
         "singular_ratio": 0.0,
         "radius_ratio": null,
-        "dilution": null
+        "dilution": null,
+        "stability": null
       },
       "refused": "positions_flat"
     },
@@ -704,7 +729,8 @@
       "bounds": {
         "singular_ratio": 0.5529006701136676,
         "radius_ratio": 0.8837975916213759,
-        "dilution": 3.460067173946488
+        "dilution": 3.460067173946488,
+        "stability": 0.026179050729935316
       },
       "expected": {
         "center": [-0.015585735658551347, -0.0009005837881461042, 0.004908080887141415],
@@ -726,7 +752,8 @@
       "bounds": {
         "singular_ratio": 0.2556613290941687,
         "radius_ratio": 0.815050913069105,
-        "dilution": 5.9565215541703695
+        "dilution": 5.9565215541703695,
+        "stability": null
       },
       "refused": "positions_partial"
     },
@@ -743,7 +770,8 @@
       "bounds": {
         "singular_ratio": 0.23604258274465656,
         "radius_ratio": 1.0219829392675746,
-        "dilution": 8.024336042217783
+        "dilution": 8.024336042217783,
+        "stability": null
       },
       "refused": "positions_partial"
     },
@@ -760,7 +788,67 @@
       "bounds": {
         "singular_ratio": 0.31073078947848776,
         "radius_ratio": 1.0956346125526906,
-        "dilution": 5.986664769821539
+        "dilution": 5.986664769821539,
+        "stability": null
+      },
+      "refused": "positions_partial"
+    },
+    {
+      "name": "stability_inside",
+      "description": "The 19 electrodes of the 10-20 system on the Colin27 head (MNIColin27), with Cz digitized 26% too far from the montage's center: the dilution passes, and leaving Cz out moves the fitted center by less than 0.12 of the radius; drawn.",
+      "coordinate_system": "MNIColin27",
+      "positions": {
+        "name": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
+        "x": [-0.0294367, 0.0298723, -0.0702629, -0.0502438, 0.0003122, 0.0518362, 0.0730431, -0.0841611, -0.0653581, 0.00029208063999999995, 0.0671179, 0.0850799, -0.0724343, -0.0530073, 0.0003247, 0.0556667, 0.0730557, -0.0294134, 0.0298426],
+        "y": [0.0839171, 0.0848959, 0.0424743, 0.0531112, 0.058512, 0.0543048, 0.0444217, -0.0160187, -0.0116317, -0.00733081656, -0.0109003, -0.0150203, -0.0734527, -0.0787878, -0.081115, -0.0785602, -0.0730683, -0.112449, -0.112156],
+        "z": [-0.00699, -0.00708, -0.01142, 0.042192, 0.066462, 0.040814, -0.012, -0.009346, 0.064358, 0.12661008831999998, 0.06358, -0.00949, -0.002487, 0.05594, 0.082615, 0.056561, -0.00254, 0.008839, 0.0088]
+      },
+      "bounds": {
+        "singular_ratio": 0.6012160651344663,
+        "radius_ratio": 0.8771156768268236,
+        "dilution": 3.3402858876757175,
+        "stability": 0.1011744497800272
+      },
+      "expected": {
+        "center": [-0.014675695414210495, -0.0008981938710862945, 0.014505290146750009],
+        "center_method": "sphere",
+        "theta_deg": [-17.10201182199677, 16.224344348135617, -51.23179742984328, -37.032819687513324, -0.4587418417834783, 36.44366955944139, 50.67742982289835, -90.90457018659157, -87.3695248356521, -4.7174665412745185, 86.73691842918106, 90.23454357232026, -128.71265542362886, -139.94285809763397, -179.5054439154335, 139.39334983566988, 128.98110410083564, -162.7755643531708, 163.46249340436054],
+        "radius": [0.5653938035487859, 0.5653229296221959, 0.5880966438486801, 0.3996741497947579, 0.30349736867423494, 0.4052418558131046, 0.5881424242437516, 0.5870114159035629, 0.2948355510990377, 0.020895838937753097, 0.29723731818828736, 0.5883868390113992, 0.5569372058054823, 0.3537768804223962, 0.24605436202681885, 0.3524711369831867, 0.5578069452000423, 0.5176018461158837, 0.5178405625873429]
+      }
+    },
+    {
+      "name": "stability_outside",
+      "description": "The 19 electrodes of the 10-20 system on the Colin27 head (MNIColin27), with Cz digitized 33% too far from the montage's center: the dilution passes, and leaving Cz out moves the fitted center by more than 0.12 of the radius; refused (positions_partial).",
+      "coordinate_system": "MNIColin27",
+      "positions": {
+        "name": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
+        "x": [-0.0294367, 0.0298723, -0.0702629, -0.0502438, 0.0003122, 0.0518362, 0.0730431, -0.0841611, -0.0653581, 0.00026278312, 0.0671179, 0.0850799, -0.0724343, -0.0530073, 0.0003247, 0.0556667, 0.0730557, -0.0294134, 0.0298426],
+        "y": [0.0839171, 0.0848959, 0.0424743, 0.0531112, 0.058512, 0.0543048, 0.0444217, -0.0160187, -0.0116317, -0.006836459479999999, -0.0109003, -0.0150203, -0.0734527, -0.0787878, -0.081115, -0.0785602, -0.0730683, -0.112449, -0.112156],
+        "z": [-0.00699, -0.00708, -0.01142, 0.042192, 0.066462, 0.040814, -0.012, -0.009346, 0.064358, 0.13370865056, 0.06358, -0.00949, -0.002487, 0.05594, 0.082615, 0.056561, -0.00254, 0.008839, 0.0088]
+      },
+      "bounds": {
+        "singular_ratio": 0.6158499358721619,
+        "radius_ratio": 0.8762421331685464,
+        "dilution": 3.3114183139354583,
+        "stability": 0.13515826032190809
+      },
+      "refused": "positions_partial"
+    },
+    {
+      "name": "p300_8_noisy_unstable",
+      "description": "The posterior P300 set (Fz, Cz, Pz, P3, P4, PO7, PO8, Oz) of the Colin27 head measured with 5 mm of noise: the noise spreads the directions so the dilution passes (4.28), but leaving one position out moves the center by 0.19 of the radius; refused (positions_partial).",
+      "coordinate_system": "MNIColin27",
+      "positions": {
+        "name": ["Fz", "Cz", "Pz", "P3", "P4", "PO7", "PO8", "Oz"],
+        "x": [0.0070659366166527975, -0.000534529121434021, 0.0033089808027466166, -0.058647103441276376, 0.058985084522409685, -0.05301285218519199, 0.05151133808180592, 0.0025078353816902427],
+        "y": [0.060227452923505044, -0.01086432297834989, -0.08751011569854139, -0.07973009263439111, -0.0820152814437488, -0.1023001101686744, -0.09545419313159226, -0.12374463969449925],
+        "z": [0.060647049198709675, 0.09910561838272147, 0.08744827664736296, 0.0603749445455733, 0.06540533058067748, 0.003004672240125408, -0.003979088894972067, 0.02014024643111125]
+      },
+      "bounds": {
+        "singular_ratio": 0.4895838313892907,
+        "radius_ratio": 0.7458249184256346,
+        "dilution": 4.277551203938183,
+        "stability": 0.18614769839471978
       },
       "refused": "positions_partial"
     },
@@ -777,7 +865,8 @@
       "bounds": {
         "singular_ratio": 0.31073078947848776,
         "radius_ratio": 1.0956346125526906,
-        "dilution": 5.986664769821539
+        "dilution": 5.986664769821539,
+        "stability": null
       },
       "refused": "positions_partial"
     },
@@ -794,7 +883,8 @@
       "bounds": {
         "singular_ratio": 0.429901979205955,
         "radius_ratio": 0.7920825440461291,
-        "dilution": 4.855073986473355
+        "dilution": 4.855073986473355,
+        "stability": null
       },
       "refused": "positions_partial"
     },
@@ -811,7 +901,8 @@
       "bounds": {
         "singular_ratio": 0.4862134192939724,
         "radius_ratio": 0.9020325869907354,
-        "dilution": 4.358595365067553
+        "dilution": 4.358595365067553,
+        "stability": 9.2703910849975e-15
       },
       "expected": {
         "center": [-2.9002408113987244e-18, 4.550938619007905e-17, 4.579669976578771e-16],
@@ -833,7 +924,8 @@
       "bounds": {
         "singular_ratio": 0.46031689284787347,
         "radius_ratio": 0.9181112767265485,
-        "dilution": 4.620702964849243
+        "dilution": 4.620702964849243,
+        "stability": null
       },
       "refused": "positions_partial"
     },

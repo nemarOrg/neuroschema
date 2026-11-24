@@ -1850,7 +1850,8 @@
       "bounds": {
         "singular_ratio": 0.6742955256695562,
         "radius_ratio": 0.7382295827637589,
-        "dilution": 3.257284176229058
+        "dilution": 3.257284176229058,
+        "stability": 0.01825932998364405
       },
       "expected": {
         "layout": {
@@ -2188,7 +2189,8 @@
       "bounds": {
         "singular_ratio": 0.0,
         "radius_ratio": null,
-        "dilution": null
+        "dilution": null,
+        "stability": null
       },
       "refused": "positions_flat"
     },
@@ -2206,7 +2208,8 @@
       "bounds": {
         "singular_ratio": 4.084424354473371e-17,
         "radius_ratio": null,
-        "dilution": null
+        "dilution": null,
+        "stability": null
       },
       "refused": "positions_flat"
     },
@@ -2224,7 +2227,8 @@
       "bounds": {
         "singular_ratio": 1.0683256095783204e-16,
         "radius_ratio": null,
-        "dilution": null
+        "dilution": null,
+        "stability": null
       },
       "refused": "positions_flat"
     },

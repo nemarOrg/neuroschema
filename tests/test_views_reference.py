@@ -344,14 +344,18 @@ def layout_mismatches(case: dict, frame: str | None = None) -> list[str]:
         if case.get("refused") != exc.word:
             return [f"refused {exc.word}"]
         return bounds_mismatches(
-            case, exc.singular_ratio, exc.radius_ratio, exc.dilution
+            case, exc.singular_ratio, exc.radius_ratio, exc.dilution, exc.stability
         )
     if "refused" in case:
         return [f"gave a layout; the vector refuses it ({case['refused']})"]
     expected = case["expected"]
     theta, radius = numbers(expected["theta_deg"]), numbers(expected["radius"])
     problems = bounds_mismatches(
-        case, layout.singular_ratio, layout.radius_ratio, layout.dilution
+        case,
+        layout.singular_ratio,
+        layout.radius_ratio,
+        layout.dilution,
+        layout.stability,
     )
     if not np.array_equal(np.isnan(layout.radius), np.isnan(radius)):
         return ["rows without a position"]
@@ -381,18 +385,21 @@ def layout_mismatches(case: dict, frame: str | None = None) -> list[str]:
     return problems
 
 
-def bounds_mismatches(case, singular_ratio, radius_ratio, dilution) -> list[str]:
-    """A measured case's three measures, within tolerance.bounds_absolute (a
+def bounds_mismatches(
+    case, singular_ratio, radius_ratio, dilution, stability
+) -> list[str]:
+    """A measured case's four measures, within tolerance.bounds_absolute (a
     template case has none)."""
     bounds = case.get("bounds")
     if bounds is None:
-        reached = (singular_ratio, radius_ratio, dilution)
+        reached = (singular_ratio, radius_ratio, dilution, stability)
         return [] if all(v is None for v in reached) else ["bounds"]
     problems = []
     for name, got in (
         ("singular_ratio", singular_ratio),
         ("radius_ratio", radius_ratio),
         ("dilution", dilution),
+        ("stability", stability),
     ):
         want = bounds[name]
         if (want is None) != (got is None) or (
@@ -423,9 +430,11 @@ def test_spec_names_every_frame_and_bound():
         assert f"`{frame}`" in LAYOUT_SPEC, frame
     for word in ("frame_unknown", "positions_flat", "positions_partial"):
         assert f"`{word}`" in LAYOUT_SPEC, word
-    for phrase in ("`\u03c33 < 0.05 * \u03c31`", "`rho > 3`", "`D > 4.5`", "(0, 0, 0)"):
+    phrases = ("`\u03c33 < 0.05 * \u03c31`", "`rho > 3`", "`D > 4.5`", "`L > 0.12`")
+    for phrase in (*phrases, "(0, 0, 0)"):
         assert phrase in LAYOUT_SPEC, phrase
-    assert (sl.FLAT_RATIO, sl.RADIUS_RATIO, sl.PARTIAL_DILUTION) == (0.05, 3.0, 4.5)
+    assert (sl.FLAT_RATIO, sl.RADIUS_RATIO) == (0.05, 3.0)
+    assert (sl.PARTIAL_DILUTION, sl.PARTIAL_SHIFT) == (4.5, 0.12)
 
 
 def test_frame_table_is_the_vectors():
@@ -513,7 +522,7 @@ def _template_any_frame(coordinate_system, montage=None):
 
 def _always_centroid(points):
     centroid = points.sum(axis=0) / len(points)
-    return sl.Fit(centroid, 1.0, 1.0, 3.0)
+    return sl.Fit(centroid, 1.0, 1.0, 3.0, 0.0)
 
 
 def _no_wrap(xyz):
@@ -589,6 +598,8 @@ LAYOUT_MUTATIONS = {
     "theta not written in (-180, 180]": ("cart2topo", _no_wrap),
     "dilution bound 4.5 -> 6.5": ("PARTIAL_DILUTION", 6.5),
     "dilution bound 4.5 -> 4.3": ("PARTIAL_DILUTION", 4.3),
+    "stability bound 0.12 -> 0.2": ("PARTIAL_SHIFT", 0.2),
+    "stability bound 0.12 -> 0.08": ("PARTIAL_SHIFT", 0.08),
     "rows at (0, 0, 0) kept": ("has_position", _zeros_kept),
     "every row fitted": ("scalp_rows", _every_row_fitted),
     "sensor types ignored": ("scalp_rows", _types_ignored),
@@ -784,6 +795,56 @@ def test_partial_positions_carry_their_measures():
     assert refusal.word == "positions_partial"
     assert abs(refusal.dilution - case["bounds"]["dilution"]) <= LTOL["bounds_absolute"]
     assert refusal.radius_ratio is not None and refusal.singular_ratio is not None
+    assert refusal.stability is None  # the dilution refused it first
+    unstable = LAYOUT_CASES["p300_8_noisy_unstable"]
+    xyz = np.column_stack([numbers(unstable["positions"][a]) for a in "xyz"])
+    with pytest.raises(sl.SensorLayoutRefusal) as raised:
+        sl.sensor_layout(xyz, unstable["coordinate_system"])
+    assert raised.value.word == "positions_partial"
+    assert (
+        raised.value.dilution
+        <= sl.PARTIAL_DILUTION
+        < unstable["bounds"]["dilution"] + 1
+    )
+    assert raised.value.stability > sl.PARTIAL_SHIFT
+
+
+def test_stability_is_the_largest_move_of_a_refit_without_one_position():
+    """The downdated normal equations give the center a least-squares refit
+    without each row gives, on a real cap and on a noisy regional set."""
+    for name in ("hydrocel_32_off_center", "p300_8_noisy_unstable"):
+        case = LAYOUT_CASES[name]
+        xyz = np.column_stack([numbers(case["positions"][a]) for a in "xyz"])
+        als = sl.to_als(xyz, case["coordinate_system"])
+        n = len(als)
+        centroid = als.sum(axis=0) / n
+        u = (als - centroid) / np.sqrt(((als - centroid) ** 2).sum(axis=1)).max()
+        design = np.column_stack([2 * u, np.ones(n)])
+        target = (u * u).sum(axis=1)
+        w = np.linalg.lstsq(design, target, rcond=None)[0]
+        radius = math.sqrt(w[0] ** 2 + w[1] ** 2 + w[2] ** 2 + w[3])
+        moves = []
+        for k in range(n):
+            keep = np.arange(n) != k
+            wk = np.linalg.lstsq(design[keep], target[keep], rcond=None)[0]
+            moves.append(np.linalg.norm(wk[:3] - w[:3]) / radius)
+        assert abs(sl.stability(design, target, w, radius) - max(moves)) < 1e-9
+        assert abs(case["bounds"]["stability"] - max(moves)) < 1e-9
+
+
+def test_the_stability_bound_is_pinned_from_both_sides():
+    inside, outside = (
+        LAYOUT_CASES["stability_inside"],
+        LAYOUT_CASES["stability_outside"],
+    )
+    assert "expected" in inside and outside["refused"] == "positions_partial"
+    assert (
+        inside["bounds"]["stability"]
+        < sl.PARTIAL_SHIFT
+        < outside["bounds"]["stability"]
+    )
+    for case in (inside, outside):
+        assert case["bounds"]["dilution"] < sl.PARTIAL_DILUTION - 1.0
 
 
 @pytest.mark.parametrize(
@@ -1037,11 +1098,12 @@ def test_generator_keeps_every_measure_off_its_bound():
     implementation's rounding cannot flip a case."""
     gen = _generator()
 
-    def bounds(singular_ratio, radius_ratio=None, dilution=None):
+    def bounds(singular_ratio, radius_ratio=None, dilution=None, stability=None):
         return {
             "singular_ratio": singular_ratio,
             "radius_ratio": radius_ratio,
             "dilution": dilution,
+            "stability": stability,
         }
 
     gen.check_bounds("clear", bounds(0.06, 2.9, 4.44))
@@ -1055,7 +1117,14 @@ def test_generator_keeps_every_measure_off_its_bound():
         gen.check_bounds("near", bounds(0.2, 1.0, 4.46))
     with pytest.raises(SystemExit, match="dilution"):
         gen.check_bounds("near", bounds(0.2, 1.0, 4.54))
+    gen.check_bounds("clear", bounds(0.2, 1.0, 3.0, 0.114))
+    gen.check_bounds("clear", bounds(0.2, 1.0, 3.0, 0.126))
+    with pytest.raises(SystemExit, match="stability"):
+        gen.check_bounds("near", bounds(0.2, 1.0, 3.0, 0.118))
+    with pytest.raises(SystemExit, match="stability"):
+        gen.check_bounds("near", bounds(0.2, 1.0, 3.0, 0.122))
     assert gen.PARTIAL_DILUTION == sl.PARTIAL_DILUTION
+    assert gen.PARTIAL_SHIFT == sl.PARTIAL_SHIFT
 
 
 def test_generator_checks_each_stored_montage_center(monkeypatch):

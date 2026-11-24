@@ -232,10 +232,16 @@ def to_als(xyz, frame, montage=None):
 FLAT_RATIO = 0.05
 RADIUS_RATIO = 3.0
 PARTIAL_DILUTION = 4.5
+PARTIAL_SHIFT = 0.12
 # Every vector keeps its measures this far from a bound (singular ratio,
-# radius ratio, dilution).
-BOUND_MARGIN = (0.002, 0.05, 0.05)
-NO_BOUNDS = {"singular_ratio": None, "radius_ratio": None, "dilution": None}
+# radius ratio, dilution, stability).
+BOUND_MARGIN = (0.002, 0.05, 0.05, 0.005)
+NO_BOUNDS = {
+    "singular_ratio": None,
+    "radius_ratio": None,
+    "dilution": None,
+    "stability": None,
+}
 
 
 def fit_center(points):
@@ -273,14 +279,25 @@ def fit_center(points):
     bounds["dilution"] = float(math.sqrt(np.trace(inverse[:3, :3])))
     if bounds["dilution"] > PARTIAL_DILUTION:
         return None, bounds, "positions_partial"
+    # The stability: the largest move of the center, as a share of the radius,
+    # when one position is left out and the rest refitted by least squares.
+    moves = []
+    for k in range(n):
+        keep = np.arange(n) != k
+        (ak, bk, ck, _dk), *_ = np.linalg.lstsq(design[keep], target[keep], rcond=None)
+        moves.append(math.dist((ak, bk, ck), (a, b, c)) / bounds["radius_ratio"])
+    bounds["stability"] = float(max(moves))
+    if bounds["stability"] > PARTIAL_SHIFT:
+        return None, bounds, "positions_partial"
     return centroid + scale * np.array([a, b, c]), bounds, None
 
 
 def check_bounds(name, bounds):
-    ratio, radius, spread = (
+    ratio, radius, spread, shift = (
         bounds["singular_ratio"],
         bounds["radius_ratio"],
         bounds["dilution"],
+        bounds["stability"],
     )
     if ratio is not None and 0 < abs(ratio - FLAT_RATIO) < BOUND_MARGIN[0]:
         raise SystemExit(f"{name}: singular ratio {ratio} too near {FLAT_RATIO}")
@@ -288,6 +305,8 @@ def check_bounds(name, bounds):
         raise SystemExit(f"{name}: radius ratio {radius} too near {RADIUS_RATIO}")
     if spread is not None and abs(spread - PARTIAL_DILUTION) < BOUND_MARGIN[2]:
         raise SystemExit(f"{name}: dilution {spread} too near {PARTIAL_DILUTION}")
+    if shift is not None and abs(shift - PARTIAL_SHIFT) < BOUND_MARGIN[3]:
+        raise SystemExit(f"{name}: stability {shift} too near {PARTIAL_SHIFT}")
 
 
 def has_position(xyz):
@@ -1364,7 +1383,43 @@ def partial_cases():
                 "MNIColin27",
             )
         )
+    center = np.array(ten_05["center"])
+    for name, factor, verdict in [
+        ("stability_inside", 0.26, "drawn"),
+        ("stability_outside", 0.33, "refused (positions_partial)"),
+    ]:
+        rows = [np.array(by_name[k]) for k in TEN_TWENTY_19]
+        cz = TEN_TWENTY_19.index("Cz")
+        rows[cz] = center + (rows[cz] - center) * (1 + factor)
+        cases.append(
+            layout_case(
+                name,
+                "The 19 electrodes of the 10-20 system on the Colin27 head "
+                f"(MNIColin27), with Cz digitized {round(100 * factor)}% too far "
+                "from the montage's center: the dilution passes, and leaving Cz "
+                "out moves the fitted center by "
+                f"{'less' if factor < 0.3 else 'more'} than 0.12 of the radius; "
+                f"{verdict}.",
+                TEN_TWENTY_19,
+                rows,
+                "MNIColin27",
+            )
+        )
     p300 = ["Fz", "Cz", "Pz", "P3", "P4", "PO7", "PO8", "Oz"]
+    noise = np.random.default_rng(24).normal(0, 0.005, (len(p300), 3))
+    cases.append(
+        layout_case(
+            "p300_8_noisy_unstable",
+            "The posterior P300 set (Fz, Cz, Pz, P3, P4, PO7, PO8, Oz) of the "
+            "Colin27 head measured with 5 mm of noise: the noise spreads the "
+            "directions so the dilution passes (4.28), but leaving one position "
+            "out moves the center by 0.19 of the radius; refused "
+            "(positions_partial).",
+            p300,
+            np.array([by_name[k] for k in p300]) + noise,
+            "MNIColin27",
+        )
+    )
     fiducials = [ten_05["fiducials"][k] for k in ("nasion", "lpa", "rpa")]
     for name, keys, fiducial_names in [
         (
@@ -1749,9 +1804,10 @@ def sensor_layout_vectors(ref):
             "scalp row or has no position: not finite, or exactly 0, 0, 0) or the "
             "word it is refused with. Template positions are centered on the "
             "montage's own center, its file's center; measured positions carry "
-            "bounds, their singular_ratio, radius_ratio and dilution (null when "
-            "not reached), which decide positions_flat against 0.05 and 3 and "
-            "positions_partial against 4.5, within tolerance.bounds_absolute. The "
+            "bounds, their singular_ratio, radius_ratio, dilution and stability "
+            "(null when not reached), which decide positions_flat against 0.05 and "
+            "3 and positions_partial against 4.5 and 0.12, within "
+            "tolerance.bounds_absolute. The "
             "expected theta and radius are eegprep's convertlocs(..., 'cart2topo') "
             "of the positions minus the center, with -180 written 180. frames lists "
             "the BIDS coordinate systems of each orientation: an implementation "
