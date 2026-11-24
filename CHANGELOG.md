@@ -9,7 +9,7 @@ While the schema is pre-1.0, a MINOR bump marks a breaking change or a new exten
 
 Quality views replace figures: a view is data a browser draws, declared with a namespaced, versioned kind (nemarOrg/neuroschema#21, part of nemarOrg/nemar-cli#2324).
 
-**Breaking.** A document valid under 0.5.0 can fail under 0.6.0: record-level `dataQuality` `figures` is replaced by the required `views`, each dataset-level distribution requires `unit`, and a record-level metric's name is paired with its producer (a bare name with `recipe`, `<plugin>:<name>` with `plugin`). See Changed (breaking).
+**Breaking.** A document valid under 0.5.0 can fail under 0.6.0. The changes that reject one: record-level `dataQuality` `figures` is replaced by the required `views`; each dataset-level distribution requires `unit`; a record-level metric's name is paired with its producer (a bare name with `recipe`, `<plugin>:<name>` with `plugin`); `processingTypes.plugin.name` is `^[A-Za-z][A-Za-z0-9_-]{0,63}$`; `dataQuality` is closed at its root and in `$defs/record` and `$defs/dataset`; `processingTypes.metricName` allows one colon at most, followed by a letter; `processingTypes.relativeLocation` refuses `%`, `?`, `#`, dot and empty segments, a trailing `/`, leading or trailing spaces and control characters; `dataPaper.doi` takes ASCII `[!-~]+` after the prefix; and every `integer` is capped at 2^53 - 1 in magnitude. Every entry under Changed (breaking) can reject a 0.5.0 document.
 
 ### Added
 
@@ -90,6 +90,10 @@ Quality views replace figures: a view is data a browser draws, declared with a n
 - CI and the typo check run on pull requests into `feature/**` branches.
 - The role contract (`meets_role_contract`) requires each role a kind requires exactly once and each optional role at most once, and validates the view's entries in the kind's roles together under the kind schema's `data` subschema, so a rule across roles holds for a preset drawn by its base.
 - The reserved dimension `sensor`: with a layout or positions role, that role's name column in row order; with neither, names placed by `nemar.sensor-labels.v1`.
+
+### Documentation
+
+- `docs/views/sensor-layout.md` lists the nine deprecated `UNCInfant` frame names (`UNCInfant0V21` to `UNCInfant2V23`) one by one in place of a range, and a test holds the page to every frame name (#28).
 
 ## [0.5.0] - 2026-11-22
 
