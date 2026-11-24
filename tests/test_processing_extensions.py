@@ -181,6 +181,24 @@ def test_every_integer_is_within_2_53(path):
         assert high is not None and high <= SAFE, f"{path.name}{where}"
 
 
+PYPROJECT_VERSION = re.search(
+    r'^version = "([^"]+)"$', (ROOT / "pyproject.toml").read_text(), re.M
+)[1]
+
+
+@pytest.mark.xfail(
+    PYPROJECT_VERSION == "0.5.0",
+    strict=True,
+    reason="the ids name the release tag v0.6.0; S5 bumps pyproject to 0.6.0",
+)
+def test_the_ids_name_the_released_version():
+    """Each $id names the release tag of the version it ships in, so a consumer
+    pinned to a version reads that version's files; the release that bumps
+    pyproject.toml bumps the tag in SCHEMA_BASE with it (review r29)."""
+    tag = re.fullmatch(r".*/neuroschema/v([^/]+)/schema/", SCHEMA_BASE)[1]
+    assert tag == PYPROJECT_VERSION
+
+
 def test_the_ajv_check_uses_the_same_ids():
     """scripts/ajv/check.ts (CI job ajv) checks each $id against the same base."""
     check = (ROOT / "scripts" / "ajv" / "check.ts").read_text(encoding="utf-8")
@@ -518,6 +536,15 @@ class TestDataQualityRecord:
             "a\u0085b.tsv",
             "a\x9fb.tsv",
             "a\x7fb.tsv",
+            # Review r29: a JavaScript . does not match U+2028 or U+2029, so a
+            # lookahead written with . stopped there and let these through.
+            "a\u2028/../../x.tsv",
+            "a\u2029/../x.tsv",
+            "a\u2028/./x.tsv",
+            "a\u2028//x.tsv",
+            "a\u2028/",
+            "a\u2028 ",
+            "x\u2028.tsv",
         ],
     )
     def test_bad_location(self, location):

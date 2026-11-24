@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/extensions/nemar.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/extensions/nemar.schema.json",
   "title": "NEMAR Extension",
   "description": "NEMAR-specific properties that extend the core schema. Includes fields from the NEMAR API and nemar.json that are not part of the universal core.",
   "type": "object",

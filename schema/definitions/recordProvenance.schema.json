@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/definitions/recordProvenance.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/definitions/recordProvenance.schema.json",
   "title": "Record Provenance",
   "description": "Record-level timestamps tracking when a record was digested, created, and last modified.",
   "type": "object",

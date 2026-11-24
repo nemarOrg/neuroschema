@@ -21,6 +21,7 @@ from neuroschema.views import (
     CanonicalizationError,
     Drawing,
     canonicalize,
+    download_headers,
     draw_as,
     kind_schema_path,
     known_kinds,
@@ -167,6 +168,42 @@ def test_duplicate_member_name_is_refused_at_any_depth():
         parse_declaration('{"k":1,"k":1}')
     with pytest.raises(CanonicalizationError, match="duplicate member name 'name'"):
         parse_declaration('{"a":[{"b":{"name":"x","name":"x"}}]}')
+
+
+@pytest.mark.parametrize(
+    ("location", "file_format", "content_type", "disposition"),
+    [
+        (
+            "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+            "tsv",
+            "text/tab-separated-values",
+            'attachment; filename="sub-01_task-rest_desc-nemarica_channels.tsv"; '
+            "filename*=UTF-8''sub-01_task-rest_desc-nemarica_channels.tsv",
+        ),
+        (
+            "x/report.html",
+            "html",
+            "application/octet-stream",
+            "attachment; filename=\"report.html\"; filename*=UTF-8''report.html",
+        ),
+        (
+            'x/µV "map" 100%.json',
+            "json",
+            "application/json",
+            'attachment; filename="_V _map_ 100_.json"; '
+            "filename*=UTF-8''%C2%B5V%20%22map%22%20100%25.json",
+        ),
+    ],
+)
+def test_download_headers(location, file_format, content_type, disposition):
+    """Every download is an attachment named by RFC 6266 with nosniff, and a
+    format the registry does not list is octet-stream (review r29)."""
+    headers = download_headers(location, file_format)
+    assert headers == {
+        "Content-Type": content_type,
+        "Content-Disposition": disposition,
+        "X-Content-Type-Options": "nosniff",
+    }
 
 
 def test_a_declared_size_is_within_the_cap_on_bytes():

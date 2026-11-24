@@ -830,12 +830,23 @@ def refusals() -> list[Case]:
     )
     view, files = _small_view(segments=True)
     refused(
-        "kind_reusing_the_transform_drops_segments",
-        "A kind the registry does not list that reuses the transform and drops "
-        "the bad segments the record names: the transform's schema holds the "
-        "rule, so declaration_invalid, not a note that there is no table "
-        "(probe p14).",
-        (without_segments(view) | {"kind": "acme.activity"}, files),
+        "kind_reusing_the_transform",
+        "A kind the registry does not list that reuses the transform: this "
+        "reference draws only nemar.ic-activity version 1, whose display filter "
+        "and window it applies, so kind_unsupported (review r29); the renderer "
+        "rule draws the view. (Dropping the bad segments would also break the "
+        "transform's schema: the verdict corpus holds that.)",
+        (view | {"kind": "acme.activity"}, files),
+    )
+    view, files = _small_view(segments=True)
+    refused(
+        "order_kind_before_declaration",
+        "Another kind and an invalid declaration (the bad segments dropped): the "
+        "kind comes first.",
+        (
+            without_segments(view) | {"kind": "nemar.ic-activity", "kind_version": 2},
+            files,
+        ),
     )
     view, files = _small_view(segments=True)
     del files[UNMIXING_AT]
@@ -857,6 +868,37 @@ def refusals() -> list[Case]:
         "The badsegments input reads a decoy table with no rows where "
         "shaded.files names the floor's: table_location_mismatch, never drawn "
         "with nothing shaded (probe p7).",
+        (view, files),
+    )
+    view, files = _small_view(segments=True)
+    other = "sub-01/eeg/sub-01_task-rest_run-2_desc-nemarica"
+    for given in view["inputs"]:
+        if "file" in given:
+            role, old = given["role"], given["file"]["location"]
+            moved = other + old.removeprefix(PREFIX)
+            files[moved] = files.pop(old)
+            given["file"]["location"] = moved
+            if role == "unmixing":
+                view["transform"]["parameters"]["matrix"] = moved
+            if role == "badsegments":
+                view["transform"]["parameters"]["shaded"]["files"] = [moved]
+    refused(
+        "tables_of_another_recording",
+        "The matrix, the components and the bad segments of run 2, named for it "
+        "and consistent with matrix and shaded.files: not the recording's, so "
+        "table_location_mismatch (review r29).",
+        (view, files),
+    )
+    view, files = _small_view()
+    moved = "sub-01/eeg/sub-01_task-rest_desc-nemarfloor_components.tsv"
+    files[moved] = files.pop(COMPONENTS_AT)
+    for given in view["inputs"]:
+        if given["role"] == "components":
+            given["file"]["location"] = moved
+    refused(
+        "tables_two_stems",
+        "The components table under another stem (desc-nemarfloor) than the "
+        "matrix's (desc-nemarica): table_location_mismatch.",
         (view, files),
     )
     view, files = _small_view()
@@ -1184,6 +1226,14 @@ def refusals() -> list[Case]:
         "burst (it says Burst): label_unmatched, never drawn with the bursts "
         "unshaded (probe p7).",
         _small_view(segments=MISSPELLED),
+        bursts_repaired=True,
+    )
+    refused(
+        "no_table_where_bursts_were_repaired",
+        "The record says ASR repaired spans and the view declares no bad-segment "
+        "table (shaded.files null): the two contradict, so label_unmatched, "
+        "never drawn with a note that there is nothing to shade (review r29).",
+        _small_view(),
         bursts_repaired=True,
     )
     refused(

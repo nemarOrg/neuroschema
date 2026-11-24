@@ -24,13 +24,14 @@ import json
 import sys
 from pathlib import Path
 
-from neuroschema.ijson import FORBIDDEN, binary64
+from neuroschema.ijson import FORBIDDEN
 from neuroschema.views import load_registry
 from neuroschema.views.models import (
     MODELS_FORMAT,
     ViewRefused,
     build_model,
     content_validator,
+    data_quality_validator,
     histogram_content_validator,
     locate_bin,
     snap_row,
@@ -1041,6 +1042,12 @@ def histogram_cases() -> list[Case]:
             "A byte order mark: json_invalid.",
         ),
         (
+            "histogram_not_utf8",
+            b'{"categories": ["a\xff"], "counts": [1]}\n',
+            "A byte that is not UTF-8 (0xFF): json_invalid, where a decoder "
+            "without fatal would read U+FFFD (review r29).",
+        ),
+        (
             "histogram_escaped_duplicate_member",
             b'{"categories": ["a"], "counts": [1], "\\u0063ounts": [2]}\n',
             "A member named twice, once escaped (counts and \\u0063ounts are one "
@@ -1832,12 +1839,48 @@ def view_verdicts() -> list[tuple[str, str, dict]]:
             _set(table, "data/0/location", "x/t\u007f.tsv"),
         ),
         (
+            "envelope_location_line_separator_dot_segment",
+            "A line separator (U+2028) before a .. segment: a JavaScript . stops "
+            "at it, so a lookahead written with . would not see the segment.",
+            _set(table, "data/0/location", "x/a\u2028/../t.tsv"),
+        ),
+        (
+            "envelope_location_line_separator_double_slash",
+            "A line separator before an empty segment.",
+            _set(table, "data/0/location", "x/a\u2028//t.tsv"),
+        ),
+        (
+            "envelope_location_paragraph_separator",
+            "A paragraph separator (U+2029) in a name.",
+            _set(table, "data/0/location", "x/t\u2029.tsv"),
+        ),
+        (
             "envelope_location_space_inside",
             "A space inside a name, and dots that are no dot segment, are one "
             "file: valid.",
             _set(table, "data/0/location", "x/.. a/t b.tsv"),
         ),
         ("envelope_dims_valid", "An unknown kind with a dimension.", dims),
+        (
+            "envelope_plugin_name_with_dot",
+            "A plugin named with a dot: plugin names take a metric prefix's "
+            "grammar, so every plugin can name its metrics.",
+            _set(
+                unknown,
+                "source",
+                {"plugin": {"name": "org.nemar.quality", "version": "1.0.0"}},
+            ),
+        ),
+        (
+            "envelope_plugin_name_64",
+            "A plugin name of 64 characters, the most.",
+            _set(unknown, "source", {"plugin": {"name": "p" * 64, "version": "1.0.0"}}),
+        ),
+        (
+            "envelope_plugin_name_65",
+            "A plugin name of 65 characters.",
+            _set(unknown, "source", {"plugin": {"name": "p" * 65, "version": "1.0.0"}}),
+        ),
         (
             "envelope_kind_version_0",
             "kind_version starts at 1.",
@@ -2088,6 +2131,43 @@ def view_verdicts() -> list[tuple[str, str, dict]]:
             "histogram_parameters",
             "Version 1 takes no parameters.",
             _set(hist, "parameters", {"log": True}),
+        ),
+    ]
+
+
+def data_quality_verdicts() -> list[tuple[str, str, dict]]:
+    """A recording's dataQuality entry: the example, and the rules of the
+    namespace a renderer that validates with ajv must agree on."""
+    entry = json.loads(PRESET_EXAMPLE.read_text(encoding="utf-8"))
+    ica = "recipes/nemar-ica"
+    views = entry["recipes"]["nemar-ica"]["views"]
+    archive = _set(
+        _set(entry, f"{ica}/input_kind", "bids"), f"{ica}/profile", "archive"
+    )
+    metric = "nemar-quality:percentBrainComponents"
+    return [
+        ("dataquality_record", "The example's record entry.", entry),
+        (
+            "dataquality_root_closed",
+            "A views list beside recipes at the root, which no schema would "
+            "check: the root is closed (probe p11).",
+            entry | {"views": copy.deepcopy(views)},
+        ),
+        (
+            "dataquality_record_closed",
+            "A member beside level and recipes, refused by the record shape too.",
+            entry | {"dataset_level_counts": {"total": 3}},
+        ),
+        (
+            "dataquality_store_profile_pairing",
+            "An entry of the archive whose views name stores of the serving copy: "
+            "a store's profile is its entry's.",
+            archive,
+        ),
+        (
+            "dataquality_plugin_name_with_dot",
+            "A metric's plugin named with a dot, which no metric name can prefix.",
+            _set(entry, f"{ica}/metrics/{metric}/plugin/name", "org.nemar.quality"),
         ),
     ]
 
@@ -2661,6 +2741,12 @@ def preset_verdicts() -> list[tuple[str, str, dict]]:
             _set(activity, "kind", "acme.activity"),
         ),
         (
+            "ic_activity_transform_reused_without_parameters",
+            "That kind with no parameters: the transform's schema requires the "
+            "ones its computation reads (review r29).",
+            _set(_set(activity, "kind", "acme.activity"), "parameters", DROP),
+        ),
+        (
             "ic_activity_transform_reused_drops_segments",
             "That kind drops the bad segments the record names: the transform's "
             "schema refuses it, whatever the kind (probe p14).",
@@ -3167,6 +3253,10 @@ FLOOR_CHANNELS = tsv(
     "Fp1 EEG good n/a n/a",
     "Fp2 EEG good n/a n/a",
     "F3 EEG good n/a n/a",
+    "F4 EEG good n/a n/a",
+    "C3 EEG good n/a n/a",
+    "C4 EEG good n/a n/a",
+    "P3 EEG good n/a n/a",
     "P4 EEG bad flat flatline",
     "ECG ECG n/a non-signal not_assessed",
 )
@@ -3196,6 +3286,14 @@ def _relocated(case: tuple, role: str, location: str) -> tuple:
     entry = next(i for i in view["inputs"] if i["role"] == role)["file"]
     files[location] = files.pop(entry["location"])
     entry["location"] = location
+    return view, files, store, caps
+
+
+def _recorded_as(case: tuple, recording: str) -> tuple:
+    """A signal window case whose store is that of another recording path."""
+    view, files, store, caps = copy.deepcopy(case)
+    signal = next(i for i in view["inputs"] if i["role"] == "signal")["store"]
+    signal["recording"] = recording
     return view, files, store, caps
 
 
@@ -3280,7 +3378,8 @@ def signal_window_check_cases() -> list[tuple[str, str, dict, dict, dict]]:
                 2,
                 channels=tsv(
                     "status name type",
-                    "good Fp1 EEG",
+                    *[f"good {n} EEG" for n in ("Fp1", "Fp2", "F3", "F4", "C3")],
+                    *[f"good {n} EEG" for n in ("C4", "P3")],
                     "bad P4 EEG",
                     "n/a ECG ECG",
                 ),
@@ -3452,6 +3551,102 @@ def signal_window_check_cases() -> list[tuple[str, str, dict, dict, dict]]:
                 at(151.5, 2),
                 "badsegments",
                 "sub-01/eeg/sub-01_task-rest_desc-nemarfloor_badsegments.tsv",
+            ),
+        ),
+        (
+            "signal_window_tables_run",
+            "Both tables of run 2 (sub-01_task-rest_run-2), whose name begins "
+            "with the recording's entities: "
+            "after the entities only _desc-<label> may follow, so "
+            "table_location_mismatch (review r29).",
+            *_relocated(
+                _relocated(
+                    at(151.5, 2),
+                    "channels",
+                    "sub-01/eeg/sub-01_task-rest_run-2_desc-nemarica_channels.tsv",
+                ),
+                "badsegments",
+                "sub-01/eeg/sub-01_task-rest_run-2_desc-nemarica_badsegments.tsv",
+            ),
+        ),
+        (
+            "signal_window_tables_task_prefix",
+            "Both tables of task restingstate, whose name begins with "
+            "sub-01_task-rest: "
+            "after the entities only _desc-<label> may follow, so "
+            "table_location_mismatch (review r29).",
+            *_relocated(
+                _relocated(
+                    at(151.5, 2),
+                    "channels",
+                    "sub-01/eeg/sub-01_task-restingstate_desc-nemarica_channels.tsv",
+                ),
+                "badsegments",
+                "sub-01/eeg/sub-01_task-restingstate_desc-nemarica_badsegments.tsv",
+            ),
+        ),
+        (
+            "signal_window_tables_acq",
+            "Both tables of acquisition other (sub-01_task-rest_acq-other): "
+            "after the entities only _desc-<label> may follow, so "
+            "table_location_mismatch (review r29).",
+            *_relocated(
+                _relocated(
+                    at(151.5, 2),
+                    "channels",
+                    "sub-01/eeg/sub-01_task-rest_acq-other_desc-nemarica_channels.tsv",
+                ),
+                "badsegments",
+                "sub-01/eeg/sub-01_task-rest_acq-other_desc-nemarica_badsegments.tsv",
+            ),
+        ),
+        (
+            "signal_window_tables_desc_recording",
+            "A recording whose last entity is a desc (desc-clean): the tables "
+            "append the label to its value (desc-cleannemarica), as nemar-process "
+            "names them, and are the recording's.",
+            *_recorded_as(
+                _relocated(
+                    _relocated(
+                        at(151.5, 2),
+                        "channels",
+                        "sub-01/eeg/sub-01_task-rest_desc-cleannemarica_channels.tsv",
+                    ),
+                    "badsegments",
+                    "sub-01/eeg/sub-01_task-rest_desc-cleannemarica_badsegments.tsv",
+                ),
+                "sub-01/eeg/sub-01_task-rest_desc-clean_eeg.set",
+            ),
+        ),
+        (
+            "signal_window_channel_row_missing",
+            "The store has a row ECG that the channels table does not name: a "
+            "floor decision dropped, so channel_row_missing, never a channel "
+            "drawn with no decision (review r29).",
+            *at(
+                151.5,
+                2,
+                channels=FLOOR_CHANNELS.replace(
+                    b"ECG\tECG\tn/a\tnon-signal\tnot_assessed\n", b""
+                ),
+            ),
+        ),
+        (
+            "signal_window_order_bad_channel_before_row_missing",
+            "A bad channel p4 no store row has, and the store's P4 with no row: "
+            "bad_channel_unknown comes first.",
+            *at(151.5, 2, channels=FLOOR_CHANNELS.replace(b"P4", b"p4", 1)),
+        ),
+        (
+            "signal_window_order_row_missing_before_window",
+            "The store's ECG with no row and a window at the recording's end: the "
+            "channel rows come first.",
+            *at(
+                300,
+                2,
+                channels=FLOOR_CHANNELS.replace(
+                    b"ECG\tECG\tn/a\tnon-signal\tnot_assessed\n", b""
+                ),
             ),
         ),
         (
@@ -3635,11 +3830,12 @@ def preset_checks() -> dict:
 
 
 def _errors(validator, instance) -> list[list[str]]:
-    """jsonschema's errors on the binary64 reading of the instance: what an
-    engine that parses the vectors file with JSON.parse checks."""
+    """jsonschema's errors on the binary64 reading of the instance (the
+    validators read it so): what an engine that parses the vectors file with
+    JSON.parse checks."""
     pairs = {
         (e.validator, "/".join(str(p) for p in e.absolute_path))
-        for e in validator.iter_errors(binary64(instance))
+        for e in validator.iter_errors(instance)
     }
     return [list(pair) for pair in sorted(pairs)]
 
@@ -3648,6 +3844,7 @@ def verdicts() -> dict:
     cases = []
     for schema, validator, items in [
         ("view", view_validator(), [*view_verdicts(), *preset_verdicts()]),
+        ("dataQuality", data_quality_validator(), data_quality_verdicts()),
         (HISTOGRAM_CONTENT, histogram_content_validator(), content_verdicts()),
         (
             IC_CLASSES_CONTENT,
@@ -3672,10 +3869,12 @@ def verdicts() -> dict:
         "spec": SPEC,
         "description": (
             "Declarations and contents with jsonschema's verdicts, for a renderer "
-            "that checks them without a JSON Schema engine. Each verdict is on the "
+            "that checks them without a JSON Schema engine, or with another one. "
+            "Each verdict is on the "
             "binary64 reading of the instance, as JSON.parse reads it, so an integer "
             "beyond 2^53 is checked as the nearest binary64. schema view means "
-            "schema/definitions/view.schema.json#/$defs/view; any other schema is "
+            "schema/definitions/view.schema.json#/$defs/view, dataQuality "
+            "schema/extensions/dataQuality.schema.json; any other schema is "
             "a file in schema/views/. Only valid binds an implementation; errors "
             "list each failing keyword and instance path jsonschema reports."
         ),

@@ -31,6 +31,7 @@ from neuroschema.views.presets import (
     check_table_locations,
     read_channels,
     read_segments,
+    table_stem,
     window_samples,
 )
 
@@ -106,6 +107,44 @@ def _notes_and_states() -> dict[str, str]:
         SPEC.read_text().split("\n## Notes and states\n", 1)[1].split("\n## ", 1)[0]
     )
     return dict(re.findall(r"^\| `([a-z_]+)` \| (state|note) \|", section, re.M))
+
+
+REC = "sub-01/eeg/sub-01_task-rest_eeg.set"
+DESC = "sub-01/eeg/sub-01_task-rest_desc-clean_eeg.set"
+
+
+@pytest.mark.parametrize(
+    ("location", "recording", "stem"),
+    [
+        (
+            "sub-01/eeg/sub-01_task-rest_desc-nemarfloor_channels.tsv",
+            REC,
+            "sub-01_task-rest_desc-nemarfloor",
+        ),
+        (
+            "sub-01/eeg/sub-01_task-rest_desc-cleannemarfloor_channels.tsv",
+            DESC,
+            "sub-01_task-rest_desc-cleannemarfloor",
+        ),
+        ("sub-01/eeg/sub-01_task-rest_run-2_desc-nemarfloor_channels.tsv", REC, None),
+        ("sub-01/eeg/sub-01_task-restingstate_desc-nemarfloor_channels.tsv", REC, None),
+        (
+            "sub-01/eeg/sub-01_task-rest_acq-other_desc-nemarfloor_channels.tsv",
+            REC,
+            None,
+        ),
+        ("sub-01/eeg/sub-01_task-rest_desc-nemar-floor_channels.tsv", REC, None),
+        ("sub-01/eeg/sub-01_task-rest_desc-clean_desc-x_channels.tsv", DESC, None),
+        ("sub-01/meg/sub-01_task-rest_desc-nemarfloor_channels.tsv", REC, None),
+        ("sub-01/eeg/sub-01_task-rest_channels.tsv", REC, None),
+        ("sub-01/eeg/sub-01_task-rest_desc-nemarfloor_channels.json", REC, None),
+    ],
+)
+def test_a_table_stem_follows_the_recordings_entities(location, recording, stem):
+    """After the recording's entities only _desc-<label> may follow, or, when
+    its last entity is a desc, the label appended to its value: the names
+    nemar-process's naming.product_stem gives (review r29)."""
+    assert table_stem(location, recording) == stem
 
 
 def test_one_table_words_every_note_and_state():
@@ -264,6 +303,18 @@ def _bad_channels_check(case):
     return "bad_channel_unknown" if unknown else None
 
 
+def _channel_rows_check(case):
+    caps = load_registry()["caps"] | case.get("caps", {})
+    entry = next(i for i in case["view"]["inputs"] if i["role"] == "channels")
+    try:
+        rows = read_channels(files_of(case)[entry["file"]["location"]], caps)
+    except Refusal:
+        return None  # the tables' check refuses this one
+    named = {r["name"] for r in rows}
+    missing = [label for label in case["store"]["labels"] if label not in named]
+    return "channel_row_missing" if missing else None
+
+
 def _window_check(case):
     parameters, store = case["view"]["parameters"], case["store"]
     _first, count = window_samples(
@@ -295,6 +346,7 @@ ORDERS = {
             _rate_check,
             _tables_check,
             _bad_channels_check,
+            _channel_rows_check,
             _window_check,
         ],
     ),

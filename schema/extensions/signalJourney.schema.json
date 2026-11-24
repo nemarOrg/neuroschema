@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/extensions/signalJourney.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/extensions/signalJourney.schema.json",
   "title": "signalJourney Extension",
   "description": "Links from a dataset or recording to the signalJourney records of NEMAR recipe runs, one per recipe, written by the NEMAR backend. The same shape at both levels. A link describes the latest run: `in_progress` while reports arrive (no record yet), `completed` when the run wrote this record, `failed` when the run ended without writing it (the reason is in the processing extension). dataQuality keeps the last completed results.",
   "type": "object",

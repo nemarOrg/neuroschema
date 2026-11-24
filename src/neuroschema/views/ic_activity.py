@@ -40,6 +40,7 @@ from neuroschema.views.presets import (
     NO_BAD_SEGMENT_TABLE,
     NO_SHADED_ROWS,
     read_segments,
+    table_stem,
 )
 from neuroschema.views.presets import check_rate as _check_rate
 from neuroschema.views.registry import load_registry
@@ -116,11 +117,22 @@ def _input(view: Mapping, role: str) -> Mapping:
     return next(i for i in view["inputs"] if i["role"] == role)
 
 
+KIND = ("nemar.ic-activity", 1)
+
+
 def check_declaration(view: Mapping) -> None:
-    """The declaration is valid (``declaration_invalid``): it has a digest and
-    meets the envelope, which applies the transform's schema to every view that
-    names the transform, whatever its kind. Among the transform's rules: the view
-    declares ``badsegments`` exactly when ``shaded.files`` is not null."""
+    """The view is one this reference draws, and valid.
+
+    Its kind is ``nemar.ic-activity`` version 1 (``kind_unsupported``): the
+    display filter and the window are that kind's, so a view of another kind
+    that names the transform is drawn by the renderer rule, never by this
+    function (review r29). Then the declaration is valid
+    (``declaration_invalid``): it has a digest and meets the envelope, which
+    applies the kind's schema and the transform's to it. Among the transform's
+    rules: the view declares ``badsegments`` exactly when ``shaded.files`` is
+    not null, and carries the parameters the computation reads."""
+    if (view.get("kind"), view.get("kind_version")) != KIND:
+        raise IcActivityRefusal("kind_unsupported", repr(view.get("kind")))
     if not declaration_valid(view):
         raise IcActivityRefusal("declaration_invalid")
 
@@ -129,8 +141,10 @@ def check_locations(view: Mapping) -> None:
     """Each file input is at the location the record names for it
     (``table_location_mismatch``): the ``unmixing`` input at the transform's
     ``matrix``, and the ``badsegments`` input, when declared, at
-    ``shaded.files[0]``. So a view cannot read one table and name another, such
-    as a decoy table with no rows in place of the floor's (probe p7)."""
+    ``shaded.files[0]``; then the three tables are the recording's, beside it
+    under one stem (``presets.table_stem``). So a view cannot read one table and
+    name another, such as a decoy table with no rows in place of the floor's, or
+    another recording's (probes p7, r29)."""
     transform = view["transform"]["parameters"]
     if _input(view, "unmixing")["file"]["location"] != transform["matrix"]:
         raise IcActivityRefusal("table_location_mismatch", "unmixing is not matrix")
@@ -141,6 +155,20 @@ def check_locations(view: Mapping) -> None:
         raise IcActivityRefusal(
             "table_location_mismatch", "badsegments is not shaded.files[0]"
         )
+    recording = _input(view, "signal")["store"]["recording"]
+    stems = set()
+    for role in ("unmixing", "components", "badsegments"):
+        given = next((i["file"] for i in view["inputs"] if i["role"] == role), None)
+        if given is None:
+            continue
+        stem = table_stem(given["location"], recording)
+        if stem is None:
+            raise IcActivityRefusal(
+                "table_location_mismatch", f"{role}: not the recording's"
+            )
+        stems.add(stem)
+    if len(stems) > 1:
+        raise IcActivityRefusal("table_location_mismatch", "two stems")
 
 
 def check_store(view: Mapping) -> None:
@@ -245,22 +273,25 @@ def read_shading(data: bytes, label: str, caps: Mapping = CAPS) -> list[dict]:
 
 
 def check_shaded(
-    shaded: Sequence[Mapping], label: str, bursts_repaired: bool | None
+    shaded: Sequence[Mapping] | None, label: str, bursts_repaired: bool | None
 ) -> list[str]:
-    """The notes for a bad-segment table whose rows hold none labeled ``label``.
+    """The notes for the spans a view shades: ``shaded`` holds the rows labeled
+    ``label``, or is None when the view declares no bad-segment table.
 
     When the record says ASR repaired at least one span of the decomposition's
     input (``bursts_repaired`` true), a table with no row of that label cannot
-    be the right one, or its labels are misspelled (``Burst``, ``BURST``):
-    ``label_unmatched`` refuses the view, never drawn with the bursts unshaded
-    (probe p7). Otherwise, false or unknown, the view is drawn with nothing
-    shaded and the note ``no_shaded_rows`` says so.
+    be the right one, or its labels are misspelled (``Burst``, ``BURST``), and
+    no table at all contradicts the record: ``label_unmatched`` refuses the
+    view, never drawn with the bursts unshaded (probe p7, review r29).
+    Otherwise, false or unknown, the view is drawn with nothing shaded, and the
+    note ``no_bad_segment_table`` or ``no_shaded_rows`` says so.
     """
     if shaded:
         return []
     if bursts_repaired:
-        raise IcActivityRefusal("label_unmatched", f"no row labeled {label!r}")
-    return [NO_SHADED_ROWS]
+        found = "no bad-segment table" if shaded is None else "no row"
+        raise IcActivityRefusal("label_unmatched", f"{found} labeled {label!r}")
+    return [NO_BAD_SEGMENT_TABLE] if shaded is None else [NO_SHADED_ROWS]
 
 
 def match_rows(
@@ -522,12 +553,12 @@ def ic_activity(
     )
     header, weights = read_unmixing(unmixing_bytes, caps)
     labels = read_components(components_bytes, weights.shape[0], caps)
-    if segments_bytes is None:
-        shaded, notes = [], [NO_BAD_SEGMENT_TABLE]
-    else:
-        label = transform["shaded"]["label"]
-        shaded = read_shading(segments_bytes, label, caps)
-        notes = check_shaded(shaded, label, bursts_repaired)
+    label = transform["shaded"]["label"]
+    shaded = (
+        None if segments_bytes is None else read_shading(segments_bytes, label, caps)
+    )
+    notes = check_shaded(shaded, label, bursts_repaired)
+    shaded = shaded or []
     rows = match_rows(
         header,
         store.labels,

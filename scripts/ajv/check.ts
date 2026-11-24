@@ -24,7 +24,7 @@ import Ajv2020 from "ajv/dist/2020.js";
 
 const ROOT = join(import.meta.dir, "..", "..");
 const SCHEMA_DIR = join(ROOT, "schema");
-const BASE = "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/";
+const BASE = "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/";
 
 const ajv = new Ajv2020({
   strict: true,
@@ -69,7 +69,11 @@ report();
 
 function validator(name: string) {
   const id =
-    name === "view" ? `${BASE}definitions/view.schema.json#/$defs/view` : `${BASE}views/${name}`;
+    name === "view"
+      ? `${BASE}definitions/view.schema.json#/$defs/view`
+      : name === "dataQuality"
+        ? `${BASE}extensions/dataQuality.schema.json`
+        : `${BASE}views/${name}`;
   const validate = ajv.getSchema(id);
   if (!validate) throw new Error(`no schema ${id}`);
   return validate;

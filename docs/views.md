@@ -119,7 +119,8 @@ Each entry of `data` is one file read as one role.
 ### Locations
 
 A location (`relativeLocation`, the `location` of a data entry or a file input, and every other path a view names) is a relative POSIX path: Unicode text, written in UTF-8 like the rest of the record, that names one file of the run's product and is never a URL.
-It has no leading slash, no URI scheme, no `.` or `..` segment, no empty segment, no backslash, none of `%`, `?` and `#`, no leading or trailing space, no control character (C0, DEL or C1) and no bidirectional control (U+061C, U+200E, U+200F, U+202A to U+202E, U+2066 to U+2069).
+It has no leading slash, no URI scheme, no `.` or `..` segment, no empty segment, no backslash, none of `%`, `?` and `#`, no leading or trailing space, no control character (C0, DEL or C1), no line or paragraph separator (U+2028, U+2029) and no bidirectional control (U+061C, U+200E, U+200F, U+202A to U+202E, U+2066 to U+2069).
+The pattern's lookaheads match any character with `[\s\S]`, never `.`, which in JavaScript stops at a line terminator.
 So it means the same file in every reader: a URL parser strips a leading or trailing space and decodes `%2e%2e` as `..`, `?` and `#` would end the path, and a bidirectional control can show one name as another.
 A renderer that fetches a file builds its URL from the location by percent-encoding the UTF-8 bytes of each `/`-separated segment (JavaScript's `encodeURIComponent`) and joining the segments with `/` under the product's base; it compares locations as text.
 
@@ -192,8 +193,12 @@ The formats are an open registry; `tsv` and `json` are defined.
 The extension and the format name each other in both directions: a `tsv` file's location ends in `.tsv` and a `json` file's in `.json`, and a location that ends in `.tsv` or `.json` in any case is of that format, so a `.TSV` file or an `.html` file named `.tsv` is invalid.
 
 A file of a format the registry does not list is offered for download only.
-A renderer never draws it, embeds it, previews it or navigates to it, and it serves the download with `Content-Disposition: attachment`, the content type `application/octet-stream` and `X-Content-Type-Options: nosniff`, whatever the file's extension or bytes: an `html` or `svg` file a plugin declares would otherwise run as a page under the renderer's origin.
-A download of a registered format is an attachment too, with the registry's `media_type`.
+A renderer never draws it, embeds it, previews it or navigates to it, and serves it with the content type `application/octet-stream`, whatever the file's extension or bytes: an `html` or `svg` file a plugin declares would otherwise run as a page under the renderer's origin.
+A file of a registered format is served with the registry's `media_type`.
+
+Every download, of any format, is served with `X-Content-Type-Options: nosniff` and as an attachment named for the last segment of its location, by RFC 6266 with RFC 8187's encoding: `Content-Disposition: attachment; filename="<fallback>"; filename*=UTF-8''<name>`.
+`<name>` is the segment's UTF-8 bytes percent-encoded, every byte but the ASCII letters, digits, `-`, `.`, `_` and `~`, and `<fallback>` is the segment with each character outside printable ASCII, and each `"`, `\` and `%`, replaced by `_`, for a client that reads only `filename`.
+`neuroschema.views.download_headers` is the reference.
 
 ### TSV
 
@@ -215,7 +220,9 @@ Internet JSON (I-JSON, RFC 7493), the rules for every JSON text neuroschema read
 - Arrays and objects nest at most 64 deep: `[[1]]` is 2 deep and a scalar 0.
 
 Each number is the binary64 nearest its text, as JavaScript's `JSON.parse` reads it, and a schema check applies to that reading: 9007199254740993 is checked as 9007199254740992.
-`neuroschema.ijson` is the Python reader; a JavaScript reader parses with `JSON.parse` after a scan that refuses a repeated name and nesting past 64, and checks every string with `String.prototype.isWellFormed` and for the noncharacters.
+`neuroschema.ijson` is the Python reader.
+A JavaScript reader decodes the bytes with `new TextDecoder("utf-8", {fatal: true, ignoreBOM: true})`, which throws on bytes that are not UTF-8 (without `fatal` it would put U+FFFD in their place) and keeps a byte order mark as U+FEFF (without `ignoreBOM` it would drop it silently), and refuses text that begins with U+FEFF.
+It then parses with `JSON.parse` after a scan that refuses a repeated name and nesting past 64, and checks every string with `String.prototype.isWellFormed` and for the noncharacters.
 
 ## Caps
 

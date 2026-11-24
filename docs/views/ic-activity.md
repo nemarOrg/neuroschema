@@ -121,9 +121,11 @@ two binary64 operations, each rounded, as the store content digest `nemar.store-
 A renderer runs these checks in this order, and the first that fails gives the word.
 
 1. **The declaration.**
-   The declaration is valid (`declaration_invalid`): it has a digest and meets `view.schema.json#/$defs/view`, which applies the transform's schema to every view that names the transform, whatever its kind ([generic-kinds.md](generic-kinds.md#building-a-model)).
+   The view's kind is `nemar.ic-activity` version 1 (`kind_unsupported`): the display filter and the window are that kind's, so a view of another kind that names the transform is drawn by the renderer rule (by its base, or as a table), never by these checks.
+   Then the declaration is valid (`declaration_invalid`): it has a digest and meets `view.schema.json#/$defs/view`, which applies the transform's schema to every view that names the transform, whatever its kind ([generic-kinds.md](generic-kinds.md#building-a-model)); the transform's schema requires the parameters the computation reads (`display_filter`, `max_window_s`, `decomposition_input`).
 2. **The inputs' locations.**
    Each file input is where the record says (`table_location_mismatch`): the `unmixing` input's location is the transform's `matrix`, then the `badsegments` input's, when there is one, is `shaded.files[0]`.
+   Then the `unmixing`, `components` and `badsegments` tables are the recording's: each is named `<stem>_<suffix>.tsv` beside the `signal` store's `recording`, with the stem of a product of it, and all share one stem ([the floor's tables](presets.md#the-floors-tables) gives the rule).
    A view cannot read one table and name another, such as a decoy table with no rows in place of the floor's.
 3. **The decomposition's store.**
    For a decomposition of the serving copy, `decomposition_input.store` names the `signal` store (`store_mismatch`): its `path` is the store's `path` (or its `recording`, when it has no `path`) and its `group` the store's `group`, then its `content_sha256` is the store's.
@@ -147,7 +149,7 @@ A renderer runs these checks in this order, and the first that fails gives the w
    Its `component` cells, in order, label the matrix's rows.
 10. **The bad segments.**
    When the view declares `badsegments`, its file is read as [presets.md](presets.md#the-floors-tables) says for the floor's tables: the TSV grammar, at most `caps.cells_per_role` cells counting every header column (`cap_exceeded`), the columns `onset`, `duration` and `label`, found by name in any position and looked for in that order (`column_missing`), then every `onset` cell and then every `duration` cell a number (`cell_not_number`, `cell_not_finite`), then every duration above 0 (`duration_not_positive`).
-   Then, when no row's `label` cell is `shaded.label`: if the record says ASR repaired at least one span of the decomposition's input (`bursts_repaired`, below), the table cannot be the right one or its labels are misspelled (`Burst`, `BURST`), and the view is refused (`label_unmatched`); otherwise, when the record says it repaired none or the renderer does not know, the view is drawn with nothing shaded and the note `no_shaded_rows`.
+   Then, when no row's `label` cell is `shaded.label`, or the view declares no bad-segment table: if the record says ASR repaired at least one span of the decomposition's input (`bursts_repaired`, below), the table cannot be the right one, its labels are misspelled (`Burst`, `BURST`), or its absence contradicts the record, and the view is refused (`label_unmatched`); otherwise, when the record says it repaired none or the renderer does not know, the view is drawn with nothing shaded and the note `no_shaded_rows`, or `no_bad_segment_table` when there is no table.
    `bursts_repaired` is a fact of the record beside the view, not of the declaration: for nemar-ica, the recipe entry's metric `asrBurstFraction` is above 0; a renderer that has no such fact treats it as unknown.
    A fault refuses the whole view, as every other check does: activations drawn without their shading could pass the spans ASR repaired for brain signal.
 11. **The channel match.**
@@ -253,7 +255,7 @@ The value axis is labeled `a.u.` (arbitrary units): an activation is a component
 It shades each row of the `badsegments` input whose `label` cell is `shaded.label`, and no other row, over `[onset, onset + duration)` seconds: the spans ASR repaired in the decomposition's input, drawn where they meet the window.
 The vectors' `shaded` lists every such row, in file order, whether or not it meets the window, and a renderer clips each to the window itself.
 When there is none, it says so with the note `no_shaded_rows` ([presets.md](presets.md#notes-and-states)).
-A view with no bad-segment table (`shaded.files` null) shades nothing and says so: its result carries the note `no_bad_segment_table`, shown with its sentence ([presets.md](presets.md#notes-and-states); the vectors' `notes`).
+A view with no bad-segment table (`shaded.files` null), where the record does not say ASR repaired a span, shades nothing and says so: its result carries the note `no_bad_segment_table`, shown with its sentence ([presets.md](presets.md#notes-and-states); the vectors' `notes`).
 It may mark the table's other rows (the floor's bad windows) apart from them.
 With the view's caption it states:
 
@@ -275,6 +277,7 @@ A filter case matches when every value is within 1e-6 times the largest magnitud
 
 | Word | Meaning |
 |---|---|
+| `kind_unsupported` | The view's kind is not `nemar.ic-activity` version 1, whose display filter and window these checks apply. |
 | `declaration_invalid` | The declaration fails `view.schema.json#/$defs/view` (with the transform's schema) or has no digest; among others, it declares `badsegments` when `shaded.files` is null, or not when it names a table. |
 | `table_location_mismatch` | The `unmixing` input is not at the transform's `matrix`, or the `badsegments` input is not at `shaded.files[0]`. |
 | `store_mismatch` | `decomposition_input.store` does not name the `signal` store: another path, group or digest. |
@@ -282,7 +285,7 @@ A filter case matches when every value is within 1e-6 times the largest magnitud
 | `window_outside_store` | The window holds no sample, or does not lie in the store. |
 | `window_too_long` | The window holds more than `floor(max_window_s · rate)` samples. |
 | `duration_not_positive` | A bad segment's `duration` is not above 0. |
-| `label_unmatched` | The record says ASR repaired a span, and no row of the bad segments is labeled `shaded.label`. |
+| `label_unmatched` | The record says ASR repaired a span, and no row of the bad segments is labeled `shaded.label`, or the view declares no bad-segment table. |
 | `file_missing` | An input file is not there. |
 | `file_size_mismatch` | An input file's length is not its declared `size`. |
 | `file_digest_mismatch` | An input file's SHA-256 is not its declared `sha256`. |

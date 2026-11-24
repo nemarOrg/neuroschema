@@ -13,9 +13,11 @@ repository at their published paths.
 from __future__ import annotations
 
 import json
+import posixpath
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Literal, NamedTuple
+from urllib.parse import quote
 
 from jsonschema import Draft202012Validator
 
@@ -53,6 +55,29 @@ def load_registry(path: Path = REGISTRY_PATH) -> dict:
             f"{path}: format is {registry.get('format')!r}, not {REGISTRY_FORMAT!r}"
         )
     return registry
+
+
+def download_headers(
+    location: str, file_format: str, registry: Mapping | None = None
+) -> dict[str, str]:
+    """The headers a renderer serves a view file's download with (docs/views.md,
+    Formats): the registry's media type for a registered format, and
+    ``application/octet-stream`` for any other, so no file runs as a page;
+    ``nosniff`` always; and an attachment named for the location's last segment
+    by RFC 6266, ``filename*`` in RFC 8187's UTF-8 encoding with an ASCII
+    ``filename`` beside it for a client that reads only that."""
+    registry = load_registry() if registry is None else registry
+    known = registry["formats"].get(file_format)
+    name = posixpath.basename(location)
+    fallback = "".join(c if " " <= c <= "~" and c not in '"\\%' else "_" for c in name)
+    encoded = quote(name.encode("utf-8"), safe="-._~")
+    return {
+        "Content-Type": known["media_type"] if known else "application/octet-stream",
+        "Content-Disposition": (
+            f"attachment; filename=\"{fallback}\"; filename*=UTF-8''{encoded}"
+        ),
+        "X-Content-Type-Options": "nosniff",
+    }
 
 
 def known_kinds(registry: Mapping) -> dict[tuple[str, int], dict]:

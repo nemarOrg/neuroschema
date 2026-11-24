@@ -7864,6 +7864,60 @@
       }
     },
     {
+      "name": "histogram_not_utf8",
+      "covers": "A byte that is not UTF-8 (0xFF): json_invalid, where a decoder without fatal would read U+FFFD (review r29).",
+      "view": {
+        "key": "hist",
+        "kind": "nemar.histogram",
+        "kind_version": 1,
+        "caption": "Recordings by share of good samples.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "format": "json",
+            "size": 38,
+            "sha256": "54ef373a4d065b38768ac10c3eda3a72e84bf278436fc19386427a5401825280"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json": {
+          "base64": "eyJjYXRlZ29yaWVzIjogWyJh/yJdLCAiY291bnRzIjogWzFdfQo="
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "table",
+          "kind": null,
+          "kind_version": null
+        },
+        "refused": {
+          "kind": "nemar.histogram",
+          "kind_version": 1,
+          "word": "json_invalid"
+        },
+        "downloads": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "size": 38,
+            "sha256": "54ef373a4d065b38768ac10c3eda3a72e84bf278436fc19386427a5401825280"
+          }
+        ],
+        "model": {
+          "type": "fallback",
+          "tables": []
+        }
+      }
+    },
+    {
       "name": "histogram_escaped_duplicate_member",
       "covers": "A member named twice, once escaped (counts and \\u0063ounts are one name): json_invalid.",
       "view": {

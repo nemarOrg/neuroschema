@@ -38,9 +38,6 @@ _NONCHARACTERS = "﷐-﷯" + "".join(
     for plane in range(17)
 )
 FORBIDDEN = re.compile(f"[\ud800-\udfff{_NONCHARACTERS}]")
-# A JSON string token, escapes included; for the depth scan only.
-_STRING = re.compile(r'"(?:[^"\\]|\\.)*"', re.DOTALL)
-_BRACKET = re.compile(r"[\[\]{}]")
 
 
 class IJsonError(ValueError):
@@ -63,18 +60,35 @@ def decode(data: bytes | bytearray | str) -> str:
         raise IJsonError(f"not UTF-8: {exc}") from exc
 
 
-def depth(text: str) -> int:
+def depth(text: str, stop: int | None = None) -> int:
     """How deep the text's arrays and objects nest (0 for a scalar).
 
-    String tokens are skipped, so a bracket inside a string does not count. The
-    scan runs before the parse, so no parser recurses past :data:`MAX_DEPTH`.
+    One pass over the text, with a flag for being inside a string (where a
+    backslash escapes the next character), so a bracket inside a string does
+    not count and the cost is linear whatever the text: no regular expression
+    backtracks over an unterminated string. The scan runs before the parse, so
+    no parser recurses past :data:`MAX_DEPTH`; with ``stop``, it returns as
+    soon as the depth passes it.
     """
     level = deepest = 0
-    for match in _BRACKET.finditer(_STRING.sub('""', text)):
-        if match.group() in "[{":
+    in_string = escaped = False
+    for char in text:
+        if in_string:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == '"':
+                in_string = False
+        elif char == '"':
+            in_string = True
+        elif char == "[" or char == "{":
             level += 1
-            deepest = max(deepest, level)
-        else:
+            if level > deepest:
+                deepest = level
+                if stop is not None and deepest > stop:
+                    return deepest
+        elif char == "]" or char == "}":
             level -= 1
     return deepest
 
@@ -82,7 +96,7 @@ def depth(text: str) -> int:
 def parse(data: bytes | bytearray | str, max_depth: int = MAX_DEPTH) -> Any:
     """Parse I-JSON text (module docstring), or raise :class:`IJsonError`."""
     text = decode(data)
-    if depth(text) > max_depth:
+    if depth(text, stop=max_depth) > max_depth:
         raise IJsonError(f"nested more than {max_depth} deep")
     try:
         value = json.loads(
