@@ -13576,6 +13576,526 @@
       ]
     },
     {
+      "name": "sensor_field_measured_layout_typed",
+      "covers": "A measured layout that declares sensor_type.",
+      "schema": "view",
+      "instance": {
+        "key": "maps",
+        "kind": "nemar.sensor-field",
+        "kind_version": 1,
+        "caption": "Scalp maps.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv",
+            "format": "tsv",
+            "size": 302,
+            "sha256": "03f9fe4ae2c800af783a26a819c2eec48efbd3e4b8b204e1569e6a386df7ca91",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC002",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC003",
+                "type": "number",
+                "unit": "uV"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              },
+              {
+                "name": "sensor_type",
+                "type": "string"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured"
+          }
+        ]
+      },
+      "valid": true,
+      "errors": []
+    },
+    {
+      "name": "sensor_field_measured_layout_untyped",
+      "covers": "A measured layout without sensor_type: refused, since a scalp map draws a measured row only when it is typed EEG.",
+      "schema": "view",
+      "instance": {
+        "key": "maps",
+        "kind": "nemar.sensor-field",
+        "kind_version": 1,
+        "caption": "Scalp maps.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv",
+            "format": "tsv",
+            "size": 302,
+            "sha256": "03f9fe4ae2c800af783a26a819c2eec48efbd3e4b8b204e1569e6a386df7ca91",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC002",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC003",
+                "type": "number",
+                "unit": "uV"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 269,
+            "sha256": "3f87ee297645a210111149bac07b627032791daf831fa73245976793671a3c5c",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured"
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["oneOf", "data/1"]
+      ]
+    },
+    {
+      "name": "sensor_field_template_layout_untyped",
+      "covers": "A template layout without sensor_type: valid.",
+      "schema": "view",
+      "instance": {
+        "key": "maps",
+        "kind": "nemar.sensor-field",
+        "kind_version": 1,
+        "caption": "Scalp maps.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv",
+            "format": "tsv",
+            "size": 302,
+            "sha256": "03f9fe4ae2c800af783a26a819c2eec48efbd3e4b8b204e1569e6a386df7ca91",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC002",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC003",
+                "type": "number",
+                "unit": "uV"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 269,
+            "sha256": "3f87ee297645a210111149bac07b627032791daf831fa73245976793671a3c5c",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "n/a",
+            "position_source": "template",
+            "montage": "standard_1005"
+          }
+        ]
+      },
+      "valid": true,
+      "errors": []
+    },
+    {
+      "name": "sensor_field_measured_positions_untyped",
+      "covers": "Measured positions without sensor_type: refused.",
+      "schema": "view",
+      "instance": {
+        "key": "maps",
+        "kind": "nemar.sensor-field",
+        "kind_version": 1,
+        "caption": "Scalp maps.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0"
+          }
+        },
+        "transform": {
+          "name": "nemar.sensor-layout.v1",
+          "parameters": {}
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv",
+            "format": "tsv",
+            "size": 302,
+            "sha256": "03f9fe4ae2c800af783a26a819c2eec48efbd3e4b8b204e1569e6a386df7ca91",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC002",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC003",
+                "type": "number",
+                "unit": "uV"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "positions",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "positions",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_electrodes.tsv",
+            "format": "tsv",
+            "size": 632,
+            "sha256": "5bcc504e7335c5fde70a150b2022cf283372ba8ca4def006bbba596bc0091430",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "x",
+                "type": "number",
+                "unit": "m"
+              },
+              {
+                "name": "y",
+                "type": "number",
+                "unit": "m"
+              },
+              {
+                "name": "z",
+                "type": "number",
+                "unit": "m"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured"
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["oneOf", "data/1"]
+      ]
+    },
+    {
+      "name": "sensor_field_template_positions_untyped",
+      "covers": "Template positions without sensor_type: valid.",
+      "schema": "view",
+      "instance": {
+        "key": "maps",
+        "kind": "nemar.sensor-field",
+        "kind_version": 1,
+        "caption": "Scalp maps.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0"
+          }
+        },
+        "transform": {
+          "name": "nemar.sensor-layout.v1",
+          "parameters": {}
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv",
+            "format": "tsv",
+            "size": 302,
+            "sha256": "03f9fe4ae2c800af783a26a819c2eec48efbd3e4b8b204e1569e6a386df7ca91",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC002",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC003",
+                "type": "number",
+                "unit": "uV"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "positions",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "positions",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_electrodes.tsv",
+            "format": "tsv",
+            "size": 632,
+            "sha256": "5bcc504e7335c5fde70a150b2022cf283372ba8ca4def006bbba596bc0091430",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "x",
+                "type": "number",
+                "unit": "m"
+              },
+              {
+                "name": "y",
+                "type": "number",
+                "unit": "m"
+              },
+              {
+                "name": "z",
+                "type": "number",
+                "unit": "m"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "n/a",
+            "position_source": "template",
+            "montage": "standard_1005"
+          }
+        ]
+      },
+      "valid": true,
+      "errors": []
+    },
+    {
       "name": "content_edges",
       "covers": "Bins by edges.",
       "schema": "content.nemar.histogram.v1.schema.json",

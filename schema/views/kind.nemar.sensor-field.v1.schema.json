@@ -388,7 +388,42 @@
                   }
                 }
               }
-            }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "type": "object",
+                  "properties": {
+                    "position_source": {
+                      "const": "measured"
+                    }
+                  },
+                  "required": [
+                    "position_source"
+                  ]
+                },
+                "then": {
+                  "type": "object",
+                  "properties": {
+                    "columns": {
+                      "type": "array",
+                      "contains": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "const": "sensor_type"
+                          }
+                        },
+                        "required": [
+                          "name"
+                        ]
+                      }
+                    }
+                  }
+                },
+                "description": "A measured layout carries sensor_type: a scalp map draws the rows typed EEG and no untyped row, so an intracranial set that does not say what it is never reaches a scalp (the renderer refuses rows none of which is typed EEG with no_eeg_sensors). Template positions, from a montage, may be untyped."
+              }
+            ]
           },
           {
             "type": "object",
@@ -575,7 +610,42 @@
                   }
                 }
               }
-            }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "type": "object",
+                  "properties": {
+                    "position_source": {
+                      "const": "measured"
+                    }
+                  },
+                  "required": [
+                    "position_source"
+                  ]
+                },
+                "then": {
+                  "type": "object",
+                  "properties": {
+                    "columns": {
+                      "type": "array",
+                      "contains": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "const": "sensor_type"
+                          }
+                        },
+                        "required": [
+                          "name"
+                        ]
+                      }
+                    }
+                  }
+                },
+                "description": "Measured positions carry sensor_type: a scalp map draws the rows typed EEG and no untyped row, so an intracranial set that does not say what it is never reaches a scalp (the renderer refuses rows none of which is typed EEG with no_eeg_sensors). Template positions, from a montage, may be untyped."
+              }
+            ]
           }
         ]
       },

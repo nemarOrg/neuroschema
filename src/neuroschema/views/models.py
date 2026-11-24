@@ -563,17 +563,21 @@ def sensor_type_class(text: str | None) -> str:
     return "eeg" if folded == "eeg" else "other"
 
 
-def drawn_rows(types: Sequence[str] | None, count: int) -> list[bool]:
+def drawn_rows(
+    types: Sequence[str] | None, count: int, measured: bool = False
+) -> list[bool]:
     """Which sensor rows a scalp map draws, by their types.
 
-    With any row typed, only the rows typed EEG; with no row typed (or no
-    ``sensor_type`` column), every row. So a map holds one sensor type, and
-    never an intracranial contact (``SEEG``, ``ECOG``, ``DBS``) that says so.
+    Measured positions (a layout or positions role with ``position_source``
+    ``measured``): only the rows typed EEG, never an untyped row. Template
+    positions and names in the values file: with any row typed, only the rows
+    typed EEG; with no row typed (or no ``sensor_type`` column), every row.
+    So a map holds one sensor type, never draws a contact typed ``SEEG``,
+    ``ECOG`` or ``DBS``, and never draws a measured position that does not
+    say it is EEG.
     """
-    if types is None:
-        return [True] * count
-    classes = [sensor_type_class(text) for text in types]
-    if all(c == "untyped" for c in classes):
+    classes = [sensor_type_class(text) for text in types or [None] * count]
+    if not measured and all(c == "untyped" for c in classes):
         return [True] * count
     return [c == "eeg" for c in classes]
 
@@ -600,7 +604,9 @@ class _Sensors:
     types: list[str] | None = None
 
 
-def _sensor_role(reader: _Reader, dim: Mapping, count: int) -> _Sensors:
+def _sensor_role(
+    reader: _Reader, dim: Mapping, count: int, names: Sequence[str] | None = None
+) -> _Sensors:
     """The layout or positions role whose rows are the sensors, by position.
 
     In order: the role is there once, as a TSV file that declares the
@@ -608,8 +614,11 @@ def _sensor_role(reader: _Reader, dim: Mapping, count: int) -> _Sensors:
     its declared columns (``column_repeated``, then each ``column_missing`` in
     declared order); the coordinate column's type (``coords_mismatch``); one
     row per sensor (``coords_length``); the cap on cells, counting every
-    declared column; and its cells, column by column in declared order, where
-    a place column's cells are finite numbers or ``n/a``.
+    declared column; its cells, column by column in declared order, where a
+    place column's cells are finite numbers or ``n/a``; and, when the sensors
+    run along the values' columns (``names``, the value columns' names in
+    declared order), its name cells are those names, compared as text
+    (``sensors_mismatch``), so no value is drawn at another sensor's place.
     """
     role, name = dim["coords"]["role"], dim["coords"]["column"]
     entry = reader.entry(role)
@@ -636,6 +645,8 @@ def _sensor_role(reader: _Reader, dim: Mapping, count: int) -> _Sensors:
             cell_value(text, kind or declared_column["type"])
         if declared_column["name"] == "sensor_type":
             types = texts
+    if names is not None and tsv.cells(name) != list(names):
+        raise KindRefused("sensors_mismatch", f"{role}: names differ from the header")
     return _Sensors(tsv.cells(name), role, entry, places, types)
 
 
@@ -684,7 +695,8 @@ def _sensor_field(reader: _Reader, own: bool) -> dict:
     for dim in sorted(dims, key=lambda d: d["axis"] != "rows"):
         coords = dim["coords"]
         if dim is sensor_dim and "role" in coords:
-            sensors = _sensor_role(reader, dim, counts[dim["axis"]])
+            header = names if dim["axis"] == "columns" else None
+            sensors = _sensor_role(reader, dim, counts[dim["axis"]], header)
         elif dim is sensor_dim:
             sensors = _Sensors(names if "header" in coords else label_texts)
         elif "role" in coords:
@@ -746,10 +758,12 @@ def sensor_field_model(
     """A scalp map's model from its sensors and maps (sensor-field.md, The model).
 
     The placement runs in order: a sensor role in a frame no scalp map is
-    drawn in (``frame_not_scalp``); rows typed, none of them EEG
-    (``no_eeg_sensors``); for positions, the projection, whose refusal
-    (``frame_unknown``, ``positions_flat``) places the sensors by name
-    instead; and for names, ``nemar.sensor-labels.v1`` (its reason). A
+    drawn in (``frame_not_scalp``); no row to draw (``no_eeg_sensors``: rows
+    typed and none EEG, or measured positions with no row typed EEG); for
+    positions, the projection, whose refusal (``frame_unknown``,
+    ``positions_flat``) places the sensors by name instead when every drawn
+    row is typed EEG, and is every map's word otherwise; and for names,
+    ``nemar.sensor-labels.v1`` (its reason). A
     placement's word is every map's word; otherwise each map's word is the one
     ``nemar.sensor-field.v1`` refuses it with, or None, and its notes are the
     drawn map's (``flat_field``). The projection and the
@@ -760,8 +774,14 @@ def sensor_field_model(
 
     count = len(sensors.labels)
     entry = sensors.entry or {}
-    drawn = drawn_rows(sensors.types, count)
+    measured = entry.get("position_source") == "measured"
+    drawn = drawn_rows(sensors.types, count, measured)
     rows = [k for k in range(count) if drawn[k]]
+    # The drawn rows may be placed by name after their positions are refused
+    # only when every one of them says it is EEG.
+    named_eeg = sensors.types is not None and all(
+        sensor_type_class(sensors.types[k]) == "eeg" for k in rows
+    )
     placement = {
         "source": sensors.role or "names",
         "role": sensors.role,
@@ -788,6 +808,8 @@ def sensor_field_model(
             layout = _projected(xyz, frame, montage, rows, count)
         except SensorLayoutRefusal as exc:
             placement["unused_positions"] = exc.word
+            if not named_eeg:
+                placement["word"] = exc.word
         else:
             places.update({axis: list(sensors.places[axis]) for axis in "xyz"})
     if placement["word"] is None and layout is None:

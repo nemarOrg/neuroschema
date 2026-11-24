@@ -316,6 +316,7 @@ When a kind refused the files, `refused` is `{"kind", "kind_version", "word"}`, 
 | `coords_unresolved` | fallback | A coordinate column is not declared, or a coordinate role is absent, repeated or not TSV. |
 | `coords_mismatch` | fallback | A coordinate column's type or unit differs from its dimension's. |
 | `coords_length` | fallback | Coordinates from another role do not have one cell per position. |
+| `sensors_mismatch` | fallback | A scalp map's sensors run along the columns and are placed by a layout or positions role, and the value columns' names, in declared order, are not that role's name cells ([sensor-field.md](sensor-field.md#the-order-of-checks)). |
 | `value_type` | fallback | A value column is not numeric. |
 | `value_units_differ` | fallback | The value columns' units differ. |
 | `empty` | fallback | No data row, or no value column. |

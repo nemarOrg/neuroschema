@@ -75,9 +75,10 @@ The parameters record how the spectrum was computed; a renderer prints them and 
 A renderer that knows this kind draws the `nemar.lines` model of the values, and below it a scalp map of the sensors' values at one frequency row: the row the readout snaps to, or, before the reader picks one, the row nearest each frequency of `initial_maps_hz` by the same rule.
 A map is the row's cells as one value per sensor, drawn with `nemar.sensor-field.v1` with `minmax` limits (the decibels are not signed about zero), and placed by the layout or by the sensors' names.
 Its model is the `nemar.sensor-field` model ([sensor-field.md](sensor-field.md#the-model)) of the series' stored cells at those rows: one map per row, labeled by the row's stored frequency text (the dimension `freq`, in Hz), with the sensors and their places read and checked as that page's order of checks says from step 7 on, the layout's rows being the sensors, or the header's names without a layout.
-The lines have already read the layout's names, so what is left to check is its place columns.
-A fault in them (for example a theta that is not a number) puts that word in every map's place, and a map the placement or the scalp-map algorithm refuses (for example `too_few_sensors`) shows that word in its place; either way, the lines are drawn all the same.
+The lines have already read the layout's names, so what is left to check is its place columns and that its names are the sensor columns'.
+A fault in them (for example a theta that is not a number), or a layout whose names are not the sensor columns' (`sensors_mismatch`), puts that word in every map's place, and a map the placement or the scalp-map algorithm refuses (for example `too_few_sensors`) shows that word in its place; either way, the lines are drawn all the same.
 When the base refuses the values, there are no lines and no maps.
+A file that is not the one recorded draws nothing, neither the lines nor the maps: `spectrum_maps` raises `ViewRefused`, as `build_model` does.
 `neuroschema.views.presets.spectrum_maps` is the Python reference, and the [model vectors](generic-kinds.md#the-model-vectors)' `nemar.spectrum` cases list `maps`: the frequencies asked for (`hz`), the `rows` they snap to, and the maps' `model`, or the word that `refused` them.
 
 The writer makes sure that the rows rise strictly from 0 to at most `upper_hz`, and, with a layout, that the values' sensor columns are the layout's rows in order.

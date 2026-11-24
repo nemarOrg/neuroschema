@@ -302,9 +302,15 @@ def spectrum_maps(
     snap to, by the lines' readout rule, and ``model`` is the
     ``nemar.sensor-field`` model of those rows' cells, one map per row labeled
     by its frequency's stored text, with ``minmax`` limits, the sensors placed
-    by the layout or, without one, by their names. When the layout's place
-    columns break a rule of the files, ``refused`` is the word, shown in every
-    map's place while the lines are drawn, and ``model`` is None.
+    by the layout or, without one, by their names. When the layout breaks a
+    rule of the files that only the maps read (a place column, or names that
+    are not the series' columns: ``sensors_mismatch``), ``refused`` is the
+    word, shown in every map's place while the lines are drawn, and ``model``
+    is None.
+
+    Raises :class:`ViewRefused`, as :func:`build_model` does, when a file the
+    lines or the maps read is missing or is not the one recorded: nothing is
+    drawn, neither the lines nor the maps.
     """
     registry = load_registry() if registry is None else registry
     base = build_model(view, files, _base_only(registry))
@@ -319,7 +325,8 @@ def spectrum_maps(
     series = lines["series"]["items"]
     try:
         if "role" in sensor_dim["coords"]:
-            sensors = _sensor_role(reader, sensor_dim, len(series))
+            columns = [item["column"] for item in series]
+            sensors = _sensor_role(reader, sensor_dim, len(series), columns)
         else:
             sensors = _Sensors([item["label"] for item in series])
     except KindRefused as exc:

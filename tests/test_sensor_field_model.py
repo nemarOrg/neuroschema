@@ -13,6 +13,7 @@ Needs numpy, the ``views`` extra: ``uv run --extra views pytest``.
 from __future__ import annotations
 
 import base64
+import importlib.util
 import json
 import math
 import re
@@ -190,26 +191,40 @@ def test_notes_table_matches_the_reference_and_the_vectors():
     assert [item["notes"] for item in items] == [[], [sf.FLAT_FIELD], []]
 
 
+GENERIC = ROOT / "docs" / "views" / "generic-kinds.md"
+# The generic kinds' words a scalp map's files cannot give: a JSON file's and
+# a line chart's x column's.
+NOT_A_SCALP_MAP_WORD = {
+    "json_invalid",
+    "content_invalid",
+    "edges_not_increasing",
+    "counts_length",
+    "x_not_increasing",
+}
+
+
+def _generic_words() -> dict[str, str]:
+    rows = re.findall(
+        r"^\| `([a-z0-9_]+)` \| (nothing drawn|fallback) \|",
+        GENERIC.read_text(encoding="utf-8"),
+        flags=re.MULTILINE,
+    )
+    return dict(rows)
+
+
 FILE_WORDS = {
-    "tsv_ragged",
-    "tsv_line_endings",
-    "column_repeated",
-    "column_missing",
-    "coords_unresolved",
-    "coords_mismatch",
-    "coords_length",
-    "value_type",
-    "value_units_differ",
-    "empty",
-    "cell_not_number",
-    "cell_not_finite",
-    "cell_not_integer",
-    "cap_exceeded",
+    word for word, outcome in _generic_words().items() if outcome == "fallback"
+} - NOT_A_SCALP_MAP_WORD
+NOTHING_DRAWN = {
+    word for word, outcome in _generic_words().items() if outcome == "nothing drawn"
 }
 
 
 def test_every_file_word_has_a_scalp_map_vector():
-    """Each fault of the files falls a scalp map back to its tables."""
+    """Each fault of the files a scalp map reads, taken from the generic kinds'
+    words table, falls the map back to its tables; each file that is not the
+    one recorded, and an invalid declaration, draws nothing."""
+    assert "sensors_mismatch" in FILE_WORDS
     refused = {
         c["model"]["refused"]["word"] for c in FIELD_CASES if c["model"]["refused"]
     }
@@ -222,41 +237,64 @@ def test_every_file_word_has_a_scalp_map_vector():
         for r in MODELS["refusals"]
         if r["view"]["kind"] in (KIND, "nemar.ic-maps")
     }
-    assert nothing >= {"file_missing", "file_digest_mismatch"}
+    assert nothing == NOTHING_DRAWN
 
 
-ORDER = {
-    "order_sensor_coordinate_before_values": "coords_mismatch",
-    "order_sensor_values_cells_before_layout": "cell_not_number",
-    "order_sensor_layout_grammar_before_columns": "tsv_ragged",
-    "order_sensor_layout_repeated_before_missing": "column_repeated",
-    "order_sensor_layout_missing_before_length": "column_missing",
-    "order_sensor_layout_length_before_cap": "coords_length",
-    "order_sensor_layout_cap_before_cells": "cap_exceeded",
-    "order_sensor_layout_column_by_column": "cell_not_finite",
-    "order_sensor_files_before_frame": "cell_not_number",
-    "order_sensor_rows_before_columns": "tsv_ragged",
-}
-MAP_ORDER = {
-    "order_sensor_frame_before_types": "frame_not_scalp",
-    "order_sensor_types_before_projection": "no_eeg_sensors",
-    "order_sensor_frame_before_maps": "frame_not_scalp",
-    "order_sensor_map_too_few_before_overflow": "too_few_sensors",
-    "order_sensor_map_grid_before_overflow": "head_outside_grid",
-    "sensor_field_positions_flat_names_refused": "labels_unrecognized",
-}
+def _generator():
+    path = ROOT / "scripts" / "generate_kind_vectors.py"
+    spec = importlib.util.spec_from_file_location("generate_kind_vectors", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
-def test_neighboring_checks_have_two_fault_vectors():
-    """Each case holds two faults of different words; the earlier check's word
-    is the one recorded."""
-    for name, word in ORDER.items():
-        assert BY_NAME[name]["model"]["refused"]["word"] == word, name
-    for name, word in MAP_ORDER.items():
-        items = BY_NAME[name]["model"]["model"]["maps"]["items"]
-        assert {item["word"] for item in items} == {word}, name
+ORDER_PAIRS = [
+    (name, first, second)
+    for name, _covers, _both, _alone, first, second, *_caps in (
+        _generator().sensor_field_order_pairs()
+    )
+]
+
+
+def signature(model: dict) -> set[str]:
+    """Every word a model shows: the files' word, the placement's, why the
+    positions were not used, and each map's."""
+    words = set()
+    if model["refused"]:
+        words.add(model["refused"]["word"])
+    inner = model["model"]
+    if inner["type"] == "sensor-field":
+        words |= {inner["placement"]["word"], inner["placement"]["unused_positions"]}
+        words |= {item["word"] for item in inner["maps"]["items"]}
+    return words - {None}
+
+
+@pytest.mark.parametrize(
+    ("name", "first", "second"), ORDER_PAIRS, ids=[n for n, *_ in ORDER_PAIRS]
+)
+def test_each_neighboring_pair_has_two_faults_and_the_earlier_word(name, first, second):
+    """The case gives the earlier check's word; its sibling, with the later
+    fault alone, shows that fault is there."""
+    both, alone = BY_NAME[name]["model"], BY_NAME[f"{name}_alone"]["model"]
+    assert first in signature(both), name
+    assert second in signature(alone), name
+    assert first not in signature(alone), name
+
+
+def test_the_order_pairs_cover_the_checks_a_scalp_map_adds():
+    names = {name for name, *_ in ORDER_PAIRS}
+    assert {
+        "order_sensor_dimension_before_maps_dimension",
+        "order_sensor_coordinate_cells_before_values",
+        "order_sensor_layout_missing_before_mismatch",
+        "order_sensor_layout_mismatch_before_length",
+        "order_sensor_cells_before_names",
+        "order_sensor_map_too_few_before_grid",
+        "order_sensor_names_keep_their_types",
+    } <= names
     refused = BY_NAME["sensor_field_positions_flat_names_refused"]["model"]["model"]
     assert refused["placement"]["unused_positions"] == "positions_flat"
+    assert refused["placement"]["word"] == "labels_unrecognized"
 
 
 # ── Sensor types and frames ───────────────────────────────────────────────
@@ -344,7 +382,7 @@ def test_every_place_is_a_stored_number(case):
 # ── The vectors catch a wrong rule ────────────────────────────────────────
 
 
-def _all_untyped(types, count):
+def _all_untyped(types, count, measured=False):
     return [True] * count
 
 
@@ -387,6 +425,157 @@ def test_the_vectors_catch_a_wrong_rule(monkeypatch, mutation):
     name, value = MUTATIONS[mutation]
     monkeypatch.setattr(models, name, value)
     assert failing(), mutation
+
+
+def _variant(func, old, new):
+    """``func`` with one piece of its source replaced: a wrong rule to plant."""
+    import inspect
+    import textwrap
+
+    source = textwrap.dedent(inspect.getsource(func))
+    assert old in source, old
+    namespace = dict(func.__globals__)
+    exec(source.replace(old, new), namespace)
+    return namespace[func.__name__]
+
+
+RULES = {
+    "the sensor role's coordinate type not checked": (
+        models,
+        "_sensor_role",
+        "    _match(dim, column)\n",
+        "",
+    ),
+    "the sensor role's cap counts the place columns only": (
+        models,
+        "_sensor_role",
+        "len(tsv.rows) * len(declared) >",
+        "len(tsv.rows) * len(PLACE_COLUMNS[role]) >",
+    ),
+    "the sensors' names never compared": (
+        models,
+        "_sensor_role",
+        "if names is not None and tsv.cells(name) != list(names):",
+        "if False:",
+    ),
+    "measured rows drawn untyped": (
+        models,
+        "sensor_field_model",
+        "drawn = drawn_rows(sensors.types, count, measured)",
+        "drawn = drawn_rows(sensors.types, count)",
+    ),
+    "names tried after any refused projection": (
+        models,
+        "sensor_field_model",
+        '            if not named_eeg:\n                placement["word"] = exc.word\n',
+        "",
+    ),
+    "the projection's refusal never recorded": (
+        models,
+        "sensor_field_model",
+        'placement["unused_positions"] = exc.word',
+        "pass",
+    ),
+    "the maps' dimension checked before the sensors'": (
+        models,
+        "_sensor_field",
+        "label_column = _label_column(dims, declared)",
+        "label_column = _label_column(dims[::-1], declared)",
+    ),
+    "the value cells read before the coordinate column": (
+        models,
+        "_sensor_field",
+        "    label_texts = None\n    if label_column is not None:\n"
+        "        _values, label_texts = _parse_column(tsv, label_column)\n"
+        "    columns = [_parse_column(tsv, column) for column in value_columns]\n",
+        "    columns = [_parse_column(tsv, column) for column in value_columns]\n"
+        "    label_texts = None\n    if label_column is not None:\n"
+        "        _values, label_texts = _parse_column(tsv, label_column)\n",
+    ),
+}
+
+
+@pytest.mark.parametrize("rule", list(RULES))
+def test_the_vectors_catch_a_wrong_ordering_or_check(monkeypatch, rule):
+    module, name, old, new = RULES[rule]
+    original = getattr(module, name)
+    planted = _variant(original, old, new)
+    monkeypatch.setattr(module, name, planted)
+    for pair, builder in list(models.BUILDERS.items()):
+        if builder is original:  # build_model finds a kind's builder here
+            monkeypatch.setitem(models.BUILDERS, pair, planted)
+    assert failing(), rule
+
+
+def test_the_vectors_catch_names_placed_without_their_types(monkeypatch):
+    infer = sensor_labels.infer_positions
+
+    def untyped(channels, *args, **kwargs):
+        return infer([(name, None) for name, _type in channels], *args, **kwargs)
+
+    monkeypatch.setattr(sensor_labels, "infer_positions", untyped)
+    assert "order_sensor_names_keep_their_types" in failing()
+
+
+def test_the_vectors_catch_a_grid_checked_before_the_sensor_count(monkeypatch):
+    drawn = sf.sensor_field
+
+    def grid_first(theta, radius, values):
+        try:
+            return drawn(theta, radius, values)
+        except sf.SensorFieldRefusal as exc:
+            if exc.word != "too_few_sensors":
+                raise
+            monkeypatch.setattr(sf, "MIN_SENSORS", 1)
+            try:
+                drawn(theta, radius, values)
+            except sf.SensorFieldRefusal as other:
+                if other.word == "head_outside_grid":
+                    raise other from exc
+            finally:
+                monkeypatch.setattr(sf, "MIN_SENSORS", 8)
+            raise
+
+    monkeypatch.setattr(sf, "sensor_field", grid_first)
+    assert "order_sensor_map_too_few_before_grid" in failing()
+
+
+def test_the_vectors_catch_a_spectrum_snapped_up_on_a_tie(monkeypatch):
+    from neuroschema.views import presets
+
+    snap = presets.snap_row
+
+    def upper(xs, x):
+        row = snap(xs, x)
+        if row + 1 < len(xs) and xs[row + 1] - x == x - xs[row]:
+            return row + 1
+        return row
+
+    monkeypatch.setattr(presets, "snap_row", upper)
+    assert "spectrum_maps_snap" in failing()
+
+
+SPECTRUM_RULES = {
+    "a layout fault drops the lines too": (
+        'return {"rows": rows, "refused": exc.word, "model": None}',
+        "return None",
+    ),
+    "absmax maps": ('sensors, maps, "minmax",', 'sensors, maps, "absmax",'),
+    "maps labeled by the request": (
+        'lines["x"]["text"][row],',
+        "str(frequencies[rows.index(row)]),",
+    ),
+}
+
+
+@pytest.mark.parametrize("rule", list(SPECTRUM_RULES))
+def test_the_vectors_catch_a_wrong_spectrum_rule(monkeypatch, rule):
+    import sys
+
+    old, new = SPECTRUM_RULES[rule]
+    module = sys.modules[__name__]
+    monkeypatch.setattr(module, "spectrum_maps", _variant(spectrum_maps, old, new))
+    assert failing(), rule
 
 
 def test_the_vectors_catch_a_projection_never_used(monkeypatch):
@@ -466,3 +655,42 @@ def test_spectrum_maps_follow_the_readout():
     assert fault["model"]["refused"] is None, "the lines are drawn"
     assert fault["maps"]["refused"] == "cell_not_number"
     assert BY_NAME["spectrum_maps_base_refused"]["maps"]["rows"] is None
+
+
+def test_spectrum_maps_raise_when_a_file_is_not_the_one_recorded():
+    """As build_model does: nothing is drawn, neither the lines nor the maps."""
+    case = BY_NAME["spectrum_maps_layout"]
+    files = decode(case["files"])
+    layout = next(e for e in case["view"]["data"] if e["role"] == "layout")
+    del files[layout["location"]]
+    with pytest.raises(models.ViewRefused) as raised:
+        spectrum_maps(case["view"], files, [10], REGISTRY)
+    assert raised.value.word == "file_missing"
+
+
+def test_measured_positions_without_types_draw_nothing_even_unchecked():
+    """The schema refuses measured positions without sensor_type; a renderer
+    that never ran the schema still draws no row of them (no_eeg_sensors)."""
+    entry = {"position_source": "measured", "coordinate_system": "CapTrak"}
+    sensors = models._Sensors(
+        ["F3", "F4"], "layout", entry, {"theta_deg": [0.0, 1.0], "radius": [0.1, 0.2]}
+    )
+    dim = {"name": "sensor", "type": "string", "axis": "rows"}
+    model = models.sensor_field_model(
+        sensors, [("m", [1.0, 2.0], ["1", "2"])], "absmax", None, dim, None
+    )
+    assert model["placement"]["word"] == "no_eeg_sensors"
+    assert model["sensors"]["drawn"] == [False, False]
+
+
+def test_untyped_rows_are_drawn_only_from_templates_and_names():
+    assert models.drawn_rows(None, 2, measured=True) == [False, False]
+    assert models.drawn_rows(["n/a", ""], 2, measured=True) == [False, False]
+    assert models.drawn_rows(["EEG", "n/a"], 2, measured=True) == [True, False]
+    assert models.drawn_rows(None, 2) == [True, True]
+    assert models.drawn_rows(["n/a", ""], 2) == [True, True]
+    for name in ("template_unknown_montage_untyped", "strip_other_untyped"):
+        placement = BY_NAME[name]["model"]["model"]["placement"]
+        assert placement["source"] != "names", name
+    typed = BY_NAME["template_unknown_montage_typed_eeg"]["model"]["model"]
+    assert typed["placement"]["source"] == "names"

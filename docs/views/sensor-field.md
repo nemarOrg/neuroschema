@@ -103,16 +103,17 @@ These are every word that can take a map's place, each with what it means for th
 | `head_outside_grid` | this algorithm, step 7 | A sensor lies so far outside the head that the map's grid has no point inside it. |
 | `interpolation_failed` | this algorithm, step 10 | The values could not be interpolated into finite numbers (a value near the largest a double can hold, or sensors that make the system singular). |
 | `frame_not_scalp` | the kind's placement | The sensors' positions are in a coordinate system of intracranial recordings (`Pixels`, `ACPC` or `ScanRAS`), so they are not positions on the scalp, and no scalp map is drawn from them, by place or by name. |
-| `no_eeg_sensors` | the kind's placement | The sensors carry types and none is EEG (an intracranial recording's SEEG, ECOG or DBS contacts, for example), and a scalp map draws EEG sensors only. |
+| `no_eeg_sensors` | the kind's placement | No sensor says it is EEG: measured positions whose rows are none of them typed EEG (untyped, or an intracranial recording's SEEG, ECOG or DBS contacts), or other sensors typed and none EEG; a scalp map draws EEG sensors only. |
 
 When the sensors are placed by name, `nemar.sensor-labels.v1` has its own words for names it cannot place, with their meanings, in [`sensor-labels.md`](sensor-labels.md); that word takes every map's place.
 
-Two more words never take a map's place: they say why a view's positions were not used, and the sensors are placed by name instead.
+Two more words say why a view's positions were not used.
+When every row the map draws is typed EEG, the sensors are placed by name instead, and the word explains that; otherwise the word takes every map's place, because names alone cannot say that the sensors are on the scalp.
 
 | Word | From | Meaning |
 |---|---|---|
-| `frame_unknown` | `nemar.sensor-layout.v1` | The view's positions name a frame whose orientation is not known, or name it inconsistently, so they cannot be projected; the renderer places the sensors by name instead and says so. |
-| `positions_flat` | `nemar.sensor-layout.v1` | The view's measured positions are too flat, or too few, to locate the head's center (singular ratio below 0.05, or a sphere more than 3 times their scale), so they cannot be projected; the renderer places the sensors by name instead and says so. |
+| `frame_unknown` | `nemar.sensor-layout.v1` | The view's positions name a frame whose orientation is not known, or name it inconsistently, so they cannot be projected; sensors typed EEG are placed by name instead, and the map says so. |
+| `positions_flat` | `nemar.sensor-layout.v1` | The view's measured positions are too flat, or too few, to locate the head's center (singular ratio below 0.05, or a sphere more than 3 times their scale), so they cannot be projected; sensors typed EEG are placed by name instead, and the map says so. |
 
 A note is shown with a drawn map, in its caption, and says what the map alone cannot.
 
@@ -120,7 +121,8 @@ A note is shown with a drawn map, in its caption, and says what the map alone ca
 |---|---|---|---|
 | `flat_field` | this algorithm, step 9 | all sensors have the same value | Every sensor with a value and a place has exactly one value, so the map is that value's one color, with no contours. |
 
-A fault in the files themselves (a broken TSV grammar, a missing column, a cell that is not a number, a sensor role with the wrong number of rows, a cap) takes no map's place: the whole view shows as tables, with the word, as for every generic kind ([The model](#the-model)).
+A fault in the files themselves (a broken TSV grammar, a missing column, a cell that is not a number, a sensor role with the wrong number of rows or other names than the sensors it places, a cap) takes no map's place: the whole view shows as tables, with the word, as for every generic kind ([The model](#the-model)).
+The spectrum's maps are the exception: the lines have already drawn the view, so a fault that only the maps read (in the layout's place columns, or `sensors_mismatch`) shows its generic word in every map's place while the lines stay drawn ([presets.md](presets.md#nemarspectrum-version-1)).
 
 ## The kind `nemar.sensor-field` version 1
 
@@ -141,6 +143,8 @@ A view has at most one of `layout` and `positions`.
 
 The layout and the positions each carry `coordinate_system` (the Brain Imaging Data Structure (BIDS) name of the frame the positions were in, or `n/a`) and `position_source` (`measured` or `template`).
 Template positions have the coordinate system `n/a` and name their `montage` (`nemar.sensor-labels.v1`); a montage beside any other coordinate system is inconsistent, and the schema refuses it.
+A layout or positions role of `measured` positions declares `sensor_type`, and the schema refuses one that does not: a scalp map draws a measured position only when its row is typed EEG.
+Template positions, taken from a montage, may be untyped.
 A place cell (`theta_deg` and `radius` of a layout, `x`, `y` and `z` of positions) is a number, or exactly `n/a`, as BIDS writes a position it does not have: that sensor has no place, and every map drops it (step 1).
 Any other cell that is not a number refuses the files (`cell_not_number`), and so does `n/a` in the values: a map's value is always a number.
 `parameters` may give `limits`: `absmax` (the default, for a diverging color map) or `minmax` (for a sequential one).
@@ -157,7 +161,8 @@ The source decides the values' `sensor` coordinates and how a renderer places ea
    The coordinates are `{"role": "positions", "column": "name"}`: the values' sensors are the positions' rows, by position.
    The renderer projects the drawn rows' positions (below) with `nemar.sensor-layout.v1` in the frame the role names (`coordinate_system`, or `n/a` with a `montage`), and draws the projected layout; a row without a finite position has no place and is dropped (step 1).
    The projection is given the drawn rows only, in row order, and fits every row it is given, so with typed rows the sphere is fitted to the EEG rows alone.
-   If the projection is refused (`frame_unknown` or `positions_flat`), the renderer places the drawn rows by their names, as in 3, and says why the positions could not be used; if that placement is refused too, its word takes every map's place.
+   If the projection is refused (`frame_unknown` or `positions_flat`), the renderer places the drawn rows by their names, as in 3, only when every one of them is typed EEG, and says why the positions could not be used; if that placement is refused too, its word takes every map's place.
+   When a drawn row is untyped (template positions may be), the projection's word takes every map's place instead: names alone never place sensors whose rows do not say they are EEG, so an intracranial strip named F1 to C6 in the frame `Other` is never laid on a scalp.
 3. **Names.**
    The coordinates are names in the values file, `{"column": "<name column>"}` along the rows or `{"header": true}` along the columns, and a renderer places the names with `nemar.sensor-labels.v1` (a separate algorithm, specified beside this one), each with its row's type when the names came from a positions role and no type otherwise.
    The placed names are template positions of the montage the algorithm chose, projected as such (`n/a` with that `montage`); a name it does not place has no place and is not drawn.
@@ -167,9 +172,11 @@ Which rows a map draws:
 
 - **Sensor types.**
   A row's type is its `sensor_type` cell, read as `nemar.sensor-labels.v1` reads a channel's type: trimmed of TAB, LF, VT, FF, CR and space at both ends, its letters A to Z folded to a to z; then `eeg` is EEG, an empty cell or `n/a` is untyped, and anything else is another type.
-  When any row is typed, a map draws only the rows typed EEG, and an untyped row is not drawn; when no row is typed, or the role has no `sensor_type` column, every row is drawn.
-  So a map holds one sensor type, and never draws a row typed `SEEG`, `ECOG` or `DBS`: an intracranial contact is never drawn on a scalp.
-  When rows are typed and none is EEG, no row is drawn, and `no_eeg_sensors` takes every map's place.
+  Measured positions (a layout or positions role with `position_source` `measured`): a map draws only the rows typed EEG, never an untyped row.
+  Template positions and names in the values file: when any row is typed, a map draws only the rows typed EEG; when no row is typed, or there is no `sensor_type` column, every row is drawn.
+  When no row is drawn by these rules, `no_eeg_sensors` takes every map's place.
+  So a map holds one sensor type, never draws a row typed `SEEG`, `ECOG` or `DBS`, and never draws a measured position whose row does not say it is EEG.
+  What this guarantees is bounded by what a declaration says: a row typed EEG is believed, and names in a values file carry no type, so a writer that types intracranial contacts EEG, or names them in a values file with no positions, is believed too; the writer types each row as the recording's `channels.tsv` does.
 - **Frames.**
   A layout or positions role whose `coordinate_system` is `Pixels`, `ACPC` or `ScanRAS`, BIDS's coordinate systems for intracranial electrodes only, draws no scalp map: `frame_not_scalp` takes every map's place, and the sensors are not placed by name either, because an implant's contacts are often named like scalp electrodes (a strip named C1 to C6).
   BIDS admits every one of its standard template spaces for EEG as well as for intracranial positions, so no template space is refused here; a template space in the frame table of `nemar.sensor-layout.v1` is projected as it says.
@@ -220,7 +227,7 @@ The model holds the stored numbers and the decisions; the maps themselves are th
   `source` is `layout`, `positions` or `names`, and `role` the sensor role (`layout`, `positions`, or `null` when the values name the sensors).
   `coordinate_system`, `position_source` and `montage` are the role's; for sensors placed by name, they are `n/a`, `template` and the montage `nemar.sensor-labels.v1` chose (`null` when it refused).
   `unused_positions` is `frame_unknown` or `positions_flat` when the view's positions could not be projected and the sensors were placed by name instead, and `null` otherwise.
-  `word` is the placement's refusal (`frame_not_scalp`, `no_eeg_sensors`, or a word of `nemar.sensor-labels.v1`), or `null`.
+  `word` is the placement's refusal (`frame_not_scalp`, `no_eeg_sensors`, `frame_unknown` or `positions_flat` for positions not all typed EEG, or a word of `nemar.sensor-labels.v1`), or `null`.
 - `sensors` has one entry per sensor, in sensor order: `labels`, the stored names; `types`, the stored `sensor_type` cells, or `null` without the column; and `drawn`, whether a map draws that row, by the rules above (every entry `false` when the placement refused).
   The places are the stored numbers a map is drawn from, each `null` for a cell `n/a`: for a layout, `theta_deg` and `radius`; for positions, `x`, `y` and `z` in the role's frame; for sensors placed by name, `electrodes` (the montage's label for each placed name, `null` for the others) and `x`, `y` and `z`, the montage's positions in meters.
   The other places are `null`.
@@ -242,9 +249,9 @@ When the files break more than one rule, the first rule broken gives the word.
 5. The value columns, each in declared order (`value_type`: `number` or `integer`), their units (`value_units_differ`), `empty`, then the caps on rows, value columns and cells.
 6. The cells, column by column: the coordinate column first, then the value columns in declared order, each from top to bottom.
 7. Coordinates from another role, the rows' dimension before the columns'.
-   For the sensor role (`layout` or `positions`): it is there once, as a TSV file that declares the coordinate column (`coords_unresolved`); its file and the cap on bytes; its TSV grammar; its declared columns (`column_repeated`, then each `column_missing` in declared order); the coordinate column's type (`coords_mismatch`); one row per sensor (`coords_length`); the cap on its cells, counting every declared column; and its cells, column by column in declared order, a place column's cells numbers or `n/a`.
+   For the sensor role (`layout` or `positions`): it is there once, as a TSV file that declares the coordinate column (`coords_unresolved`); its file and the cap on bytes; its TSV grammar; its declared columns (`column_repeated`, then each `column_missing` in declared order); the coordinate column's type and unit (`coords_mismatch`); one row per sensor (`coords_length`); the cap on its cells, counting every declared column; its cells, column by column in declared order, a place column's cells numbers or `n/a`; and, when the sensors run along the values' columns, its name cells, top to bottom, are the value columns' names in declared order, compared as exact text (`sensors_mismatch`), so no value is drawn at another sensor's place.
    For any other role labeling the maps, the generic rule ([generic-kinds.md](generic-kinds.md#coordinates)).
-8. The placement, which draws the view but puts its word in every map's place: `frame_not_scalp`, then `no_eeg_sensors`, then, for positions, the projection (a refusal places the sensors by name and is kept in `unused_positions`), then, for names, `nemar.sensor-labels.v1`.
+8. The placement, which draws the view but puts its word in every map's place: `frame_not_scalp`, then `no_eeg_sensors`, then, for positions, the projection (a refusal is kept in `unused_positions`, and places the sensors by name when every drawn row is typed EEG, or is every map's word otherwise), then, for names, `nemar.sensor-labels.v1`.
 9. Each map, by this page's algorithm: `too_few_sensors` (step 5), `head_outside_grid` (step 7), `interpolation_failed` (step 10).
 
 The words of steps 1 to 7 are the generic kinds' ([generic-kinds.md](generic-kinds.md#words)), with their outcomes.
