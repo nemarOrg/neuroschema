@@ -179,8 +179,12 @@ The formats are an open registry; `tsv` and `json` are defined.
 The extension and the format name each other in both directions: a `tsv` file's location ends in `.tsv` and a `json` file's in `.json`, and a location that ends in `.tsv` or `.json` in any case is of that format, so a `.TSV` file or an `.html` file named `.tsv` is invalid.
 
 A file of a format the registry does not list is offered for download only.
-A renderer never draws it, embeds it, previews it or navigates to it, and it serves the download with `Content-Disposition: attachment`, the content type `application/octet-stream` and `X-Content-Type-Options: nosniff`, whatever the file's extension or bytes: an `html` or `svg` file a plugin declares would otherwise run as a page under the renderer's origin.
-A download of a registered format is an attachment too, with the registry's `media_type`.
+A renderer never draws it, embeds it, previews it or navigates to it, and serves it with the content type `application/octet-stream`, whatever the file's extension or bytes: an `html` or `svg` file a plugin declares would otherwise run as a page under the renderer's origin.
+A file of a registered format is served with the registry's `media_type`.
+
+Every download, of any format, is served with `X-Content-Type-Options: nosniff` and as an attachment named for the last segment of its location, by RFC 6266 with RFC 8187's encoding: `Content-Disposition: attachment; filename="<fallback>"; filename*=UTF-8''<name>`.
+`<name>` is the segment's UTF-8 bytes percent-encoded, every byte but the ASCII letters, digits, `-`, `.`, `_` and `~`, and `<fallback>` is the segment with each character outside printable ASCII, and each `"`, `\` and `%`, replaced by `_`, for a client that reads only `filename`.
+`neuroschema.views.download_headers` is the reference.
 
 ### TSV
 

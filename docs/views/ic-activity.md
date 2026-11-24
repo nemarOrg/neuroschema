@@ -237,7 +237,9 @@ The filter's transient at each end of a window is part of the display: the same 
 ### Drawing
 
 A renderer draws the filtered activations as `nemar.lines` draws a `values` role: one series per component, against time in seconds, with the readout snapping to a stored sample ([generic-kinds.md](generic-kinds.md#nemarlines-version-1)).
-It shades each row of the `badsegments` input whose `label` cell is `shaded.label`, and no other row; when there is none, it says so with the note `no_shaded_rows` ([presets.md](presets.md#notes-and-states)), over `[onset, onset + duration)` seconds, where that meets the window: the spans ASR repaired in the decomposition's input; the vectors' `shaded` lists exactly those rows, in file order.
+It shades each row of the `badsegments` input whose `label` cell is `shaded.label`, and no other row, over `[onset, onset + duration)` seconds: the spans ASR repaired in the decomposition's input, drawn where they meet the window.
+The vectors' `shaded` lists every such row, in file order, whether or not it meets the window, and a renderer clips each to the window itself.
+When there is none, it says so with the note `no_shaded_rows` ([presets.md](presets.md#notes-and-states)).
 A view with no bad-segment table (`shaded.files` null) shades nothing and says so: its result carries the note `no_bad_segment_table`, shown with its sentence ([presets.md](presets.md#notes-and-states); the vectors' `notes`).
 It may mark the table's other rows (the floor's bad windows) apart from them.
 With the view's caption it states:
