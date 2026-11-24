@@ -1,0 +1,447 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kind.nemar.spectrum.v1.schema.json",
+  "title": "View Kind nemar.spectrum, Version 1",
+  "description": "A power spectrum per sensor, a preset over nemar.lines version 1, applied on top of the envelope to a view declaration whose kind is nemar.spectrum and kind_version 1. The role values is a nemar.lines values entry: the column freq_hz (the dimension freq, in Hz) along the rows and one column per sensor (the dimension sensor, in dB) along the columns. The optional role layout places the sensors, so a renderer that knows this kind also draws a scalp map of the sensors' values at a chosen frequency row (nemar.sensor-field.v1); with a layout the sensors are its rows, by position, and without one they are the values' header names. The parameters record how the spectrum was computed. docs/views/presets.md is normative; a renderer that knows only nemar.lines draws the values entry as lines, because each entry meets its base's role subschema.",
+  "type": "object",
+  "required": [
+    "base",
+    "base_version",
+    "parameters",
+    "data"
+  ],
+  "properties": {
+    "base": {
+      "const": "nemar.lines",
+      "description": "Drawn over nemar.lines."
+    },
+    "base_version": {
+      "const": 1,
+      "description": "nemar.lines version 1."
+    },
+    "inputs": {
+      "not": {},
+      "description": "A spectrum is stored data only."
+    },
+    "transform": {
+      "not": {},
+      "description": "A spectrum is stored data only."
+    },
+    "parameters": {
+      "type": "object",
+      "description": "How the spectrum was computed, recorded for the reader; a renderer prints them and recomputes nothing.",
+      "required": [
+        "method",
+        "window",
+        "window_s",
+        "overlap",
+        "unit",
+        "upper_hz"
+      ],
+      "properties": {
+        "method": {
+          "const": "welch",
+          "description": "Welch's method: the average of the periodograms of overlapping windows."
+        },
+        "window": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]{0,31}$(?!\n)",
+          "description": "The taper applied to each window, by its lowercase name (hamming for NEMAR's spectra)."
+        },
+        "window_s": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "The length of each window, in seconds."
+        },
+        "overlap": {
+          "type": "number",
+          "minimum": 0,
+          "exclusiveMaximum": 1,
+          "description": "The share of each window that overlaps the next, from 0 up to but not including 1 (0.5 is half)."
+        },
+        "unit": {
+          "const": "dB",
+          "description": "Power spectral density in decibels relative to 1 microvolt squared per hertz: 10 log10 of the density in uV^2/Hz. The sensor columns carry the same unit."
+        },
+        "upper_hz": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "The highest frequency the rows reach, in hertz: every freq_hz cell is at most this, and at most half the sampling rate."
+        },
+        "initial_maps_hz": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          },
+          "description": "Frequencies whose scalp maps a renderer shows before the reader picks one, each drawn at the row nearest it by the nemar.lines readout rule."
+        }
+      },
+      "additionalProperties": false
+    },
+    "data": {
+      "type": "array",
+      "description": "The role values, exactly once, and the optional role layout.",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "description": "The role values: a nemar.lines values entry (it meets that role's subschema), with the column freq_hz in Hz as the x column and one column per sensor in dB.",
+            "allOf": [
+              {
+                "$ref": "../views/kind.nemar.lines.v1.schema.json#/properties/data/items"
+              }
+            ],
+            "required": [
+              "role",
+              "format",
+              "columns",
+              "dims"
+            ],
+            "properties": {
+              "role": {
+                "const": "values"
+              },
+              "format": {
+                "const": "tsv"
+              },
+              "columns": {
+                "type": "array",
+                "description": "freq_hz once, in Hz, then the sensor columns, each a number in dB.",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "unit"
+                  ],
+                  "properties": {
+                    "type": {
+                      "const": "number"
+                    }
+                  },
+                  "if": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "const": "freq_hz"
+                      }
+                    },
+                    "required": [
+                      "name"
+                    ]
+                  },
+                  "then": {
+                    "type": "object",
+                    "properties": {
+                      "unit": {
+                        "const": "Hz"
+                      }
+                    }
+                  },
+                  "else": {
+                    "type": "object",
+                    "properties": {
+                      "unit": {
+                        "const": "dB"
+                      }
+                    }
+                  }
+                },
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "const": "freq_hz"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ]
+                },
+                "minContains": 1,
+                "maxContains": 1
+              },
+              "dims": {
+                "type": "array",
+                "description": "The dimension freq along the rows and the dimension sensor along the columns.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "enum": [
+                        "freq",
+                        "sensor"
+                      ]
+                    }
+                  }
+                },
+                "allOf": [
+                  {
+                    "contains": {
+                      "type": "object",
+                      "description": "The frequency axis: the column freq_hz, in Hz.",
+                      "required": [
+                        "name",
+                        "axis",
+                        "type",
+                        "unit",
+                        "coords"
+                      ],
+                      "properties": {
+                        "name": {
+                          "const": "freq"
+                        },
+                        "axis": {
+                          "const": "rows"
+                        },
+                        "type": {
+                          "const": "number"
+                        },
+                        "unit": {
+                          "const": "Hz"
+                        },
+                        "coords": {
+                          "type": "object",
+                          "required": [
+                            "column"
+                          ],
+                          "properties": {
+                            "column": {
+                              "const": "freq_hz"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  },
+                  {
+                    "contains": {
+                      "type": "object",
+                      "description": "The sensors, one per series.",
+                      "required": [
+                        "name",
+                        "axis",
+                        "type"
+                      ],
+                      "properties": {
+                        "name": {
+                          "const": "sensor"
+                        },
+                        "axis": {
+                          "const": "columns"
+                        },
+                        "type": {
+                          "const": "string"
+                        }
+                      }
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "The role layout: each sensor's name, theta and radius, as nemar.sensor-field's role layout declares them (it meets that role's subschema).",
+            "allOf": [
+              {
+                "$ref": "../views/kind.nemar.sensor-field.v1.schema.json#/properties/data/items/oneOf/1"
+              }
+            ],
+            "properties": {
+              "role": {
+                "const": "layout"
+              },
+              "format": {
+                "const": "tsv"
+              },
+              "dims": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "const": "sensor"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "const": "values"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "const": "layout"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1,
+          "description": "The layout is optional (minContains 0)."
+        },
+        {
+          "if": {
+            "type": "array",
+            "contains": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "const": "layout"
+                }
+              },
+              "required": [
+                "role"
+              ]
+            }
+          },
+          "then": {
+            "type": "array",
+            "items": {
+              "if": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "const": "values"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "then": {
+                "$ref": "../views/kind.nemar.spectrum.v1.schema.json#/$defs/sensorsFromLayout"
+              }
+            },
+            "description": "With a layout, the sensors are its rows: coordinates {role: layout, column: name}."
+          },
+          "else": {
+            "type": "array",
+            "items": {
+              "if": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "const": "values"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "then": {
+                "$ref": "../views/kind.nemar.spectrum.v1.schema.json#/$defs/sensorsFromHeader"
+              }
+            },
+            "description": "Without a layout, the sensors are the values' header names."
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "sensorsFromLayout": {
+      "description": "The values' sensors are the layout's rows, by position.",
+      "type": "object",
+      "properties": {
+        "dims": {
+          "type": "array",
+          "items": {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "sensor"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "coords": {
+                  "type": "object",
+                  "required": [
+                    "role",
+                    "column"
+                  ],
+                  "properties": {
+                    "role": {
+                      "const": "layout"
+                    },
+                    "column": {
+                      "const": "name"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "sensorsFromHeader": {
+      "description": "The values' sensors are its header names.",
+      "type": "object",
+      "properties": {
+        "dims": {
+          "type": "array",
+          "items": {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "sensor"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "coords": {
+                  "type": "object",
+                  "required": [
+                    "header"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

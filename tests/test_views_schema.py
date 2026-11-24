@@ -613,7 +613,10 @@ def _schema_roles(schema: dict) -> dict[str, dict[str, set | None]]:
     array whose items leave the name open admits any name (None, the
     registry's null).
     """
-    items = schema["properties"]["data"]["items"]
+    data = schema["properties"]["data"]
+    if data.get("not") == {}:
+        return {}  # a computed kind: no stored data
+    items = data["items"]
     roles: dict[str, dict[str, set | None]] = {}
     for branch in items.get("oneOf") or items.get("anyOf") or [items]:
         props = branch["properties"]
@@ -627,6 +630,25 @@ def _schema_roles(schema: dict) -> dict[str, dict[str, set | None]]:
             assert role not in roles, role
             roles[role] = {"formats": _allowed(props["format"]), "dims": names}
     return roles
+
+
+def _schema_inputs(schema: dict) -> dict[str, dict]:
+    """Each input role a kind schema admits, with its source and, for a file,
+    its format (the extension its location pattern requires)."""
+    inputs = schema["properties"].get("inputs", {})
+    if inputs.get("not") == {} or "items" not in inputs:
+        return {}
+    out: dict[str, dict] = {}
+    for branch in inputs["items"]["oneOf"]:
+        source = "file" if "file" in branch["required"] else "store"
+        spec: dict = {"source": source}
+        if source == "file":
+            pattern = branch["properties"]["file"]["properties"]["location"]["pattern"]
+            spec["formats"] = {re.match(r"\\\.(\w+)\$", pattern)[1]}
+        for role in _allowed(branch["properties"]["role"]):
+            assert role not in out, role
+            out[role] = spec
+    return out
 
 
 def _dispatch() -> dict[tuple[str, int], str]:
@@ -677,8 +699,15 @@ class TestRegistry:
                 assert (entry["base"], entry["base_version"]) in kinds
 
     def test_roles_name_registered_formats(self):
+        """Every kind has roles, except a computed kind, which has inputs."""
         for entry in REGISTRY["kinds"]:
-            assert entry["roles"], entry["kind"]
+            assert bool(entry["roles"]) is not bool(entry.get("inputs")), entry["kind"]
+            for role, spec in [
+                *entry["roles"].items(),
+                *entry.get("inputs", {}).items(),
+            ]:
+                assert re.fullmatch(r"[a-z][a-z0-9_]{0,63}", role)
+                assert set(spec.get("formats", [])) <= set(REGISTRY["formats"])
             for role, spec in entry["roles"].items():
                 assert re.fullmatch(r"[a-z][a-z0-9_]{0,63}", role)
                 assert set(spec["formats"]) <= set(REGISTRY["formats"])
@@ -708,6 +737,22 @@ class TestRegistry:
                 }
                 for role, spec in entry["roles"].items()
             }, entry["kind"]
+
+    def test_registry_inputs_match_each_kind_schema(self):
+        """A computed kind's registered inputs are what its schema admits: each
+        role, its source (file or store), and a file's format."""
+        computed = []
+        for entry in REGISTRY["kinds"]:
+            schema = json.loads((ROOT / entry["schema"]).read_text())
+            registered = {
+                role: {"source": spec["source"]}
+                | ({"formats": set(spec["formats"])} if "formats" in spec else {})
+                for role, spec in entry.get("inputs", {}).items()
+            }
+            assert _schema_inputs(schema) == registered, entry["kind"]
+            if registered:
+                computed.append(entry["kind"])
+        assert computed == ["nemar.ic-activity", "nemar.signal-window"]
 
     def test_reserved_dim_units_match_the_schema(self):
         """A reserved dimension's registered unit is the unit the schema requires."""

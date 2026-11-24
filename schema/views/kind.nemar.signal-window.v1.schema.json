@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kind.nemar.signal-window.v1.schema.json",
+  "title": "View Kind nemar.signal-window, Version 1",
+  "description": "A window of the recording as the serving copy holds it, opened in the signal viewer, a preset over nemar.lines version 1, applied on top of the envelope to a view declaration whose kind is nemar.signal-window and kind_version 1. The role signal is the recording's store; the window starts at parameters.start_s and lasts parameters.duration_s. The optional roles channels and badsegments are the floor's decisions, which a renderer marks over the window (bad channels and bad segments). Nothing is computed or stored: the view names a window of data anyone can already read. docs/views/presets.md is normative.",
+  "type": "object",
+  "required": [
+    "base",
+    "base_version",
+    "inputs",
+    "parameters"
+  ],
+  "properties": {
+    "base": {
+      "const": "nemar.lines",
+      "description": "The window is drawn as lines over time, one per channel."
+    },
+    "base_version": {
+      "const": 1,
+      "description": "nemar.lines version 1."
+    },
+    "data": {
+      "not": {},
+      "description": "The window is read from the serving copy; nothing is stored."
+    },
+    "transform": {
+      "not": {},
+      "description": "The window is drawn as the store holds it."
+    },
+    "inputs": {
+      "type": "array",
+      "description": "The role signal, once, and the optional roles channels and badsegments.",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "description": "The recording's store in the serving copy.",
+            "required": [
+              "role",
+              "store"
+            ],
+            "properties": {
+              "role": {
+                "const": "signal"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "A table of the floor's decisions: the channels (the floor's _channels.tsv, whose status column marks bad channels) or the bad segments (its _badsegments.tsv, onset and duration in seconds).",
+            "required": [
+              "role",
+              "file"
+            ],
+            "properties": {
+              "role": {
+                "enum": [
+                  "channels",
+                  "badsegments"
+                ]
+              },
+              "file": {
+                "type": "object",
+                "properties": {
+                  "location": {
+                    "type": "string",
+                    "pattern": "\\.tsv$(?!\n)"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "const": "signal"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "const": "channels"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1,
+          "description": "The channels are optional (minContains 0)."
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "const": "badsegments"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1,
+          "description": "The bad segments are optional (minContains 0)."
+        }
+      ]
+    },
+    "parameters": {
+      "type": "object",
+      "description": "The window.",
+      "required": [
+        "start_s",
+        "duration_s"
+      ],
+      "properties": {
+        "start_s": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The window's start, in seconds from the recording's first sample."
+        },
+        "duration_s": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 30,
+          "description": "The window's length, in seconds."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

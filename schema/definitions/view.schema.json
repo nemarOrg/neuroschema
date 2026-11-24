@@ -256,6 +256,106 @@
           "if": {
             "type": "object",
             "properties": {
+              "kind": {
+                "const": "nemar.spectrum"
+              },
+              "kind_version": {
+                "const": 1
+              }
+            },
+            "required": [
+              "kind",
+              "kind_version"
+            ]
+          },
+          "then": {
+            "$ref": "../views/kind.nemar.spectrum.v1.schema.json"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "nemar.ic-maps"
+              },
+              "kind_version": {
+                "const": 1
+              }
+            },
+            "required": [
+              "kind",
+              "kind_version"
+            ]
+          },
+          "then": {
+            "$ref": "../views/kind.nemar.ic-maps.v1.schema.json"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "nemar.ic-classes"
+              },
+              "kind_version": {
+                "const": 1
+              }
+            },
+            "required": [
+              "kind",
+              "kind_version"
+            ]
+          },
+          "then": {
+            "$ref": "../views/kind.nemar.ic-classes.v1.schema.json"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "nemar.ic-activity"
+              },
+              "kind_version": {
+                "const": 1
+              }
+            },
+            "required": [
+              "kind",
+              "kind_version"
+            ]
+          },
+          "then": {
+            "$ref": "../views/kind.nemar.ic-activity.v1.schema.json"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "nemar.signal-window"
+              },
+              "kind_version": {
+                "const": 1
+              }
+            },
+            "required": [
+              "kind",
+              "kind_version"
+            ]
+          },
+          "then": {
+            "$ref": "../views/kind.nemar.signal-window.v1.schema.json"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
               "transform": {
                 "type": "object",
                 "properties": {

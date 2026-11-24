@@ -1,6 +1,6 @@
 {
   "format": "neuroschema.views-registry.v1",
-  "description": "The view vocabulary neuroschema defines: kinds (each with its base, roles, dimensions and schema), transforms and algorithms (each with its specification and vectors), data formats, reserved dimension names and size caps. A kind or format not listed here is still valid in a declaration; docs/views.md gives the renderer rule for it.",
+  "description": "The view vocabulary neuroschema defines: kinds (each with its base, roles, dimensions and schema, and for a computed kind its inputs), transforms and algorithms (each with its specification and vectors), data formats, reserved dimension names and size caps. A kind or format not listed here is still valid in a declaration; docs/views.md gives the renderer rule for it.",
   "kinds": [
     {
       "kind": "nemar.table",
@@ -90,6 +90,138 @@
           ],
           "dims": [
             "sensor"
+          ]
+        }
+      }
+    },
+    {
+      "kind": "nemar.spectrum",
+      "kind_version": 1,
+      "base": "nemar.lines",
+      "base_version": 1,
+      "schema": "schema/views/kind.nemar.spectrum.v1.schema.json",
+      "roles": {
+        "values": {
+          "formats": [
+            "tsv"
+          ],
+          "dims": [
+            "freq",
+            "sensor"
+          ]
+        },
+        "layout": {
+          "formats": [
+            "tsv"
+          ],
+          "dims": [
+            "sensor"
+          ]
+        }
+      }
+    },
+    {
+      "kind": "nemar.ic-maps",
+      "kind_version": 1,
+      "base": "nemar.sensor-field",
+      "base_version": 1,
+      "schema": "schema/views/kind.nemar.ic-maps.v1.schema.json",
+      "roles": {
+        "values": {
+          "formats": [
+            "tsv"
+          ],
+          "dims": [
+            "sensor",
+            "component"
+          ]
+        },
+        "layout": {
+          "formats": [
+            "tsv"
+          ],
+          "dims": [
+            "sensor"
+          ]
+        },
+        "components": {
+          "formats": [
+            "tsv"
+          ],
+          "dims": [
+            "component"
+          ]
+        }
+      }
+    },
+    {
+      "kind": "nemar.ic-classes",
+      "kind_version": 1,
+      "base": "nemar.histogram",
+      "base_version": 1,
+      "schema": "schema/views/kind.nemar.ic-classes.v1.schema.json",
+      "roles": {
+        "histogram": {
+          "formats": [
+            "json"
+          ],
+          "dims": [],
+          "content": "schema/views/content.nemar.ic-classes.v1.schema.json"
+        }
+      }
+    },
+    {
+      "kind": "nemar.ic-activity",
+      "kind_version": 1,
+      "base": "nemar.lines",
+      "base_version": 1,
+      "schema": "schema/views/kind.nemar.ic-activity.v1.schema.json",
+      "roles": {},
+      "inputs": {
+        "unmixing": {
+          "source": "file",
+          "formats": [
+            "tsv"
+          ]
+        },
+        "signal": {
+          "source": "store"
+        },
+        "components": {
+          "source": "file",
+          "formats": [
+            "tsv"
+          ]
+        },
+        "badsegments": {
+          "source": "file",
+          "formats": [
+            "tsv"
+          ]
+        }
+      }
+    },
+    {
+      "kind": "nemar.signal-window",
+      "kind_version": 1,
+      "base": "nemar.lines",
+      "base_version": 1,
+      "schema": "schema/views/kind.nemar.signal-window.v1.schema.json",
+      "roles": {},
+      "inputs": {
+        "signal": {
+          "source": "store"
+        },
+        "channels": {
+          "source": "file",
+          "formats": [
+            "tsv"
+          ]
+        },
+        "badsegments": {
+          "source": "file",
+          "formats": [
+            "tsv"
           ]
         }
       }

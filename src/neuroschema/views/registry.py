@@ -94,9 +94,12 @@ def role_schemas(entry: Mapping) -> dict[str, dict]:
     The subschema is the kind schema's ``data.items``, or, for a kind with
     several roles, the branch of its ``oneOf`` or ``anyOf`` whose ``role``
     admits that role. The kind's schema, not the registry's ``roles``, is the
-    source: the registry mirrors it, and a test holds the two together.
+    source: the registry mirrors it, and a test holds the two together. A
+    computed kind, whose schema refuses ``data``, has no roles.
     """
-    items = _kind_schema(entry)["properties"]["data"]["items"]
+    items = _kind_schema(entry)["properties"]["data"].get("items")
+    if items is None:  # a computed kind (data: {"not": {}}) has no data roles
+        return {}
     branches = items.get("oneOf") or items.get("anyOf") or [items]
     roles: dict[str, dict] = {}
     for branch in branches:
