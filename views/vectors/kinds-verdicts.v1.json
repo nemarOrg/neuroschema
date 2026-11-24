@@ -801,6 +801,404 @@
       ]
     },
     {
+      "name": "envelope_location_percent",
+      "covers": "A location with a percent escape, which a URL parser decodes: %2e%2e is ..",
+      "schema": "view",
+      "instance": {
+        "key": "channels",
+        "kind": "nemar.table",
+        "kind_version": 1,
+        "caption": "Channels and the floor's decisions.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "table",
+            "location": "%2e%2e/secret.tsv",
+            "format": "tsv",
+            "size": 86,
+            "sha256": "0cad6be49122197e1babfc62712a4de6fabebe2e8884380808f58c7a006ec062",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "status",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "data/0/location"]
+      ]
+    },
+    {
+      "name": "envelope_location_leading_space",
+      "covers": "A location with a leading space, which a URL parser strips before it resolves ..",
+      "schema": "view",
+      "instance": {
+        "key": "channels",
+        "kind": "nemar.table",
+        "kind_version": 1,
+        "caption": "Channels and the floor's decisions.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "table",
+            "location": " ../x.tsv",
+            "format": "tsv",
+            "size": 86,
+            "sha256": "0cad6be49122197e1babfc62712a4de6fabebe2e8884380808f58c7a006ec062",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "status",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "data/0/location"]
+      ]
+    },
+    {
+      "name": "envelope_location_query",
+      "covers": "A location with a ?, which would end the URL's path.",
+      "schema": "view",
+      "instance": {
+        "key": "channels",
+        "kind": "nemar.table",
+        "kind_version": 1,
+        "caption": "Channels and the floor's decisions.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "table",
+            "location": "x/t.tsv?x=1.tsv",
+            "format": "tsv",
+            "size": 86,
+            "sha256": "0cad6be49122197e1babfc62712a4de6fabebe2e8884380808f58c7a006ec062",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "status",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "data/0/location"]
+      ]
+    },
+    {
+      "name": "envelope_location_fragment",
+      "covers": "A location with a #, which would end the URL's path.",
+      "schema": "view",
+      "instance": {
+        "key": "channels",
+        "kind": "nemar.table",
+        "kind_version": 1,
+        "caption": "Channels and the floor's decisions.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "table",
+            "location": "x/#t.tsv",
+            "format": "tsv",
+            "size": 86,
+            "sha256": "0cad6be49122197e1babfc62712a4de6fabebe2e8884380808f58c7a006ec062",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "status",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "data/0/location"]
+      ]
+    },
+    {
+      "name": "envelope_location_dot_segment",
+      "covers": "A location with a . segment, another name for a file.",
+      "schema": "view",
+      "instance": {
+        "key": "channels",
+        "kind": "nemar.table",
+        "kind_version": 1,
+        "caption": "Channels and the floor's decisions.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "table",
+            "location": "x/./t.tsv",
+            "format": "tsv",
+            "size": 86,
+            "sha256": "0cad6be49122197e1babfc62712a4de6fabebe2e8884380808f58c7a006ec062",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "status",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "data/0/location"]
+      ]
+    },
+    {
+      "name": "envelope_location_empty_segment",
+      "covers": "A location with an empty segment (//).",
+      "schema": "view",
+      "instance": {
+        "key": "channels",
+        "kind": "nemar.table",
+        "kind_version": 1,
+        "caption": "Channels and the floor's decisions.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "table",
+            "location": "x//t.tsv",
+            "format": "tsv",
+            "size": 86,
+            "sha256": "0cad6be49122197e1babfc62712a4de6fabebe2e8884380808f58c7a006ec062",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "status",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "data/0/location"]
+      ]
+    },
+    {
+      "name": "envelope_location_bidi",
+      "covers": "A location with U+202E, which shows the name reversed.",
+      "schema": "view",
+      "instance": {
+        "key": "channels",
+        "kind": "nemar.table",
+        "kind_version": 1,
+        "caption": "Channels and the floor's decisions.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "table",
+            "location": "x/t‮qsv.tsv",
+            "format": "tsv",
+            "size": 86,
+            "sha256": "0cad6be49122197e1babfc62712a4de6fabebe2e8884380808f58c7a006ec062",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "status",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "data/0/location"]
+      ]
+    },
+    {
+      "name": "envelope_location_c1",
+      "covers": "A location with the C1 control U+0085.",
+      "schema": "view",
+      "instance": {
+        "key": "channels",
+        "kind": "nemar.table",
+        "kind_version": 1,
+        "caption": "Channels and the floor's decisions.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "table",
+            "location": "x/t.tsv",
+            "format": "tsv",
+            "size": 86,
+            "sha256": "0cad6be49122197e1babfc62712a4de6fabebe2e8884380808f58c7a006ec062",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "status",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "data/0/location"]
+      ]
+    },
+    {
+      "name": "envelope_location_del",
+      "covers": "A location with DEL, U+007F.",
+      "schema": "view",
+      "instance": {
+        "key": "channels",
+        "kind": "nemar.table",
+        "kind_version": 1,
+        "caption": "Channels and the floor's decisions.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "table",
+            "location": "x/t.tsv",
+            "format": "tsv",
+            "size": 86,
+            "sha256": "0cad6be49122197e1babfc62712a4de6fabebe2e8884380808f58c7a006ec062",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "status",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "data/0/location"]
+      ]
+    },
+    {
+      "name": "envelope_location_space_inside",
+      "covers": "A space inside a name, and dots that are no dot segment, are one file: valid.",
+      "schema": "view",
+      "instance": {
+        "key": "channels",
+        "kind": "nemar.table",
+        "kind_version": 1,
+        "caption": "Channels and the floor's decisions.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "table",
+            "location": "x/.. a/t b.tsv",
+            "format": "tsv",
+            "size": 86,
+            "sha256": "0cad6be49122197e1babfc62712a4de6fabebe2e8884380808f58c7a006ec062",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "status",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "valid": true,
+      "errors": []
+    },
+    {
       "name": "envelope_dims_valid",
       "covers": "An unknown kind with a dimension.",
       "schema": "view",

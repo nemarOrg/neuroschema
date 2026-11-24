@@ -335,12 +335,57 @@ class TestDataQualityRecord:
 
     @pytest.mark.parametrize(
         "location",
-        ["/a.tsv", "../a.tsv", "a/../b.tsv", "https://h/a.tsv", "a\\b.tsv"],
+        [
+            "/a.tsv",
+            "../a.tsv",
+            "a/../b.tsv",
+            "https://h/a.tsv",
+            "a\\b.tsv",
+            # Probe p13: each escapes the product once a renderer resolves it as
+            # a URL, or names another file than its text.
+            "%2e%2e/secret.tsv",
+            ".%2e/secret.tsv",
+            "a/%2E%2E/b.tsv",
+            " ../a.tsv",
+            "a.tsv ",
+            "?x=1.tsv",
+            "a/b.tsv?x",
+            "#frag.tsv",
+            "a/./b.tsv",
+            "./a.tsv",
+            "a//b.tsv",
+            "a/b.tsv/",
+            "x\u202ecod.tsv",
+            "x\u2066y.tsv",
+            "x\u200fy.tsv",
+            "x\u061cy.tsv",
+            "a\u0085b.tsv",
+            "a\x9fb.tsv",
+            "a\x7fb.tsv",
+        ],
     )
     def test_bad_location(self, location):
         doc = dq_record()
         self._data(doc)["location"] = location
         assert errors_for(DATA_QUALITY, doc) == {("pattern", f"{V0D}/location")}
+
+    @pytest.mark.parametrize(
+        "location",
+        [
+            "a b/c.tsv",
+            ".../a.tsv",
+            "a/.hidden.tsv",
+            "a..b/c.tsv",
+            "\u00b5/a.tsv",
+            ".. /a.tsv",
+        ],
+    )
+    def test_names_that_resolve_as_themselves(self, location):
+        """A space inside a name, dots that are no dot segment and text outside
+        ASCII stay one file under every URL resolution (probe p13.js)."""
+        doc = dq_record()
+        self._data(doc)["location"] = location.removesuffix(".tsv") + ".tsv"
+        assert errors_for(DATA_QUALITY, doc) == set()
 
     def test_empty_location(self):
         doc = dq_record()

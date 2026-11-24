@@ -1613,6 +1613,59 @@ def view_verdicts() -> list[tuple[str, str, dict]]:
             "An axis other than rows and columns.",
             _set(dims, "data/1/dims/0/axis", "depth"),
         ),
+        (
+            "envelope_location_percent",
+            "A location with a percent escape, which a URL parser decodes: "
+            "%2e%2e is ..",
+            _set(table, "data/0/location", "%2e%2e/secret.tsv"),
+        ),
+        (
+            "envelope_location_leading_space",
+            "A location with a leading space, which a URL parser strips before "
+            "it resolves ..",
+            _set(table, "data/0/location", " ../x.tsv"),
+        ),
+        (
+            "envelope_location_query",
+            "A location with a ?, which would end the URL's path.",
+            _set(table, "data/0/location", "x/t.tsv?x=1.tsv"),
+        ),
+        (
+            "envelope_location_fragment",
+            "A location with a #, which would end the URL's path.",
+            _set(table, "data/0/location", "x/#t.tsv"),
+        ),
+        (
+            "envelope_location_dot_segment",
+            "A location with a . segment, another name for a file.",
+            _set(table, "data/0/location", "x/./t.tsv"),
+        ),
+        (
+            "envelope_location_empty_segment",
+            "A location with an empty segment (//).",
+            _set(table, "data/0/location", "x//t.tsv"),
+        ),
+        (
+            "envelope_location_bidi",
+            "A location with U+202E, which shows the name reversed.",
+            _set(table, "data/0/location", "x/t\u202eqsv.tsv"),
+        ),
+        (
+            "envelope_location_c1",
+            "A location with the C1 control U+0085.",
+            _set(table, "data/0/location", "x/t\u0085.tsv"),
+        ),
+        (
+            "envelope_location_del",
+            "A location with DEL, U+007F.",
+            _set(table, "data/0/location", "x/t\u007f.tsv"),
+        ),
+        (
+            "envelope_location_space_inside",
+            "A space inside a name, and dots that are no dot segment, are one "
+            "file: valid.",
+            _set(table, "data/0/location", "x/.. a/t b.tsv"),
+        ),
         ("envelope_dims_valid", "An unknown kind with a dimension.", dims),
         (
             "envelope_kind_version_0",
