@@ -71,7 +71,7 @@ scripts/
   generate_kind_vectors.py         # Writes the generic-kind model, preset-check and verdict vectors
   generate_view_vectors.py         # Writes the sensor-field and sensor-layout vectors from eegprep
   generate_ic_activity_vectors.py  # Writes the nemar.ic-activity.v1 vectors from frozen inputs
-  generate_montages.py             # Writes views/montages from MNE-Python
+  generate_montages.py             # Writes views/montages, its PROVENANCE.json and views/vectors/sensor-labels.v1.json from MNE-Python and EEGLAB's sample_locs files
   ajv/check.ts                     # Compiles every schema with ajv in strict mode (CI job ajv)
 ```
 
