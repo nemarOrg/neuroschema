@@ -1571,6 +1571,13 @@ def refusals() -> list[Case]:
             {SPECTRUM_AT: SPECTRUM},
         ),
         (
+            "refusal_kind_version_true",
+            "A nemar.lines view whose kind_version is true: no version, so the "
+            "declaration is invalid, never drawn as version 1.",
+            lines_view() | {"kind_version": True},
+            {SPECTRUM_AT: SPECTRUM},
+        ),
+        (
             "refusal_preset_as_base",
             "An unknown kind over the preset nemar.spectrum: a preset is no base, "
             "so declaration_invalid (probe p2).",
@@ -1819,6 +1826,17 @@ def view_verdicts() -> list[tuple[str, str, dict]]:
             "envelope_kind_version_1000",
             "kind_version is at most 999.",
             _set(unknown, "kind_version", 1000),
+        ),
+        (
+            "envelope_kind_version_true",
+            "kind_version true: a boolean is no integer, though Python reads "
+            "True == 1.",
+            _set(unknown, "kind_version", True),
+        ),
+        (
+            "table_kind_version_true",
+            "A nemar.table view whose kind_version is true: not version 1.",
+            _set(table, "kind_version", True),
         ),
         (
             "envelope_kind_version_text",

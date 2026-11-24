@@ -43,7 +43,7 @@ from neuroschema.views.presets import (
     table_stem,
 )
 from neuroschema.views.presets import check_rate as _check_rate
-from neuroschema.views.registry import load_registry
+from neuroschema.views.registry import load_registry, version_of
 
 IC_ACTIVITY = "nemar.ic-activity.v1"
 ORDER = 2
@@ -131,7 +131,7 @@ def check_declaration(view: Mapping) -> None:
     applies the kind's schema and the transform's to it. Among the transform's
     rules: the view declares ``badsegments`` exactly when ``shaded.files`` is
     not null, and carries the parameters the computation reads."""
-    if (view.get("kind"), view.get("kind_version")) != KIND:
+    if (view.get("kind"), version_of(view.get("kind_version"))) != KIND:
         raise IcActivityRefusal("kind_unsupported", repr(view.get("kind")))
     if not declaration_valid(view):
         raise IcActivityRefusal("declaration_invalid")

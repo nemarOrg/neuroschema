@@ -80,6 +80,14 @@ def download_headers(
     }
 
 
+def version_of(value: object) -> int | None:
+    """A kind or base version as a version: an int, and never a bool. In Python
+    ``True == 1`` and they hash alike, so a declaration's ``kind_version: true``
+    would find version 1 in any lookup; JSON's ``true`` is no version
+    (review r29, round 2)."""
+    return value if type(value) is int else None
+
+
 def known_kinds(registry: Mapping) -> dict[tuple[str, int], dict]:
     """The registry's kinds, keyed by (kind, kind_version)."""
     kinds: dict[tuple[str, int], dict] = {}
@@ -187,7 +195,7 @@ def draw_as(view: Mapping, registry: Mapping | None = None) -> Drawing:
     falls back to the table; nothing here raises for an unknown kind.
     """
     registry = load_registry() if registry is None else registry
-    own = (view.get("kind"), view.get("kind_version"))
+    own = (view.get("kind"), version_of(view.get("kind_version")))
     if own in known_kinds(registry):
         return Drawing("kind", *own)
     return draw_by_base(view, registry)
@@ -203,7 +211,7 @@ def draw_by_base(view: Mapping, registry: Mapping | None = None) -> Drawing:
     the base draws it; a computed preset has no data and shows as a table.
     """
     kinds = known_kinds(load_registry() if registry is None else registry)
-    base = kinds.get((view.get("base"), view.get("base_version")))
+    base = kinds.get((view.get("base"), version_of(view.get("base_version"))))
     # Only a generic kind is a base: a preset names its own base (and the
     # envelope refuses a preset as a base), so none is drawn over a preset.
     if base is not None and base["base"] is None and meets_role_contract(view, base):

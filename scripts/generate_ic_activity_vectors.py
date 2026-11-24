@@ -786,6 +786,13 @@ def refusals() -> list[Case]:
         "transform's schema: the verdict corpus holds that.)",
         (view | {"kind": "acme.activity"}, files),
     )
+    view, files = _small_view()
+    refused(
+        "kind_version_true",
+        "kind_version written true: JSON's true is no version, though Python "
+        "reads True == 1, so kind_unsupported (review r29, round 2).",
+        (view | {"kind_version": True}, files),
+    )
     view, files = _small_view(segments=True)
     refused(
         "order_kind_before_declaration",

@@ -1836,6 +1836,93 @@
       ]
     },
     {
+      "name": "envelope_kind_version_true",
+      "covers": "kind_version true: a boolean is no integer, though Python reads True == 1.",
+      "schema": "view",
+      "instance": {
+        "key": "movie",
+        "kind": "acme.scalp-movie",
+        "kind_version": true,
+        "caption": "A kind no renderer knows.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "parameters": {
+          "fps": 30
+        },
+        "data": [
+          {
+            "role": "frames",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_frames.npy",
+            "format": "npy",
+            "size": 8,
+            "sha256": "21eaac327f0aecbb787b9a1ce54d68aa855cfc59ae5c9f4f6924cd61028bcd90"
+          },
+          {
+            "role": "labels",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_labels.tsv",
+            "format": "tsv",
+            "size": 78,
+            "sha256": "af77dc802bf58662721f76a369e4e6859dd95f46d07b854597ed1055e0f839e7"
+          },
+          {
+            "role": "broken",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_broken.tsv",
+            "format": "tsv",
+            "size": 88,
+            "sha256": "12a03501c6ca2c77a554f56f9750c087b1a1e19e6b5528bd8f303a09de1fe552"
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["type", "kind_version"]
+      ]
+    },
+    {
+      "name": "table_kind_version_true",
+      "covers": "A nemar.table view whose kind_version is true: not version 1.",
+      "schema": "view",
+      "instance": {
+        "key": "channels",
+        "kind": "nemar.table",
+        "kind_version": true,
+        "caption": "Channels and the floor's decisions.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "table",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+            "format": "tsv",
+            "size": 86,
+            "sha256": "0cad6be49122197e1babfc62712a4de6fabebe2e8884380808f58c7a006ec062",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "status",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["type", "kind_version"]
+      ]
+    },
+    {
       "name": "envelope_kind_version_text",
       "covers": "kind_version is an integer, not text.",
       "schema": "view",
