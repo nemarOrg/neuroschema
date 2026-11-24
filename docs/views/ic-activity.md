@@ -121,7 +121,8 @@ two binary64 operations, each rounded, as the store content digest `nemar.store-
 A renderer runs these checks in this order, and the first that fails gives the word.
 
 1. **The declaration.**
-   The declaration is valid (`declaration_invalid`): it has a digest and meets `view.schema.json#/$defs/view`, which applies the transform's schema to every view that names the transform, whatever its kind ([generic-kinds.md](generic-kinds.md#building-a-model)).
+   The view's kind is `nemar.ic-activity` version 1 (`kind_unsupported`): the display filter and the window are that kind's, so a view of another kind that names the transform is drawn by the renderer rule (by its base, or as a table), never by these checks.
+   Then the declaration is valid (`declaration_invalid`): it has a digest and meets `view.schema.json#/$defs/view`, which applies the transform's schema to every view that names the transform, whatever its kind ([generic-kinds.md](generic-kinds.md#building-a-model)); the transform's schema requires the parameters the computation reads (`display_filter`, `max_window_s`, `decomposition_input`).
 2. **The inputs' locations.**
    Each file input is where the record says (`table_location_mismatch`): the `unmixing` input's location is the transform's `matrix`, then the `badsegments` input's, when there is one, is `shaded.files[0]`.
    Then the `unmixing`, `components` and `badsegments` tables are the recording's: each is named `<stem>_<suffix>.tsv` beside the `signal` store's `recording`, with the stem of a product of it, and all share one stem ([the floor's tables](presets.md#the-floors-tables) gives the rule).
@@ -259,6 +260,7 @@ A filter case matches when every value is within 1e-6 times the largest magnitud
 
 | Word | Meaning |
 |---|---|
+| `kind_unsupported` | The view's kind is not `nemar.ic-activity` version 1, whose display filter and window these checks apply. |
 | `declaration_invalid` | The declaration fails `view.schema.json#/$defs/view` (with the transform's schema) or has no digest; among others, it declares `badsegments` when `shaded.files` is null, or not when it names a table. |
 | `table_location_mismatch` | The `unmixing` input is not at the transform's `matrix`, or the `badsegments` input is not at `shaded.files[0]`. |
 | `store_mismatch` | `decomposition_input.store` does not name the `signal` store: another path, group or digest. |

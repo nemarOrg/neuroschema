@@ -116,11 +116,22 @@ def _input(view: Mapping, role: str) -> Mapping:
     return next(i for i in view["inputs"] if i["role"] == role)
 
 
+KIND = ("nemar.ic-activity", 1)
+
+
 def check_declaration(view: Mapping) -> None:
-    """The declaration is valid (``declaration_invalid``): it has a digest and
-    meets the envelope, which applies the transform's schema to every view that
-    names the transform, whatever its kind. Among the transform's rules: the view
-    declares ``badsegments`` exactly when ``shaded.files`` is not null."""
+    """The view is one this reference draws, and valid.
+
+    Its kind is ``nemar.ic-activity`` version 1 (``kind_unsupported``): the
+    display filter and the window are that kind's, so a view of another kind
+    that names the transform is drawn by the renderer rule, never by this
+    function (review r29). Then the declaration is valid
+    (``declaration_invalid``): it has a digest and meets the envelope, which
+    applies the kind's schema and the transform's to it. Among the transform's
+    rules: the view declares ``badsegments`` exactly when ``shaded.files`` is
+    not null, and carries the parameters the computation reads."""
+    if (view.get("kind"), view.get("kind_version")) != KIND:
+        raise IcActivityRefusal("kind_unsupported", repr(view.get("kind")))
     if not declaration_valid(view):
         raise IcActivityRefusal("declaration_invalid")
 

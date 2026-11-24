@@ -158,6 +158,8 @@ def test_vector_declarations_are_valid(case):
     """Every case and refusal declares a valid view, but a refusal whose word is
     declaration_invalid: the other words are the transform's, never the schema's."""
     invalid = case.get("word") == "declaration_invalid"
+    if case["name"] == "order_kind_before_declaration":
+        invalid = True  # both faults: the kind's word comes first
     assert view_validator().is_valid(case["view"]) is not invalid
 
 

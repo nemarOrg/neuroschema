@@ -6,9 +6,30 @@
   "type": "object",
   "required": [
     "inputs",
-    "transform"
+    "transform",
+    "parameters"
   ],
   "properties": {
+    "parameters": {
+      "type": "object",
+      "description": "The view parameters the transform's computation reads, whatever the view's kind: the display filter, the window cap and what the decomposition was given (its store is checked against the signal's).",
+      "required": [
+        "display_filter",
+        "max_window_s",
+        "decomposition_input"
+      ],
+      "properties": {
+        "display_filter": {
+          "$ref": "../views/kind.nemar.ic-activity.v1.schema.json#/properties/parameters/properties/display_filter"
+        },
+        "max_window_s": {
+          "$ref": "../views/kind.nemar.ic-activity.v1.schema.json#/properties/parameters/properties/max_window_s"
+        },
+        "decomposition_input": {
+          "$ref": "../views/kind.nemar.ic-activity.v1.schema.json#/$defs/decompositionInput"
+        }
+      }
+    },
     "inputs": {
       "type": "array",
       "description": "The roles unmixing, signal and components, each once, and badsegments exactly when shaded.files is not null.",

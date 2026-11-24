@@ -2591,6 +2591,12 @@ def preset_verdicts() -> list[tuple[str, str, dict]]:
             _set(activity, "kind", "acme.activity"),
         ),
         (
+            "ic_activity_transform_reused_without_parameters",
+            "That kind with no parameters: the transform's schema requires the "
+            "ones its computation reads (review r29).",
+            _set(_set(activity, "kind", "acme.activity"), "parameters", DROP),
+        ),
+        (
             "ic_activity_transform_reused_drops_segments",
             "That kind drops the bad segments the record names: the transform's "
             "schema refuses it, whatever the kind (probe p14).",

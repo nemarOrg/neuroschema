@@ -778,12 +778,23 @@ def refusals() -> list[Case]:
     )
     view, files = _small_view(segments=True)
     refused(
-        "kind_reusing_the_transform_drops_segments",
-        "A kind the registry does not list that reuses the transform and drops "
-        "the bad segments the record names: the transform's schema holds the "
-        "rule, so declaration_invalid, not a note that there is no table "
-        "(probe p14).",
-        (without_segments(view) | {"kind": "acme.activity"}, files),
+        "kind_reusing_the_transform",
+        "A kind the registry does not list that reuses the transform: this "
+        "reference draws only nemar.ic-activity version 1, whose display filter "
+        "and window it applies, so kind_unsupported (review r29); the renderer "
+        "rule draws the view. (Dropping the bad segments would also break the "
+        "transform's schema: the verdict corpus holds that.)",
+        (view | {"kind": "acme.activity"}, files),
+    )
+    view, files = _small_view(segments=True)
+    refused(
+        "order_kind_before_declaration",
+        "Another kind and an invalid declaration (the bad segments dropped): the "
+        "kind comes first.",
+        (
+            without_segments(view) | {"kind": "nemar.ic-activity", "kind_version": 2},
+            files,
+        ),
     )
     view, files = _small_view(segments=True)
     del files[UNMIXING_AT]

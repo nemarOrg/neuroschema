@@ -693,9 +693,10 @@ class TestComputedPresets:
 
 def transform_view() -> dict:
     """A kind neuroschema does not know, computed by nemar.ic-activity.v1, so
-    only the envelope and the transform's schema apply."""
+    only the envelope and the transform's schema apply; it keeps the parameters
+    the transform reads."""
     instance = view("icactivity")
-    for name in ("base", "base_version", "parameters"):
+    for name in ("base", "base_version"):
         del instance[name]
     return instance | {"kind": "acme.activity", "kind_version": 2}
 
@@ -703,6 +704,18 @@ def transform_view() -> dict:
 class TestTransform:
     def test_any_kind_may_name_it(self):
         assert view_errors(transform_view()) == set()
+
+    @pytest.mark.parametrize(
+        "member", ["display_filter", "max_window_s", "decomposition_input"]
+    )
+    def test_it_requires_the_parameters_it_reads(self, member):
+        """Whatever the kind, a view that names the transform carries what its
+        computation reads (review r29: a kind with no parameters crashed it)."""
+        instance = transform_view()
+        del instance["parameters"][member]
+        assert view_errors(instance) == {("required", "parameters")}
+        del instance["parameters"]
+        assert view_errors(instance) == {("required", "")}
 
     @pytest.mark.parametrize(("at", "role"), [(0, "unmixing"), (2, "components")])
     def test_the_matrix_and_the_components_are_tsv_files(self, at, role):

@@ -13104,6 +13104,82 @@
       "errors": []
     },
     {
+      "name": "ic_activity_transform_reused_without_parameters",
+      "covers": "That kind with no parameters: the transform's schema requires the ones its computation reads (review r29).",
+      "schema": "view",
+      "instance": {
+        "key": "icactivity",
+        "kind": "acme.activity",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Component activations computed in your browser from the serving copy, with no preprocessing; they approximate the decomposition's input, which was filtered and repaired with artifact subspace reconstruction.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "unmixing",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
+              "size": 768
+            }
+          },
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "components",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
+              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
+              "size": 512
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "b68fb64a6db637af549087fb5cf77cf44b46f088042c31ea214d6069b2c0502a",
+              "size": 214
+            }
+          }
+        ],
+        "transform": {
+          "name": "nemar.ic-activity.v1",
+          "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels listed, physical unit",
+            "note": "no preprocessing; activations approximate the decomposition input",
+            "match": "store_row",
+            "rows": [0, 1, 2, 3, 4, 5, 6],
+            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "unit": "µV",
+            "caption": null,
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv"]
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        ["required", ""]
+      ]
+    },
+    {
       "name": "ic_activity_transform_reused_drops_segments",
       "covers": "That kind drops the bad segments the record names: the transform's schema refuses it, whatever the kind (probe p14).",
       "schema": "view",
@@ -13852,7 +13928,8 @@
       "valid": false,
       "errors": [
         ["contains", "inputs"],
-        ["not", "transform"]
+        ["not", "transform"],
+        ["required", "parameters"]
       ]
     },
     {
