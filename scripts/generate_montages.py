@@ -444,7 +444,7 @@ def render(value: object, indent: int = 0) -> str:
     escaped, so an invisible character in a channel name (a no-break space)
     shows in the file.
     """
-    inline = json.dumps(value, separators=(", ", ": "))
+    inline = json.dumps(value, allow_nan=False, separators=(", ", ": "))
 
     def flat(v: object) -> bool:
         items = v.values() if isinstance(v, dict) else v

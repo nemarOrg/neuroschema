@@ -5474,6 +5474,38 @@ def sensor_field_verdicts() -> list[tuple[str, str, dict]]:
             )[0],
         ),
         (
+            "sensor_field_cap_model_256_astral",
+            "A cap_model of 256 code points outside the Basic Multilingual Plane "
+            "(512 UTF-16 code units): valid, since maxLength counts code points "
+            "in every engine, as ajv's unicode option and Python do.",
+            field_view(
+                mixing(),
+                electrodes(),
+                "positions",
+                positions={"cap_model": "\U0001d400" * 256, "reference": "Cz"},
+            )[0],
+        ),
+        (
+            "sensor_field_cap_model_257",
+            "A cap_model of 257 characters: refused (maxLength 256).",
+            field_view(
+                mixing(),
+                electrodes(),
+                "positions",
+                positions={"cap_model": "H" * 257, "reference": "Cz"},
+            )[0],
+        ),
+        (
+            "sensor_field_reference_257",
+            "A reference of 257 characters: refused (maxLength 256).",
+            names_view(
+                named_values(),
+                NAMED_COLUMNS,
+                [NAME_ROWS, MAPS_HEADER],
+                values_fields={"cap_model": "HydroCel GSN", "reference": "C" * 257},
+            )[0],
+        ),
+        (
             "sensor_field_layout_label_inputs",
             "A layout carrying a cap_model and a reference: refused, since a "
             "layout is drawn as stored and never placed by name.",
@@ -5720,9 +5752,13 @@ def dump(value, depth: int = 0) -> str:
 def _scalars(value) -> str:
     """A scalar or a flat array, as UTF-8 text; a string holding a lone
     surrogate or a noncharacter is escaped, so the file stays I-JSON."""
-    text = json.dumps(value, ensure_ascii=False, separators=(", ", ": "))
+    text = json.dumps(
+        value, ensure_ascii=False, allow_nan=False, separators=(", ", ": ")
+    )
     if FORBIDDEN.search(text):
-        return json.dumps(value, ensure_ascii=True, separators=(", ", ": "))
+        return json.dumps(
+            value, ensure_ascii=True, allow_nan=False, separators=(", ", ": ")
+        )
     return text
 
 

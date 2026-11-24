@@ -333,6 +333,9 @@ When a kind refused the files, `refused` is `{"kind", "kind_version", "word"}`, 
 | `edges_not_increasing` | fallback | The edges are not strictly increasing. |
 | `counts_length` | fallback | The counts are not one per bin. |
 
+These are the words of the files, which decide the view's outcome.
+A scalp map's placement and algorithm have words of their own that take a map's place while the view is drawn, among them `montage_unknown`, `template_name_unknown` and, from `nemar.sensor-layout.v1`, `positions_flat` and `positions_partial`; they are in [sensor-field.md](sensor-field.md#refusals)'s tables.
+
 ## The model vectors
 
 `kinds-models.v1.json` has `format`, `spec`, `description`, `cases` and `refusals`.
