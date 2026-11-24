@@ -304,8 +304,8 @@ def sensor_field_from_positions(
     :func:`sensor_field` draws the map; a row with no layout is dropped like
     any sensor without a place. Raises
     :class:`~neuroschema.views.sensor_layout.SensorLayoutRefusal`
-    (``frame_unknown`` or ``positions_flat``), after which a renderer places
-    the sensors by name, or :class:`SensorFieldRefusal`.
+    (``frame_unknown``, ``positions_flat`` or ``positions_partial``), after
+    which a renderer places the sensors by name, or :class:`SensorFieldRefusal`.
     """
     layout = sensor_layout(
         xyz, coordinate_system, montage=montage, names=names, sensor_types=sensor_types

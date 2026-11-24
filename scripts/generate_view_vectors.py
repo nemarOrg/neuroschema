@@ -231,43 +231,63 @@ def to_als(xyz, frame, montage=None):
 
 FLAT_RATIO = 0.05
 RADIUS_RATIO = 3.0
-BOUND_MARGIN = (0.002, 0.05)  # every vector keeps its measures this far from a bound
+PARTIAL_DILUTION = 4.5
+# Every vector keeps its measures this far from a bound (singular ratio,
+# radius ratio, dilution).
+BOUND_MARGIN = (0.002, 0.05, 0.05)
+NO_BOUNDS = {"singular_ratio": None, "radius_ratio": None, "dilution": None}
 
 
 def fit_center(points):
-    """Measured positions: (center, bounds), or (None, bounds) when the spec
-    refuses them as flat. Computed by SVD and least squares (the spec uses the
-    eigenvalues of u.T u and LU on the normal equations); the vectors keep every
-    measure at least BOUND_MARGIN from its bound, so the two cannot disagree."""
+    """Measured positions: (center, bounds, None), or (None, bounds, word) when
+    the spec refuses them as flat or partial. Computed by SVD, least squares
+    and a matrix inverse (the spec uses the eigenvalues of u.T u and LU); the
+    vectors keep every measure at least BOUND_MARGIN from its bound, so the two
+    cannot disagree."""
     n = len(points)
     if n == 0:
-        return None, {"singular_ratio": None, "radius_ratio": None}
+        return None, dict(NO_BOUNDS), "positions_flat"
     centroid = points.sum(axis=0) / n
     centered = points - centroid
     scale = float(np.sqrt((centered**2).sum(axis=1)).max())
     if scale == 0:
-        return None, {"singular_ratio": None, "radius_ratio": None}
+        return None, dict(NO_BOUNDS), "positions_flat"
     u = centered / scale
     singular = np.linalg.svd(u, compute_uv=False)
     ratio = float(singular[-1] / singular[0]) if len(singular) == 3 else 0.0
-    bounds = {"singular_ratio": ratio, "radius_ratio": None}
+    bounds = dict(NO_BOUNDS, singular_ratio=ratio)
     if ratio < FLAT_RATIO:
-        return None, bounds
+        return None, bounds, "positions_flat"
     design = np.column_stack([2 * u, np.ones(n)])
     target = (u**2).sum(axis=1)
     (a, b, c, d), *_ = np.linalg.lstsq(design, target, rcond=None)
     bounds["radius_ratio"] = float(math.sqrt(a * a + b * b + c * c + d))
     if bounds["radius_ratio"] > RADIUS_RATIO:
-        return None, bounds
-    return centroid + scale * np.array([a, b, c]), bounds
+        return None, bounds, "positions_flat"
+    # The dilution: the center block of the inverse of the mean of [e, 1] [e, 1]'
+    # over the unit vectors e from the center to each position.
+    spokes = u - np.array([a, b, c])
+    spokes /= np.linalg.norm(spokes, axis=1)[:, None]
+    augmented = np.column_stack([spokes, np.ones(n)])
+    inverse = np.linalg.inv(augmented.T @ augmented / n)
+    bounds["dilution"] = float(math.sqrt(np.trace(inverse[:3, :3])))
+    if bounds["dilution"] > PARTIAL_DILUTION:
+        return None, bounds, "positions_partial"
+    return centroid + scale * np.array([a, b, c]), bounds, None
 
 
 def check_bounds(name, bounds):
-    ratio, radius = bounds["singular_ratio"], bounds["radius_ratio"]
+    ratio, radius, spread = (
+        bounds["singular_ratio"],
+        bounds["radius_ratio"],
+        bounds["dilution"],
+    )
     if ratio is not None and 0 < abs(ratio - FLAT_RATIO) < BOUND_MARGIN[0]:
         raise SystemExit(f"{name}: singular ratio {ratio} too near {FLAT_RATIO}")
     if radius is not None and abs(radius - RADIUS_RATIO) < BOUND_MARGIN[1]:
         raise SystemExit(f"{name}: radius ratio {radius} too near {RADIUS_RATIO}")
+    if spread is not None and abs(spread - PARTIAL_DILUTION) < BOUND_MARGIN[2]:
+        raise SystemExit(f"{name}: dilution {spread} too near {PARTIAL_DILUTION}")
 
 
 def has_position(xyz):
@@ -311,7 +331,7 @@ def montage_center(name):
     document = montage_document(name)
     stored = np.array(document["center"], dtype=float)
     electrodes = np.array([e[1:4] for e in document["electrodes"]], dtype=float)
-    center, _bounds = fit_center(electrodes)
+    center, _bounds, _word = fit_center(electrodes)
     if center is None or np.abs(center - stored).max() > 2e-9:
         sys.exit(f"{name}: the stored center {stored} is not the fit {center}")
     return stored
@@ -319,10 +339,10 @@ def montage_center(name):
 
 def layout_of(xyz, frame, montage=None, names=None, types=None):
     """(theta, radius, center, method, bounds) for positions in a BIDS frame,
-    or (None, bounds) for measured positions the spec refuses as flat. Only
-    the scalp rows with a position are projected. Template positions use their
-    montage's own center; measured positions a sphere fitted to the scalp rows
-    with a position."""
+    or (None, word, bounds) for measured positions the spec refuses as flat or
+    partial. Only the scalp rows with a position are projected. Template
+    positions use their montage's own center; measured positions a sphere
+    fitted to the scalp rows with a position."""
     als = to_als(xyz, frame, montage)
     rows = has_position(als)
     if names is not None:
@@ -333,9 +353,9 @@ def layout_of(xyz, frame, montage=None, names=None, types=None):
         center = to_als(montage_center(montage)[None, :], frame, montage)[0]
         method, bounds = "montage", None
     else:
-        center, bounds = fit_center(als[rows])
+        center, bounds, word = fit_center(als[rows])
         if center is None:
-            return None, bounds
+            return None, word, bounds
         method = "sphere"
     t, r = eegprep_cart2topo(als[rows] - center)
     for k, row in enumerate(np.flatnonzero(rows)):
@@ -863,7 +883,7 @@ def positions_case(name, description, labels, xyz, frame, values, montage=None):
         check_bounds(name, projected[-1])
         case["bounds"] = projected[-1]
     if projected[0] is None:
-        case["refused"] = "positions_flat"
+        case["refused"] = projected[1]
         return case
     theta, radius, center, method, _bounds = projected
     drawn = field_case_from(
@@ -1065,7 +1085,7 @@ def layout_case(name, description, labels, xyz, frame, montage=None, types=None)
         check_bounds(name, projected[-1])
         case["bounds"] = projected[-1]
     if projected[0] is None:
-        case["refused"] = "positions_flat"
+        case["refused"] = projected[1]
         return case
     theta, radius, center, method, _bounds = projected
     case["expected"] = {
@@ -1279,6 +1299,87 @@ TEN_TWENTY_19 = [
     "O1",
     "O2",
 ]
+# Regional sets of the reviewers' coverage probe, measured on the Colin27 head
+# (standard_1005 as measured positions). The fit error is the largest planar
+# distance, as a share of the head radius (0.5), between a sensor projected
+# about the sphere fitted to the set and about the montage's own center.
+REGIONAL_SETS = [
+    (
+        "measured_ten_twenty",
+        TEN_TWENTY_19,
+        "the 19 electrodes of the 10-20 system: they cover the head (dilution "
+        "3.46; fit error 4.6% of the head radius); drawn",
+    ),
+    (
+        "measured_emotiv_14",
+        [
+            "AF3",
+            "F7",
+            "F3",
+            "FC5",
+            "T7",
+            "P7",
+            "O1",
+            "O2",
+            "P8",
+            "T8",
+            "FC6",
+            "F4",
+            "F8",
+            "AF4",
+        ],
+        "the 14 electrodes of the Emotiv EPOC, a ring around the head with no "
+        "top (dilution 5.96; fit error 10.0% of the head radius); refused "
+        "(positions_partial)",
+    ),
+    (
+        "measured_frontal_6",
+        ["Fp1", "Fp2", "AF3", "AF4", "F7", "F8"],
+        "six frontal electrodes (dilution 8.02; fit error 30.1% of the head "
+        "radius); refused (positions_partial)",
+    ),
+    (
+        "measured_central_9",
+        ["FC3", "FCz", "FC4", "C3", "Cz", "C4", "CP3", "CPz", "CP4"],
+        "nine central electrodes around the vertex (dilution 5.99; fit error "
+        "14.8% of the head radius); refused (positions_partial)",
+    ),
+]
+
+
+def partial_cases():
+    """The coverage bound, from both sides: regional sets of a real head, and
+    spherical caps just inside and outside the bound."""
+    cases = []
+    ten_05 = montage_document("standard_1005")
+    by_name = {e[0]: e[1:4] for e in ten_05["electrodes"]}
+    for name, keys, what in REGIONAL_SETS:
+        cases.append(
+            layout_case(
+                name,
+                "Measured positions: from the montage standard_1005 (FieldTrip's "
+                f"10-05 positions on the Colin27 head, MNIColin27, meters), {what}.",
+                keys,
+                [by_name[k] for k in keys],
+                "MNIColin27",
+            )
+        )
+    for name, angle, dilution, verdict in [
+        ("cap_partial_inside", 88.0, 4.36, "drawn"),
+        ("cap_partial_outside", 84.0, 4.62, "refused (positions_partial)"),
+    ]:
+        cases.append(
+            layout_case(
+                name,
+                f"Positions on a 9 cm sphere within {angle} degrees of its top, an "
+                f"even cover of a little {'more' if angle > 85 else 'less'} than "
+                f"a hemisphere: dilution {dilution}, against the bound 4.5; "
+                f"{verdict}.",
+                *spherical_cap(angle),
+                "EEGLAB",
+            )
+        )
+    return cases
 
 
 def layout_cases():
@@ -1412,7 +1513,11 @@ def layout_cases():
         )
     )
     for name, factor, verdict in [
-        ("squashed_sphere_inside", 0.055, "drawn"),
+        (
+            "squashed_sphere_inside",
+            0.055,
+            "it passes, and the dilution (13) then refuses it (positions_partial)",
+        ),
         ("squashed_sphere_outside", 0.045, "refused (positions_flat)"),
     ]:
         cases.append(
@@ -1428,7 +1533,11 @@ def layout_cases():
             )
         )
     for name, angle, verdict in [
-        ("cap_inside", 21.0, "drawn"),
+        (
+            "cap_inside",
+            21.0,
+            "it passes, and the dilution (52) then refuses it (positions_partial)",
+        ),
         ("cap_outside", 19.0, "refused (positions_flat)"),
     ]:
         cases.append(
@@ -1449,9 +1558,10 @@ def layout_cases():
         layout_case(
             "measured_six",
             "Six measured positions, F3 F4 C3 C4 P3 P4 of eegprep's 10-5 "
-            "template (EEGLAB, meters), and no others: no midline, but they span "
-            "the head (singular ratio 0.15, sphere radius 1.1 times their scale); "
-            "drawn about the sphere fitted to them.",
+            "template (EEGLAB, meters), and no others: they pass both flatness "
+            "bounds (singular ratio 0.15, sphere radius 1.1 times their scale), "
+            "but they cover a band across the top of the head, and their dilution "
+            "(10.9) refuses them (positions_partial).",
             six,
             [ten_five[k] for k in six],
             frame,
@@ -1555,6 +1665,7 @@ def layout_cases():
             )
         )
     cases += scalp_row_cases()
+    cases += partial_cases()
     for number, frame in enumerate(UNKNOWN_FRAMES, start=1):
         cases.append(
             layout_case(
@@ -1611,9 +1722,9 @@ def sensor_layout_vectors(ref):
             "scalp row or has no position: not finite, or exactly 0, 0, 0) or the "
             "word it is refused with. Template positions are centered on the "
             "montage's own center, its file's center; measured positions carry "
-            "bounds, their singular_ratio and radius_ratio (null when not "
-            "reached), which decide positions_flat against 0.05 and 3, within "
-            "tolerance.bounds_absolute. The "
+            "bounds, their singular_ratio, radius_ratio and dilution (null when "
+            "not reached), which decide positions_flat against 0.05 and 3 and "
+            "positions_partial against 4.5, within tolerance.bounds_absolute. The "
             "expected theta and radius are eegprep's convertlocs(..., 'cart2topo') "
             "of the positions minus the center, with -180 written 180. frames lists "
             "the BIDS coordinate systems of each orientation: an implementation "

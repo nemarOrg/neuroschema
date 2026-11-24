@@ -79,6 +79,7 @@ These are every word a sensor-field view can end in, each with what it means for
 | `interpolation_failed` | this algorithm, step 10 | The values could not be interpolated into finite numbers (a value near the largest a double can hold, or sensors that make the system singular). |
 | `frame_unknown` | `nemar.sensor-layout.v1` | The view's positions name a frame whose orientation is not known, or name it inconsistently, so they cannot be projected; the renderer places the sensors by name instead and says so. |
 | `positions_flat` | `nemar.sensor-layout.v1` | The view's measured positions are too flat, or too few, to locate the head's center (singular ratio below 0.05, or a sphere more than 3 times their scale), so they cannot be projected; the renderer places the sensors by name instead and says so. |
+| `positions_partial` | `nemar.sensor-layout.v1` | The view's measured positions cover too little of the head to locate its center (a frontal, central or occipital set, or a ring with no top: the dilution of their center is above 4.5), so they cannot be projected; the renderer places the sensors by name instead and says so. |
 
 When the sensors are placed by name, `nemar.sensor-labels.v1` has its own words for names it cannot place, with their meanings, in [`sensor-labels.md`](sensor-labels.md); the renderer shows that word's sentence and draws no map.
 
@@ -114,7 +115,7 @@ The source decides the values' `sensor` coordinates and how a renderer places ea
 2. **Positions.**
    The coordinates are `{"role": "positions", "column": "name"}`: the values' sensors are the positions' rows, by position.
    The renderer projects the positions with `nemar.sensor-layout.v1` in the frame the role names (`coordinate_system`, or `n/a` with a `montage`), reading its `name` and `sensor_type` columns for the scalp rows, and draws the projected layout; a row with no layout (not a scalp row, or without a position) has no place and is dropped (step 1).
-   If the projection is refused (`frame_unknown` or `positions_flat`), the renderer places the sensors by name, as in 3, and says why the positions could not be used; if that placement is refused too, it draws no map and shows that refusal's sentence.
+   If the projection is refused (`frame_unknown`, `positions_flat` or `positions_partial`), the renderer places the sensors by name, as in 3, and says why the positions could not be used; if that placement is refused too, it draws no map and shows that refusal's sentence.
 3. **Names.**
    The coordinates are names in the values file, `{"column": "<name column>"}` along the rows or `{"header": true}` along the columns, and a renderer places each name with `nemar.sensor-labels.v1` (a separate algorithm, specified beside this one).
    When a name cannot be placed, that algorithm says why, and the renderer draws no map and shows its sentence.

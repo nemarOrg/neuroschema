@@ -14,7 +14,7 @@ and [`views/montages/`](../../views/montages/) holds the montages, with their or
 A consumer that draws sensor positions (the viewer's live scalp map, and a `nemar.sensor-field` view without a layout role) chooses positions in this order:
 
 1. Measured positions in a frame that `nemar.sensor-layout.v1` knows are used as they are (`position_source` `measured`).
-2. When the recording has no positions, declares no frame, declares a frame that `nemar.sensor-layout.v1` does not know (`frame_unknown`), or has measured positions that `nemar.sensor-layout.v1` refuses as too flat or too few to locate the head's center (`positions_flat`), the consumer infers positions from the channel names with this algorithm.
+2. When the recording has no positions, declares no frame, declares a frame that `nemar.sensor-layout.v1` does not know (`frame_unknown`), or has measured positions that `nemar.sensor-layout.v1` refuses as too flat or too few to locate the head's center (`positions_flat`) or as covering too little of the head (`positions_partial`), the consumer infers positions from the channel names with this algorithm.
    The caption says that the positions are template positions matched by name, names the montage, and says why measured positions were not used.
 3. When the algorithm refuses, the consumer draws no map and shows the reason.
 

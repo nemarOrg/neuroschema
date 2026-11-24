@@ -6,9 +6,9 @@ superior) from the frame their Brain Imaging Data Structure (BIDS) coordinate
 system names, keep the scalp rows (EEG sensors, never fiducials or other
 channels), center them (template positions on their montage's own center;
 measured positions on an algebraic least-squares sphere through the scalp
-rows, refusing positions too flat to fix one), and convert each to EEGLAB's
-``topoplot`` theta and radius as eegprep's ``convertlocs(..., 'cart2topo')``
-does.
+rows, refusing positions too flat to fix one or covering too little of the
+head), and convert each to EEGLAB's ``topoplot`` theta and radius as eegprep's
+``convertlocs(..., 'cart2topo')`` does.
 ``views/vectors/sensor-layout.v1.json`` holds the cases every implementation
 reproduces.
 
@@ -93,6 +93,13 @@ RADIUS_RATIO = 3.0
 """Measured positions are flat when their fitted sphere's radius is above this
 many times their scale."""
 
+PARTIAL_DILUTION = 4.5
+"""Measured positions cover too little of the head when the dilution of their
+fitted center (:func:`dilution`) is above this. Whole-head caps measure 3.1 to
+3.9 (4.13 at most with 3 mm of noise on each position), and frontal, central
+and occipital sets and a ring with no top 5.2 and above (4.76 at least with
+that noise); see ``docs/views/sensor-layout.md``, step 3."""
+
 RAD = 180 / np.pi
 """Radians to degrees: 180 divided by the binary64 nearest pi."""
 
@@ -100,8 +107,9 @@ RAD = 180 / np.pi
 class SensorLayoutRefusal(ValueError):
     """Positions the transform refuses, with the word a renderer shows.
 
-    A ``positions_flat`` refusal also carries the flatness measures it reached
-    (``singular_ratio``, ``radius_ratio``, None where not reached).
+    A ``positions_flat`` or ``positions_partial`` refusal also carries the
+    measures it reached (``singular_ratio``, ``radius_ratio``, ``dilution``,
+    None where not reached).
     """
 
     def __init__(
@@ -110,11 +118,13 @@ class SensorLayoutRefusal(ValueError):
         detail: str,
         singular_ratio: float | None = None,
         radius_ratio: float | None = None,
+        dilution: float | None = None,
     ) -> None:
         super().__init__(f"{word}: {detail}")
         self.word = word
         self.singular_ratio = singular_ratio
         self.radius_ratio = radius_ratio
+        self.dilution = dilution
 
 
 @dataclass(frozen=True)
@@ -126,8 +136,9 @@ class SensorLayout:
     and ``center_method`` says how it was found: ``montage`` (template
     positions: the montage's own center) or ``sphere`` (measured positions:
     the sphere fitted to the scalp rows). For measured positions,
-    ``singular_ratio`` and ``radius_ratio`` are the two flatness measures
-    :func:`sphere_center` bounds; both are None for template positions.
+    ``singular_ratio``, ``radius_ratio`` and ``dilution`` are the three
+    measures :func:`sphere_center` bounds; all are None for template
+    positions.
     """
 
     theta_deg: np.ndarray
@@ -136,6 +147,7 @@ class SensorLayout:
     center_method: str
     singular_ratio: float | None
     radius_ratio: float | None
+    dilution: float | None
 
 
 def orientation(coordinate_system: str, montage: str | None = None) -> str:
@@ -230,13 +242,40 @@ def has_position(xyz: np.ndarray) -> np.ndarray:
     return np.isfinite(xyz).all(axis=1) & ~(xyz == 0).all(axis=1)
 
 
+def dilution(directions: np.ndarray) -> float:
+    """The dilution of a fitted center, from the unit vectors to the positions.
+
+    With each unit vector ``e`` (pointing from the center to one position) and
+    the 4-by-4 matrix ``M``, the mean of ``[e, 1]`` times its transpose, the
+    dilution is the square root of the sum of the first three diagonal entries
+    of ``M`` inverted (each column solved by LU decomposition with partial
+    pivoting). When ``n`` positions depart from a sphere independently, along
+    its radius, by a share ``sigma`` of the radius, the fitted center's error
+    has a root mean square of about ``dilution * sigma / sqrt(n)`` radii. It is
+    3 for an even cover of a sphere, ``sqrt(18)`` (4.24) for one of a
+    hemisphere, and more as the positions bunch together or lie on one band.
+    A singular ``M`` gives a value that is not finite.
+    """
+    n = len(directions)
+    augmented = np.column_stack([directions, np.ones(n)])
+    moments = augmented.T @ augmented / n
+    total = 0.0
+    for k in range(3):
+        unit = np.zeros(4)
+        unit[k] = 1.0
+        total += float(lu_solve(moments, unit)[k])
+    with np.errstate(invalid="ignore"):
+        return float(np.sqrt(total))
+
+
 @dataclass(frozen=True)
 class Fit:
-    """A sphere fitted to measured positions, with its two flatness measures."""
+    """A sphere fitted to measured positions, with its three measures."""
 
     center: np.ndarray
     singular_ratio: float
     radius_ratio: float
+    dilution: float
 
 
 def sphere_center(points: np.ndarray) -> Fit:
@@ -256,6 +295,9 @@ def sphere_center(points: np.ndarray) -> Fit:
     and their usual subsets measure a singular ratio of 0.12 or more and a
     radius ratio of 1.6 or less, while a midline or a row of sensors measures
     about 1e-5 and 16 to 1500, so the bounds refuse what fixes no head.
+    Last, they cover too little of the head, and raise ``positions_partial``,
+    when the :func:`dilution` of the center (from the unit vectors
+    ``u - (a, b, c)``, normalized) is above :data:`PARTIAL_DILUTION`.
     """
     n = len(points)
     centroid = points.sum(axis=0) / max(n, 1)
@@ -282,7 +324,22 @@ def sphere_center(points: np.ndarray) -> Fit:
             singular_ratio,
             radius_ratio,
         )
-    return Fit(centroid + scale * np.array([a, b, c]), singular_ratio, radius_ratio)
+    spokes = u - np.array([a, b, c])
+    with np.errstate(invalid="ignore", divide="ignore"):
+        spokes = spokes / np.sqrt((spokes * spokes).sum(axis=1))[:, None]
+    spread = dilution(spokes)
+    if not spread <= PARTIAL_DILUTION:
+        raise SensorLayoutRefusal(
+            "positions_partial",
+            f"the positions cover too little of the head: the dilution of their "
+            f"center is {spread:.3g}, above {PARTIAL_DILUTION}",
+            singular_ratio,
+            radius_ratio,
+            spread,
+        )
+    return Fit(
+        centroid + scale * np.array([a, b, c]), singular_ratio, radius_ratio, spread
+    )
 
 
 def montage_center(montage: str, directory: Path = MONTAGES) -> np.ndarray:
@@ -301,19 +358,20 @@ def montage_center(montage: str, directory: Path = MONTAGES) -> np.ndarray:
 
 def center_of(
     points: np.ndarray, coordinate_system: str, montage: str | None
-) -> tuple[np.ndarray, str, float | None, float | None]:
-    """The center of ALS ``points``: (center, method, singular_ratio, radius_ratio).
+) -> tuple[np.ndarray, str, Fit | None]:
+    """The center of ALS ``points``: (center, method, the fit or None).
 
     Template positions (a ``montage``) take the montage's own center, rotated
     into ALS, and are never fitted: a subset of a montage, such as its
     midline, fixes no sphere of its own. Measured positions take the sphere
-    fitted to all of them (:func:`sphere_center`).
+    fitted to all of them (:func:`sphere_center`), which also bounds how flat
+    and how partial they may be.
     """
     if montage is not None:
         center = montage_center(montage)[None, :]
-        return to_als(center, coordinate_system, montage)[0], "montage", None, None
+        return to_als(center, coordinate_system, montage)[0], "montage", None
     fit = sphere_center(points)
-    return fit.center, "sphere", fit.singular_ratio, fit.radius_ratio
+    return fit.center, "sphere", fit
 
 
 def cart2topo(xyz: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -352,8 +410,8 @@ def sensor_layout(
     measured positions are centered on the sphere fitted to every scalp row
     with a position (:func:`sphere_center`), so the rows should be all of the
     recording's measured positions. Raises :class:`SensorLayoutRefusal` with
-    ``frame_unknown`` or ``positions_flat``, after which a renderer places the
-    sensors by name.
+    ``frame_unknown``, ``positions_flat`` or ``positions_partial``, after
+    which a renderer places the sensors by name.
     """
     xyz = np.asarray(xyz, dtype=np.float64)
     if xyz.ndim != 2 or xyz.shape[1] != 3:
@@ -365,15 +423,14 @@ def sensor_layout(
     rows = has_position(als) & scalp_rows(len(als), names, sensor_types)
     theta = np.full(len(als), np.nan)
     radius = np.full(len(als), np.nan)
-    center, method, singular_ratio, radius_ratio = center_of(
-        als[rows], coordinate_system, montage
-    )
+    center, method, fit = center_of(als[rows], coordinate_system, montage)
     theta[rows], radius[rows] = cart2topo(als[rows] - center)
     return SensorLayout(
         theta,
         radius,
         tuple(float(v) for v in center),
         method,
-        singular_ratio,
-        radius_ratio,
+        None if fit is None else fit.singular_ratio,
+        None if fit is None else fit.radius_ratio,
+        None if fit is None else fit.dilution,
     )
