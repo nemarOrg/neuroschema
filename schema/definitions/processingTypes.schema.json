@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/definitions/processingTypes.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/definitions/processingTypes.schema.json",
   "title": "Processing Types",
   "description": "Shared types for the dataQuality, processing and signalJourney extensions and the view declaration. A library of $defs; the root constrains nothing.",
   "$defs": {

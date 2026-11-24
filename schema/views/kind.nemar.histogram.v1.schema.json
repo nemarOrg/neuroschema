@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/views/kind.nemar.histogram.v1.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/views/kind.nemar.histogram.v1.schema.json",
   "title": "View Kind nemar.histogram, Version 1",
   "description": "Generic histogram, applied on top of the envelope to a view declaration whose kind is nemar.histogram and kind_version 1. One stored JSON file is read as the role histogram, and its content meets content.nemar.histogram.v1. The content holds counts per bin, binned either by numeric edges or by named categories, and a renderer draws the stated counts without recomputing them. A renderer builds the model in docs/views/generic-kinds.md. This is a generic kind, so it has no base, no inputs, no transform, no parameters and no dimensions.",
   "type": "object",

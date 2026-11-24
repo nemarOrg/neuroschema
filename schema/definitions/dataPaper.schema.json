@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/definitions/dataPaper.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/definitions/dataPaper.schema.json",
   "title": "Data Paper",
   "description": "A paper, or a deposit of the same data, that a trusted judgment classified as this dataset's own data paper: it introduces, describes, or releases the data in this specific dataset. Unlike the relation type on a related identifier, which is only a hint, membership here is a judged verdict.",
   "type": "object",

@@ -41,7 +41,7 @@ Quality views replace figures: a view is data a browser draws, declared with a n
 
 ### Changed (breaking)
 
-- From the adversarial release review (S6c, security and grammar): every schema's `$id` is an absolute URI (`https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/` plus its path), so the relative `$ref`s resolve by RFC 3986 in every engine; `neuroschema.validate` resolves them from `schema/` and fetches nothing.
+- From the adversarial release review (S6c, security and grammar): every schema's `$id` is an absolute URI (`https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/` plus its path), so the relative `$ref`s resolve by RFC 3986 in every engine; `neuroschema.validate` resolves them from `schema/` and fetches nothing.
 - `processingTypes.relativeLocation` refuses `%`, `?`, `#`, a `.` or empty segment, a trailing `/`, a leading or trailing space, DEL, C1 controls and bidirectional controls, so a location means one file under every URL resolution; `docs/views.md` states how a renderer builds a URL from one.
 - Every `integer` in every schema is capped at 2^53 - 1 in magnitude, and verdicts are on the binary64 reading of a document (an integer past 2^53 is checked as `JSON.parse` reads it).
 - `viewData.size` and `fileInput.size` are at most 4,194,304 (`caps.bytes_per_role`), and a renderer checks the declared size before it fetches a file; a declared size over the cap now gives `cap_exceeded` before `file_missing` or a digest is computed.

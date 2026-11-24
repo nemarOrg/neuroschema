@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/views/kind.nemar.spectrum.v1.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/views/kind.nemar.spectrum.v1.schema.json",
   "title": "View Kind nemar.spectrum, Version 1",
   "description": "A power spectrum per sensor, a preset over nemar.lines version 1, applied on top of the envelope to a view declaration whose kind is nemar.spectrum and kind_version 1. The role values is a nemar.lines values entry: the column freq_hz (the dimension freq, in Hz) along the rows and one column per sensor (the dimension sensor, in dB) along the columns. The optional role layout places the sensors, so a renderer that knows this kind also draws a scalp map of the sensors' values at a chosen frequency row (nemar.sensor-field.v1); with a layout the sensors are its rows, by position, and without one they are the values' header names. The parameters record how the spectrum was computed. docs/views/presets.md is normative; a renderer that knows only nemar.lines draws the values entry as lines, because each entry meets its base's role subschema.",
   "type": "object",

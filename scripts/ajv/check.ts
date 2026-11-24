@@ -24,7 +24,7 @@ import Ajv2020 from "ajv/dist/2020.js";
 
 const ROOT = join(import.meta.dir, "..", "..");
 const SCHEMA_DIR = join(ROOT, "schema");
-const BASE = "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/";
+const BASE = "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/";
 
 const ajv = new Ajv2020({
   strict: true,

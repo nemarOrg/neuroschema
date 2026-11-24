@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/extensions/dataQuality.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/extensions/dataQuality.schema.json",
   "title": "Data Quality Extension",
   "description": "Quality results the NEMAR backend projects from the signalJourney records of its recipe runs. `level` selects the shape: `record` (one recording's metrics and views per recipe) or `dataset` (the dataset quality control summary per recipe; replaces nemar-process qc-summary.v1). Each entry carries the SHA-256 of the signalJourney record it came from; the record stays the source. Closed at every level, its root and its $defs included: it holds the views a browser draws, so a member no schema checks (a second views list, a stray counts block) is refused rather than carried along.",
   "type": "object",
