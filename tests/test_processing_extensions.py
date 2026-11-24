@@ -340,7 +340,76 @@ class TestDataQualityRecord:
         doc = dq_record()
         del doc["recipes"]["nemar-floor"]["metrics"]["lineNoiseAfterDb"]["recipe"]
         assert errors_for(DATA_QUALITY, doc) == {
-            ("oneOf", f"{FLOOR}/metrics/lineNoiseAfterDb")
+            ("oneOf", f"{FLOOR}/metrics/lineNoiseAfterDb"),
+            ("required", f"{FLOOR}/metrics/lineNoiseAfterDb"),
+        }
+
+
+PLUGIN_PRODUCER = {"name": "nemar-quality", "version": "0.1.0"}
+
+
+class TestMetricNames:
+    """A recipe's metric has a bare name, a plugin's is <plugin>:<name>."""
+
+    def _metrics(self, doc):
+        return doc["recipes"]["nemar-floor"]["metrics"]
+
+    def _plugin_metric(self):
+        out = metric(50.0, "%", "Share of brain components.")
+        del out["recipe"]
+        return out | {"plugin": dict(PLUGIN_PRODUCER)}
+
+    def test_a_plugin_metric_named_by_its_plugin(self):
+        doc = dq_record()
+        self._metrics(doc)["nemar-quality:percentBrainComponents"] = (
+            self._plugin_metric()
+        )
+        assert errors_for(DATA_QUALITY, doc) == set()
+
+    def test_a_bare_name_is_a_recipe_metric(self):
+        """Fails if the bare pattern stops requiring the recipe producer."""
+        doc = dq_record()
+        self._metrics(doc)["percentBrainComponents"] = self._plugin_metric()
+        assert errors_for(DATA_QUALITY, doc) == {
+            ("required", f"{FLOOR}/metrics/percentBrainComponents")
+        }
+
+    def test_a_prefixed_name_is_a_plugin_metric(self):
+        """Fails if the prefixed pattern stops requiring the plugin producer."""
+        doc = dq_record()
+        metrics = self._metrics(doc)
+        metrics["nemar-floor:lineNoiseAfterDb"] = metrics.pop("lineNoiseAfterDb")
+        assert errors_for(DATA_QUALITY, doc) == {
+            ("required", f"{FLOOR}/metrics/nemar-floor:lineNoiseAfterDb")
+        }
+
+    @pytest.mark.parametrize(
+        "name",
+        [
+            "nemar-quality:a:b",
+            "nemar-quality:",
+            "nemar-quality:9x",
+            "nemar-quality:_x",
+            "nemar-quality:x\n",
+        ],
+    )
+    def test_the_part_after_the_colon_is_a_name(self, name):
+        """One colon, then a letter: a name the manifest rule accepts."""
+        doc = dq_record()
+        self._metrics(doc)[name] = self._plugin_metric()
+        errors = errors_for(DATA_QUALITY, doc)
+        assert ("additionalProperties", f"{FLOOR}/metrics") in errors
+        assert {v for v, _ in errors} <= {"additionalProperties", "pattern"}
+
+    def test_the_example_names_its_producers(self):
+        """The presets example carries one metric of each producer."""
+        path = EXAMPLES_DIR / "views" / "dataquality-record-nemar-ica.json"
+        doc = json.loads(path.read_text())
+        assert errors_for(DATA_QUALITY, doc) == set()
+        metrics = doc["recipes"]["nemar-ica"]["metrics"]
+        assert {name: "plugin" in m for name, m in metrics.items()} == {
+            "icaRank": False,
+            "nemar-quality:percentBrainComponents": True,
         }
 
 

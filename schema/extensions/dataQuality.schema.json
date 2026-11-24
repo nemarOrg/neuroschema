@@ -121,13 +121,41 @@
         },
         "metrics": {
           "type": "object",
-          "description": "Metrics keyed by metric name.",
+          "description": "Metrics keyed by metric name: a recipe's own metric by a bare name, with the producer recipe, and a plugin's by <plugin>:<name>, with the producer plugin, the part after the one colon a letter and then letters, digits, _ or -. That the prefix is the producing plugin's name is the writer's rule.",
           "propertyNames": {
             "$ref": "../definitions/processingTypes.schema.json#/$defs/metricName"
           },
-          "additionalProperties": {
-            "$ref": "../definitions/qualityMetric.schema.json"
-          }
+          "patternProperties": {
+            "^[^:]+$(?!\n)": {
+              "description": "A recipe's metric, by a bare name.",
+              "allOf": [
+                {
+                  "$ref": "../definitions/qualityMetric.schema.json"
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "recipe"
+                  ]
+                }
+              ]
+            },
+            "^[^:]+:[A-Za-z][A-Za-z0-9_-]*$(?!\n)": {
+              "description": "A plugin's metric, by <plugin>:<name>.",
+              "allOf": [
+                {
+                  "$ref": "../definitions/qualityMetric.schema.json"
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "plugin"
+                  ]
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
         },
         "views": {
           "type": "array",
