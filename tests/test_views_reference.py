@@ -385,13 +385,19 @@ def test_a_flat_field_is_drawn_at_its_value():
     assert not sf.is_flat(np.array([2.5, 2.5, 2.5000000000000004]))
 
 
-@pytest.mark.parametrize("value", [2.5, 0.1, -110.0, 1e-300, 1e300, -0.0])
-def test_a_flat_field_draws_exactly_its_value(value):
-    """Equal values have deviations of exactly 0 from their mean, so every cell
-    is the value itself, with no special case."""
+@pytest.mark.parametrize("count", [8, 10, 12, 15, 19, 32])
+@pytest.mark.parametrize(
+    "value", [2.5, 0.1, 0.7, -110.0, 1e-300, 1e300, 1.5e308, -1.5e308, -0.0]
+)
+def test_a_flat_field_draws_exactly_its_value(value, count):
+    """Equal values have deviations of exactly 0 from their mean, as the spec
+    computes it, so every cell is the value itself, with no special case; a
+    mean summed and then divided would overflow on values near the binary64
+    limit (two of 1.5e308 sum to infinity) and refuse a map that is flat."""
     case = FIELD_CASES["montage_32"]["sensors"]
-    theta, radius = numbers(case["theta_deg"]), numbers(case["radius"])
-    drawn = sf.sensor_field(theta, radius, np.full(len(theta), value))
+    theta = numbers(case["theta_deg"])[:count]
+    radius = numbers(case["radius"])[:count]
+    drawn = sf.sensor_field(theta, radius, np.full(count, value))
     cells = drawn.z[~np.isnan(drawn.z)]
     assert (cells == value).all()
     if value == 0:
