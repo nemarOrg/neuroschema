@@ -71,7 +71,7 @@ scripts/
   generate_kind_vectors.py         # Writes the generic-kind model, preset-check and verdict vectors
   generate_view_vectors.py         # Writes the sensor-field and sensor-layout vectors from eegprep
   generate_ic_activity_vectors.py  # Writes the nemar.ic-activity.v1 vectors from frozen inputs
-  generate_montages.py             # Writes views/montages from MNE-Python
+  generate_montages.py             # Writes views/montages, its PROVENANCE.json and views/vectors/sensor-labels.v1.json from MNE-Python and EEGLAB's sample_locs files
   ajv/check.ts                     # Compiles every schema with ajv in strict mode (CI job ajv)
 ```
 
@@ -113,7 +113,7 @@ bun install --frozen-lockfile --cwd scripts/ajv && bun scripts/ajv/check.ts
 
 ## Version
 
-Current: **0.5.0** (pre-1.0: a MINOR bump marks a breaking change or a new extension namespace; a PATCH bump marks an additive optional field or a doc fix; 1.0.0 only when the schema is completely stable)
+Current: **0.6.0** (pre-1.0: a MINOR bump marks a breaking change or a new extension namespace; a PATCH bump marks an additive optional field or a doc fix; 1.0.0 only when the schema is completely stable)
 
 JSON Schema draft: **2020-12**
 

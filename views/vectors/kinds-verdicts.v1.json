@@ -1,7 +1,7 @@
 {
   "format": "nemar.kinds-verdicts.v1",
   "spec": "docs/views/generic-kinds.md",
-  "description": "Declarations and contents with jsonschema's verdicts, for a renderer that checks them without a JSON Schema engine, or with another one. Each verdict is on the binary64 reading of the instance, as JSON.parse reads it, so an integer beyond 2^53 is checked as the nearest binary64. schema view means schema/definitions/view.schema.json#/$defs/view, dataQuality schema/extensions/dataQuality.schema.json, a path with a slash that path under schema/; any other schema is a file in schema/views/. Only valid binds an implementation; errors list each failing keyword and instance path jsonschema reports.",
+  "description": "Declarations and contents with jsonschema's verdicts, for a renderer that checks them without a JSON Schema engine, or with another one. Each verdict is on the binary64 reading of the instance, as JSON.parse reads it, so an integer beyond 2^53 is checked as the nearest binary64. schema view means schema/definitions/view.schema.json#/$defs/view, dataQuality schema/extensions/dataQuality.schema.json, neuroschema.schema.json the root schema schema/neuroschema.schema.json, a path with a slash that path under schema/; any other schema is a file in schema/views/. Only valid binds an implementation; errors list each failing keyword and instance path jsonschema reports.",
   "cases": [
     {
       "name": "envelope_unknown_kind",
@@ -23201,6 +23201,85 @@
       "valid": false,
       "errors": [
         ["pattern", "doi"]
+      ]
+    },
+    {
+      "name": "core_dataset_valid",
+      "covers": "A dataset document through the root.",
+      "schema": "neuroschema.schema.json",
+      "instance": {
+        "schema_version": "0.6.0",
+        "doc_type": "dataset",
+        "dataset_id": "ds002718",
+        "name": "Face processing EEG dataset",
+        "source": "openneuro",
+        "recording_modality": ["EEG"]
+      },
+      "valid": true,
+      "errors": []
+    },
+    {
+      "name": "core_dataset_id_trailing_newline",
+      "covers": "A final newline after dataset_id, which Python's bare $ let pass.",
+      "schema": "neuroschema.schema.json",
+      "instance": {
+        "schema_version": "0.6.0",
+        "doc_type": "dataset",
+        "dataset_id": "ds002718\n",
+        "name": "Face processing EEG dataset",
+        "source": "openneuro",
+        "recording_modality": ["EEG"]
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "dataset_id"]
+      ]
+    },
+    {
+      "name": "core_schema_version_trailing_newline",
+      "covers": "A final newline after schema_version, which Python's bare $ let pass.",
+      "schema": "neuroschema.schema.json",
+      "instance": {
+        "schema_version": "0.6.0\n",
+        "doc_type": "dataset",
+        "dataset_id": "ds002718",
+        "name": "Face processing EEG dataset",
+        "source": "openneuro",
+        "recording_modality": ["EEG"]
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "schema_version"]
+      ]
+    },
+    {
+      "name": "core_record_valid",
+      "covers": "A record document through the root.",
+      "schema": "neuroschema.schema.json",
+      "instance": {
+        "schema_version": "0.6.0",
+        "doc_type": "record",
+        "dataset": "ds002718",
+        "bids_relpath": "sub-002/eeg/sub-002_task-FaceRecognition_eeg.set",
+        "modality": "EEG"
+      },
+      "valid": true,
+      "errors": []
+    },
+    {
+      "name": "core_record_dataset_trailing_newline",
+      "covers": "A final newline after a record's dataset, which Python's bare $ let pass.",
+      "schema": "neuroschema.schema.json",
+      "instance": {
+        "schema_version": "0.6.0",
+        "doc_type": "record",
+        "dataset": "ds002718\n",
+        "bids_relpath": "sub-002/eeg/sub-002_task-FaceRecognition_eeg.set",
+        "modality": "EEG"
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "dataset"]
       ]
     },
     {

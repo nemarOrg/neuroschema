@@ -310,6 +310,7 @@ VALIDATORS = {
     "definitions/dataPaper.schema.json": schema_validator(
         "definitions/dataPaper.schema.json"
     ),
+    "neuroschema.schema.json": schema_validator("neuroschema.schema.json"),
     "content.nemar.histogram.v1.schema.json": histogram_content_validator(),
     IC_CLASSES: content_validator(IC_CLASSES),
 }
@@ -347,7 +348,11 @@ def test_verdict_corpus_covers_each_kind_both_ways():
             group = case["schema"]
         groups.setdefault(group, set()).add(case["valid"])
     contents = sorted(p.name for p in SCHEMAS.glob("content.*.schema.json"))
-    others = {"dataQuality", "definitions/dataPaper.schema.json"}
+    others = {
+        "dataQuality",
+        "definitions/dataPaper.schema.json",
+        "neuroschema.schema.json",
+    }
     assert set(VALIDATORS) == {"view", *others, *contents}
     for group in [*known, "env", *others, *contents]:
         assert groups.get(group) == {True, False}, group

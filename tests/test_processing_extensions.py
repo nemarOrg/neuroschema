@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 from jsonschema import Draft202012Validator
 
+import neuroschema
 from neuroschema.validate import (
     SCHEMA_BASE,
     load_schema,
@@ -186,17 +187,17 @@ PYPROJECT_VERSION = re.search(
 )[1]
 
 
-@pytest.mark.xfail(
-    PYPROJECT_VERSION == "0.5.0",
-    strict=True,
-    reason="the ids name the release tag v0.6.0; S5 bumps pyproject to 0.6.0",
-)
 def test_the_ids_name_the_released_version():
     """Each $id names the release tag of the version it ships in, so a consumer
     pinned to a version reads that version's files; the release that bumps
     pyproject.toml bumps the tag in SCHEMA_BASE with it (review r29)."""
     tag = re.fullmatch(r".*/neuroschema/v([^/]+)/schema/", SCHEMA_BASE)[1]
     assert tag == PYPROJECT_VERSION
+
+
+def test_the_package_version_is_the_released_version():
+    """neuroschema.__version__ is the version pyproject.toml releases."""
+    assert neuroschema.__version__ == PYPROJECT_VERSION
 
 
 def test_the_ajv_check_uses_the_same_ids():
@@ -1469,15 +1470,6 @@ def test_null_dataset_version_and_range_min_are_allowed():
 # ── Every anchored pattern in extensions and definitions closes the gap ───
 
 
-# Older patterns with a bare $, tracked in nemarOrg/neuroschema#20.
-NEWLINE_GAP_ALLOWLIST = {
-    ("dataset.schema.json", "^[a-z]{2}[0-9]+$"),
-    ("record.schema.json", "^[a-z]{2}[0-9]+$"),
-    ("neuroschema.schema.json", "^[0-9]+\\.[0-9]+\\.[0-9]+$"),
-}
-# Patterns with a token whose meaning differs between Python's re and
-# JavaScript's RegExp with the u flag, tracked in nemarOrg/neuroschema#20.
-TOKEN_ALLOWLIST: set[tuple[str, str]] = set()
 # A bare . (JavaScript's stops at a line terminator; Python's at a line feed
 # only), and the classes \s, \S, \d, \D, \w, \W, \b, \B (Unicode in Python,
 # narrower or other sets in JavaScript). The class [\s\S] means any character
@@ -1525,14 +1517,9 @@ def anchor_problems(paths) -> list[str]:
     problems = []
     for path in paths:
         for pattern in _patterns(json.loads(path.read_text())):
-            key = (path.name, pattern)
-            if (
-                key not in NEWLINE_GAP_ALLOWLIST
-                and "$" in pattern
-                and not pattern.endswith("$(?!\n)")
-            ):
+            if "$" in pattern and not pattern.endswith("$(?!\n)"):
                 problems.append(f"{path.name}: {pattern!r}")
-            if key not in TOKEN_ALLOWLIST and divergent_tokens(pattern):
+            if divergent_tokens(pattern):
                 problems.append(f"{path.name}: {pattern!r} {divergent_tokens(pattern)}")
     return problems
 

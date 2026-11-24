@@ -73,7 +73,7 @@ function validator(name: string) {
       ? `${BASE}definitions/view.schema.json#/$defs/view`
       : name === "dataQuality"
         ? `${BASE}extensions/dataQuality.schema.json`
-        : name.includes("/")
+        : name === "neuroschema.schema.json" || name.includes("/")
           ? `${BASE}${name}`
           : `${BASE}views/${name}`;
   const validate = ajv.getSchema(id);
