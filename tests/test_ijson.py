@@ -270,3 +270,22 @@ def test_the_depth_scan_reads_escapes(text, expected):
 
 def test_the_depth_scan_stops_past_the_limit():
     assert ijson.depth("[" * 100 + "]" * 100, stop=64) == 65
+
+
+def test_the_view_validator_reads_binary64_too():
+    """view_validator() itself checks the binary64 reading, as ajv does, so a
+    caller that hands it a parsed declaration gets one verdict (review r29)."""
+    from neuroschema.views.models import view_validator
+
+    document = ijson.parse(TEXT)
+    spectrum = next(
+        v
+        for v in document["recipes"]["nemar-ica"]["views"]
+        if v["kind"] == "nemar.spectrum"
+    )
+    assert view_validator().is_valid(spectrum)
+    spectrum["parameters"]["initial_maps_hz"] = [9007199254740993, 9007199254740992]
+    errors = list(view_validator().iter_errors(spectrum))
+    assert [e.validator for e in errors] == ["uniqueItems"]
+    spectrum["parameters"]["initial_maps_hz"] = [float("inf")]
+    assert [e.validator for e in view_validator().iter_errors(spectrum)] == ["binary64"]

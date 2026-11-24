@@ -21,7 +21,7 @@ import json
 import sys
 from pathlib import Path
 
-from neuroschema.ijson import FORBIDDEN, binary64
+from neuroschema.ijson import FORBIDDEN
 from neuroschema.views import load_registry
 from neuroschema.views.models import (
     MODELS_FORMAT,
@@ -3686,11 +3686,12 @@ def preset_checks() -> dict:
 
 
 def _errors(validator, instance) -> list[list[str]]:
-    """jsonschema's errors on the binary64 reading of the instance: what an
-    engine that parses the vectors file with JSON.parse checks."""
+    """jsonschema's errors on the binary64 reading of the instance (the
+    validators read it so): what an engine that parses the vectors file with
+    JSON.parse checks."""
     pairs = {
         (e.validator, "/".join(str(p) for p in e.absolute_path))
-        for e in validator.iter_errors(binary64(instance))
+        for e in validator.iter_errors(instance)
     }
     return [list(pair) for pair in sorted(pairs)]
 

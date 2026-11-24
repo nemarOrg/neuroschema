@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from itertools import pairwise
 from typing import Any
 
-from jsonschema import Draft202012Validator
+from jsonschema import Draft202012Validator, ValidationError
 
 from neuroschema import ijson
 from neuroschema.validate import load_schema
@@ -203,27 +203,57 @@ def number_text(value: float) -> str:
 # ── Building a model ──────────────────────────────────────────────────────
 
 
+class Binary64Validator:
+    """A jsonschema validator that checks the binary64 reading of an instance.
+
+    It validates :func:`neuroschema.ijson.binary64` of what it is given, the
+    value JavaScript's ``JSON.parse`` would read, so its verdict is the one ajv
+    gives for the same text: an integer past 2^53 is checked as the nearest
+    binary64 (``uniqueItems``, ``maximum``). A value with no binary64 reading
+    (a float that is not finite, an integer past binary64 range) is invalid,
+    with one error whose validator is ``binary64``.
+    """
+
+    def __init__(self, validator: Draft202012Validator) -> None:
+        self.validator = validator
+
+    def iter_errors(self, instance: object):
+        try:
+            reading = ijson.binary64(instance)
+        except ijson.IJsonError as exc:
+            yield ValidationError(str(exc), validator="binary64", instance=instance)
+            return
+        yield from self.validator.iter_errors(reading)
+
+    def is_valid(self, instance: object) -> bool:
+        return next(self.iter_errors(instance), None) is None
+
+
 @functools.cache
-def _validator(path: str, fragment: str) -> Draft202012Validator:
+def _validator(path: str, fragment: str) -> Binary64Validator:
     schema_path = REPO_ROOT / path
     _schema, resolver = load_schema(schema_path)
-    return Draft202012Validator(
-        {"$ref": f"file://{schema_path}{fragment}"}, resolver=resolver
+    return Binary64Validator(
+        Draft202012Validator(
+            {"$ref": f"file://{schema_path}{fragment}"}, resolver=resolver
+        )
     )
 
 
-def view_validator() -> Draft202012Validator:
-    """A validator for one view declaration (``view.schema.json#/$defs/view``)."""
+def view_validator() -> Binary64Validator:
+    """A validator for one view declaration (``view.schema.json#/$defs/view``),
+    on the binary64 reading of the declaration (:class:`Binary64Validator`)."""
     return _validator(str(VIEW_SCHEMA.relative_to(REPO_ROOT)), "#/$defs/view")
 
 
-def histogram_content_validator() -> Draft202012Validator:
-    """A validator for the content of a histogram role."""
+def histogram_content_validator() -> Binary64Validator:
+    """A validator for the content of a histogram role, on its binary64 reading."""
     return _validator(str(HISTOGRAM_CONTENT.relative_to(REPO_ROOT)), "")
 
 
-def content_validator(name: str) -> Draft202012Validator:
-    """A validator for a content schema of ``schema/views/``, by its file name."""
+def content_validator(name: str) -> Binary64Validator:
+    """A validator for a content schema of ``schema/views/``, by its file name,
+    on the binary64 reading of the content."""
     return _validator(f"schema/views/{name}", "")
 
 
@@ -612,10 +642,9 @@ def declaration_valid(view: Mapping) -> bool:
     it meets ``view.schema.json#/$defs/view``."""
     try:
         canonicalize(view)
-        reading = ijson.binary64(view)
-    except (CanonicalizationError, ijson.IJsonError):
+    except CanonicalizationError:
         return False
-    return view_validator().is_valid(reading)
+    return view_validator().is_valid(view)
 
 
 def _build(view: Mapping, files: Mapping[str, bytes], registry: Mapping) -> dict:
