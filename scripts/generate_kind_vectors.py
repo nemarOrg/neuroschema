@@ -31,6 +31,7 @@ from neuroschema.views.models import (
     data_quality_validator,
     histogram_content_validator,
     locate_bin,
+    schema_validator,
     snap_row,
     view_validator,
 )
@@ -2082,6 +2083,39 @@ def view_verdicts() -> list[tuple[str, str, dict]]:
     ]
 
 
+DATA_PAPER = "definitions/dataPaper.schema.json"
+
+
+def data_paper_verdicts() -> list[tuple[str, str, dict]]:
+    """The DOI pattern, whose old \\d and \\S Python and JavaScript read apart."""
+    paper = {"doi": "10.1038/s41597-019-0027-4"}
+    return [
+        ("doi_valid", "A DOI as the producer serves it.", paper),
+        (
+            "doi_arabic_indic_digits",
+            "Arabic-Indic digits in the prefix: Python's \\d took them, "
+            "JavaScript's does not; [0-9] in both.",
+            {"doi": "10.\u0661\u0662\u0663\u0664/abc"},
+        ),
+        (
+            "doi_byte_order_mark",
+            "U+FEFF in the suffix: \\S took it in Python and not in JavaScript.",
+            {"doi": "10.1234/a\ufeffb"},
+        ),
+        (
+            "doi_information_separator",
+            "U+001C in the suffix: \\S took it in JavaScript and not in Python.",
+            {"doi": "10.1234/a\u001cb"},
+        ),
+        ("doi_space", "A space in the suffix.", {"doi": "10.1234/a b"}),
+        (
+            "doi_trailing_newline",
+            "A final newline, which Python's bare $ let pass.",
+            {"doi": "10.1234/abc\n"},
+        ),
+    ]
+
+
 def data_quality_verdicts() -> list[tuple[str, str, dict]]:
     """A recording's dataQuality entry: the example, and the rules of the
     namespace a renderer that validates with ajv must agree on."""
@@ -3808,6 +3842,11 @@ def verdicts() -> dict:
     for schema, validator, items in [
         ("view", view_validator(), [*view_verdicts(), *preset_verdicts()]),
         ("dataQuality", data_quality_validator(), data_quality_verdicts()),
+        (
+            DATA_PAPER,
+            schema_validator(DATA_PAPER),
+            data_paper_verdicts(),
+        ),
         (HISTOGRAM_CONTENT, histogram_content_validator(), content_verdicts()),
         (
             IC_CLASSES_CONTENT,
@@ -3837,8 +3876,9 @@ def verdicts() -> dict:
             "binary64 reading of the instance, as JSON.parse reads it, so an integer "
             "beyond 2^53 is checked as the nearest binary64. schema view means "
             "schema/definitions/view.schema.json#/$defs/view, dataQuality "
-            "schema/extensions/dataQuality.schema.json; any other schema is "
-            "a file in schema/views/. Only valid binds an implementation; errors "
+            "schema/extensions/dataQuality.schema.json, a path with a slash that "
+            "path under schema/; any other schema is a file in schema/views/. "
+            "Only valid binds an implementation; errors "
             "list each failing keyword and instance path jsonschema reports."
         ),
         "cases": cases,

@@ -1,7 +1,7 @@
 {
   "format": "nemar.kinds-verdicts.v1",
   "spec": "docs/views/generic-kinds.md",
-  "description": "Declarations and contents with jsonschema's verdicts, for a renderer that checks them without a JSON Schema engine, or with another one. Each verdict is on the binary64 reading of the instance, as JSON.parse reads it, so an integer beyond 2^53 is checked as the nearest binary64. schema view means schema/definitions/view.schema.json#/$defs/view, dataQuality schema/extensions/dataQuality.schema.json; any other schema is a file in schema/views/. Only valid binds an implementation; errors list each failing keyword and instance path jsonschema reports.",
+  "description": "Declarations and contents with jsonschema's verdicts, for a renderer that checks them without a JSON Schema engine, or with another one. Each verdict is on the binary64 reading of the instance, as JSON.parse reads it, so an integer beyond 2^53 is checked as the nearest binary64. schema view means schema/definitions/view.schema.json#/$defs/view, dataQuality schema/extensions/dataQuality.schema.json, a path with a slash that path under schema/; any other schema is a file in schema/views/. Only valid binds an implementation; errors list each failing keyword and instance path jsonschema reports.",
   "cases": [
     {
       "name": "envelope_unknown_kind",
@@ -17422,6 +17422,76 @@
       "valid": false,
       "errors": [
         ["pattern", "recipes/nemar-ica/metrics/nemar-quality:percentBrainComponents/plugin/name"]
+      ]
+    },
+    {
+      "name": "doi_valid",
+      "covers": "A DOI as the producer serves it.",
+      "schema": "definitions/dataPaper.schema.json",
+      "instance": {
+        "doi": "10.1038/s41597-019-0027-4"
+      },
+      "valid": true,
+      "errors": []
+    },
+    {
+      "name": "doi_arabic_indic_digits",
+      "covers": "Arabic-Indic digits in the prefix: Python's \\d took them, JavaScript's does not; [0-9] in both.",
+      "schema": "definitions/dataPaper.schema.json",
+      "instance": {
+        "doi": "10.١٢٣٤/abc"
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "doi"]
+      ]
+    },
+    {
+      "name": "doi_byte_order_mark",
+      "covers": "U+FEFF in the suffix: \\S took it in Python and not in JavaScript.",
+      "schema": "definitions/dataPaper.schema.json",
+      "instance": {
+        "doi": "10.1234/a﻿b"
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "doi"]
+      ]
+    },
+    {
+      "name": "doi_information_separator",
+      "covers": "U+001C in the suffix: \\S took it in JavaScript and not in Python.",
+      "schema": "definitions/dataPaper.schema.json",
+      "instance": {
+        "doi": "10.1234/a\u001cb"
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "doi"]
+      ]
+    },
+    {
+      "name": "doi_space",
+      "covers": "A space in the suffix.",
+      "schema": "definitions/dataPaper.schema.json",
+      "instance": {
+        "doi": "10.1234/a b"
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "doi"]
+      ]
+    },
+    {
+      "name": "doi_trailing_newline",
+      "covers": "A final newline, which Python's bare $ let pass.",
+      "schema": "definitions/dataPaper.schema.json",
+      "instance": {
+        "doi": "10.1234/abc\n"
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "doi"]
       ]
     },
     {

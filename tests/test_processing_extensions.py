@@ -1414,14 +1414,13 @@ def test_null_dataset_version_and_range_min_are_allowed():
 
 # Older patterns with a bare $, tracked in nemarOrg/neuroschema#20.
 NEWLINE_GAP_ALLOWLIST = {
-    ("dataPaper.schema.json", "^10\\.\\d{4,9}/\\S+$"),
     ("dataset.schema.json", "^[a-z]{2}[0-9]+$"),
     ("record.schema.json", "^[a-z]{2}[0-9]+$"),
     ("neuroschema.schema.json", "^[0-9]+\\.[0-9]+\\.[0-9]+$"),
 }
 # Patterns with a token whose meaning differs between Python's re and
 # JavaScript's RegExp with the u flag, tracked in nemarOrg/neuroschema#20.
-TOKEN_ALLOWLIST = {("dataPaper.schema.json", "^10\\.\\d{4,9}/\\S+$")}
+TOKEN_ALLOWLIST: set[tuple[str, str]] = set()
 # A bare . (JavaScript's stops at a line terminator; Python's at a line feed
 # only), and the classes \s, \S, \d, \D, \w, \W, \b, \B (Unicode in Python,
 # narrower or other sets in JavaScript). The class [\s\S] means any character

@@ -8,8 +8,8 @@
   "properties": {
     "doi": {
       "type": "string",
-      "description": "DOI of the data paper, without a resolver prefix (e.g., '10.1038/s41597-019-0027-4'). DOIs are case-insensitive; the producer serves them in canonical lowercase, so consumers must compare case-insensitively (for example against related_identifiers[].identifier).",
-      "pattern": "^10\\.\\d{4,9}/\\S+$"
+      "description": "DOI of the data paper, without a resolver prefix (e.g., '10.1038/s41597-019-0027-4'): 10., four to nine ASCII digits, a slash, and a suffix of printable ASCII with no space. The classes are explicit, so Python and JavaScript read the pattern alike (\\d and \\S differ between them). DOIs are case-insensitive; the producer serves them in canonical lowercase, so consumers must compare case-insensitively (for example against related_identifiers[].identifier).",
+      "pattern": "^10\\.[0-9]{4,9}/[!-~]+$(?!\n)"
     },
     "title": {
       "type": ["string", "null"],
