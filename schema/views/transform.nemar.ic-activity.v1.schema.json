@@ -213,7 +213,7 @@
             },
             "shaded": {
               "type": "object",
-              "description": "The spans cut from the decomposition's input, which a view shades over the whole recording: the rows whose label is label, in the floor's tables files.",
+              "description": "The spans ASR repaired in the decomposition's input (flagged in the floor's tables, never removed), which a view shades over the whole recording: the rows whose label is label, in the floor's tables files.",
               "required": [
                 "label",
                 "files"

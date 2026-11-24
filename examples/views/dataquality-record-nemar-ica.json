@@ -199,7 +199,7 @@
           "kind_version": 1,
           "base": "nemar.lines",
           "base_version": 1,
-          "caption": "Component activations computed in your browser from the serving copy, with no preprocessing; they approximate the decomposition's input, which was filtered and cleaned with artifact subspace reconstruction.",
+          "caption": "Component activations computed in your browser from the serving copy, with no preprocessing; they approximate the decomposition's input, which was filtered and repaired with artifact subspace reconstruction.",
           "source": {
             "recipe": {
               "name": "nemar-ica",
@@ -306,10 +306,6 @@
                 {
                   "step": "asr",
                   "function": "eegprep.clean_asr"
-                },
-                {
-                  "step": "asr",
-                  "function": "eegprep.clean_artifacts"
                 },
                 {
                   "step": "reref",

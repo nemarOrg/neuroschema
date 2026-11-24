@@ -105,10 +105,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -369,10 +365,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -535,10 +527,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -697,10 +685,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -853,10 +837,6 @@
               {
                 "step": "asr",
                 "function": "eegprep.clean_asr"
-              },
-              {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
               },
               {
                 "step": "reref",
@@ -1016,10 +996,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -1172,10 +1148,6 @@
               {
                 "step": "asr",
                 "function": "eegprep.clean_asr"
-              },
-              {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
               },
               {
                 "step": "reref",
@@ -1341,10 +1313,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -1506,10 +1474,6 @@
               {
                 "step": "asr",
                 "function": "eegprep.clean_asr"
-              },
-              {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
               },
               {
                 "step": "reref",
@@ -1675,10 +1639,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -1842,10 +1802,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -2007,10 +1963,6 @@
               {
                 "step": "asr",
                 "function": "eegprep.clean_asr"
-              },
-              {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
               },
               {
                 "step": "reref",
@@ -2178,10 +2130,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -2322,10 +2270,6 @@
               {
                 "step": "asr",
                 "function": "eegprep.clean_asr"
-              },
-              {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
               },
               {
                 "step": "reref",
@@ -2473,10 +2417,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -2620,10 +2560,6 @@
               {
                 "step": "asr",
                 "function": "eegprep.clean_asr"
-              },
-              {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
               },
               {
                 "step": "reref",
@@ -2771,10 +2707,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -2918,10 +2850,6 @@
               {
                 "step": "asr",
                 "function": "eegprep.clean_asr"
-              },
-              {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
               },
               {
                 "step": "reref",
@@ -3069,10 +2997,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -3216,10 +3140,6 @@
               {
                 "step": "asr",
                 "function": "eegprep.clean_asr"
-              },
-              {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
               },
               {
                 "step": "reref",
@@ -3367,10 +3287,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -3514,10 +3430,6 @@
               {
                 "step": "asr",
                 "function": "eegprep.clean_asr"
-              },
-              {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
               },
               {
                 "step": "reref",
@@ -3665,10 +3577,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -3814,10 +3722,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -3961,10 +3865,6 @@
               {
                 "step": "asr",
                 "function": "eegprep.clean_asr"
-              },
-              {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
               },
               {
                 "step": "reref",
@@ -4115,10 +4015,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -4265,10 +4161,6 @@
               {
                 "step": "asr",
                 "function": "eegprep.clean_asr"
-              },
-              {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
               },
               {
                 "step": "reref",
@@ -4419,10 +4311,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -4566,10 +4454,6 @@
               {
                 "step": "asr",
                 "function": "eegprep.clean_asr"
-              },
-              {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
               },
               {
                 "step": "reref",
@@ -4717,10 +4601,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -4864,10 +4744,6 @@
               {
                 "step": "asr",
                 "function": "eegprep.clean_asr"
-              },
-              {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
               },
               {
                 "step": "reref",
@@ -5015,10 +4891,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -5162,10 +5034,6 @@
               {
                 "step": "asr",
                 "function": "eegprep.clean_asr"
-              },
-              {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
               },
               {
                 "step": "reref",
@@ -5313,10 +5181,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -5460,10 +5324,6 @@
               {
                 "step": "asr",
                 "function": "eegprep.clean_asr"
-              },
-              {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
               },
               {
                 "step": "reref",
@@ -5611,10 +5471,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -5758,10 +5614,6 @@
               {
                 "step": "asr",
                 "function": "eegprep.clean_asr"
-              },
-              {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
               },
               {
                 "step": "reref",
@@ -5910,10 +5762,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -6057,10 +5905,6 @@
               {
                 "step": "asr",
                 "function": "eegprep.clean_asr"
-              },
-              {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
               },
               {
                 "step": "reref",
@@ -6208,10 +6052,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -6355,10 +6195,6 @@
               {
                 "step": "asr",
                 "function": "eegprep.clean_asr"
-              },
-              {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
               },
               {
                 "step": "reref",
@@ -6506,10 +6342,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -6653,10 +6485,6 @@
               {
                 "step": "asr",
                 "function": "eegprep.clean_asr"
-              },
-              {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
               },
               {
                 "step": "reref",
@@ -6804,10 +6632,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -6951,10 +6775,6 @@
               {
                 "step": "asr",
                 "function": "eegprep.clean_asr"
-              },
-              {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
               },
               {
                 "step": "reref",
@@ -7102,10 +6922,6 @@
                 "function": "eegprep.clean_asr"
               },
               {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
-              },
-              {
                 "step": "reref",
                 "function": "eegprep.pop_reref"
               }
@@ -7249,10 +7065,6 @@
               {
                 "step": "asr",
                 "function": "eegprep.clean_asr"
-              },
-              {
-                "step": "asr",
-                "function": "eegprep.clean_artifacts"
               },
               {
                 "step": "reref",

@@ -97,7 +97,6 @@ PREPROCESSING = [
     {"step": "drift", "function": "eegprep.pop_eegfiltnew"},
     {"step": "bad_channels", "function": "eegprep.clean_channels"},
     {"step": "asr", "function": "eegprep.clean_asr"},
-    {"step": "asr", "function": "eegprep.clean_artifacts"},
     {"step": "reref", "function": "eegprep.pop_reref"},
 ]
 

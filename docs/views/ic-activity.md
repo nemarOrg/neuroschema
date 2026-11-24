@@ -3,14 +3,14 @@
 This page is normative for the transform `nemar.ic-activity.v1` and for version 1 of the kind `nemar.ic-activity`, which draws the transform's output.
 An activation is an independent component's time course: the independent component analysis (ICA) unmixing matrix times the recording's values.
 NEMAR never stores activations.
-A browser computes them from the serving copy, the 16-bit Zarr copy of each recording that anyone can already read, over a window of at most 30 seconds.
+A browser computes them from the serving copy, NEMAR's 16-bit Zarr copy of each recording, which the viewer already reads under the dataset's read rule (anyone, for a public dataset; for a private one, only the people that rule admits), over a window of at most 30 seconds.
 
 [`views/vectors/ic-activity.v1.json`](../../views/vectors/ic-activity.v1.json) holds the cases every renderer reproduces, and `neuroschema.views.ic_activity` is the Python reference (numpy, the optional extra `views`).
 `scripts/generate_ic_activity_vectors.py` writes the vectors from inputs frozen in `scripts/ic_activity_vector_inputs.json`, and holds the reference to scipy's `filtfilt` and to numpy's matrix product.
 
 ## What the decomposition got, and what the browser computes
 
-The decomposition always gets the recipe's full preprocessing, whether it reads the dataset's own files (the archive) or the serving copy: channel selection, the removal of flat and bad channels, a high-pass, line-noise removal, artifact subspace reconstruction (ASR) with its bursts cut, and the average reference.
+The decomposition always gets the recipe's full preprocessing, whether it reads the dataset's own files (the archive) or the serving copy: channel selection, the removal of flat and bad channels, a high-pass, line-noise removal, artifact subspace reconstruction (ASR), which repairs its bursts (the repaired spans are flagged in the floor's tables, never removed), and the average reference.
 The record says what it got, in `decomposition_input`, which the view repeats in its parameters.
 
 The browser applies none of that preprocessing.
@@ -85,7 +85,7 @@ The transform's parameters are the record's `browser_transform` block (`extensio
 | `columns` | The matrix's columns: its header names, in column order. |
 | `unit` | The unit the matrix takes: the store's own unit for a decomposition of the serving copy (its factor to microvolts is folded into the matrix), `uV` for one of the archive. Microvolts may be spelled `uV`, `µV` (U+00B5) or `μV` (U+03BC). |
 | `caption` | A caption the view shows with the activations, or `null`: for a decomposition of the archive, "not checked against the decomposition input". |
-| `shaded` | `{label, files}`: the spans cut from the decomposition's input, the rows labeled `label` (`burst`) of the floor's tables `files`. |
+| `shaded` | `{label, files}`: the spans ASR repaired in the decomposition's input (flagged, never removed), the rows labeled `label` (`burst`) of the floor's tables `files`. |
 
 The kind's parameters:
 
@@ -214,7 +214,7 @@ The filter's transient at each end of a window is part of the display: the same 
 ### Drawing
 
 A renderer draws the filtered activations as `nemar.lines` draws a `values` role: one series per component, against time in seconds, with the readout snapping to a stored sample ([generic-kinds.md](generic-kinds.md#nemarlines-version-1)).
-It shades each row of the `badsegments` input whose `label` cell is `shaded.label` over `[onset, onset + duration)` seconds, where that meets the window: the spans cut from the decomposition's input.
+It shades each row of the `badsegments` input whose `label` cell is `shaded.label` over `[onset, onset + duration)` seconds, where that meets the window: the spans ASR repaired in the decomposition's input.
 It may mark the table's other rows (the floor's bad windows) apart from them.
 With the view's caption it states:
 
