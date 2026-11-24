@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/views/transform.nemar.ic-activity.v1.schema.json",
   "title": "View Transform nemar.ic-activity, Version 1",
-  "description": "Applied on top of the envelope to a view declaration whose transform is nemar.ic-activity.v1 (docs/views/ic-activity.md): component activations as one plain multiply, the browser's unmixing matrix times the serving copy's physical values of the decomposition's channels, with no preprocessing. It reads three inputs, each once: unmixing (a TSV file of the run's product: one column per channel, headed by its label, and one row per component), signal (the recording's store in the serving copy) and components (a TSV file whose column component names the rows of unmixing). The parameters are the record's browser_transform block: the matrix and its columns, how the columns find their store rows (match: store_row, by the rows the decomposition read, or label, by channel label), the unit the matrix takes, a caption, and the spans a view shades.",
+  "description": "Applied on top of the envelope to a view declaration whose transform is nemar.ic-activity.v1 (docs/views/ic-activity.md), whatever its kind: component activations as one plain multiply, the browser's unmixing matrix times the serving copy's physical values of the decomposition's channels, with no preprocessing. It reads three inputs, each once, and the floor's bad segments (badsegments) exactly when its parameters name them (shaded.files not null): unmixing (a TSV file of the run's product: one column per channel, headed by its label, and one row per component), signal (the recording's store in the serving copy) and components (a TSV file whose column component names the rows of unmixing). The parameters are the record's browser_transform block: the matrix and its columns, how the columns find their store rows (match: store_row, by the rows the decomposition read, or label, by channel label), the unit the matrix takes, a caption, and the spans a view shades.",
   "type": "object",
   "required": [
     "inputs",
@@ -11,7 +11,7 @@
   "properties": {
     "inputs": {
       "type": "array",
-      "description": "The roles unmixing, signal and components, each once.",
+      "description": "The roles unmixing, signal and components, each once, and badsegments exactly when shaded.files is not null.",
       "items": {
         "allOf": [
           {
@@ -53,6 +53,37 @@
               "type": "object",
               "properties": {
                 "role": {
+                  "const": "badsegments"
+                }
+              },
+              "required": [
+                "role"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "file"
+              ],
+              "properties": {
+                "file": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "type": "string",
+                      "pattern": "\\.tsv$(?!\n)"
+                    }
+                  }
+                }
+              },
+              "description": "The floor's bad segments are a TSV file of the run's product."
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "role": {
                   "const": "signal"
                 }
               },
@@ -71,6 +102,22 @@
         ]
       },
       "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "const": "badsegments"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1,
+          "description": "At most one badsegments input, declared exactly when shaded.files is not null (the root's rule)."
+        },
         {
           "contains": {
             "type": "object",
@@ -337,6 +384,122 @@
           }
         },
         "description": "A decomposition of the archive read no store, so its columns can only be matched by label."
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "transform": {
+            "type": "object",
+            "properties": {
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "shaded": {
+                    "type": "object",
+                    "properties": {
+                      "files": {
+                        "type": "array"
+                      }
+                    },
+                    "required": [
+                      "files"
+                    ]
+                  }
+                },
+                "required": [
+                  "shaded"
+                ]
+              }
+            },
+            "required": [
+              "parameters"
+            ]
+          }
+        },
+        "required": [
+          "transform"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": "array",
+            "contains": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "const": "badsegments"
+                }
+              },
+              "required": [
+                "role"
+              ]
+            }
+          }
+        },
+        "description": "The record names the floor's bad-segment table (shaded.files), so the view declares the badsegments input: a table never read is never drawn silently. The rule is the transform's, so it holds whatever the view's kind: a kind that reuses the transform cannot drop the table (probe p14)."
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "transform": {
+            "type": "object",
+            "properties": {
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "shaded": {
+                    "type": "object",
+                    "properties": {
+                      "files": {
+                        "type": "null"
+                      }
+                    },
+                    "required": [
+                      "files"
+                    ]
+                  }
+                },
+                "required": [
+                  "shaded"
+                ]
+              }
+            },
+            "required": [
+              "parameters"
+            ]
+          }
+        },
+        "required": [
+          "transform"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": "array",
+            "not": {
+              "contains": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "const": "badsegments"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              }
+            }
+          }
+        },
+        "description": "With shaded.files null the floor wrote no table, so the view declares none and a renderer says nothing is shaded."
       }
     }
   ]

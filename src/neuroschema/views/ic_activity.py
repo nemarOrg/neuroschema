@@ -27,7 +27,13 @@ from dataclasses import dataclass
 import numpy as np
 
 from neuroschema.views.digest import canonicalize
-from neuroschema.views.models import Refusal, Tsv, cell_value, read_tsv
+from neuroschema.views.models import (
+    Refusal,
+    Tsv,
+    cell_value,
+    declaration_valid,
+    read_tsv,
+)
 from neuroschema.views.presets import NO_BAD_SEGMENT_TABLE, read_segments
 
 IC_ACTIVITY = "nemar.ic-activity.v1"
@@ -98,6 +104,15 @@ class Activations:
 
 def _input(view: Mapping, role: str) -> Mapping:
     return next(i for i in view["inputs"] if i["role"] == role)
+
+
+def check_declaration(view: Mapping) -> None:
+    """The declaration is valid (``declaration_invalid``): it has a digest and
+    meets the envelope, which applies the transform's schema to every view that
+    names the transform, whatever its kind. Among the transform's rules: the view
+    declares ``badsegments`` exactly when ``shaded.files`` is not null."""
+    if not declaration_valid(view):
+        raise IcActivityRefusal("declaration_invalid")
 
 
 def verified(entry: Mapping, files: Mapping[str, bytes], caps: Mapping) -> bytes:
@@ -359,13 +374,15 @@ def ic_activity(
 
     Runs the checks in the specification's order and raises
     :class:`IcActivityRefusal` with the word of the first that fails: the
-    files (unmixing, components, then badsegments when declared), the store
-    digest, the matrix, the components table, the bad segments table, the
-    channel match, the units, then the filter. A fault in the bad segments
-    refuses the whole view: unshaded artifact spans could pass for brain
-    signal. The
-    window must lie in the recording and hold at most ``max_window_s`` of it.
+    declaration (valid under the envelope and the transform's schema, whatever
+    its kind), the files (unmixing, components, then badsegments when
+    declared), the store digest, the matrix, the components table, the bad
+    segments table, the channel match, the units, then the filter. A fault in
+    the bad segments refuses the whole view: unshaded artifact spans could pass
+    for brain signal. The window must lie in the recording and hold at most
+    ``max_window_s`` of it.
     """
+    check_declaration(view)
     parameters = view["parameters"]
     transform = view["transform"]["parameters"]
     unmixing_entry = _input(view, "unmixing")["file"]

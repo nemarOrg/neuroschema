@@ -154,9 +154,10 @@ def test_vector_file():
     "case", [*CASES, *REFUSALS], ids=[c["name"] for c in [*CASES, *REFUSALS]]
 )
 def test_vector_declarations_are_valid(case):
-    """Every case and refusal declares a valid view: the words are the
-    transform's, never the schema's."""
-    assert view_validator().is_valid(case["view"])
+    """Every case and refusal declares a valid view, but a refusal whose word is
+    declaration_invalid: the other words are the transform's, never the schema's."""
+    invalid = case.get("word") == "declaration_invalid"
+    assert view_validator().is_valid(case["view"]) is not invalid
 
 
 def test_caps_are_only_lowered():
@@ -513,6 +514,10 @@ def _lenient_rows(case):
     return [labels.index(h) for h in _header(case) if h in labels]
 
 
+def _step_declaration(case):
+    ia.check_declaration(case["view"])
+
+
 def _step_files(case):
     for role in ("unmixing", "components", "badsegments"):
         entry = _input_file(case, role)
@@ -563,6 +568,7 @@ def _step_filter(case):
 
 
 ORDER = [
+    _step_declaration,
     _step_files,
     _step_digest,
     _step_matrix,
@@ -574,6 +580,7 @@ ORDER = [
 ]
 # The refusal that holds both faults of each neighboring pair.
 PAIRS = [
+    "order_declaration_before_files",
     "order_file_before_digest",
     "order_digest_before_matrix",
     "order_matrix_before_components",

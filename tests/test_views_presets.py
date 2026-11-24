@@ -672,7 +672,10 @@ class TestComputedPresets:
         instance = view("icactivity")
         location = instance["inputs"][3]["file"]["location"]
         instance["inputs"][3]["file"]["location"] = location[:-3] + "json"
-        assert view_errors(instance) == {("oneOf", "inputs/3")}
+        assert view_errors(instance) == {
+            ("oneOf", "inputs/3"),
+            ("pattern", "inputs/3/file/location"),
+        }
 
     def test_the_decomposition_input_is_closed(self):
         instance = view("icactivity")
@@ -708,6 +711,25 @@ class TestTransform:
         location = instance["inputs"][at]["file"]["location"]
         instance["inputs"][at]["file"]["location"] = location[:-3] + "json"
         assert view_errors(instance) == {("pattern", f"inputs/{at}/file/location")}
+
+    @pytest.mark.parametrize(
+        ("kind", "version"), [("acme.activity", 2), ("nemar.ic-activity", 2)]
+    )
+    def test_a_kind_that_reuses_it_keeps_the_bad_segments(self, kind, version):
+        """The rule "badsegments exactly when shaded.files is not null" is the
+        transform's, so a kind the registry does not list, or another version of
+        nemar.ic-activity, cannot drop the table (probe p14)."""
+        instance = transform_view() | {"kind": kind, "kind_version": version}
+        assert view_errors(instance) == set()
+        dropped = copy.deepcopy(instance)
+        dropped["inputs"] = [i for i in dropped["inputs"] if i["role"] != "badsegments"]
+        assert view_errors(dropped) == {("contains", "inputs")}
+        unnamed = copy.deepcopy(instance)
+        unnamed["transform"]["parameters"]["shaded"]["files"] = None
+        assert view_errors(unnamed) == {("not", "inputs")}
+        twice = copy.deepcopy(instance)
+        twice["inputs"].append(copy.deepcopy(twice["inputs"][3]))
+        assert view_errors(twice) == {("maxContains", "inputs")}
 
     def test_each_input_once(self):
         instance = transform_view()

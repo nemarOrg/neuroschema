@@ -97,7 +97,7 @@
           },
           "minContains": 0,
           "maxContains": 1,
-          "description": "At most one badsegments input, declared exactly when the transform's shaded.files is not null (the root's rule): the table is absent only when the floor's window step was skipped and ASR repaired nothing."
+          "description": "At most one badsegments input, declared exactly when the transform's shaded.files is not null (transform.nemar.ic-activity.v1's rule, which holds for every view that names the transform): the table is absent only when the floor's window step was skipped and ASR repaired nothing."
         }
       ]
     },
@@ -271,122 +271,6 @@
           }
         },
         "description": "A decomposition of the serving copy declares a signal store of profile serving."
-      }
-    },
-    {
-      "if": {
-        "type": "object",
-        "properties": {
-          "transform": {
-            "type": "object",
-            "properties": {
-              "parameters": {
-                "type": "object",
-                "properties": {
-                  "shaded": {
-                    "type": "object",
-                    "properties": {
-                      "files": {
-                        "type": "array"
-                      }
-                    },
-                    "required": [
-                      "files"
-                    ]
-                  }
-                },
-                "required": [
-                  "shaded"
-                ]
-              }
-            },
-            "required": [
-              "parameters"
-            ]
-          }
-        },
-        "required": [
-          "transform"
-        ]
-      },
-      "then": {
-        "type": "object",
-        "properties": {
-          "inputs": {
-            "type": "array",
-            "contains": {
-              "type": "object",
-              "properties": {
-                "role": {
-                  "const": "badsegments"
-                }
-              },
-              "required": [
-                "role"
-              ]
-            }
-          }
-        },
-        "description": "The record names the floor's bad-segment tables (shaded.files), so the view declares the badsegments input: a table never read is never drawn silently."
-      }
-    },
-    {
-      "if": {
-        "type": "object",
-        "properties": {
-          "transform": {
-            "type": "object",
-            "properties": {
-              "parameters": {
-                "type": "object",
-                "properties": {
-                  "shaded": {
-                    "type": "object",
-                    "properties": {
-                      "files": {
-                        "type": "null"
-                      }
-                    },
-                    "required": [
-                      "files"
-                    ]
-                  }
-                },
-                "required": [
-                  "shaded"
-                ]
-              }
-            },
-            "required": [
-              "parameters"
-            ]
-          }
-        },
-        "required": [
-          "transform"
-        ]
-      },
-      "then": {
-        "type": "object",
-        "properties": {
-          "inputs": {
-            "type": "array",
-            "not": {
-              "contains": {
-                "type": "object",
-                "properties": {
-                  "role": {
-                    "const": "badsegments"
-                  }
-                },
-                "required": [
-                  "role"
-                ]
-              }
-            }
-          }
-        },
-        "description": "With shaded.files null the floor wrote no table, so the view declares none and a renderer says nothing is shaded."
       }
     }
   ],

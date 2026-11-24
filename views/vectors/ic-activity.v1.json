@@ -2608,6 +2608,603 @@
   ],
   "refusals": [
     {
+      "name": "segments_named_not_declared",
+      "covers": "The record names the floor's bad-segment table (shaded.files) and the view does not declare it: declaration_invalid, never drawn unshaded.",
+      "view": {
+        "key": "icactivity",
+        "kind": "nemar.ic-activity",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Component activations computed in your browser from the serving copy, with no preprocessing; they approximate the decomposition's input.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "unmixing",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+              "sha256": "4ad38cd0ff6d7179020d679312d73cd290fd8b8e8e84ea0fdd256b67863dc8e7",
+              "size": 511
+            }
+          },
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "81db8ebbbbc69c6c6ad4a6aa92b76e0c08af547da236b9e2c9dbe1d8285a8130",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "components",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
+              "sha256": "0bf2dc8f06a8c311b99465e64661401abe3230b76799e3f378f71c9fc4d90227",
+              "size": 366
+            }
+          }
+        ],
+        "transform": {
+          "name": "nemar.ic-activity.v1",
+          "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels listed, physical unit",
+            "note": "no preprocessing; activations approximate the decomposition input",
+            "match": "store_row",
+            "rows": [0, 1, 2, 3, 4, 5],
+            "columns": ["Fp1", "Fp2", "Cz", "Pz", "O1", "O2"],
+            "unit": "uV",
+            "caption": null,
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
+          }
+        },
+        "parameters": {
+          "display_filter": {
+            "highpass_hz": 1.0,
+            "order": 2
+          },
+          "max_window_s": 30,
+          "decomposition_input": {
+            "source": "serving_copy",
+            "preprocessing": [
+              {
+                "step": "select",
+                "function": "eegprep.pop_select"
+              },
+              {
+                "step": "flatline",
+                "function": "eegprep.clean_flatlines"
+              },
+              {
+                "step": "drift",
+                "function": "eegprep.pop_eegfiltnew"
+              },
+              {
+                "step": "bad_channels",
+                "function": "eegprep.clean_channels"
+              },
+              {
+                "step": "asr",
+                "function": "eegprep.clean_asr"
+              },
+              {
+                "step": "reref",
+                "function": "eegprep.pop_reref"
+              }
+            ],
+            "channels": ["Fp1", "Fp2", "Cz", "Pz", "O1", "O2"],
+            "channel_types": [
+              ["Fp1", "EEG"],
+              ["Fp2", "EEG"],
+              ["Cz", "EEG"],
+              ["Pz", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"]
+            ],
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
+            "reference": "average",
+            "unit": "uV",
+            "store": {
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "81db8ebbbbc69c6c6ad4a6aa92b76e0c08af547da236b9e2c9dbe1d8285a8130"
+            }
+          }
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv": {
+          "text": "Fp1\tFp2\tCz\tPz\tO1\tO2\n-0.28791423637664931\t0.15306181088602178\t-0.74679312424704758\t0.1067666518020033\t0.60506438572663335\t0.16981451220903843\n-0.54543979124737008\t0.56357771341577501\t0.40776775112784214\t-0.26323785161359869\t-0.61429187328398838\t0.45162405160133978\n-0.77937384009981303\t0.55052804083005269\t0.22184351866736721\t-0.29663347445631982\t-0.11952322291455017\t0.42315897797326318\n-0.14445837240923504\t0.47314913851633733\t-0.20870736004667528\t0.52690618516138721\t-0.17278792835310491\t-0.47410166286870942\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
+          "text": "component\tvariance_pct\tbrain\tmuscle\teye\theart\tline_noise\tchannel_noise\tother\nIC001\t30\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\nIC002\t15\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\nIC003\t10\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\nIC004\t7.5\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n0.100000\t0.040000\tburst\tasr_repaired\n0.200000\t0.120000\tbad_window\tclean_windows\n0.360000\t0.200000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "Cz", "Pz", "O1", "O2"],
+        "units": ["uV", "uV", "uV", "uV", "uV", "uV"],
+        "scale": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+        "offset": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "rate": 250.0,
+        "published_sha256": "81db8ebbbbc69c6c6ad4a6aa92b76e0c08af547da236b9e2c9dbe1d8285a8130",
+        "digital": [
+          [4, 308, 240, -142, -168, -51, 226, 99, 22, -342, 213, 159, 200, -72, -153, 93, 282, 107, -61, -13, -54, 14, 191, -111, -313, -35, 152, 13, -197, -65, 183, 193, 79, 41, 29, 52, 298, 306, -18, -142, 142, 275, 326, -134, -112, 12, 50, 221, 96, -108, 292, 369, 294, 93, 108, -22, 357, 304, -155, 47],
+          [1144, 1449, 1267, 1139, 1104, 1058, 1319, 1109, 925, 667, 923, 936, 728, 606, 603, 806, 563, 841, 670, 619, 733, 1233, 962, 1086, 1191, 1042, 1379, 1222, 1230, 1305, 1466, 1094, 1112, 1010, 979, 903, 834, 845, 588, 487, 562, 857, 831, 662, 663, 758, 1083, 1318, 1055, 921, 1453, 1538, 1691, 1267, 1127, 1108, 1525, 1548, 886, 770],
+          [2132, 2057, 2006, 1743, 1667, 1829, 1757, 1732, 1329, 1317, 1137, 1357, 1591, 1288, 1433, 1647, 1969, 1946, 1887, 1784, 1933, 2132, 2149, 1916, 1928, 2100, 2238, 2049, 1605, 1687, 1776, 1935, 1742, 1354, 1242, 1686, 1673, 1766, 1665, 1316, 1678, 1916, 1966, 1880, 1872, 2088, 2090, 2238, 2012, 2059, 2105, 2332, 2238, 1923, 1783, 1810, 1801, 1702, 1421, 1425],
+          [2476, 2674, 2379, 2457, 2196, 2336, 2540, 2442, 2372, 2221, 2315, 2497, 2716, 2403, 2219, 2517, 2485, 2843, 2277, 2467, 2618, 2519, 2669, 2567, 2438, 2544, 2757, 2595, 2429, 2310, 2538, 2488, 2642, 2314, 2197, 2524, 2839, 2711, 2373, 2480, 2499, 2694, 2676, 2219, 2470, 2466, 2646, 2493, 2302, 2306, 2649, 2879, 2610, 2556, 2330, 2269, 2656, 2637, 2359, 2400],
+          [3362, 3375, 3273, 3255, 3190, 3285, 3542, 3517, 3015, 3020, 3117, 3162, 3086, 2689, 2737, 3019, 3019, 2816, 2827, 2907, 3009, 3113, 3388, 2952, 3176, 3313, 3357, 3618, 3344, 3096, 3421, 3394, 3103, 3003, 2989, 3101, 3117, 2987, 2813, 2644, 2938, 2961, 2947, 2840, 2649, 2900, 3385, 3264, 3088, 3176, 3277, 3554, 3412, 3356, 3067, 3528, 3403, 3161, 3078, 2932],
+          [3881, 3830, 3901, 4036, 3305, 3547, 3516, 3432, 2936, 2897, 3190, 3253, 3403, 2973, 3074, 3613, 3398, 3419, 3443, 3481, 3816, 3945, 3838, 3810, 4056, 4019, 3637, 3840, 3499, 3536, 3488, 3788, 3523, 3263, 3061, 3133, 3301, 3364, 3124, 3013, 3419, 3515, 3520, 3355, 3421, 3641, 3596, 4053, 3854, 3715, 3993, 4024, 3903, 3308, 3435, 3574, 3750, 3633, 3328, 2900]
+        ]
+      },
+      "window": {
+        "start": 0,
+        "count": 20
+      },
+      "word": "declaration_invalid"
+    },
+    {
+      "name": "segments_declared_not_named",
+      "covers": "A bad-segments input when shaded.files is null: declaration_invalid.",
+      "view": {
+        "key": "icactivity",
+        "kind": "nemar.ic-activity",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Component activations computed in your browser from the serving copy, with no preprocessing; they approximate the decomposition's input.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "unmixing",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+              "sha256": "4ad38cd0ff6d7179020d679312d73cd290fd8b8e8e84ea0fdd256b67863dc8e7",
+              "size": 511
+            }
+          },
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "81db8ebbbbc69c6c6ad4a6aa92b76e0c08af547da236b9e2c9dbe1d8285a8130",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "components",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
+              "sha256": "0bf2dc8f06a8c311b99465e64661401abe3230b76799e3f378f71c9fc4d90227",
+              "size": 366
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "f8ad7d4c30df47084bf4b80ec8861dddfc40ac91517770d1ebe8ce2c58a7dfbb",
+              "size": 151
+            }
+          }
+        ],
+        "transform": {
+          "name": "nemar.ic-activity.v1",
+          "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels listed, physical unit",
+            "note": "no preprocessing; activations approximate the decomposition input",
+            "match": "store_row",
+            "rows": [0, 1, 2, 3, 4, 5],
+            "columns": ["Fp1", "Fp2", "Cz", "Pz", "O1", "O2"],
+            "unit": "uV",
+            "caption": null,
+            "shaded": {
+              "label": "burst",
+              "files": null
+            }
+          }
+        },
+        "parameters": {
+          "display_filter": {
+            "highpass_hz": 1.0,
+            "order": 2
+          },
+          "max_window_s": 30,
+          "decomposition_input": {
+            "source": "serving_copy",
+            "preprocessing": [
+              {
+                "step": "select",
+                "function": "eegprep.pop_select"
+              },
+              {
+                "step": "flatline",
+                "function": "eegprep.clean_flatlines"
+              },
+              {
+                "step": "drift",
+                "function": "eegprep.pop_eegfiltnew"
+              },
+              {
+                "step": "bad_channels",
+                "function": "eegprep.clean_channels"
+              },
+              {
+                "step": "asr",
+                "function": "eegprep.clean_asr"
+              },
+              {
+                "step": "reref",
+                "function": "eegprep.pop_reref"
+              }
+            ],
+            "channels": ["Fp1", "Fp2", "Cz", "Pz", "O1", "O2"],
+            "channel_types": [
+              ["Fp1", "EEG"],
+              ["Fp2", "EEG"],
+              ["Cz", "EEG"],
+              ["Pz", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"]
+            ],
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
+            "reference": "average",
+            "unit": "uV",
+            "store": {
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "81db8ebbbbc69c6c6ad4a6aa92b76e0c08af547da236b9e2c9dbe1d8285a8130"
+            }
+          }
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv": {
+          "text": "Fp1\tFp2\tCz\tPz\tO1\tO2\n-0.28791423637664931\t0.15306181088602178\t-0.74679312424704758\t0.1067666518020033\t0.60506438572663335\t0.16981451220903843\n-0.54543979124737008\t0.56357771341577501\t0.40776775112784214\t-0.26323785161359869\t-0.61429187328398838\t0.45162405160133978\n-0.77937384009981303\t0.55052804083005269\t0.22184351866736721\t-0.29663347445631982\t-0.11952322291455017\t0.42315897797326318\n-0.14445837240923504\t0.47314913851633733\t-0.20870736004667528\t0.52690618516138721\t-0.17278792835310491\t-0.47410166286870942\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
+          "text": "component\tvariance_pct\tbrain\tmuscle\teye\theart\tline_noise\tchannel_noise\tother\nIC001\t30\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\nIC002\t15\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\nIC003\t10\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\nIC004\t7.5\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n0.100000\t0.040000\tburst\tasr_repaired\n0.200000\t0.120000\tbad_window\tclean_windows\n0.360000\t0.200000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "Cz", "Pz", "O1", "O2"],
+        "units": ["uV", "uV", "uV", "uV", "uV", "uV"],
+        "scale": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+        "offset": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "rate": 250.0,
+        "published_sha256": "81db8ebbbbc69c6c6ad4a6aa92b76e0c08af547da236b9e2c9dbe1d8285a8130",
+        "digital": [
+          [4, 308, 240, -142, -168, -51, 226, 99, 22, -342, 213, 159, 200, -72, -153, 93, 282, 107, -61, -13, -54, 14, 191, -111, -313, -35, 152, 13, -197, -65, 183, 193, 79, 41, 29, 52, 298, 306, -18, -142, 142, 275, 326, -134, -112, 12, 50, 221, 96, -108, 292, 369, 294, 93, 108, -22, 357, 304, -155, 47],
+          [1144, 1449, 1267, 1139, 1104, 1058, 1319, 1109, 925, 667, 923, 936, 728, 606, 603, 806, 563, 841, 670, 619, 733, 1233, 962, 1086, 1191, 1042, 1379, 1222, 1230, 1305, 1466, 1094, 1112, 1010, 979, 903, 834, 845, 588, 487, 562, 857, 831, 662, 663, 758, 1083, 1318, 1055, 921, 1453, 1538, 1691, 1267, 1127, 1108, 1525, 1548, 886, 770],
+          [2132, 2057, 2006, 1743, 1667, 1829, 1757, 1732, 1329, 1317, 1137, 1357, 1591, 1288, 1433, 1647, 1969, 1946, 1887, 1784, 1933, 2132, 2149, 1916, 1928, 2100, 2238, 2049, 1605, 1687, 1776, 1935, 1742, 1354, 1242, 1686, 1673, 1766, 1665, 1316, 1678, 1916, 1966, 1880, 1872, 2088, 2090, 2238, 2012, 2059, 2105, 2332, 2238, 1923, 1783, 1810, 1801, 1702, 1421, 1425],
+          [2476, 2674, 2379, 2457, 2196, 2336, 2540, 2442, 2372, 2221, 2315, 2497, 2716, 2403, 2219, 2517, 2485, 2843, 2277, 2467, 2618, 2519, 2669, 2567, 2438, 2544, 2757, 2595, 2429, 2310, 2538, 2488, 2642, 2314, 2197, 2524, 2839, 2711, 2373, 2480, 2499, 2694, 2676, 2219, 2470, 2466, 2646, 2493, 2302, 2306, 2649, 2879, 2610, 2556, 2330, 2269, 2656, 2637, 2359, 2400],
+          [3362, 3375, 3273, 3255, 3190, 3285, 3542, 3517, 3015, 3020, 3117, 3162, 3086, 2689, 2737, 3019, 3019, 2816, 2827, 2907, 3009, 3113, 3388, 2952, 3176, 3313, 3357, 3618, 3344, 3096, 3421, 3394, 3103, 3003, 2989, 3101, 3117, 2987, 2813, 2644, 2938, 2961, 2947, 2840, 2649, 2900, 3385, 3264, 3088, 3176, 3277, 3554, 3412, 3356, 3067, 3528, 3403, 3161, 3078, 2932],
+          [3881, 3830, 3901, 4036, 3305, 3547, 3516, 3432, 2936, 2897, 3190, 3253, 3403, 2973, 3074, 3613, 3398, 3419, 3443, 3481, 3816, 3945, 3838, 3810, 4056, 4019, 3637, 3840, 3499, 3536, 3488, 3788, 3523, 3263, 3061, 3133, 3301, 3364, 3124, 3013, 3419, 3515, 3520, 3355, 3421, 3641, 3596, 4053, 3854, 3715, 3993, 4024, 3903, 3308, 3435, 3574, 3750, 3633, 3328, 2900]
+        ]
+      },
+      "window": {
+        "start": 0,
+        "count": 20
+      },
+      "word": "declaration_invalid"
+    },
+    {
+      "name": "kind_reusing_the_transform_drops_segments",
+      "covers": "A kind the registry does not list that reuses the transform and drops the bad segments the record names: the transform's schema holds the rule, so declaration_invalid, not a note that there is no table (probe p14).",
+      "view": {
+        "key": "icactivity",
+        "kind": "acme.activity",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Component activations computed in your browser from the serving copy, with no preprocessing; they approximate the decomposition's input.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "unmixing",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+              "sha256": "4ad38cd0ff6d7179020d679312d73cd290fd8b8e8e84ea0fdd256b67863dc8e7",
+              "size": 511
+            }
+          },
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "81db8ebbbbc69c6c6ad4a6aa92b76e0c08af547da236b9e2c9dbe1d8285a8130",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "components",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
+              "sha256": "0bf2dc8f06a8c311b99465e64661401abe3230b76799e3f378f71c9fc4d90227",
+              "size": 366
+            }
+          }
+        ],
+        "transform": {
+          "name": "nemar.ic-activity.v1",
+          "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels listed, physical unit",
+            "note": "no preprocessing; activations approximate the decomposition input",
+            "match": "store_row",
+            "rows": [0, 1, 2, 3, 4, 5],
+            "columns": ["Fp1", "Fp2", "Cz", "Pz", "O1", "O2"],
+            "unit": "uV",
+            "caption": null,
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
+          }
+        },
+        "parameters": {
+          "display_filter": {
+            "highpass_hz": 1.0,
+            "order": 2
+          },
+          "max_window_s": 30,
+          "decomposition_input": {
+            "source": "serving_copy",
+            "preprocessing": [
+              {
+                "step": "select",
+                "function": "eegprep.pop_select"
+              },
+              {
+                "step": "flatline",
+                "function": "eegprep.clean_flatlines"
+              },
+              {
+                "step": "drift",
+                "function": "eegprep.pop_eegfiltnew"
+              },
+              {
+                "step": "bad_channels",
+                "function": "eegprep.clean_channels"
+              },
+              {
+                "step": "asr",
+                "function": "eegprep.clean_asr"
+              },
+              {
+                "step": "reref",
+                "function": "eegprep.pop_reref"
+              }
+            ],
+            "channels": ["Fp1", "Fp2", "Cz", "Pz", "O1", "O2"],
+            "channel_types": [
+              ["Fp1", "EEG"],
+              ["Fp2", "EEG"],
+              ["Cz", "EEG"],
+              ["Pz", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"]
+            ],
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
+            "reference": "average",
+            "unit": "uV",
+            "store": {
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "81db8ebbbbc69c6c6ad4a6aa92b76e0c08af547da236b9e2c9dbe1d8285a8130"
+            }
+          }
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv": {
+          "text": "Fp1\tFp2\tCz\tPz\tO1\tO2\n-0.28791423637664931\t0.15306181088602178\t-0.74679312424704758\t0.1067666518020033\t0.60506438572663335\t0.16981451220903843\n-0.54543979124737008\t0.56357771341577501\t0.40776775112784214\t-0.26323785161359869\t-0.61429187328398838\t0.45162405160133978\n-0.77937384009981303\t0.55052804083005269\t0.22184351866736721\t-0.29663347445631982\t-0.11952322291455017\t0.42315897797326318\n-0.14445837240923504\t0.47314913851633733\t-0.20870736004667528\t0.52690618516138721\t-0.17278792835310491\t-0.47410166286870942\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
+          "text": "component\tvariance_pct\tbrain\tmuscle\teye\theart\tline_noise\tchannel_noise\tother\nIC001\t30\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\nIC002\t15\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\nIC003\t10\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\nIC004\t7.5\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n0.100000\t0.040000\tburst\tasr_repaired\n0.200000\t0.120000\tbad_window\tclean_windows\n0.360000\t0.200000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "Cz", "Pz", "O1", "O2"],
+        "units": ["uV", "uV", "uV", "uV", "uV", "uV"],
+        "scale": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+        "offset": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "rate": 250.0,
+        "published_sha256": "81db8ebbbbc69c6c6ad4a6aa92b76e0c08af547da236b9e2c9dbe1d8285a8130",
+        "digital": [
+          [4, 308, 240, -142, -168, -51, 226, 99, 22, -342, 213, 159, 200, -72, -153, 93, 282, 107, -61, -13, -54, 14, 191, -111, -313, -35, 152, 13, -197, -65, 183, 193, 79, 41, 29, 52, 298, 306, -18, -142, 142, 275, 326, -134, -112, 12, 50, 221, 96, -108, 292, 369, 294, 93, 108, -22, 357, 304, -155, 47],
+          [1144, 1449, 1267, 1139, 1104, 1058, 1319, 1109, 925, 667, 923, 936, 728, 606, 603, 806, 563, 841, 670, 619, 733, 1233, 962, 1086, 1191, 1042, 1379, 1222, 1230, 1305, 1466, 1094, 1112, 1010, 979, 903, 834, 845, 588, 487, 562, 857, 831, 662, 663, 758, 1083, 1318, 1055, 921, 1453, 1538, 1691, 1267, 1127, 1108, 1525, 1548, 886, 770],
+          [2132, 2057, 2006, 1743, 1667, 1829, 1757, 1732, 1329, 1317, 1137, 1357, 1591, 1288, 1433, 1647, 1969, 1946, 1887, 1784, 1933, 2132, 2149, 1916, 1928, 2100, 2238, 2049, 1605, 1687, 1776, 1935, 1742, 1354, 1242, 1686, 1673, 1766, 1665, 1316, 1678, 1916, 1966, 1880, 1872, 2088, 2090, 2238, 2012, 2059, 2105, 2332, 2238, 1923, 1783, 1810, 1801, 1702, 1421, 1425],
+          [2476, 2674, 2379, 2457, 2196, 2336, 2540, 2442, 2372, 2221, 2315, 2497, 2716, 2403, 2219, 2517, 2485, 2843, 2277, 2467, 2618, 2519, 2669, 2567, 2438, 2544, 2757, 2595, 2429, 2310, 2538, 2488, 2642, 2314, 2197, 2524, 2839, 2711, 2373, 2480, 2499, 2694, 2676, 2219, 2470, 2466, 2646, 2493, 2302, 2306, 2649, 2879, 2610, 2556, 2330, 2269, 2656, 2637, 2359, 2400],
+          [3362, 3375, 3273, 3255, 3190, 3285, 3542, 3517, 3015, 3020, 3117, 3162, 3086, 2689, 2737, 3019, 3019, 2816, 2827, 2907, 3009, 3113, 3388, 2952, 3176, 3313, 3357, 3618, 3344, 3096, 3421, 3394, 3103, 3003, 2989, 3101, 3117, 2987, 2813, 2644, 2938, 2961, 2947, 2840, 2649, 2900, 3385, 3264, 3088, 3176, 3277, 3554, 3412, 3356, 3067, 3528, 3403, 3161, 3078, 2932],
+          [3881, 3830, 3901, 4036, 3305, 3547, 3516, 3432, 2936, 2897, 3190, 3253, 3403, 2973, 3074, 3613, 3398, 3419, 3443, 3481, 3816, 3945, 3838, 3810, 4056, 4019, 3637, 3840, 3499, 3536, 3488, 3788, 3523, 3263, 3061, 3133, 3301, 3364, 3124, 3013, 3419, 3515, 3520, 3355, 3421, 3641, 3596, 4053, 3854, 3715, 3993, 4024, 3903, 3308, 3435, 3574, 3750, 3633, 3328, 2900]
+        ]
+      },
+      "window": {
+        "start": 0,
+        "count": 20
+      },
+      "word": "declaration_invalid"
+    },
+    {
+      "name": "order_declaration_before_files",
+      "covers": "An invalid declaration and a missing matrix: the declaration comes first.",
+      "view": {
+        "key": "icactivity",
+        "kind": "nemar.ic-activity",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Component activations computed in your browser from the serving copy, with no preprocessing; they approximate the decomposition's input.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "unmixing",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+              "sha256": "4ad38cd0ff6d7179020d679312d73cd290fd8b8e8e84ea0fdd256b67863dc8e7",
+              "size": 511
+            }
+          },
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "81db8ebbbbc69c6c6ad4a6aa92b76e0c08af547da236b9e2c9dbe1d8285a8130",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "components",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
+              "sha256": "0bf2dc8f06a8c311b99465e64661401abe3230b76799e3f378f71c9fc4d90227",
+              "size": 366
+            }
+          }
+        ],
+        "transform": {
+          "name": "nemar.ic-activity.v1",
+          "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels listed, physical unit",
+            "note": "no preprocessing; activations approximate the decomposition input",
+            "match": "store_row",
+            "rows": [0, 1, 2, 3, 4, 5],
+            "columns": ["Fp1", "Fp2", "Cz", "Pz", "O1", "O2"],
+            "unit": "uV",
+            "caption": null,
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
+          }
+        },
+        "parameters": {
+          "display_filter": {
+            "highpass_hz": 1.0,
+            "order": 2
+          },
+          "max_window_s": 30,
+          "decomposition_input": {
+            "source": "serving_copy",
+            "preprocessing": [
+              {
+                "step": "select",
+                "function": "eegprep.pop_select"
+              },
+              {
+                "step": "flatline",
+                "function": "eegprep.clean_flatlines"
+              },
+              {
+                "step": "drift",
+                "function": "eegprep.pop_eegfiltnew"
+              },
+              {
+                "step": "bad_channels",
+                "function": "eegprep.clean_channels"
+              },
+              {
+                "step": "asr",
+                "function": "eegprep.clean_asr"
+              },
+              {
+                "step": "reref",
+                "function": "eegprep.pop_reref"
+              }
+            ],
+            "channels": ["Fp1", "Fp2", "Cz", "Pz", "O1", "O2"],
+            "channel_types": [
+              ["Fp1", "EEG"],
+              ["Fp2", "EEG"],
+              ["Cz", "EEG"],
+              ["Pz", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"]
+            ],
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
+            "reference": "average",
+            "unit": "uV",
+            "store": {
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "81db8ebbbbc69c6c6ad4a6aa92b76e0c08af547da236b9e2c9dbe1d8285a8130"
+            }
+          }
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
+          "text": "component\tvariance_pct\tbrain\tmuscle\teye\theart\tline_noise\tchannel_noise\tother\nIC001\t30\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\nIC002\t15\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\nIC003\t10\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\nIC004\t7.5\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\t0.125000\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n0.100000\t0.040000\tburst\tasr_repaired\n0.200000\t0.120000\tbad_window\tclean_windows\n0.360000\t0.200000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "Cz", "Pz", "O1", "O2"],
+        "units": ["uV", "uV", "uV", "uV", "uV", "uV"],
+        "scale": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+        "offset": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "rate": 250.0,
+        "published_sha256": "81db8ebbbbc69c6c6ad4a6aa92b76e0c08af547da236b9e2c9dbe1d8285a8130",
+        "digital": [
+          [4, 308, 240, -142, -168, -51, 226, 99, 22, -342, 213, 159, 200, -72, -153, 93, 282, 107, -61, -13, -54, 14, 191, -111, -313, -35, 152, 13, -197, -65, 183, 193, 79, 41, 29, 52, 298, 306, -18, -142, 142, 275, 326, -134, -112, 12, 50, 221, 96, -108, 292, 369, 294, 93, 108, -22, 357, 304, -155, 47],
+          [1144, 1449, 1267, 1139, 1104, 1058, 1319, 1109, 925, 667, 923, 936, 728, 606, 603, 806, 563, 841, 670, 619, 733, 1233, 962, 1086, 1191, 1042, 1379, 1222, 1230, 1305, 1466, 1094, 1112, 1010, 979, 903, 834, 845, 588, 487, 562, 857, 831, 662, 663, 758, 1083, 1318, 1055, 921, 1453, 1538, 1691, 1267, 1127, 1108, 1525, 1548, 886, 770],
+          [2132, 2057, 2006, 1743, 1667, 1829, 1757, 1732, 1329, 1317, 1137, 1357, 1591, 1288, 1433, 1647, 1969, 1946, 1887, 1784, 1933, 2132, 2149, 1916, 1928, 2100, 2238, 2049, 1605, 1687, 1776, 1935, 1742, 1354, 1242, 1686, 1673, 1766, 1665, 1316, 1678, 1916, 1966, 1880, 1872, 2088, 2090, 2238, 2012, 2059, 2105, 2332, 2238, 1923, 1783, 1810, 1801, 1702, 1421, 1425],
+          [2476, 2674, 2379, 2457, 2196, 2336, 2540, 2442, 2372, 2221, 2315, 2497, 2716, 2403, 2219, 2517, 2485, 2843, 2277, 2467, 2618, 2519, 2669, 2567, 2438, 2544, 2757, 2595, 2429, 2310, 2538, 2488, 2642, 2314, 2197, 2524, 2839, 2711, 2373, 2480, 2499, 2694, 2676, 2219, 2470, 2466, 2646, 2493, 2302, 2306, 2649, 2879, 2610, 2556, 2330, 2269, 2656, 2637, 2359, 2400],
+          [3362, 3375, 3273, 3255, 3190, 3285, 3542, 3517, 3015, 3020, 3117, 3162, 3086, 2689, 2737, 3019, 3019, 2816, 2827, 2907, 3009, 3113, 3388, 2952, 3176, 3313, 3357, 3618, 3344, 3096, 3421, 3394, 3103, 3003, 2989, 3101, 3117, 2987, 2813, 2644, 2938, 2961, 2947, 2840, 2649, 2900, 3385, 3264, 3088, 3176, 3277, 3554, 3412, 3356, 3067, 3528, 3403, 3161, 3078, 2932],
+          [3881, 3830, 3901, 4036, 3305, 3547, 3516, 3432, 2936, 2897, 3190, 3253, 3403, 2973, 3074, 3613, 3398, 3419, 3443, 3481, 3816, 3945, 3838, 3810, 4056, 4019, 3637, 3840, 3499, 3536, 3488, 3788, 3523, 3263, 3061, 3133, 3301, 3364, 3124, 3013, 3419, 3515, 3520, 3355, 3421, 3641, 3596, 4053, 3854, 3715, 3993, 4024, 3903, 3308, 3435, 3574, 3750, 3633, 3328, 2900]
+        ]
+      },
+      "window": {
+        "start": 0,
+        "count": 20
+      },
+      "word": "declaration_invalid"
+    },
+    {
       "name": "unmixing_missing",
       "covers": "The matrix's file is absent.",
       "view": {

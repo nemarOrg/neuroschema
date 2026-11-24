@@ -688,6 +688,41 @@ def refusals() -> list[Case]:
             Case(name, covers, view, files, store_ or _small_store(), window, caps)
         )
 
+    def without_segments(view: dict) -> dict:
+        return view | {
+            "inputs": [i for i in view["inputs"] if i["role"] != "badsegments"]
+        }
+
+    view, files = _small_view(segments=True)
+    refused(
+        "segments_named_not_declared",
+        "The record names the floor's bad-segment table (shaded.files) and the "
+        "view does not declare it: declaration_invalid, never drawn unshaded.",
+        (without_segments(view), files),
+    )
+    view, files = _small_view(segments=True)
+    view["transform"]["parameters"]["shaded"]["files"] = None
+    refused(
+        "segments_declared_not_named",
+        "A bad-segments input when shaded.files is null: declaration_invalid.",
+        (view, files),
+    )
+    view, files = _small_view(segments=True)
+    refused(
+        "kind_reusing_the_transform_drops_segments",
+        "A kind the registry does not list that reuses the transform and drops "
+        "the bad segments the record names: the transform's schema holds the "
+        "rule, so declaration_invalid, not a note that there is no table "
+        "(probe p14).",
+        (without_segments(view) | {"kind": "acme.activity"}, files),
+    )
+    view, files = _small_view(segments=True)
+    del files[UNMIXING_AT]
+    refused(
+        "order_declaration_before_files",
+        "An invalid declaration and a missing matrix: the declaration comes first.",
+        (without_segments(view), files),
+    )
     view, files = _small_view()
     del files[UNMIXING_AT]
     refused("unmixing_missing", "The matrix's file is absent.", (view, files))

@@ -99,7 +99,7 @@ The kind's parameters:
 `neuroschema.views.ic_activity.channel_types_sha256` computes it, and the vectors' `channel_types_digests` hold cases with labels outside ASCII; a renderer does not need it to draw, but can verify it.
 
 The schema checks that a decomposition of the archive declares a store of profile `archive` and matches by `label`, and that one of the serving copy declares a store of profile `serving`, whose `content_sha256` is then a digest.
-The schema checks that the view declares `badsegments` exactly when `shaded.files` is not null.
+The transform's schema checks that the view declares `badsegments` exactly when `shaded.files` is not null, whatever the view's kind, so a kind that reuses the transform cannot drop the table.
 The writer also makes sure that `shaded.files` is null only when the floor wrote no bad-segment table, that `matrix` is the `unmixing` input's location, that `rows` has one entry per column, that the matrix's header is `columns` and `decomposition_input.channels`, that the components table has one row per matrix row, that the first of `shaded.files` is the `badsegments` input's location when there is one, and, for the serving copy, that `decomposition_input.store` names the `signal` store and its digest.
 
 ## The transform `nemar.ic-activity.v1`
@@ -118,6 +118,8 @@ two binary64 operations, each rounded, as the store content digest `nemar.store-
 
 A renderer runs these checks in this order, and the first that fails gives the word.
 
+0. **The declaration.**
+   The declaration is valid (`declaration_invalid`): it has a digest and meets `view.schema.json#/$defs/view`, which applies the transform's schema to every view that names the transform, whatever its kind ([generic-kinds.md](generic-kinds.md#building-a-model)).
 1. **The files.**
    The `unmixing` file, then the `components` file, then the `badsegments` file when the view declares one, in that order: each declares at most `caps.bytes_per_role` bytes (`cap_exceeded`, checked before the file is fetched), is present (`file_missing`), has the declared `size` as its length (`file_size_mismatch`) and the declared `sha256` as its SHA-256 (`file_digest_mismatch`).
 2. **The store digest.**
@@ -241,6 +243,7 @@ A filter case matches when every value is within 1e-6 times the largest magnitud
 
 | Word | Meaning |
 |---|---|
+| `declaration_invalid` | The declaration fails `view.schema.json#/$defs/view` (with the transform's schema) or has no digest; among others, it declares `badsegments` when `shaded.files` is null, or not when it names a table. |
 | `file_missing` | An input file is not there. |
 | `file_size_mismatch` | An input file's length is not its declared `size`. |
 | `file_digest_mismatch` | An input file's SHA-256 is not its declared `sha256`. |
