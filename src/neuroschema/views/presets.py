@@ -23,7 +23,7 @@ tables, and a word of ``nemar.signal-window`` draws nothing. All but the
 signal window's run after their base's model, and a base that refuses the
 files comes first. ``views/vectors/preset-checks.v1.json`` holds the cases;
 this module is the Python reference. ``nemar.spectrum``'s scalp maps are
-:func:`spectrum_maps`.
+:func:`spectrum_maps`, drawn only when its check passes.
 ``nemar.ic-activity``'s checks are its transform's
 (``neuroschema.views.ic_activity``).
 """
@@ -45,6 +45,7 @@ from neuroschema.views.models import (
     _Sensors,
     build_model,
     cell_value,
+    check_sensor_names,
     content_validator,
     declaration_valid,
     read_json,
@@ -167,22 +168,28 @@ def check_ic_maps(view: Mapping, files: Mapping[str, bytes], caps: Mapping) -> N
 
 def check_spectrum(view: Mapping, files: Mapping[str, bytes], caps: Mapping) -> None:
     """With a layout, the values' sensor columns are the layout's names, in
-    order, compared as text (``sensors_mismatch``).
+    order, compared as text (``sensors_mismatch``, by
+    :func:`~neuroschema.views.models.check_sensor_names`, the definition a
+    scalp map's model reads too).
 
     The base labels each series by the layout's name at its position, so a
     header that names other sensors (``O2``, ``O1`` where the layout says
     ``Fp1``, ``Fp2``) would draw each spectrum under another sensor's name
     (probe p16). Which of the two is right cannot be told, so the view shows as
-    the fallback's tables, with the word.
+    the fallback's tables, with the word, and no scalp map is drawn
+    (:func:`spectrum_maps`).
     """
     reader = _Reader(view, files, caps)
-    layout = reader.entry("layout")
-    if layout is None:
-        return
     values = reader.entry("values")
+    coords = next(d for d in values["dims"] if d["name"] == "sensor")["coords"]
+    if "role" not in coords:
+        return
     names = [c["name"] for c in values["columns"] if c["name"] != "freq_hz"]
-    if reader.tsv(layout).cells("name") != names:
-        raise PresetRefused("sensors_mismatch", "fallback")
+    cells = reader.tsv(reader.entry(coords["role"])).cells(coords["column"])
+    try:
+        check_sensor_names(coords["role"], cells, names)
+    except KindRefused as exc:
+        raise PresetRefused(exc.word, "fallback", str(exc)) from exc
 
 
 def check_ic_classes(view: Mapping, files: Mapping[str, bytes], caps: Mapping) -> None:
@@ -453,16 +460,19 @@ def spectrum_maps(
     """The scalp maps a renderer that knows ``nemar.spectrum`` draws below its
     lines, one at each of ``frequencies`` (presets.md).
 
-    None when the base, ``nemar.lines``, does not draw the view: there are no
-    lines and no maps. Otherwise ``rows`` are the stored rows the frequencies
-    snap to, by the lines' readout rule, and ``model`` is the
+    None when the view is not drawn by its lines: the base, ``nemar.lines``,
+    refuses the files or draws them as tables, or the preset's own check
+    (:func:`check_spectrum`) finds the layout's names are not the sensor
+    columns (``sensors_mismatch``, the outcome ``fallback`` of
+    :func:`check_preset`): there are no lines and no maps. Otherwise
+    ``rows`` are the stored rows the frequencies snap to, by the lines'
+    readout rule, and ``model`` is the
     ``nemar.sensor-field`` model of those rows' cells, one map per row labeled
     by its frequency's stored text, with ``minmax`` limits, the sensors placed
     by the layout or, without one, by their names. When the layout breaks a
-    rule of the files that only the maps read (a place column, or names that
-    are not the series' columns: ``sensors_mismatch``), ``refused`` is the
-    word, shown in every map's place while the lines are drawn, and ``model``
-    is None.
+    rule of the files that only the maps read (a place column), ``refused``
+    is the word, shown in every map's place while the lines are drawn, and
+    ``model`` is None.
 
     Raises :class:`ViewRefused`, as :func:`build_model` does, when a file the
     lines or the maps read is missing or is not the one recorded: nothing is
@@ -471,6 +481,10 @@ def spectrum_maps(
     registry = load_registry() if registry is None else registry
     base = build_model(view, files, _base_only(registry))
     if base["refused"] is not None or base["drawing"]["via"] == "table":
+        return None
+    try:
+        check_spectrum(view, files, registry["caps"])
+    except PresetRefused:
         return None
     lines = base["model"]
     rows = [snap_row(lines["x"]["values"], hz) for hz in frequencies]

@@ -320,7 +320,7 @@ When a kind refused the files, `refused` is `{"kind", "kind_version", "word"}`, 
 | `coords_unresolved` | fallback | A coordinate column is not declared, or a coordinate role is absent, repeated or not TSV. |
 | `coords_mismatch` | fallback | A coordinate column's type or unit differs from its dimension's. |
 | `coords_length` | fallback | Coordinates from another role do not have one cell per position. |
-| `sensors_mismatch` | fallback | A scalp map's sensors run along the columns and are placed by a layout or positions role, and the value columns' names, in declared order, are not that role's name cells ([sensor-field.md](sensor-field.md#the-order-of-checks)). |
+| `sensors_mismatch` | fallback | A scalp map's sensors run along the columns and are placed by a layout or positions role, and the value columns' names, in declared order, are not that role's name cells ([sensor-field.md](sensor-field.md#the-order-of-checks)); `nemar.spectrum`'s own check reads the same rule before any map ([presets.md](presets.md#nemarspectrum-version-1)). |
 | `value_type` | fallback | A value column is not numeric. |
 | `value_units_differ` | fallback | The value columns' units differ. |
 | `empty` | fallback | No data row, or no value column. |
@@ -340,6 +340,7 @@ Each case has a `name`, what it `covers`, a `view` declaration, its `files` and 
 `files` maps each location to `{"text": …}`, the file's UTF-8 text, or to `{"base64": …}` for bytes that are not UTF-8; the declaration's `size` and `sha256` are those of the bytes.
 A case of `nemar.lines` also lists `snaps`, each a pointer `x` and the `row` it reads, and a case of bins by edges lists `locates`, each a `value` and the `bin` that holds it (-1 for underflow, the number of bins for overflow).
 A case of `nemar.spectrum` lists `maps`: the frequencies `hz`, the `rows` they snap to, and the model of the spectrum's scalp maps at those rows, or the word that `refused` them ([presets.md](presets.md#nemarspectrum-version-1)); all three are `null` when the lines are not drawn.
+It also lists `preset`, the outcome of the preset's own check (`neuroschema.views.presets.check_preset`): with `sensors_mismatch`, the outcome `fallback`, the lines are not drawn either.
 A model of `nemar.sensor-field` runs the scalp-map algorithm on each map and so needs its reference, which needs numpy (the `views` extra).
 A case or a refusal may carry `caps`, which take the place of the registry's caps of the same names for that case alone, so that small files can reach a cap.
 Each refusal has a `name`, what it `covers`, a `view`, its `files`, the `word` and the `downloads` still offered: the view is refused and nothing is drawn.

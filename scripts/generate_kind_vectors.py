@@ -3007,9 +3007,21 @@ def spectrum_maps_cases() -> list[Case]:
         (
             "spectrum_maps_sensors_mismatch",
             "A layout listed in the other order than the sensor columns: the "
-            "lines are drawn, and every map shows sensors_mismatch, never a value "
-            "at another sensor's place.",
+            "preset's own check finds sensors_mismatch (the definition a scalp "
+            "map reads), the view shows as the fallback's tables, and there are "
+            "no lines and no maps, never a value at another sensor's place.",
             spectrum_view(values, layout=chanlocs(TEN_TWENTY[::-1])),
+            [10],
+        ),
+        (
+            "spectrum_maps_mismatch_before_place_fault",
+            "A layout in the other order with a theta NA: the preset's check "
+            "runs before any map reads a place, so sensors_mismatch, the "
+            "fallback, and no maps (cell_not_number alone draws the lines).",
+            spectrum_view(
+                values,
+                layout=_replace(chanlocs(TEN_TWENTY[::-1]), "\t-54\t", "\tNA\t"),
+            ),
             [10],
         ),
         (
@@ -5465,6 +5477,7 @@ def _model_case(case: Case) -> dict:
         maps = spectrum_maps(case.view, case.files, frequencies, case.registry())
         empty = dict.fromkeys(("rows", "refused", "model"))
         out["maps"] = {"hz": frequencies} | (maps or empty)
+        out["preset"] = check_preset(case.view, case.files, case.registry())
     if "locates" in case.queries:
         edges = [inner["items"][0]["lower"], *(i["upper"] for i in inner["items"])]
         out["locates"] = [

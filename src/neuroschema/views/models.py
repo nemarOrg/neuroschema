@@ -687,9 +687,23 @@ def _sensor_role(
             cell_value(text, kind or declared_column["type"])
         if declared_column["name"] == "sensor_type":
             types = texts
-    if names is not None and tsv.cells(name) != list(names):
-        raise KindRefused("sensors_mismatch", f"{role}: names differ from the header")
+    if names is not None:
+        check_sensor_names(role, tsv.cells(name), names)
     return _Sensors(tsv.cells(name), role, entry, places, types)
+
+
+def check_sensor_names(role: str, cells: Sequence[str], names: Sequence[str]) -> None:
+    """``sensors_mismatch``, its one definition: when the sensors run along the
+    values' columns and a role places them, the role's name cells, top to
+    bottom, are the value columns' names in declared order, compared as exact
+    text, so no value is drawn at another sensor's place.
+
+    A scalp map's model reads it last of its sensor role's checks
+    (:func:`_sensor_role`), and ``nemar.spectrum``'s own check
+    (``presets.check_spectrum``) reads it after the base draws, before any map.
+    """
+    if list(cells) != list(names):
+        raise KindRefused("sensors_mismatch", f"{role}: names differ from the header")
 
 
 def _label_column(dims: Sequence[Mapping], declared: Sequence[Mapping]):

@@ -91,9 +91,14 @@ def maps_of(case: dict) -> dict:
     return {"hz": hz} | (got or dict.fromkeys(("rows", "refused", "model")))
 
 
+def preset_of(case: dict) -> dict:
+    return check_preset(case["view"], decode(case["files"]), registry_for(case))
+
+
 def failing() -> list[str]:
     """The scalp-map and spectrum cases the reference misses, as it stands."""
     out = [c["name"] for c in FIELD_CASES if not same(model_of(c), c["model"])]
+    out += [c["name"] for c in SPECTRA if not same(preset_of(c), c["preset"])]
     return out + [c["name"] for c in SPECTRA if not same(maps_of(c), c["maps"])]
 
 
@@ -103,6 +108,52 @@ def failing() -> list[str]:
 @pytest.mark.parametrize("case", SPECTRA, ids=[c["name"] for c in SPECTRA])
 def test_spectrum_maps_replay(case):
     assert same(maps_of(case), case["maps"])
+    assert same(preset_of(case), case["preset"])
+
+
+def test_no_maps_when_the_spectrum_falls_back():
+    """A spectrum case states its preset's outcome, and the maps are drawn
+    only under lines: when the base or the preset's own check falls back
+    (sensors_mismatch among them), there are no rows, no word and no model."""
+    fallback = [c for c in SPECTRA if c["preset"].get("outcome") == "fallback"]
+    assert {c["preset"]["word"] for c in fallback} >= {
+        "sensors_mismatch",
+        "x_not_increasing",
+    }
+    for case in SPECTRA:
+        empty = all(case["maps"][k] is None for k in ("rows", "refused", "model"))
+        assert empty == (case in fallback), case["name"]
+    mixed = BY_NAME["spectrum_maps_mismatch_before_place_fault"]
+    assert mixed["preset"] == {"word": "sensors_mismatch", "outcome": "fallback"}
+    assert BY_NAME["spectrum_maps_layout_fault"]["maps"]["refused"] == (
+        "cell_not_number"
+    )
+
+
+def test_one_definition_of_sensors_mismatch(monkeypatch):
+    """A scalp map's model and nemar.spectrum's own check read one definition
+    of sensors_mismatch: an order-blind one, planted, fails the scalp-map
+    vectors, the spectrum's maps and the preset-check vectors alike."""
+    from neuroschema.views import presets
+
+    assert presets.check_sensor_names is models.check_sensor_names
+
+    def order_blind(role, cells, names):
+        if sorted(cells) != sorted(names):
+            raise models.KindRefused("sensors_mismatch", role)
+
+    monkeypatch.setattr(models, "check_sensor_names", order_blind)
+    monkeypatch.setattr(presets, "check_sensor_names", order_blind)
+    missed = failing()
+    assert "spectrum_maps_sensors_mismatch" in missed
+    assert any(not name.startswith("spectrum") for name in missed), missed
+    reordered = next(
+        c for c in CHECKS["cases"] if c["name"] == "spectrum_sensors_reordered"
+    )
+    assert (
+        check_preset(reordered["view"], decode(reordered["files"]), REGISTRY)
+        != (reordered["expected"])
+    )
 
 
 def test_the_reference_matches_every_case():
@@ -460,7 +511,7 @@ RULES = {
     "the sensors' names never compared": (
         models,
         "_sensor_role",
-        "if names is not None and tsv.cells(name) != list(names):",
+        "if names is not None:",
         "if False:",
     ),
     "measured rows drawn untyped": (
@@ -566,6 +617,10 @@ SPECTRUM_RULES = {
         "return None",
     ),
     "absmax maps": ('sensors, maps, "minmax",', 'sensors, maps, "absmax",'),
+    "maps drawn past the preset's own check": (
+        'check_spectrum(view, files, registry["caps"])',
+        "pass",
+    ),
     "maps labeled by the request": (
         'lines["x"]["text"][row],',
         "str(frequencies[rows.index(row)]),",
