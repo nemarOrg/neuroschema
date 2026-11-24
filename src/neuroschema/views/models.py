@@ -787,9 +787,10 @@ def sensor_field_model(
 
     The placement runs in order: a sensor role in a frame no scalp map is
     drawn in (``frame_not_scalp``); no row to draw (``no_eeg_sensors``: rows
-    typed and none EEG, or measured positions with no row typed EEG);
-    template positions whose rows are not all their montage's electrodes
-    (``template_name_unknown``); for positions, the
+    typed and none EEG, or measured positions with no row typed EEG); a
+    template layout naming a montage ``views/montages`` does not hold
+    (``montage_unknown``); template positions whose rows are not all their
+    montage's electrodes (``template_name_unknown``); for positions, the
     projection, whose refusal (``frame_unknown``, ``positions_flat``,
     ``positions_partial``) places the sensors by name instead when every drawn
     row is typed EEG, and is every map's word otherwise; and for names,
@@ -802,7 +803,7 @@ def sensor_field_model(
     ``views`` extra).
     """
     from neuroschema.views.sensor_labels import (
-        MONTAGE_ORDER,
+        MONTAGE_NAMES,
         infer_positions,
         label_key,
         load_montages,
@@ -837,8 +838,16 @@ def sensor_field_model(
     elif not rows:
         placement["word"] = "no_eeg_sensors"
     elif (
+        sensors.role == "layout"
+        and entry.get("position_source") == "template"
+        and montage not in MONTAGE_NAMES
+    ):
+        # A layout is drawn as stored, so nothing else would refuse a montage
+        # that is not one of views/montages, compared exactly.
+        placement["word"] = "montage_unknown"
+    elif (
         entry.get("position_source") == "template"
-        and montage in MONTAGE_ORDER
+        and montage in MONTAGE_NAMES
         and not set(map(label_key, sensors.labels))
         <= set(load_montages(names=(montage,))[0].positions)
     ):

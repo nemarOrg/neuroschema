@@ -2171,6 +2171,36 @@ def sensor_field_cases() -> list[Case]:
         ),
     )
     case(
+        "template_layout_montage_unknown",
+        "A template layout naming acme-cap-19, a montage views/montages does "
+        "not hold: a layout is drawn as stored, so the placement refuses it "
+        "(montage_unknown) rather than draw places from no known montage.",
+        field_view(
+            values,
+            chanlocs(types=None),
+            layout={
+                "coordinate_system": "n/a",
+                "position_source": "template",
+                "montage": "acme-cap-19",
+            },
+        ),
+    )
+    case(
+        "template_layout_older_net_name_unknown",
+        "A template layout of GSN129, an older EGI net that serves template "
+        "positions only, whose rows are the 10-20 names: none is an electrode "
+        "of it (template_name_unknown), as for any montage views/montages holds.",
+        field_view(
+            values,
+            chanlocs(types=None),
+            layout={
+                "coordinate_system": "n/a",
+                "position_source": "template",
+                "montage": "GSN129",
+            },
+        ),
+    )
+    case(
         "template_layout_name_unknown",
         "A template layout of standard_1005 whose last row is named X1, no "
         "electrode of it: template_name_unknown.",

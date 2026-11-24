@@ -629,6 +629,12 @@ def test_a_placement_by_name_reads_the_cap_model_and_reference():
     assert models.label_inputs(role, {"reference": "Cz"})["reference"] == "FCz"
 
 
+def test_a_template_layout_names_a_held_montage():
+    model = BY_NAME["template_layout_montage_unknown"]["model"]["model"]
+    assert model["placement"]["word"] == "montage_unknown"
+    assert not any(model["sensors"]["drawn"])
+
+
 def test_the_projection_reads_the_rows_names():
     """Fiducial rows typed EEG get no layout and are not drawn."""
     drawn = BY_NAME["sensor_field_positions_fiducial_rows"]["model"]["model"]
@@ -673,6 +679,11 @@ def test_the_vectors_catch_a_projection_without_names(monkeypatch):
             'placement["reference"] = sensors.labels[reference]',
             "pass",
             "sensor_field_names_reference_with_data",
+        ),
+        (
+            'placement["word"] = "montage_unknown"',
+            "pass",
+            "template_layout_montage_unknown",
         ),
     ],
 )
@@ -790,7 +801,11 @@ def test_untyped_rows_are_drawn_only_from_templates_and_names():
 def test_template_positions_name_their_montage():
     """Every row of a template role names an electrode of its montage, compared
     as sensor-labels compares names; the check is by name, never by place."""
-    for name in ("template_names_not_in_montage", "template_layout_name_unknown"):
+    for name in (
+        "template_names_not_in_montage",
+        "template_layout_name_unknown",
+        "template_layout_older_net_name_unknown",
+    ):
         placement = BY_NAME[name]["model"]["model"]["placement"]
         assert placement["word"] == "template_name_unknown", name
     boundary = BY_NAME["template_strip_named_like_the_montage"]["model"]["model"]

@@ -17589,6 +17589,374 @@
       }
     },
     {
+      "name": "template_layout_montage_unknown",
+      "covers": "A template layout naming acme-cap-19, a montage views/montages does not hold: a layout is drawn as stored, so the placement refuses it (montage_unknown) rather than draw places from no known montage.",
+      "view": {
+        "key": "maps",
+        "kind": "nemar.sensor-field",
+        "kind_version": 1,
+        "caption": "Scalp maps.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv",
+            "format": "tsv",
+            "size": 302,
+            "sha256": "03f9fe4ae2c800af783a26a819c2eec48efbd3e4b8b204e1569e6a386df7ca91",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC002",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC003",
+                "type": "number",
+                "unit": "uV"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 269,
+            "sha256": "3f87ee297645a210111149bac07b627032791daf831fa73245976793671a3c5c",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "n/a",
+            "position_source": "template",
+            "montage": "acme-cap-19"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv": {
+          "text": "IC001\tIC002\tIC003\n-2.0\t0.75\t-0.75\n-0.25\t-1.75\t1.0\n1.5\t0.0\t-1.5\n-1.0\t1.75\t0.25\n0.75\t-0.75\t2.0\n-1.75\t1.0\t-0.5\n0.0\t-1.5\t1.25\n1.75\t0.25\t-1.25\n-0.75\t2.0\t0.5\n1.0\t-0.5\t-2.0\n-1.5\t1.25\t-0.25\n0.25\t-1.25\t1.5\n2.0\t0.5\t-1.0\n-0.5\t-2.0\t0.75\n1.25\t-0.25\t-1.75\n-1.25\t1.5\t0.0\n0.5\t-1.0\t1.75\n-2.0\t0.75\t-0.75\n-0.25\t-1.75\t1.0\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\nFp1\t-18\t0.511\nFp2\t18\t0.511\nF7\t-54\t0.511\nF3\t-39.9\t0.333\nFz\t0\t0.256\nF4\t39.9\t0.333\nF8\t54\t0.511\nT7\t-90\t0.511\nC3\t-90\t0.256\nCz\t0\t0\nC4\t90\t0.256\nT8\t90\t0.511\nP7\t-126\t0.511\nP3\t-140.1\t0.333\nPz\t180\t0.256\nP4\t140.1\t0.333\nP8\t126\t0.511\nO1\t-162\t0.511\nO2\t162\t0.511\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "kind",
+          "kind": "nemar.sensor-field",
+          "kind_version": 1
+        },
+        "refused": null,
+        "downloads": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv",
+            "size": 302,
+            "sha256": "03f9fe4ae2c800af783a26a819c2eec48efbd3e4b8b204e1569e6a386df7ca91"
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "size": 269,
+            "sha256": "3f87ee297645a210111149bac07b627032791daf831fa73245976793671a3c5c"
+          }
+        ],
+        "model": {
+          "type": "sensor-field",
+          "limits": "absmax",
+          "unit": "uV",
+          "placement": {
+            "source": "layout",
+            "role": "layout",
+            "coordinate_system": "n/a",
+            "position_source": "template",
+            "montage": "acme-cap-19",
+            "unused_positions": null,
+            "reference": null,
+            "word": "montage_unknown"
+          },
+          "sensors": {
+            "dim": "sensor",
+            "type": "string",
+            "unit": null,
+            "axis": "rows",
+            "labels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
+            "types": null,
+            "drawn": [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+            "electrodes": null,
+            "theta_deg": null,
+            "radius": null,
+            "x": null,
+            "y": null,
+            "z": null
+          },
+          "maps": {
+            "dim": "component",
+            "type": "string",
+            "unit": null,
+            "items": [
+              {
+                "label": "IC001",
+                "values": [-2.0, -0.25, 1.5, -1.0, 0.75, -1.75, 0.0, 1.75, -0.75, 1.0, -1.5, 0.25, 2.0, -0.5, 1.25, -1.25, 0.5, -2.0, -0.25],
+                "text": ["-2.0", "-0.25", "1.5", "-1.0", "0.75", "-1.75", "0.0", "1.75", "-0.75", "1.0", "-1.5", "0.25", "2.0", "-0.5", "1.25", "-1.25", "0.5", "-2.0", "-0.25"],
+                "word": "montage_unknown",
+                "notes": []
+              },
+              {
+                "label": "IC002",
+                "values": [0.75, -1.75, 0.0, 1.75, -0.75, 1.0, -1.5, 0.25, 2.0, -0.5, 1.25, -1.25, 0.5, -2.0, -0.25, 1.5, -1.0, 0.75, -1.75],
+                "text": ["0.75", "-1.75", "0.0", "1.75", "-0.75", "1.0", "-1.5", "0.25", "2.0", "-0.5", "1.25", "-1.25", "0.5", "-2.0", "-0.25", "1.5", "-1.0", "0.75", "-1.75"],
+                "word": "montage_unknown",
+                "notes": []
+              },
+              {
+                "label": "IC003",
+                "values": [-0.75, 1.0, -1.5, 0.25, 2.0, -0.5, 1.25, -1.25, 0.5, -2.0, -0.25, 1.5, -1.0, 0.75, -1.75, 0.0, 1.75, -0.75, 1.0],
+                "text": ["-0.75", "1.0", "-1.5", "0.25", "2.0", "-0.5", "1.25", "-1.25", "0.5", "-2.0", "-0.25", "1.5", "-1.0", "0.75", "-1.75", "0.0", "1.75", "-0.75", "1.0"],
+                "word": "montage_unknown",
+                "notes": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "template_layout_older_net_name_unknown",
+      "covers": "A template layout of GSN129, an older EGI net that serves template positions only, whose rows are the 10-20 names: none is an electrode of it (template_name_unknown), as for any montage views/montages holds.",
+      "view": {
+        "key": "maps",
+        "kind": "nemar.sensor-field",
+        "kind_version": 1,
+        "caption": "Scalp maps.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv",
+            "format": "tsv",
+            "size": 302,
+            "sha256": "03f9fe4ae2c800af783a26a819c2eec48efbd3e4b8b204e1569e6a386df7ca91",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC002",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC003",
+                "type": "number",
+                "unit": "uV"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 269,
+            "sha256": "3f87ee297645a210111149bac07b627032791daf831fa73245976793671a3c5c",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "n/a",
+            "position_source": "template",
+            "montage": "GSN129"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv": {
+          "text": "IC001\tIC002\tIC003\n-2.0\t0.75\t-0.75\n-0.25\t-1.75\t1.0\n1.5\t0.0\t-1.5\n-1.0\t1.75\t0.25\n0.75\t-0.75\t2.0\n-1.75\t1.0\t-0.5\n0.0\t-1.5\t1.25\n1.75\t0.25\t-1.25\n-0.75\t2.0\t0.5\n1.0\t-0.5\t-2.0\n-1.5\t1.25\t-0.25\n0.25\t-1.25\t1.5\n2.0\t0.5\t-1.0\n-0.5\t-2.0\t0.75\n1.25\t-0.25\t-1.75\n-1.25\t1.5\t0.0\n0.5\t-1.0\t1.75\n-2.0\t0.75\t-0.75\n-0.25\t-1.75\t1.0\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\nFp1\t-18\t0.511\nFp2\t18\t0.511\nF7\t-54\t0.511\nF3\t-39.9\t0.333\nFz\t0\t0.256\nF4\t39.9\t0.333\nF8\t54\t0.511\nT7\t-90\t0.511\nC3\t-90\t0.256\nCz\t0\t0\nC4\t90\t0.256\nT8\t90\t0.511\nP7\t-126\t0.511\nP3\t-140.1\t0.333\nPz\t180\t0.256\nP4\t140.1\t0.333\nP8\t126\t0.511\nO1\t-162\t0.511\nO2\t162\t0.511\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "kind",
+          "kind": "nemar.sensor-field",
+          "kind_version": 1
+        },
+        "refused": null,
+        "downloads": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv",
+            "size": 302,
+            "sha256": "03f9fe4ae2c800af783a26a819c2eec48efbd3e4b8b204e1569e6a386df7ca91"
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "size": 269,
+            "sha256": "3f87ee297645a210111149bac07b627032791daf831fa73245976793671a3c5c"
+          }
+        ],
+        "model": {
+          "type": "sensor-field",
+          "limits": "absmax",
+          "unit": "uV",
+          "placement": {
+            "source": "layout",
+            "role": "layout",
+            "coordinate_system": "n/a",
+            "position_source": "template",
+            "montage": "GSN129",
+            "unused_positions": null,
+            "reference": null,
+            "word": "template_name_unknown"
+          },
+          "sensors": {
+            "dim": "sensor",
+            "type": "string",
+            "unit": null,
+            "axis": "rows",
+            "labels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
+            "types": null,
+            "drawn": [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+            "electrodes": null,
+            "theta_deg": null,
+            "radius": null,
+            "x": null,
+            "y": null,
+            "z": null
+          },
+          "maps": {
+            "dim": "component",
+            "type": "string",
+            "unit": null,
+            "items": [
+              {
+                "label": "IC001",
+                "values": [-2.0, -0.25, 1.5, -1.0, 0.75, -1.75, 0.0, 1.75, -0.75, 1.0, -1.5, 0.25, 2.0, -0.5, 1.25, -1.25, 0.5, -2.0, -0.25],
+                "text": ["-2.0", "-0.25", "1.5", "-1.0", "0.75", "-1.75", "0.0", "1.75", "-0.75", "1.0", "-1.5", "0.25", "2.0", "-0.5", "1.25", "-1.25", "0.5", "-2.0", "-0.25"],
+                "word": "template_name_unknown",
+                "notes": []
+              },
+              {
+                "label": "IC002",
+                "values": [0.75, -1.75, 0.0, 1.75, -0.75, 1.0, -1.5, 0.25, 2.0, -0.5, 1.25, -1.25, 0.5, -2.0, -0.25, 1.5, -1.0, 0.75, -1.75],
+                "text": ["0.75", "-1.75", "0.0", "1.75", "-0.75", "1.0", "-1.5", "0.25", "2.0", "-0.5", "1.25", "-1.25", "0.5", "-2.0", "-0.25", "1.5", "-1.0", "0.75", "-1.75"],
+                "word": "template_name_unknown",
+                "notes": []
+              },
+              {
+                "label": "IC003",
+                "values": [-0.75, 1.0, -1.5, 0.25, 2.0, -0.5, 1.25, -1.25, 0.5, -2.0, -0.25, 1.5, -1.0, 0.75, -1.75, 0.0, 1.75, -0.75, 1.0],
+                "text": ["-0.75", "1.0", "-1.5", "0.25", "2.0", "-0.5", "1.25", "-1.25", "0.5", "-2.0", "-0.25", "1.5", "-1.0", "0.75", "-1.75", "0.0", "1.75", "-0.75", "1.0"],
+                "word": "template_name_unknown",
+                "notes": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
       "name": "template_layout_name_unknown",
       "covers": "A template layout of standard_1005 whose last row is named X1, no electrode of it: template_name_unknown.",
       "view": {
