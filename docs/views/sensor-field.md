@@ -113,7 +113,7 @@ The source decides the values' `sensor` coordinates and how a renderer places ea
    The coordinates are `{"role": "layout", "column": "name"}`: the values' sensors are the layout's rows, by position, at the layout's theta and radius.
 2. **Positions.**
    The coordinates are `{"role": "positions", "column": "name"}`: the values' sensors are the positions' rows, by position.
-   The renderer projects the positions with `nemar.sensor-layout.v1` in the frame the role names (`coordinate_system`, or `n/a` with a `montage`), and draws the projected layout; a row without a finite position has no place and is dropped (step 1).
+   The renderer projects the positions with `nemar.sensor-layout.v1` in the frame the role names (`coordinate_system`, or `n/a` with a `montage`), reading its `name` and `sensor_type` columns for the scalp rows, and draws the projected layout; a row with no layout (not a scalp row, or without a position) has no place and is dropped (step 1).
    If the projection is refused (`frame_unknown` or `positions_flat`), the renderer places the sensors by name, as in 3, and says why the positions could not be used; if that placement is refused too, it draws no map and shows that refusal's sentence.
 3. **Names.**
    The coordinates are names in the values file, `{"column": "<name column>"}` along the rows or `{"header": true}` along the columns, and a renderer places each name with `nemar.sensor-labels.v1` (a separate algorithm, specified beside this one).

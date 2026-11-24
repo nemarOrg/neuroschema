@@ -55,7 +55,11 @@ def field_mismatches(case: dict) -> list[str]:
         if "x" in sensors:
             xyz = np.column_stack([numbers(sensors[axis]) for axis in "xyz"])
             drawn = sf.sensor_field_from_positions(
-                xyz, case["coordinate_system"], values, montage=case.get("montage")
+                xyz,
+                case["coordinate_system"],
+                values,
+                montage=case.get("montage"),
+                names=sensors["name"],
             )
         else:
             theta = numbers(sensors["theta_deg"])
@@ -67,7 +71,7 @@ def field_mismatches(case: dict) -> list[str]:
     expected = case["expected"]
     problems = []
     if "layout" in expected:
-        positions = {axis: sensors[axis] for axis in "xyz"}
+        positions = {axis: sensors[axis] for axis in ("name", "x", "y", "z")}
         projected = case | {"positions": positions, "expected": expected["layout"]}
         problems += [f"layout {p}" for p in layout_mismatches(projected)]
     z = np.array([numbers(row) for row in expected["z"]])
@@ -329,7 +333,13 @@ def layout_mismatches(case: dict, frame: str | None = None) -> list[str]:
     frame = frame or case["coordinate_system"]
     montage = case.get("montage")
     try:
-        layout = sl.sensor_layout(xyz, frame, montage=montage)
+        layout = sl.sensor_layout(
+            xyz,
+            frame,
+            montage=montage,
+            names=positions.get("name"),
+            sensor_types=positions.get("sensor_type"),
+        )
     except sl.SensorLayoutRefusal as exc:
         if case.get("refused") != exc.word:
             return [f"refused {exc.word}"]
@@ -407,7 +417,7 @@ def test_spec_names_every_frame_and_bound():
         assert f"`{frame}`" in LAYOUT_SPEC, frame
     for word in ("frame_unknown", "positions_flat"):
         assert f"`{word}`" in LAYOUT_SPEC, word
-    for phrase in ("`\u03c33 < 0.05 * \u03c31`", "`rho > 3`"):
+    for phrase in ("`\u03c33 < 0.05 * \u03c31`", "`rho > 3`", "(0, 0, 0)"):
         assert phrase in LAYOUT_SPEC, phrase
     assert (sl.FLAT_RATIO, sl.RADIUS_RATIO) == (0.05, 3.0)
 
@@ -513,6 +523,29 @@ def _fit_the_subset(points, coordinate_system, montage):
     return fit.center, "montage", None, None
 
 
+def _zeros_kept(xyz):
+    """Every finite row has a position, (0, 0, 0) included: the R4 M1 fault."""
+    return np.isfinite(np.asarray(xyz, dtype=float)).all(axis=1)
+
+
+def _every_row_fitted(count, names=None, sensor_types=None):
+    """Every row a scalp row, EOG, neck and fiducial rows included."""
+    return np.ones(count, dtype=bool)
+
+
+def _types_ignored(count, names=None, sensor_types=None):
+    """The scalp rows chosen by name alone, as if no row were typed."""
+    return _scalp_rows(count, names, None)
+
+
+def _fiducials_kept(count, names=None, sensor_types=None):
+    """Fiducial names are not excluded."""
+    return _scalp_rows(count, None, sensor_types)
+
+
+_scalp_rows = sl.scalp_rows
+
+
 def _montage_from_the_file_system(coordinate_system, montage=None):
     """Template positions accepted for any montage name, then looked up as a
     file: the R3 M9 fault (a case-folding file system finds another case, and
@@ -548,6 +581,10 @@ LAYOUT_MUTATIONS = {
     "a montage beside a named frame accepted": ("orientation", _template_any_frame),
     "always the centroid": ("sphere_center", _always_centroid),
     "theta not written in (-180, 180]": ("cart2topo", _no_wrap),
+    "rows at (0, 0, 0) kept": ("has_position", _zeros_kept),
+    "every row fitted": ("scalp_rows", _every_row_fitted),
+    "sensor types ignored": ("scalp_rows", _types_ignored),
+    "fiducial names kept": ("scalp_rows", _fiducials_kept),
     "montages found through the file system": (
         ("orientation", _montage_from_the_file_system),
         ("montage_center", _center_from_the_file_system),
@@ -650,6 +687,90 @@ def test_the_montage_list_is_the_label_algorithms():
     assert files == {*MONTAGE_ORDER, "PROVENANCE"}
     for name in MONTAGE_ORDER:
         assert sl.orientation("n/a", name) == "RAS"
+
+
+@pytest.mark.parametrize(
+    "row",
+    [[0.0, 0.0, 0.0], [-0.0, 0.0, 0.0], [0.0, -0.0, -0.0], [-0.0, -0.0, -0.0]],
+)
+def test_a_row_at_the_origin_has_no_position(row):
+    xyz = np.array([[1.0, 2.0, 3.0], row, [0.0, 0.0, 1e-300], [math.nan, 0, 0]])
+    assert sl.has_position(xyz).tolist() == [True, False, True, False]
+
+
+def test_scalp_rows_follow_types_then_names():
+    names = ["Cz", "HEOG", "ECG", "Nz", "lpa ", "EEG RPA", "X1"]
+    # No row typed: names with a non-EEG prefix and fiducials are not scalp rows.
+    assert sl.scalp_rows(7, names).tolist() == [1, 0, 0, 0, 0, 0, 1]
+    untyped = [None, "", "n/a", " N/A ", None, None, None]
+    assert sl.scalp_rows(7, names, untyped).tolist() == [1, 0, 0, 0, 0, 0, 1]
+    # One row typed: only the rows typed EEG, never a fiducial name.
+    typed = [" eeg ", "EEG", "EOG", "EEG", None, "EEG", "n/a"]
+    assert sl.scalp_rows(7, names, typed).tolist() == [1, 1, 0, 0, 0, 0, 0]
+    # Types are not normalized: full-width EEG is another type.
+    assert sl.scalp_rows(2, ["Cz", "Pz"], ["EEG", "\uff25\uff25\uff27"]).tolist() == [
+        1,
+        0,
+    ]
+    # Without names, every row with a position is a scalp row.
+    assert sl.scalp_rows(3).tolist() == [1, 1, 1]
+
+
+def test_a_map_from_positions_drops_the_rows_that_are_not_scalp_rows():
+    """sensor_field_from_positions passes the names and types to the layout:
+    the cap with its eye and neck rows (values on every row) draws the cap's
+    own map."""
+    case = LAYOUT_CASES["eog_and_neck_typed"]
+    positions = case["positions"]
+    xyz = np.column_stack([numbers(positions[a]) for a in "xyz"])
+    values = np.linspace(-3.0, 4.0, len(xyz))
+    count = len(LAYOUT_CASES["hydrocel_32_off_center"]["positions"]["name"])
+    with_rows = sf.sensor_field_from_positions(
+        xyz,
+        case["coordinate_system"],
+        values,
+        names=positions["name"],
+        sensor_types=positions["sensor_type"],
+    )
+    cap = sf.sensor_field_from_positions(
+        xyz[:count], case["coordinate_system"], values[:count]
+    )
+    assert np.array_equal(np.isnan(with_rows.z), np.isnan(cap.z))
+    assert np.allclose(with_rows.z, cap.z, equal_nan=True, rtol=0, atol=1e-12)
+    assert list(with_rows.plotted) == list(cap.plotted)
+
+
+def test_names_and_types_have_one_entry_per_row():
+    with pytest.raises(ValueError, match="names has 2 entries for 3 rows"):
+        sl.sensor_layout(np.eye(3), "CapTrak", names=["a", "b"])
+    with pytest.raises(ValueError, match="sensor_types has 1 entries"):
+        sl.sensor_layout(np.eye(3), "CapTrak", sensor_types=["EEG"])
+
+
+@pytest.mark.parametrize(
+    ("with_rows", "without"),
+    [
+        ("eog_and_neck_typed", "hydrocel_32_off_center"),
+        ("eog_and_neck_untyped", "hydrocel_32_off_center"),
+        ("fiducials_untyped", "fiducials_typed"),
+    ],
+)
+def test_rows_that_are_not_scalp_rows_change_nothing(with_rows, without):
+    """The cap's layout with and without the EOG, neck or fiducial rows is the
+    same: those rows get none, and the center is the cap's own."""
+    case, bare = LAYOUT_CASES[with_rows], LAYOUT_CASES[without]
+    names = case["positions"]["name"]
+    count = names.index("Nz") if "Nz" in names else len(bare["expected"]["radius"])
+    expected = case["expected"]
+    assert all(r is None for r in expected["radius"][count:])
+    for measure, value in bare["bounds"].items():
+        assert abs(case["bounds"][measure] - value) <= 1e-9, measure
+    if without == "hydrocel_32_off_center":
+        # That case is the same cap moved by (3, -1.5, 2): compare radii only.
+        assert np.allclose(expected["radius"][:count], bare["expected"]["radius"])
+    else:
+        assert expected["radius"] == bare["expected"]["radius"]
+        assert expected["center"] == bare["expected"]["center"]
 
 
 def test_positions_are_n_by_3():

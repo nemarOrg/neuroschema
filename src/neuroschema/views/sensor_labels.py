@@ -327,13 +327,21 @@ def label_key(label: str) -> str:
     return finish(clean(label))
 
 
-def _type_class(channel_type: str | None) -> str:
+def type_class(channel_type: str | None) -> str:
+    """``eeg``, ``untyped`` or ``other``: a BIDS channel type, trimmed of the
+    step-2 whitespace and folded A to Z, never otherwise normalized."""
     if channel_type is None:
         return "untyped"
     folded = ascii_lower(channel_type.strip(_WHITESPACE))
     if folded in ("", "n/a"):
         return "untyped"
     return "eeg" if folded == "eeg" else "other"
+
+
+def excluded_by_name(cleaned: str) -> bool:
+    """An untyped channel whose name, after steps 1 to 3, starts with a non-EEG
+    prefix (:data:`NON_EEG_PREFIXES`, compared in lowercase)."""
+    return ascii_lower(cleaned).startswith(NON_EEG_PREFIXES)
 
 
 def fold_cap_model(model: str) -> str:
@@ -388,10 +396,10 @@ def classify(
     cleaned = [clean(name) for name, _type in channels]
     status: list[str | None] = []
     for (_name, channel_type), text in zip(channels, cleaned, strict=True):
-        kind = _type_class(channel_type)
+        kind = type_class(channel_type)
         if kind == "other":
             status.append(EXCLUDED_TYPE)
-        elif kind == "untyped" and ascii_lower(text).startswith(NON_EEG_PREFIXES):
+        elif kind == "untyped" and excluded_by_name(text):
             status.append(EXCLUDED_NAME)
         else:
             status.append(None)

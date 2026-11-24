@@ -18,11 +18,12 @@ pinned commit (Python 3.12 or later)::
     uv run --group vectors python scripts/generate_view_vectors.py --check
 
 The rules the reference needs beyond eegprep (dropping sensors that are not
-finite, merging near sensors, the frame table and the sphere fit) are written
-here a second time, independently of ``neuroschema.views``: the tests hold the
-Python reference renderer to these vectors, so the two copies check each other.
-Only data the specs list (the montage names of nemar.sensor-labels.v1) is
-imported.
+finite, merging near sensors, the frame table, the scalp rows, the sphere fit
+and its bounds) are written here a second time, independently of
+``neuroschema.views``: the tests hold the Python reference renderer to these
+vectors, so the two copies check each other. Only data the specs list (the
+montage names, the non-EEG name prefixes and the fiducial names of
+nemar.sensor-labels.v1) is imported.
 """
 
 from __future__ import annotations
@@ -41,7 +42,7 @@ os.environ.setdefault("MPLBACKEND", "Agg")
 
 import numpy as np
 
-from neuroschema.views.sensor_labels import MONTAGE_ORDER
+from neuroschema.views.sensor_labels import FIDUCIALS, MONTAGE_ORDER, NON_EEG_PREFIXES
 
 ROOT = Path(__file__).resolve().parent.parent
 VECTORS = ROOT / "views" / "vectors"
@@ -269,6 +270,34 @@ def check_bounds(name, bounds):
         raise SystemExit(f"{name}: radius ratio {radius} too near {RADIUS_RATIO}")
 
 
+def has_position(xyz):
+    """Rows with a position: finite, and not exactly (0, 0, 0) in either sign."""
+    xyz = np.asarray(xyz, dtype=float)
+    return np.isfinite(xyz).all(axis=1) & ~np.all(xyz == 0.0, axis=1)
+
+
+def _plain_name(name):
+    """A vector's name as the spec compares it for the scalp rows: trimmed, an
+    EEG prefix dropped, then lowercase (the vectors' names are plain ASCII)."""
+    text = name.strip()
+    if text[:3].lower() == "eeg" and text[3:4] in (" ", "-", "_", ":"):
+        text = text[3:].lstrip(" -_:")
+    return text.lower()
+
+
+def scalp(names, types):
+    """The scalp rows: typed EEG when any row is typed, otherwise every row but
+    those named with a non-EEG prefix; never a row named as a fiducial."""
+    kinds = [(t or "").strip().lower() for t in types] if types else []
+    typed = any(k not in ("", "n/a") for k in kinds)
+    keep = []
+    for i, name in enumerate(names):
+        plain = _plain_name(name)
+        row = kinds[i] == "eeg" if typed else not plain.startswith(NON_EEG_PREFIXES)
+        keep.append(row and plain not in FIDUCIALS)
+    return np.array(keep, dtype=bool)
+
+
 MONTAGES = ROOT / "views" / "montages"
 
 
@@ -288,25 +317,28 @@ def montage_center(name):
     return stored
 
 
-def layout_of(xyz, frame, montage=None):
+def layout_of(xyz, frame, montage=None, names=None, types=None):
     """(theta, radius, center, method, bounds) for positions in a BIDS frame,
-    or (None, bounds) for measured positions the spec refuses as flat.
-    Template positions use their montage's own center; measured positions a
-    sphere fitted to every row with a finite position."""
+    or (None, bounds) for measured positions the spec refuses as flat. Only
+    the scalp rows with a position are projected. Template positions use their
+    montage's own center; measured positions a sphere fitted to the scalp rows
+    with a position."""
     als = to_als(xyz, frame, montage)
-    finite = np.isfinite(als).all(axis=1)
+    rows = has_position(als)
+    if names is not None:
+        rows &= scalp(names, types)
     theta = [None] * len(als)
     radius = [None] * len(als)
     if montage is not None:
         center = to_als(montage_center(montage)[None, :], frame, montage)[0]
         method, bounds = "montage", None
     else:
-        center, bounds = fit_center(als[finite])
+        center, bounds = fit_center(als[rows])
         if center is None:
             return None, bounds
         method = "sphere"
-    t, r = eegprep_cart2topo(als[finite] - center)
-    for k, row in enumerate(np.flatnonzero(finite)):
+    t, r = eegprep_cart2topo(als[rows] - center)
+    for k, row in enumerate(np.flatnonzero(rows)):
         theta[row], radius[row] = t[k], r[k]
     return theta, radius, [float(v) for v in center], method, bounds
 
@@ -826,7 +858,7 @@ def positions_case(name, description, labels, xyz, frame, values, montage=None):
     if to_als(xyz, frame, montage) is None:
         case["refused"] = "frame_unknown"
         return case
-    projected = layout_of(xyz, frame, montage)
+    projected = layout_of(xyz, frame, montage, sensors["name"])
     if projected[-1] is not None:
         check_bounds(name, projected[-1])
         case["bounds"] = projected[-1]
@@ -1001,7 +1033,8 @@ def sensor_field_vectors(ref):
 # ── The sensor-layout cases ────────────────────────────────────────────────
 
 
-def layout_case(name, description, labels, xyz, frame, montage=None):
+def layout_case(name, description, labels, xyz, frame, montage=None, types=None):
+    """One sensor-layout case; ``types``, when given, is the sensor_type column."""
     xyz = np.asarray(xyz, dtype=float)
     positions = frozen(
         "sensor-layout",
@@ -1011,6 +1044,7 @@ def layout_case(name, description, labels, xyz, frame, montage=None):
             "x": _numbers(xyz[:, 0]),
             "y": _numbers(xyz[:, 1]),
             "z": _numbers(xyz[:, 2]),
+            **({"sensor_type": list(types)} if types is not None else {}),
         },
     )
     case = {
@@ -1024,7 +1058,9 @@ def layout_case(name, description, labels, xyz, frame, montage=None):
     if to_als(xyz, frame, montage) is None:
         case["refused"] = "frame_unknown"
         return case
-    projected = layout_of(xyz, frame, montage)
+    projected = layout_of(
+        xyz, frame, montage, positions["name"], positions.get("sensor_type")
+    )
     if projected[-1] is not None:
         check_bounds(name, projected[-1])
         case["bounds"] = projected[-1]
@@ -1102,6 +1138,147 @@ def flat_disk():
     r = 8 * np.sqrt(rng.uniform(0, 1, 32))
     a = rng.uniform(0, 2 * np.pi, 32)
     return np.column_stack([np.cos(a) * r, np.sin(a) * r, np.zeros(32)])
+
+
+# Five rows beside eegprep's HydroCel 32 cap (centimeters, CapTrak): eye
+# channels at the outer canthi and below the left eye, and neck muscle
+# channels, placed as a recording's electrodes.tsv lists them.
+AUXILIARY_POSITIONS = [
+    [5.5, 7.5, -3.0],
+    [-5.5, 7.5, -3.0],
+    [-3.0, 8.5, -5.5],
+    [-4.0, -5.0, -10.0],
+    [4.0, -5.0, -10.0],
+]
+
+
+def scalp_row_cases():
+    """The rows a sphere is fitted to: scalp rows with a position only."""
+    cases = []
+    labels, xyz, frame = montage("egi-gsn-hydrocell-32.sfp", 33)
+    zeros = xyz.copy()
+    zeros[[3, 17]] = 0.0
+    zeros[25] = [-0.0, 0.0, -0.0]
+    cases.append(
+        layout_case(
+            "zero_rows",
+            "eegprep's HydroCel 32 cap with rows 3 and 17 at exactly (0, 0, 0) "
+            "and row 25 at (-0, 0, -0): a row at the frame's origin is a position "
+            "the file does not have, so those rows get no layout and the sphere "
+            "is fitted to the others.",
+            labels,
+            zeros,
+            frame,
+        )
+    )
+    auxiliary = np.vstack([xyz, AUXILIARY_POSITIONS])
+    typed_names = [
+        *labels,
+        "R_horizontal_eog",
+        "L_horizontal_eog",
+        "L_vertical_eog",
+        "L_neck_emg",
+        "R_neck_emg",
+    ]
+    cases.append(
+        layout_case(
+            "eog_and_neck_typed",
+            "eegprep's HydroCel 32 cap typed EEG, three eye channels typed EOG at "
+            "the canthi and below the left eye, and two neck muscle channels "
+            "with no type (absent from channels.tsv), as OpenNeuro's "
+            "emg_Multimodal example writes them: when any row is typed only the "
+            "EEG rows are scalp rows, so the five get no layout and the center "
+            "is the cap's (fitted to all 38 rows it would move 8.5% of the head "
+            "radius).",
+            typed_names,
+            auxiliary,
+            frame,
+            types=["EEG"] * len(labels) + ["EOG", "EOG", "EOG", "n/a", "n/a"],
+        )
+    )
+    cases.append(
+        layout_case(
+            "eog_and_neck_untyped",
+            "The same 38 rows with no types, the five named EOG_R, EOG_L, EOG_V, "
+            "EMG_neck_L and EMG_neck_R: with no row typed, a name that starts "
+            "with a non-EEG prefix of nemar.sensor-labels.v1 is not a scalp row.",
+            [*labels, "EOG_R", "EOG_L", "EOG_V", "EMG_neck_L", "EMG_neck_R"],
+            auxiliary,
+            frame,
+        )
+    )
+    ten_05 = montage_document("standard_1005")
+    by_name = {e[0]: e[1:4] for e in ten_05["electrodes"]}
+    fiducials = [ten_05["fiducials"][k] for k in ("nasion", "lpa", "rpa")]
+    rows = [by_name[k] for k in TEN_TWENTY_19] + fiducials
+    for name, types, how in [
+        (
+            "fiducials_typed",
+            ["EEG"] * 19 + ["n/a"] * 3,
+            "typed EEG, the fiducials untyped, so only the EEG rows are scalp rows",
+        ),
+        (
+            "fiducials_untyped",
+            None,
+            "with no types: a row named as a fiducial is never a scalp row",
+        ),
+    ]:
+        cases.append(
+            layout_case(
+                name,
+                "The 19 electrodes of the 10-20 system from the montage "
+                "standard_1005 as measured positions (FieldTrip's 10-05 positions "
+                "on the Colin27 head, MNIColin27, meters), with its nasion and "
+                f"preauricular points as rows Nz, LPA and RPA, {how}: the "
+                "fiducials get no layout (fitted with them, the center would move "
+                "2% of the head radius).",
+                [*TEN_TWENTY_19, "Nz", "LPA", "RPA"],
+                rows,
+                "MNIColin27",
+                types=types,
+            )
+        )
+    biosemi = montage_document("biosemi64")
+    flat = [[x, y, 0.0] for _label, x, y, _z in biosemi["electrodes"]]
+    cases.append(
+        layout_case(
+            "flat_cap_with_fiducials",
+            "The montage biosemi64 flattened to z = 0 (a two-dimensional layout "
+            "written as three-dimensional positions) with "
+            "its nasion and preauricular points at their true heights, named NAS, "
+            "LPA and RPA (the vertex electrode lands on the origin, so it has no "
+            "position): the fiducials are not scalp rows, so the flatness bound "
+            "sees the flat cap alone and refuses it (positions_flat). Fitted with "
+            "the fiducials it passed both flatness bounds.",
+            [*(e[0] for e in biosemi["electrodes"]), "NAS", "LPA", "RPA"],
+            [*flat, *(biosemi["fiducials"][k] for k in ("nasion", "lpa", "rpa"))],
+            "CapTrak",
+        )
+    )
+    return cases
+
+
+TEN_TWENTY_19 = [
+    "Fp1",
+    "Fp2",
+    "F7",
+    "F3",
+    "Fz",
+    "F4",
+    "F8",
+    "T7",
+    "C3",
+    "Cz",
+    "C4",
+    "T8",
+    "P7",
+    "P3",
+    "Pz",
+    "P4",
+    "P8",
+    "O1",
+    "O2",
+]
 
 
 def layout_cases():
@@ -1377,6 +1554,7 @@ def layout_cases():
                 montage=montage_name,
             )
         )
+    cases += scalp_row_cases()
     for number, frame in enumerate(UNKNOWN_FRAMES, start=1):
         cases.append(
             layout_case(
@@ -1426,14 +1604,16 @@ def sensor_layout_vectors(ref):
             "Cases every implementation of nemar.sensor-layout.v1 reproduces. Each "
             "case gives positions (name, x, y, z in the frame coordinate_system "
             "names, or, for template positions that name a montage, in that "
-            "montage's frame, RAS, with coordinate_system n/a; null is not finite) "
-            "and either the expected layout (center and center_method, montage or "
-            "sphere, in the ALS frame, theta_deg and radius per row, null for a row "
-            "without a finite position) or the word it is refused with. Template "
-            "positions are centered on the montage's own center, its file's "
-            "center; measured positions carry bounds, their singular_ratio and "
-            "radius_ratio (null when not reached), which decide positions_flat "
-            "against 0.05 and 3, within tolerance.bounds_absolute. The "
+            "montage's frame, RAS, with coordinate_system n/a; null is not finite; "
+            "and sensor_type when the case has that column) and either the "
+            "expected layout (center and center_method, montage or sphere, in the "
+            "ALS frame, theta_deg and radius per row, null for a row that is not a "
+            "scalp row or has no position: not finite, or exactly 0, 0, 0) or the "
+            "word it is refused with. Template positions are centered on the "
+            "montage's own center, its file's center; measured positions carry "
+            "bounds, their singular_ratio and radius_ratio (null when not "
+            "reached), which decide positions_flat against 0.05 and 3, within "
+            "tolerance.bounds_absolute. The "
             "expected theta and radius are eegprep's convertlocs(..., 'cart2topo') "
             "of the positions minus the center, with -180 written 180. frames lists "
             "the BIDS coordinate systems of each orientation: an implementation "

@@ -3,9 +3,10 @@
 The Python reference for the transform ``docs/views/sensor-layout.md``
 specifies: rotate the positions into the ALS frame (x anterior, y left, z
 superior) from the frame their Brain Imaging Data Structure (BIDS) coordinate
-system names, center them (template positions on their montage's own center;
-measured positions on an algebraic least-squares sphere through all of them,
-refusing positions too flat to fix one), and convert each to EEGLAB's
+system names, keep the scalp rows (EEG sensors, never fiducials or other
+channels), center them (template positions on their montage's own center;
+measured positions on an algebraic least-squares sphere through the scalp
+rows, refusing positions too flat to fix one), and convert each to EEGLAB's
 ``topoplot`` theta and radius as eegprep's ``convertlocs(..., 'cart2topo')``
 does.
 ``views/vectors/sensor-layout.v1.json`` holds the cases every implementation
@@ -24,7 +25,14 @@ from pathlib import Path
 import numpy as np
 
 from neuroschema.views.linalg import lu_solve
-from neuroschema.views.sensor_labels import MONTAGE_ORDER
+from neuroschema.views.sensor_labels import (
+    FIDUCIALS,
+    MONTAGE_ORDER,
+    clean,
+    excluded_by_name,
+    finish,
+    type_class,
+)
 
 MONTAGES = Path(__file__).resolve().parents[3] / "views" / "montages"
 
@@ -113,13 +121,13 @@ class SensorLayoutRefusal(ValueError):
 class SensorLayout:
     """A layout: one theta (degrees) and radius per input row.
 
-    Rows without a finite position have NaN theta and radius. ``center`` is
-    the ALS point the positions were centered on, and ``center_method`` says
-    how it was found: ``montage`` (template positions: the montage's own
-    center) or ``sphere`` (measured positions: the sphere fitted to them).
-    For measured positions, ``singular_ratio`` and ``radius_ratio`` are the
-    two flatness measures :func:`sphere_center` bounds; both are None for
-    template positions.
+    Rows that are not scalp rows, and rows without a position, have NaN theta
+    and radius. ``center`` is the ALS point the positions were centered on,
+    and ``center_method`` says how it was found: ``montage`` (template
+    positions: the montage's own center) or ``sphere`` (measured positions:
+    the sphere fitted to the scalp rows). For measured positions,
+    ``singular_ratio`` and ``radius_ratio`` are the two flatness measures
+    :func:`sphere_center` bounds; both are None for template positions.
     """
 
     theta_deg: np.ndarray
@@ -184,6 +192,42 @@ def _flat(
     detail: str, singular_ratio: float | None = None, radius_ratio: float | None = None
 ) -> SensorLayoutRefusal:
     return SensorLayoutRefusal("positions_flat", detail, singular_ratio, radius_ratio)
+
+
+def scalp_rows(
+    count: int,
+    names: list[str] | None = None,
+    sensor_types: list[str | None] | None = None,
+) -> np.ndarray:
+    """Which of ``count`` rows are scalp rows: the sensors a scalp map draws.
+
+    When any row has a sensor type (not absent, empty or ``n/a``, compared as
+    ``nemar.sensor-labels.v1`` compares a channel type), the scalp rows are
+    the rows typed EEG. When no row has one, every row is a scalp row but one
+    whose name starts with a non-EEG prefix of ``nemar.sensor-labels.v1``
+    (``EOG1``, ``ECG``). In either case a row named as a fiducial (Nz, LPA,
+    RPA, NAS, inion, normalized as that algorithm normalizes a name) is not a
+    scalp row.
+    """
+    keep = np.ones(count, dtype=bool)
+    classes = [type_class(t) for t in sensor_types] if sensor_types else []
+    if any(c != "untyped" for c in classes):
+        keep &= np.array([c == "eeg" for c in classes], dtype=bool)
+    elif names is not None:
+        keep &= np.array([not excluded_by_name(clean(n)) for n in names], dtype=bool)
+    if names is not None:
+        keep &= np.array([finish(clean(n)) not in FIDUCIALS for n in names], dtype=bool)
+    return keep
+
+
+def has_position(xyz: np.ndarray) -> np.ndarray:
+    """Rows with a position: x, y and z finite, and not all three exactly zero.
+
+    A row at exactly (0, 0, 0), with either sign of zero, is how many files
+    write a position they do not have; no sensor sits at a frame's origin.
+    """
+    xyz = np.asarray(xyz, dtype=np.float64)
+    return np.isfinite(xyz).all(axis=1) & ~(xyz == 0).all(axis=1)
 
 
 @dataclass(frozen=True)
@@ -288,31 +332,43 @@ def cart2topo(xyz: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 
 
 def sensor_layout(
-    xyz: np.ndarray, coordinate_system: str, *, montage: str | None = None
+    xyz: np.ndarray,
+    coordinate_system: str,
+    *,
+    montage: str | None = None,
+    names: list[str] | None = None,
+    sensor_types: list[str | None] | None = None,
 ) -> SensorLayout:
     """Apply ``nemar.sensor-layout.v1`` to positions (n by 3).
 
     The positions are in the BIDS frame ``coordinate_system`` names, or, for
     template positions, in the frame of the ``montage`` they came from (with
-    ``coordinate_system`` ``n/a``); see :func:`orientation`. Template positions
-    are centered on the montage's own center (:func:`montage_center`), never
-    on a sphere fitted to the subset given; measured positions are centered on
-    the sphere fitted to every row with a finite position (:func:`sphere_center`),
-    so the rows should be all of the recording's measured positions. Raises
-    :class:`SensorLayoutRefusal` with ``frame_unknown`` or ``positions_flat``,
-    after which a renderer places the sensors by name.
+    ``coordinate_system`` ``n/a``); see :func:`orientation`. ``names`` and
+    ``sensor_types`` (the role's ``name`` and ``sensor_type`` columns, one per
+    row) choose the scalp rows (:func:`scalp_rows`); every other row, and
+    every row without a position (:func:`has_position`), has no layout.
+    Template positions are centered on the montage's own center
+    (:func:`montage_center`), never on a sphere fitted to the subset given;
+    measured positions are centered on the sphere fitted to every scalp row
+    with a position (:func:`sphere_center`), so the rows should be all of the
+    recording's measured positions. Raises :class:`SensorLayoutRefusal` with
+    ``frame_unknown`` or ``positions_flat``, after which a renderer places the
+    sensors by name.
     """
     xyz = np.asarray(xyz, dtype=np.float64)
     if xyz.ndim != 2 or xyz.shape[1] != 3:
         raise ValueError("positions are an n-by-3 array")
+    for column, values in (("names", names), ("sensor_types", sensor_types)):
+        if values is not None and len(values) != len(xyz):
+            raise ValueError(f"{column} has {len(values)} entries for {len(xyz)} rows")
     als = to_als(xyz, coordinate_system, montage)
-    finite = np.isfinite(als).all(axis=1)
+    rows = has_position(als) & scalp_rows(len(als), names, sensor_types)
     theta = np.full(len(als), np.nan)
     radius = np.full(len(als), np.nan)
     center, method, singular_ratio, radius_ratio = center_of(
-        als[finite], coordinate_system, montage
+        als[rows], coordinate_system, montage
     )
-    theta[finite], radius[finite] = cart2topo(als[finite] - center)
+    theta[rows], radius[rows] = cart2topo(als[rows] - center)
     return SensorLayout(
         theta,
         radius,
