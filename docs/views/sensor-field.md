@@ -47,7 +47,10 @@ Version 1 takes no override of the radii, the grid or the head.
    On screen, y runs to the right and x runs up, so the nose is at the top.
    If no cell lies inside the head circle (step 10), the map is refused with `head_outside_grid`: a sensor far outside the head has stretched the grid past it.
 8. **Interpolation.**
-   For the interpolated sensors at grid positions `p` with values `v` (merged values for kept sensors that absorbed others), build the matrix `G[k][l] = d * d * (ln(d) - 1)` with `d` the distance between `p[k]` and `p[l]`, and `G[k][k] = 0`.
+   The field is flat when every usable sensor (step 1) has the same value `v0`.
+   A flat field is not interpolated: every cell `z[i][j]` is `v0`, steps 8 and 9 do not run, and the map carries the note `flat_field`, whose caption is "all sensors have the same value".
+   The biharmonic interpolant of equal values is not constant, because it has no constant term, so it would ripple about `v0`; the ripple is the spline's, not the data's, and a map of it, its colors or its contours, would show structure the sensors do not have.
+   Otherwise, for the interpolated sensors at grid positions `p` with values `v` (merged values for kept sensors that absorbed others), build the matrix `G[k][l] = d * d * (ln(d) - 1)` with `d` the distance between `p[k]` and `p[l]`, and `G[k][k] = 0`.
    There is no regularization term.
    Solve `G w = v` by lower-upper (LU) decomposition with partial pivoting: at step `k`, the pivot is the entry of largest magnitude in column `k` at or below the diagonal, the first such row on a tie; rows are swapped, the rows below are eliminated, and `w` follows by back substitution.
    Every pivot is used as it is: an exactly zero pivot divides by zero, and values near the binary64 limit overflow, and either gives weights that are not finite, which step 10 catches.
@@ -66,11 +69,11 @@ Version 1 takes no override of the radii, the grid or the head.
     for `minmax`, with `span = max - min`, the axis is `(min - 0.05 * span, max + 0.05 * span)`, each computed in that order, 5% of the range on each side.
     Every unmasked cell lies inside the color axis; a renderer gives a value beyond it the color at its end.
     The `minmax` axis differs from EEGLAB's ([below](#eegprep-at-the-reference-commit)): on a map of one sign, moving the limit nearer zero away from zero would move it inward and clip the cells beside it.
-    When `min` equals `max`, the map is constant: the axis is the limits, every unmasked cell takes the middle color of the color map, and there are no contours.
+    A renderer colors each cell by its value's place on the color axis.
+    When `min` equals `max`, the map is constant, a flat field among them: every unmasked cell takes one color, the color of its value on the axis, and there are no contours.
+    Under `minmax`, and for a map of zeros, the axis is one point and that color is the middle of the color map; under `absmax`, a value `v0` other than zero sits on the axis `(-1.05 * |v0|, 1.05 * |v0|)`, so a flat field at `v0` takes the color that `v0` has on any map with those limits.
 12. **Contours.**
-    When `min` is below `max` and the field is not flat, there are six levels: level `k` is `k * ((max - min) / 7) + min`, for `k` from 1 to 6.
-    The field is flat when the interpolated sensors' values `v` (step 8) are all equal.
-    Its interpolant is not constant, because it has no constant term, so its cells ripple about that value; the ripple is the spline's, not the data's, and contours would draw it as structure, so a flat field has no contours.
+    When `min` is below `max`, there are six levels: level `k` is `k * ((max - min) / 7) + min`, for `k` from 1 to 6.
     The contour lines themselves are the renderer's own (marching squares, for example) and are not part of parity.
 13. **Head.**
     Over the map, a renderer draws EEGLAB's cartoon head for a head of radius 0.5, squeezed as the sensors are (EEGLAB's `topoplot.m`, lines 1289 and 1402 to 1410 of the `develop` branch at commit `6c238f7`):
@@ -107,6 +110,12 @@ Two more words never take a map's place: they say why a view's positions were no
 |---|---|---|
 | `frame_unknown` | `nemar.sensor-layout.v1` | The view's positions name a frame whose orientation is not known, or name it inconsistently, so they cannot be projected; the renderer places the sensors by name instead and says so. |
 | `positions_flat` | `nemar.sensor-layout.v1` | The view's measured positions are too flat, or too few, to locate the head's center (singular ratio below 0.05, or a sphere more than 3 times their scale), so they cannot be projected; the renderer places the sensors by name instead and says so. |
+
+A note is shown with a drawn map, in its caption, and says what the map alone cannot.
+
+| Note | From | Caption | Meaning |
+|---|---|---|---|
+| `flat_field` | this algorithm, step 8 | all sensors have the same value | Every sensor with a value and a place has one value, so the map is drawn in that value's one color, with no contours, rather than as the spline's ripple. |
 
 A fault in the files themselves (a broken TSV grammar, a missing column, a cell that is not a number, a sensor role with the wrong number of rows, a cap) takes no map's place: the whole view shows as tables, with the word, as for every generic kind ([The model](#the-model)).
 
@@ -197,7 +206,7 @@ The model holds the stored numbers and the decisions; the maps themselves are th
   },
   "maps": {
     "dim": "component", "type": "string", "unit": null,
-    "items": [{"label": "IC001", "values": [-2, -0.25], "text": ["-2.0", "-0.25"], "word": null}]
+    "items": [{"label": "IC001", "values": [-2, -0.25], "text": ["-2.0", "-0.25"], "word": null, "notes": []}]
   }
 }
 ```
@@ -212,7 +221,7 @@ The model holds the stored numbers and the decisions; the maps themselves are th
 - `sensors` has one entry per sensor, in sensor order: `labels`, the stored names; `types`, the stored `sensor_type` cells, or `null` without the column; and `drawn`, whether a map draws that row, by the rules above (every entry `false` when the placement refused).
   The places are the stored numbers a map is drawn from, each `null` for a cell `n/a`: for a layout, `theta_deg` and `radius`; for positions, `x`, `y` and `z` in the role's frame; for sensors placed by name, `electrodes` (the montage's label for each placed name, `null` for the others) and `x`, `y` and `z`, the montage's positions in meters.
   The other places are `null`.
-- `maps` has the maps' dimension (`dim`, `type` and `unit` of the second dimension, or all `null` without one) and one item per map, in order: its `label`, its `values` and their stored `text`, one per sensor, and its `word`, the word that takes its place, or `null` when it is drawn.
+- `maps` has the maps' dimension (`dim`, `type` and `unit` of the second dimension, or all `null` without one) and one item per map, in order: its `label`, its `values` and their stored `text`, one per sensor, its `word`, the word that takes its place, or `null` when it is drawn, and its `notes`, those of a drawn map (`flat_field`), empty otherwise.
   When the placement refused, every map's `word` is the placement's; otherwise it is the word this page's algorithm refuses that map with.
 
 To draw map `m`, a renderer runs the algorithm on the drawn rows, in row order: a layout's theta and radius, or the projection by `nemar.sensor-layout.v1` of their `x`, `y` and `z` (in `placement.coordinate_system`, with `placement.montage` for template positions), and map `m`'s values at those rows.
@@ -267,7 +276,7 @@ An implementation matches a vector case when:
 - each unmasked cell is within `1e-6 * (max_ref - min_ref)` of the vector's, where `max_ref` and `min_ref` are the vector's largest and smallest unmasked cells; for a constant map, within `1e-12 * max(1, |v|)` of its value `v`;
 - `plotrad`, `intrad`, `squeezefac` and each grid point are within a relative `1e-12` of the vector's;
 - the limits, the color axis and the contour levels, which follow from the cells, are within the cells' bound;
-- its plotted, interpolated and merged sensors are the vector's exactly;
+- its plotted, interpolated and merged sensors and its notes are the vector's exactly;
 - the head's radius and each point of its nose and ears are within a relative `1e-12` of the vector's.
 
 Every decision in a vector case (a merge distance against ε, a sensor against the square or `plotrad`, a cell against the head circle) is at least `1e-9` from its threshold, or an exact tie computed with no sine or cosine in doubt, so a sine or cosine that differs in its last bit cannot flip one.
@@ -303,6 +312,9 @@ The two divergences, the unreachable pseudo-inverse fallback and the shifted val
 - **The radii and the merge.**
   EEGLAB's `topoplot.m` takes its radii from every channel with a value and a place, before it interpolates; eegprep does the same and has no merge.
   The vectors' maps are eegprep's map of the merged sensors, so where a merged-away sensor is the outermost (the `merged_outermost` case), the generator passes eegprep the plotting radius from every usable sensor through eegprep's own `plotrad` option; everywhere else it checks that eegprep's radius is the spec's.
+- **A flat field.**
+  EEGLAB and eegprep interpolate equal values like any others and draw the spline's ripple about them (about 4% of the value on the `constant_values` case's cap), with its colors and contours.
+  This page draws a flat field at its value, with the note `flat_field`; the vectors' flat cases are the spec's map, not eegprep's.
 - **The head.**
   eegprep draws the head circle at `squeezefac * rmax` and EEGLAB's ears scaled by `squeezefac`, as this page does, but its nose is a triangle of its own (0.08 wide and 0.06 tall at the scale of a head of radius 0.5); this page draws EEGLAB's nose.
   EEGLAB itself draws the circle at `hin = squeezefac * headrad * (1 - 0.007 / 2)` (line 1289), 0.35% inside the equator, leaving room for a head ring 0.007 wide; this page draws it on the equator, as eegprep does, a difference under the width of the line.
@@ -314,10 +326,10 @@ The two divergences, the unreachable pseudo-inverse fallback and the shifted val
 ## Vectors
 
 [`views/vectors/sensor-field.v1.json`](../../views/vectors/sensor-field.v1.json) has the reference it came from (eegprep's commit, and the numpy and scipy versions), the tolerances above, and the cases.
-Each case gives `sensors` (`name`, `theta_deg`, `radius`, `value`, with `null` for a number that is not finite) and either `refused` (the word) or `expected`: `plotrad`, `intrad`, `squeezefac`, `plotted`, `interpolated` and `merged` (sensor rows counted from 0; each merge group lists its kept sensor first), the grid axes `x` and `y`, the cells `z` (`z[i][j]` at `(x[i], y[j])`, `null` where masked), `limits` and `color_axis` for both choices, `contours`, and `head` (`radius`, and `nose`, `right_ear` and `left_ear` as lists of `[x, y]` points).
-The expected map is eegprep's `topoplot` of the usable, merged sensors; the `minmax` color axis is this page's rule, since eegprep sets none.
+Each case gives `sensors` (`name`, `theta_deg`, `radius`, `value`, with `null` for a number that is not finite) and either `refused` (the word) or `expected`: `plotrad`, `intrad`, `squeezefac`, `plotted`, `interpolated` and `merged` (sensor rows counted from 0; each merge group lists its kept sensor first), the grid axes `x` and `y`, the cells `z` (`z[i][j]` at `(x[i], y[j])`, `null` where masked), `limits` and `color_axis` for both choices, `contours`, `head` (`radius`, and `nose`, `right_ear` and `left_ear` as lists of `[x, y]` points), and `notes` (`["flat_field"]` for a flat field, else empty).
+The expected map is eegprep's `topoplot` of the usable, merged sensors, except a flat field, which is its value in every unmasked cell; the `minmax` color axis is this page's rule, since eegprep sets none.
 A case whose `sensors` give `x`, `y` and `z` instead of `theta_deg` and `radius` is placed by positions, in the frame its `coordinate_system` names (or `n/a` with its `montage`): its `expected.layout` is the projection by `nemar.sensor-layout.v1` (`center`, `center_method`, `theta_deg`, `radius`, compared as [`sensor-layout.md`](sensor-layout.md#parity) says), and the map is drawn from that layout.
-The cases cover 32, 64, 128 and 256 sensors on eegprep's packaged caps (laid out by `nemar.sensor-layout.v1`), exact duplicates, sensors 4e-4 and 9e-4 from another (merged), two sensors 1.5e-3 apart (not merged), sensors all on the midline, sensors outside the head and outside the interpolation square, values and places that are not finite, equal values (a flat field, with no contours), all zeros (a constant map), exactly 8 sensors, 7 sensors and a merge down to 7 (refused), a dynamic range of 10^6, a sensor so far out that no cell is inside the head and values that overflow (refused), a field whose most negative value outweighs its most positive, exact ties at every `<=` (`boundary_ties`), a merged sensor that is the outermost (`merged_outermost`), maps of one sign whose every cell lies inside both color axes (`one_sign_positive_db`, `one_sign_negative_db`), and positions: 64 measured positions (one without a finite x), the whole GSN-HydroCel-32 montage and the standard_1005 midline as template positions, projected to maps; positions in an unknown frame and a montage beside a named frame (refused, `frame_unknown`); and a flat disk, three positions and a ring of measured positions (refused, `positions_flat`).
+The cases cover 32, 64, 128 and 256 sensors on eegprep's packaged caps (laid out by `nemar.sensor-layout.v1`), exact duplicates, sensors 4e-4 and 9e-4 from another (merged), two sensors 1.5e-3 apart (not merged), sensors all on the midline, sensors outside the head and outside the interpolation square, values and places that are not finite, equal values and all zeros (flat fields, drawn at their value with the note), exactly 8 sensors, 7 sensors and a merge down to 7 (refused), a dynamic range of 10^6, a sensor so far out that no cell is inside the head and values that overflow (refused), a field whose most negative value outweighs its most positive, exact ties at every `<=` (`boundary_ties`), a merged sensor that is the outermost (`merged_outermost`), maps of one sign whose every cell lies inside both color axes (`one_sign_positive_db`, `one_sign_negative_db`), and positions: 64 measured positions (one without a finite x), the whole GSN-HydroCel-32 montage and the standard_1005 midline as template positions, projected to maps; positions in an unknown frame and a montage beside a named frame (refused, `frame_unknown`); and a flat disk, three positions and a ring of measured positions (refused, `positions_flat`).
 
 Each case's inputs (names, theta, radius and value, or positions and value) are frozen in `scripts/view_vector_inputs.json`: they were computed once from eegprep's packaged caps, and the generator reads them, so a platform's sine or a library's rounding can never move an input; only the expected outputs are computed.
 `scripts/generate_view_vectors.py` writes the vectors from eegprep, with the `vectors` dependency group (Python 3.12 or later): `uv run --group vectors python scripts/generate_view_vectors.py`.

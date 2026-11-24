@@ -38,6 +38,9 @@ MIN_SENSORS = 8
 ``nemar.sensor-labels.v1`` needs to place sensors by name."""
 CONTOUR_COUNT = 6
 """Interior contour levels."""
+FLAT_FIELD = "flat_field"
+"""The note of a flat field, every sensor one value: "all sensors have the same
+value". The map is that value in every cell, with no interpolation."""
 COLOR_MARGIN = 0.05
 """The color axis widens the limits by this share: of each limit's magnitude
 for ``absmax`` (EEGLAB's ``caxis``), of their range for ``minmax``."""
@@ -109,7 +112,8 @@ class SensorField:
     right. Cells outside the head circle are NaN. Sensor indices are row
     numbers of the input, counted from 0; ``merged`` maps each kept sensor
     that absorbed others to its whole group, itself first. ``head`` is the
-    outline drawn over the map (:func:`head_outline`).
+    outline drawn over the map (:func:`head_outline`), and ``notes`` what a
+    renderer says with it (:data:`FLAT_FIELD`).
     """
 
     plotrad: float
@@ -125,6 +129,7 @@ class SensorField:
     color_axis: dict[str, tuple[float, float]]
     contours: tuple[float, ...]
     head: Head
+    notes: tuple[str, ...]
 
 
 def planar(theta_deg: np.ndarray, radius: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -246,20 +251,18 @@ def color_axis(pair: tuple[float, float], rule: str) -> tuple[float, float]:
 
 
 def is_flat(values: np.ndarray) -> bool:
-    """A flat field: every interpolated sensor's value (merged values) is equal."""
+    """A flat field: every usable sensor's value is equal.
+
+    The biharmonic interpolant of equal values is not constant, because it has
+    no constant term, so it would ripple about the value: the ripple is the
+    spline's, not the data's. A flat field is drawn at its value instead.
+    """
     return bool(values.min() == values.max())
 
 
-def contour_levels(z: np.ndarray, values: np.ndarray) -> tuple[float, ...]:
-    """``CONTOUR_COUNT`` levels evenly inside (min, max) of the cells ``z``.
-
-    None for a constant map, and none for a flat field (:func:`is_flat` of the
-    interpolated ``values``): the biharmonic interpolant of equal values is not
-    constant, because it has no constant term, so its ripple is the spline's and
-    contours would draw it as structure.
-    """
-    if is_flat(values):
-        return ()
+def contour_levels(z: np.ndarray) -> tuple[float, ...]:
+    """``CONTOUR_COUNT`` levels evenly inside (min, max) of the cells ``z``;
+    none for a constant map, a flat field among them."""
     cells = z[~np.isnan(z)]
     low, high = float(cells.min()), float(cells.max())
     if not low < high:
@@ -333,15 +336,21 @@ def sensor_field(
             "head_outside_grid", "no grid cell lies inside the head circle"
         )
 
-    # 8. Biharmonic interpolation: solve G w = v.
-    d = np.hypot(px[:, None] - px[None, :], py[:, None] - py[None, :])
-    w = lu_solve(green(d), v)
+    flat = is_flat(values[rows])
+    if flat:
+        # 8 and 9. A flat field: every cell is the one value, uninterpolated.
+        z = np.full(qx.shape, float(values[rows[0]]) + 0.0)
+    else:
+        # 8. Biharmonic interpolation: solve G w = v.
+        d = np.hypot(px[:, None] - px[None, :], py[:, None] - py[None, :])
+        w = lu_solve(green(d), v)
 
-    # 9. Evaluation, and 10. the mask. A weight that is not finite (a zero
-    # pivot, or an overflow) makes the cells not finite, so one check serves.
-    dq = np.hypot(qx[:, :, None] - px, qy[:, :, None] - py)
-    with np.errstate(over="ignore", invalid="ignore"):
-        z = green(dq) @ w
+        # 9. Evaluation. A weight that is not finite (a zero pivot, or an
+        # overflow) makes the cells not finite, so step 10's check serves.
+        dq = np.hypot(qx[:, :, None] - px, qy[:, :, None] - py)
+        with np.errstate(over="ignore", invalid="ignore"):
+            z = green(dq) @ w
+    # 10. The mask.
     z[masked] = np.nan
     if not np.isfinite(z[~masked]).all():
         raise SensorFieldRefusal("interpolation_failed", "a cell is not finite")
@@ -360,8 +369,9 @@ def sensor_field(
         merged={int(k): tuple(m) for k, m in groups.items() if len(m) > 1},
         limits=lim,
         color_axis={name: color_axis(pair, name) for name, pair in lim.items()},
-        contours=contour_levels(z, v),
+        contours=contour_levels(z),
         head=head_outline(squeezefac),
+        notes=(FLAT_FIELD,) if flat else (),
     )
 
 

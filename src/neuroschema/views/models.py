@@ -719,15 +719,16 @@ def _projected(xyz, coordinate_system: str, montage: str | None, rows, count):
     return theta, radius
 
 
-def _map_word(theta: list[float], radius: list[float], values: list) -> str | None:
-    """The word ``nemar.sensor-field.v1`` refuses one map with, or None."""
+def _map_outcome(theta: list[float], radius: list[float], values: list):
+    """One map by ``nemar.sensor-field.v1``: (the word it is refused with, or
+    None; the notes of the drawn map)."""
     from neuroschema.views.sensor_field import SensorFieldRefusal, sensor_field
 
     try:
-        sensor_field(theta, radius, values)
+        drawn = sensor_field(theta, radius, values)
     except SensorFieldRefusal as exc:
-        return exc.word
-    return None
+        return exc.word, []
+    return None, list(drawn.notes)
 
 
 def _nan(values: Sequence[float | None]) -> list[float]:
@@ -750,7 +751,8 @@ def sensor_field_model(
     (``frame_unknown``, ``positions_flat``) places the sensors by name
     instead; and for names, ``nemar.sensor-labels.v1`` (its reason). A
     placement's word is every map's word; otherwise each map's word is the one
-    ``nemar.sensor-field.v1`` refuses it with, or None. The projection and the
+    ``nemar.sensor-field.v1`` refuses it with, or None, and its notes are the
+    drawn map's (``flat_field``). The projection and the
     maps need numpy (the ``views`` extra).
     """
     from neuroschema.views.sensor_labels import infer_positions
@@ -814,11 +816,14 @@ def sensor_field_model(
         drawn = [False] * count
     items = []
     for label, values, texts in maps:
-        word = placement["word"]
+        word, notes = placement["word"], []
         if word is None:
             theta, radius = ([layout[i][k] for k in rows] for i in (0, 1))
-            word = _map_word(theta, radius, [values[k] for k in rows])
-        items.append({"label": label, "values": values, "text": texts, "word": word})
+            word, notes = _map_outcome(theta, radius, [values[k] for k in rows])
+        items.append(
+            {"label": label, "values": values, "text": texts, "word": word}
+            | {"notes": notes}
+        )
     return {
         "type": "sensor-field",
         "limits": limits,

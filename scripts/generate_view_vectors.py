@@ -187,13 +187,11 @@ def eegprep_clim(z):
     return [float(limits["vmin"]), float(limits["vmax"])]
 
 
-def eegprep_contours(z, flat):
-    """eegprep's levels, or none for a flat field: the spec draws no contours
-    when every interpolated value is equal (eegprep draws the spline's ripple)."""
+def eegprep_contours(z):
     from eegprep.functions.sigprocfunc.topoplot import _contour_levels
 
     low, high = float(np.nanmin(z)), float(np.nanmax(z))
-    if flat or not low < high:
+    if not low < high:
         return []
     return [float(v) for v in _contour_levels(low, high, 6)]
 
@@ -420,6 +418,10 @@ def field_case_from(name, description, sensors, extra=None):
     if not inside_head.any():
         case["refused"] = "head_outside_grid"
         return case
+    flat = len({float(values[i]) for i in usable}) == 1
+    if flat:
+        # eegprep interpolates equal values and ripples; the spec draws the value.
+        zi = np.where(inside_head, float(values[usable[0]]) + 0.0, np.nan)
     if not np.isfinite(zi[inside_head]).all():
         case["refused"] = "interpolation_failed"
         return case
@@ -447,10 +449,9 @@ def field_case_from(name, description, sensors, extra=None):
                 high + 0.05 * (high - low) + 0.0,
             ],
         },
-        "contours": eegprep_contours(
-            zi, len({means[kept.index(k)] for k in interpolated}) == 1
-        ),
+        "contours": eegprep_contours(zi),
         "head": eeglab_head(plotrad),
+        "notes": ["flat_field"] if flat else [],
     }
     if extra:
         case["expected"].update(extra(theta, radius, values, zi))
@@ -712,9 +713,10 @@ def field_cases():
     cases.append(
         field_case(
             "constant_values",
-            "montage_32 with every value 2.5: the biharmonic interpolant of equal "
-            "values is not constant (it has no constant term), as in EEGLAB, and "
-            "the field is flat, so it has no contours.",
+            "montage_32 with every value 2.5: a flat field. The biharmonic "
+            "interpolant of equal values is not constant (it has no constant "
+            "term) and ripples in EEGLAB and eegprep; the spec draws 2.5 in every "
+            "cell, with no contours and the note flat_field.",
             labels,
             theta,
             radius,
@@ -724,8 +726,8 @@ def field_cases():
     cases.append(
         field_case(
             "zero_map",
-            "montage_32 with every value 0: a constant map, drawn in one color "
-            "with no contours.",
+            "montage_32 with every value 0: a flat field at 0, a constant map "
+            "drawn in the middle color with no contours and the note flat_field.",
             labels,
             theta,
             radius,
@@ -1044,7 +1046,9 @@ def sensor_field_vectors(ref):
             "refused with. z[i][j] is the value at (x[i], y[j]); null is a masked "
             "cell. Sensor indices are input rows from 0; merged lists each merge "
             "group, the kept sensor first. The expected maps are eegprep's topoplot "
-            "of the merged, finite sensors. A case whose sensors give x, y and z "
+            "of the merged, finite sensors, except a flat field (every usable value "
+            "equal), which is that value in every cell, with the note flat_field. "
+            "A case whose sensors give x, y and z "
             "instead of theta_deg and radius places them by 3D positions in the "
             "frame coordinate_system names (or n/a with a montage): "
             "nemar.sensor-layout.v1 projects them (expected.layout, compared as in "

@@ -1968,7 +1968,14 @@ def sensor_field_cases() -> list[Case]:
             named_values(NAMES_1020[:7]), NAMED_COLUMNS, [NAME_ROWS, MAPS_HEADER]
         ),
     )
-    # Per-map words.
+    # Per-map words and notes.
+    flat = mixing(at=lambda k, m: "1.5" if m == 1 else pattern(k, m))
+    case(
+        "sensor_field_flat_map",
+        "Three maps; every sensor of the second has the value 1.5: a flat field, "
+        "drawn at 1.5 with the note flat_field, and the others interpolated.",
+        field_view(flat, chanlocs()),
+    )
     overflow = mixing(at=lambda k, m: "1e308" if m == 1 and k % 2 else pattern(k, m))
     case(
         "sensor_field_one_map_overflows",

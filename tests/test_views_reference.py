@@ -15,6 +15,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import math
+import re
 from pathlib import Path
 
 import pytest
@@ -105,6 +106,8 @@ def field_mismatches(case: dict) -> list[str]:
         or not (np.abs(np.subtract(drawn.contours, contours)) <= bound).all()
     ):
         problems.append("contours")
+    if list(drawn.notes) != expected["notes"]:
+        problems.append("notes")
     head = expected["head"]
     if not close(drawn.head.radius, head["radius"], geometry):
         problems.append("head radius")
@@ -357,15 +360,30 @@ def test_the_head_sits_at_the_squeezed_equator():
     assert outside["plotrad"] > 0.5 and outside["head"]["radius"] < 0.5
 
 
-def test_a_flat_field_has_no_contours():
-    """Equal values ripple through the spline; the ripple draws no contour."""
+def test_a_flat_field_is_drawn_at_its_value():
+    """Equal values would ripple through the spline; a flat field is drawn as
+    the value itself, in one color, with no contours and the note flat_field."""
     case = FIELD_CASES["constant_values"]
     assert len(set(case["sensors"]["value"])) == 1
-    limits = case["expected"]["limits"]["minmax"]
-    assert limits[0] < limits[1], "the interpolant ripples"
-    assert case["expected"]["contours"] == []
+    expected = case["expected"]
+    assert set(_drawn_cells(case)) == {2.5}
+    assert expected["limits"] == {"absmax": [-2.5, 2.5], "minmax": [2.5, 2.5]}
+    assert expected["color_axis"] == {"absmax": [-2.625, 2.625], "minmax": [2.5, 2.5]}
+    assert expected["contours"] == []
+    flat = {c["name"] for c in DRAWN if c["expected"]["notes"] == [sf.FLAT_FIELD]}
+    assert flat == {"constant_values", "zero_map"}
+    assert all(c["expected"]["notes"] in ([], [sf.FLAT_FIELD]) for c in DRAWN)
     assert sf.is_flat(np.array([2.5, 2.5, 2.5]))
     assert not sf.is_flat(np.array([2.5, 2.5, 2.5000000000000004]))
+
+
+def test_a_flat_field_note_reads_as_its_caption():
+    """The note's caption, as sensor-field.md's Notes table gives it."""
+    section = (ROOT / FIELD["spec"]).read_text().split("\n## Refusals\n", 1)[1]
+    notes = re.findall(r"^\| `([a-z_]+)` \| [^|]+ \| ([^|]+) \|", section, re.M)
+    assert ("flat_field", "all sensors have the same value") in [
+        (word, caption.strip()) for word, caption in notes
+    ]
 
 
 def test_color_axis_rules():

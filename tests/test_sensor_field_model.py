@@ -130,9 +130,18 @@ def test_every_source_and_drawing_is_covered():
 # ── The words ─────────────────────────────────────────────────────────────
 
 
-def _doc_words() -> set[str]:
+def _doc_table(header: str) -> set[str]:
+    """The first cells of the Refusals section's tables whose header is this."""
     section = SPEC.read_text().split("\n## Refusals\n", 1)[1].split("\n## ", 1)[0]
-    return set(re.findall(r"^\| `([a-z_]+)` \|", section, re.M))
+    names = set()
+    for table in section.split("\n\n"):
+        if table.startswith(f"| {header} |"):
+            names |= set(re.findall(r"^\| `([a-z_]+)` \|", table, re.M))
+    return names
+
+
+def _doc_words() -> set[str]:
+    return _doc_table("Word")
 
 
 def _reference_words() -> set[str]:
@@ -165,6 +174,20 @@ def test_every_word_has_a_vector():
     assert words <= seen
     assert seen - words - {None} <= set(sensor_labels.REASONS)
     assert seen & set(sensor_labels.REASONS), "a sensor-labels word in a map's place"
+
+
+def test_notes_table_matches_the_reference_and_the_vectors():
+    """flat_field is the one note; a drawn map of the model vectors carries it."""
+    assert _doc_table("Note") == {sf.FLAT_FIELD}
+    notes = {
+        note
+        for case in DRAWN
+        for item in case["model"]["model"]["maps"]["items"]
+        for note in item["notes"]
+    }
+    assert notes == {sf.FLAT_FIELD}
+    items = BY_NAME["sensor_field_flat_map"]["model"]["model"]["maps"]["items"]
+    assert [item["notes"] for item in items] == [[], [sf.FLAT_FIELD], []]
 
 
 FILE_WORDS = {
@@ -336,7 +359,7 @@ def _strict_place(text):
 
 
 def _never_refused(theta, radius, values):
-    return None
+    return None, []
 
 
 def _values_number_only(columns):
@@ -354,7 +377,7 @@ MUTATIONS = {
     "untyped rows beside typed ones": ("drawn_rows", _all_untyped),
     "types compared exactly": ("sensor_type_class", _exact_eeg),
     "n/a not a place": ("_place_cell", _strict_place),
-    "maps never refused": ("_map_word", _never_refused),
+    "maps never refused": ("_map_outcome", _never_refused),
     "integer columns not maps": ("_value_columns", _values_number_only),
 }
 
