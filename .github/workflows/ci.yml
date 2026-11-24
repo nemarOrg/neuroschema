@@ -63,6 +63,6 @@ jobs:
 
       - name: Validate JSON files
         run: |
-          for f in schema/**/*.schema.json examples/*.json; do
+          for f in schema/**/*.schema.json examples/*.json examples/views/*.json; do
             python -m json.tool "$f" > /dev/null || { echo "Invalid JSON: $f"; exit 1; }
           done

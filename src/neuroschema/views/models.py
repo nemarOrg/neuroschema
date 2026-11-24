@@ -238,6 +238,11 @@ def histogram_content_validator() -> Draft202012Validator:
     return _validator(str(HISTOGRAM_CONTENT.relative_to(REPO_ROOT)), "")
 
 
+def content_validator(name: str) -> Draft202012Validator:
+    """A validator for a content schema of ``schema/views/``, by its file name."""
+    return _validator(f"schema/views/{name}", "")
+
+
 class _Reader:
     """The files of one view: verified once, read once, under the caps."""
 

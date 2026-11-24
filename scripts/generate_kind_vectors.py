@@ -26,6 +26,7 @@ from neuroschema.views.models import (
     MODELS_FORMAT,
     ViewRefused,
     build_model,
+    content_validator,
     histogram_content_validator,
     locate_bin,
     snap_row,
@@ -38,6 +39,8 @@ VERDICTS_PATH = ROOT / "views" / "vectors" / "kinds-verdicts.v1.json"
 VERDICTS_FORMAT = "nemar.kinds-verdicts.v1"
 SPEC = "docs/views/generic-kinds.md"
 HISTOGRAM_CONTENT = "content.nemar.histogram.v1.schema.json"
+IC_CLASSES_CONTENT = "content.nemar.ic-classes.v1.schema.json"
+PRESET_EXAMPLE = ROOT / "examples" / "views" / "dataquality-record-nemar-ica.json"
 
 PLUGIN = {"plugin": {"name": "nemar-quality", "version": "0.1.0"}}
 RECIPE = {"recipe": {"name": "nemar-ica", "version": "1.0.0"}}
@@ -1860,6 +1863,404 @@ def content_verdicts() -> list[tuple[str, str, object]]:
     ]
 
 
+# ── The presets' verdicts ─────────────────────────────────────────────────
+
+
+def preset_views() -> dict[str, dict]:
+    """The example's five preset views, by key (examples/views)."""
+    document = json.loads(PRESET_EXAMPLE.read_text(encoding="utf-8"))
+    views = document["recipes"]["nemar-ica"]["views"]
+    return {v["key"]: v for v in views}
+
+
+def _archive_activity(activity: dict) -> dict:
+    """The activations of a decomposition of the archive: matched by label, in
+    microvolts, with no store digest and no decomposition store."""
+    out = copy.deepcopy(activity)
+    signal = next(i for i in out["inputs"] if i["role"] == "signal")
+    signal["store"].update(profile="archive", content_sha256=None)
+    out["transform"]["parameters"] = {"match": "label", "unit": "uV"}
+    given = out["parameters"]["decomposition_input"]
+    given["source"] = "archive"
+    del given["store"]
+    return out
+
+
+def preset_verdicts() -> list[tuple[str, str, dict]]:
+    views = preset_views()
+    spectrum, maps = views["spectrum"], views["icmaps"]
+    classes, activity, window = (
+        views["icclasses"],
+        views["icactivity"],
+        views["midsegment"],
+    )
+    by_header = dim("sensor", "columns", "string", {"header": True})
+    bare = _set(
+        _set(spectrum, "data", spectrum["data"][:1]), "data/0/dims/1", by_header
+    )
+    archive = _archive_activity(activity)
+    signal = next(i for i, x in enumerate(activity["inputs"]) if x["role"] == "signal")
+    signal_only = _set(window, "inputs", window["inputs"][:1])
+    return [
+        (
+            "spectrum",
+            "A plugin's spectrum, its sensors the recipe's layout rows.",
+            spectrum,
+        ),
+        (
+            "spectrum_without_layout",
+            "Without a layout the sensors are the header names.",
+            bare,
+        ),
+        (
+            "spectrum_freq_unit",
+            "The dimension freq in kHz, not Hz.",
+            _set(spectrum, "data/0/dims/0/unit", "kHz"),
+        ),
+        (
+            "spectrum_freq_column_unit",
+            "The column freq_hz in kHz.",
+            _set(spectrum, "data/0/columns/0/unit", "kHz"),
+        ),
+        (
+            "spectrum_sensor_unit",
+            "A sensor column in uV^2/Hz, not dB.",
+            _set(spectrum, "data/0/columns/1/unit", "uV^2/Hz"),
+        ),
+        (
+            "spectrum_no_upper_hz",
+            "upper_hz is required.",
+            _set(spectrum, "parameters/upper_hz", DROP),
+        ),
+        (
+            "spectrum_no_window",
+            "The window is recorded.",
+            _set(spectrum, "parameters/window", DROP),
+        ),
+        (
+            "spectrum_no_overlap",
+            "The overlap is recorded.",
+            _set(spectrum, "parameters/overlap", DROP),
+        ),
+        (
+            "spectrum_no_unit",
+            "The unit is recorded.",
+            _set(spectrum, "parameters/unit", DROP),
+        ),
+        (
+            "spectrum_overlap_one",
+            "An overlap of 1 is no step.",
+            _set(spectrum, "parameters/overlap", 1),
+        ),
+        (
+            "spectrum_method",
+            "Version 1 records Welch's method.",
+            _set(spectrum, "parameters/method", "multitaper"),
+        ),
+        (
+            "spectrum_header_with_layout",
+            "With a layout, the sensors are its rows, not the header.",
+            _set(spectrum, "data/0/dims/1", by_header),
+        ),
+        (
+            "spectrum_layout_coords_without_layout",
+            "Sensors from a layout the view does not have.",
+            _set(bare, "data/0/dims/1/coords", {"role": "layout", "column": "name"}),
+        ),
+        (
+            "spectrum_x_from_a_role",
+            "The x axis is the values' own column.",
+            _set(
+                spectrum, "data/0/dims/0/coords", {"role": "layout", "column": "radius"}
+            ),
+        ),
+        (
+            "spectrum_base",
+            "A spectrum is drawn over nemar.lines.",
+            _set(spectrum, "base", "nemar.heatmap"),
+        ),
+        (
+            "spectrum_no_base",
+            "A preset declares its base.",
+            _set(_set(spectrum, "base", DROP), "base_version", DROP),
+        ),
+        (
+            "spectrum_two_values",
+            "The values once.",
+            _set(spectrum, "data", [spectrum["data"][0], *spectrum["data"]]),
+        ),
+        ("ic_maps", "The recipe's component maps, layout and components table.", maps),
+        (
+            "ic_maps_no_layout",
+            "Component maps need the layout.",
+            _set(maps, "data", [maps["data"][0], maps["data"][2]]),
+        ),
+        (
+            "ic_maps_no_components",
+            "Component maps need the components table.",
+            _set(maps, "data", maps["data"][:2]),
+        ),
+        (
+            "ic_maps_sensors_by_name",
+            "The sensors are the layout's rows, not a column of the values.",
+            _set(maps, "data/0/dims/0/coords", {"column": "IC001"}),
+        ),
+        (
+            "ic_maps_components_by_header",
+            "The components are named by the header.",
+            _set(
+                maps,
+                "data/0/dims/1/coords",
+                {"role": "components", "column": "component"},
+            ),
+        ),
+        (
+            "ic_maps_components_dim",
+            "The components table is named by its column component.",
+            _set(maps, "data/2/dims/0/coords", {"column": "variance_pct"}),
+        ),
+        (
+            "ic_maps_no_component_column",
+            "The components table declares component.",
+            _set(maps, "data/2/columns", maps["data"][2]["columns"][1:]),
+        ),
+        (
+            "ic_maps_parameters",
+            "Version 1 takes no parameters.",
+            _set(maps, "parameters", {"limits": "minmax"}),
+        ),
+        ("ic_classes", "A plugin's class counts.", classes),
+        (
+            "ic_classes_tsv",
+            "The class counts are a JSON file.",
+            _set(
+                _set(classes, "data/0/format", "tsv"),
+                "data/0/location",
+                classes["data"][0]["location"].replace(".json", ".tsv"),
+            ),
+        ),
+        (
+            "ic_classes_parameters",
+            "Version 1 takes no parameters.",
+            _set(classes, "parameters", {"threshold": 0.9}),
+        ),
+        (
+            "ic_classes_base_version",
+            "nemar.histogram version 1.",
+            _set(classes, "base_version", 2),
+        ),
+        (
+            "ic_activity",
+            "Activations of a decomposition of the serving copy.",
+            activity,
+        ),
+        (
+            "ic_activity_archive",
+            "Activations of a decomposition of the archive: "
+            "matched by label, no digest.",
+            archive,
+        ),
+        (
+            "ic_activity_no_transform",
+            "The transform is required.",
+            _set(activity, "transform", DROP),
+        ),
+        (
+            "ic_activity_other_transform",
+            "The transform is nemar.ic-activity.v1.",
+            _set(
+                activity,
+                "transform",
+                {"name": "nemar.sensor-layout.v1", "parameters": {}},
+            ),
+        ),
+        (
+            "ic_activity_data",
+            "Activations are never stored.",
+            _set(activity, "data", classes["data"]),
+        ),
+        (
+            "ic_activity_no_components",
+            "The components label the rows.",
+            _set(
+                activity,
+                "inputs",
+                [i for i in activity["inputs"] if i["role"] != "components"],
+            ),
+        ),
+        (
+            "ic_activity_signal_as_file",
+            "The signal is a store.",
+            _set(
+                activity,
+                f"inputs/{signal}",
+                {"role": "signal", "file": activity["inputs"][0]["file"]},
+            ),
+        ),
+        (
+            "ic_activity_store_row_without_rows",
+            "Matching by row names the rows.",
+            _set(activity, "transform/parameters/rows", DROP),
+        ),
+        (
+            "ic_activity_label_with_rows",
+            "Matching by label names no rows.",
+            _set(archive, "transform/parameters/rows", [0, 1]),
+        ),
+        (
+            "ic_activity_archive_by_row",
+            "A decomposition of the archive read no store rows.",
+            _set(
+                archive,
+                "transform/parameters",
+                {"match": "store_row", "rows": [0], "unit": "uV"},
+            ),
+        ),
+        (
+            "ic_activity_nanovolts",
+            "The matrix's unit is one of the table's.",
+            _set(activity, "transform/parameters/unit", "nV"),
+        ),
+        (
+            "ic_activity_no_display_filter",
+            "The display filter is declared.",
+            _set(activity, "parameters/display_filter", DROP),
+        ),
+        (
+            "ic_activity_filter_order",
+            "The display filter is of order 2.",
+            _set(activity, "parameters/display_filter/order", 4),
+        ),
+        (
+            "ic_activity_window_60",
+            "A window of at most 30 seconds.",
+            _set(activity, "parameters/max_window_s", 60),
+        ),
+        (
+            "ic_activity_no_decomposition_input",
+            "What the decomposition got is declared.",
+            _set(activity, "parameters/decomposition_input", DROP),
+        ),
+        (
+            "ic_activity_serving_without_store",
+            "A decomposition of the serving copy names its store.",
+            _set(activity, "parameters/decomposition_input/store", DROP),
+        ),
+        (
+            "ic_activity_archive_with_store",
+            "A decomposition of the archive names no store.",
+            _set(
+                archive,
+                "parameters/decomposition_input/store",
+                activity["parameters"]["decomposition_input"]["store"],
+            ),
+        ),
+        (
+            "ic_activity_source_and_profile",
+            "A decomposition of the archive with a store of profile serving.",
+            _set(
+                _set(archive, f"inputs/{signal}", activity["inputs"][signal]),
+                "transform/parameters",
+                {"match": "label", "unit": "uV"},
+            ),
+        ),
+        (
+            "ic_activity_types_without_digest",
+            "channel_types comes with its digest.",
+            _set(activity, "parameters/decomposition_input/channel_types_sha256", DROP),
+        ),
+        (
+            "ic_activity_preprocessing_closed",
+            "A preprocessing step is {step, function}.",
+            _set(
+                activity,
+                "parameters/decomposition_input/preprocessing/0/parameters",
+                {"chans": 7},
+            ),
+        ),
+        ("signal_window", "A recipe's midsegment window.", window),
+        ("signal_window_signal_only", "The floor's tables are optional.", signal_only),
+        (
+            "signal_window_long",
+            "A window of at most 30 seconds.",
+            _set(window, "parameters/duration_s", 60),
+        ),
+        (
+            "signal_window_no_start",
+            "The start is required.",
+            _set(window, "parameters/start_s", DROP),
+        ),
+        (
+            "signal_window_transform",
+            "Nothing is computed.",
+            _set(window, "transform", activity["transform"]),
+        ),
+        (
+            "signal_window_no_signal",
+            "The store is required.",
+            _set(window, "inputs", window["inputs"][1:]),
+        ),
+        (
+            "signal_window_other_input",
+            "Only the store and the floor's tables.",
+            _set(window, "inputs", [*window["inputs"], activity["inputs"][0]]),
+        ),
+    ]
+
+
+def ic_classes_content_verdicts() -> list[tuple[str, str, object]]:
+    counts = {
+        "categories": json.loads(ICLABEL)["categories"],
+        "counts": [12, 3, 2, 0, 1, 0, 4],
+        "summed_variance_pct": [61.25, 9.5, 14.75, 0, 0.5, 0, 6.125],
+        "n_components": 22,
+    }
+    edges = json.loads(EDGES)
+    return [
+        ("ic_classes_content", "Dominant counts with summed variance.", counts),
+        (
+            "ic_classes_content_negative_variance",
+            "A component's variance share may be negative.",
+            counts | {"summed_variance_pct": [-1.5, 0, 0, 0, 0, 0, 0]},
+        ),
+        (
+            "ic_classes_content_extra_member",
+            "The root is open.",
+            counts | {"classifier": "iclabel"},
+        ),
+        (
+            "ic_classes_content_no_variance",
+            "summed_variance_pct is required.",
+            {k: v for k, v in counts.items() if k != "summed_variance_pct"},
+        ),
+        (
+            "ic_classes_content_no_n",
+            "n_components is required.",
+            {k: v for k, v in counts.items() if k != "n_components"},
+        ),
+        (
+            "ic_classes_content_edges",
+            "Classes are categories, not edges.",
+            edges | {"summed_variance_pct": [1.0], "n_components": 3},
+        ),
+        (
+            "ic_classes_content_unit",
+            "Categories carry no unit (the histogram's rule).",
+            counts | {"unit": "%"},
+        ),
+        (
+            "ic_classes_content_zero_components",
+            "At least one component.",
+            counts | {"n_components": 0},
+        ),
+        (
+            "ic_classes_content_text_variance",
+            "A variance share is a number.",
+            counts | {"summed_variance_pct": ["61.25", 9.5, 14.75, 0, 0.5, 0, 6.125]},
+        ),
+    ]
+
+
 def _errors(validator, instance) -> list[list[str]]:
     pairs = {
         (e.validator, "/".join(str(p) for p in e.absolute_path))
@@ -1871,8 +2272,13 @@ def _errors(validator, instance) -> list[list[str]]:
 def verdicts() -> dict:
     cases = []
     for schema, validator, items in [
-        ("view", view_validator(), view_verdicts()),
+        ("view", view_validator(), [*view_verdicts(), *preset_verdicts()]),
         (HISTOGRAM_CONTENT, histogram_content_validator(), content_verdicts()),
+        (
+            IC_CLASSES_CONTENT,
+            content_validator(IC_CLASSES_CONTENT),
+            ic_classes_content_verdicts(),
+        ),
     ]:
         for name, covers, instance in items:
             errors = _errors(validator, instance)
