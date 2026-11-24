@@ -23,6 +23,7 @@ import hashlib
 import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from types import MappingProxyType
 
 import numpy as np
 
@@ -40,6 +41,7 @@ from neuroschema.views.presets import (
     read_segments,
 )
 from neuroschema.views.presets import check_rate as _check_rate
+from neuroschema.views.registry import load_registry
 
 IC_ACTIVITY = "nemar.ic-activity.v1"
 ORDER = 2
@@ -50,7 +52,8 @@ SQRT2 = math.sqrt(2.0)
 # are spelled three ways: ASCII u, the micro sign U+00B5 and the Greek small
 # letter mu U+03BC (eegprep-lean's microvolts_per accepts the same five).
 MICROVOLTS_PER = {"V": 1e6, "mV": 1e3, "uV": 1.0, "µV": 1.0, "μV": 1.0}
-CAPS = {"bytes_per_role": 4194304, "entries_per_dim": 1024, "cells_per_role": 262144}
+# The registry's caps, read from views/registry.json: one copy, never two.
+CAPS = MappingProxyType(dict(load_registry()["caps"]))
 
 
 class IcActivityRefusal(Refusal):

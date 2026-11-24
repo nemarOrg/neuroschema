@@ -193,6 +193,15 @@ def test_locate_vectors_replay(case):
     ]
 
 
+def test_nan_has_no_bin():
+    """Every comparison with NaN is false, so a bin search would put it in a bin
+    silently; it is refused, and a renderer marks nothing (L6)."""
+    with pytest.raises(ValueError, match="NaN"):
+        locate_bin([0.0, 1.0, 2.0], float("nan"))
+    assert locate_bin([0.0, 1.0, 2.0], float("-inf")) == -1
+    assert locate_bin([0.0, 1.0, 2.0], float("inf")) == 2
+
+
 def test_model_vectors_header():
     assert MODELS["format"] == MODELS_FORMAT == "nemar.kinds-models.v1"
     assert (ROOT / MODELS["spec"]).resolve() == SPEC

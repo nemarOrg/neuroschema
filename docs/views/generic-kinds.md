@@ -242,6 +242,7 @@ Bin i holds the values v with e_i <= v < e_(i+1), and the last bin also holds a 
 `underflow` counts the values below the first edge, and `overflow` the values above the last edge.
 This is the rule of nemar-process's binning and of the `dataQuality` distributions.
 A renderer draws the counts it is given and never bins values itself; when it marks a value on a histogram, such as one recording's value on its dataset's distribution, it finds the bin by this rule.
+A value that is not a number (NaN) is in no bin, since every comparison with it is false, and nothing is marked for it.
 
 ```json
 {

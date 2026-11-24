@@ -165,6 +165,10 @@ def test_caps_are_only_lowered():
     """A case's caps take the place of registry caps of the same names, lowered."""
     registry = load_registry()["caps"]
     assert registry == ia.CAPS
+    assert (
+        "CAPS = {"
+        not in (ROOT / "src" / "neuroschema" / "views" / "ic_activity.py").read_text()
+    )
     overrides = [
         (k, v) for c in [*CASES, *REFUSALS] for k, v in c.get("caps", {}).items()
     ]

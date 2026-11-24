@@ -181,8 +181,12 @@ def locate_bin(edges: Sequence[float], value: float) -> int:
     """The bin holding ``value``: ``[e_i, e_i+1)``, the last bin closed.
 
     Returns -1 below the first edge (underflow) and the number of bins above
-    the last edge (overflow).
+    the last edge (overflow). Raises ``ValueError`` for NaN, which no bin holds
+    (every comparison with it is false, so it would land in a bin silently);
+    a renderer marks nothing for it.
     """
+    if math.isnan(value):
+        raise ValueError("NaN has no bin")
     bins = len(edges) - 1
     if value < edges[0]:
         return -1
