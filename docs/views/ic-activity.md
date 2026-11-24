@@ -48,7 +48,7 @@ That filter is not part of the decomposition and not part of the transform.
     "note": "no preprocessing; activations approximate the decomposition input",
     "match": "store_row", "rows": [0, 1, 2, 3, 5], "columns": ["Fp1", "Fp2", "Cz", "Pz", "O2"], "unit": "µV",
     "caption": null,
-    "shaded": {"label": "burst", "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]}
+    "shaded": {"label": "burst", "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv"]}
   }},
   "parameters": {
     "display_filter": {"highpass_hz": 1, "order": 2},
@@ -85,7 +85,7 @@ The transform's parameters are the record's `browser_transform` block (`extensio
 | `columns` | The matrix's columns: its header names, in column order. |
 | `unit` | The unit the matrix takes: the store's own unit for a decomposition of the serving copy (its factor to microvolts is folded into the matrix), `uV` for one of the archive. Microvolts may be spelled `uV`, `µV` (U+00B5) or `μV` (U+03BC). |
 | `caption` | A caption the view shows with the activations, or `null`: for a decomposition of the archive, "not checked against the decomposition input". |
-| `shaded` | `{label, files}`: the spans ASR repaired in the decomposition's input (flagged, never removed), the rows labeled `label` (`burst`) of the floor's tables `files`; `files` is null when the floor wrote no table (its window step was skipped and ASR repaired nothing). |
+| `shaded` | `{label, files}`: the spans ASR repaired in the decomposition's input (flagged, never removed), the rows labeled `label` (`burst`) of the floor's bad-segment table. `files` names that table alone, the floor's `_badsegments.tsv` (the location of the `badsegments` input), or is null when the floor wrote no table (its window step was skipped and ASR repaired nothing). `_samplemask.tsv` is never named: its sample indices are the grid the floor read, not the serving copy the view draws. |
 
 The kind's parameters:
 

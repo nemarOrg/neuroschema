@@ -272,8 +272,7 @@
               "shaded": {
                 "label": "burst",
                 "files": [
-                  "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
-                  "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"
+                  "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv"
                 ]
               }
             }

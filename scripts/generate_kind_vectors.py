@@ -2136,6 +2136,9 @@ def preset_verdicts() -> list[tuple[str, str, dict]]:
     )
     archive = _archive_activity(activity)
     signal = next(i for i, x in enumerate(activity["inputs"]) if x["role"] == "signal")
+    segments_at = next(
+        i for i, x in enumerate(activity["inputs"]) if x["role"] == "badsegments"
+    )
     without_segments = _set(
         _set(window, "inputs", window["inputs"][:2]),
         "parameters/bad_segment_table",
@@ -2479,6 +2482,45 @@ def preset_verdicts() -> list[tuple[str, str, dict]]:
             "ic_activity_segments_declared_not_named",
             "A bad-segments input when shaded.files is null.",
             _set(activity, "transform/parameters/shaded/files", None),
+        ),
+        (
+            "ic_activity_shaded_names_the_sample_mask",
+            "shaded.files names _samplemask.tsv beside _badsegments.tsv: it names "
+            "the bad-segment table alone (nemar-process#81).",
+            _set(
+                activity,
+                "transform/parameters/shaded/files",
+                [
+                    f"{PREFIX}_badsegments.tsv",
+                    f"{PREFIX}_samplemask.tsv",
+                ],
+            ),
+        ),
+        (
+            "ic_activity_shaded_names_two_tables",
+            "shaded.files names two bad-segment tables: it names one, the input's.",
+            _set(
+                activity,
+                "transform/parameters/shaded/files",
+                [
+                    f"{PREFIX}_badsegments.tsv",
+                    "sub-01/eeg/sub-01_task-rest_desc-nemarfloor_badsegments.tsv",
+                ],
+            ),
+        ),
+        (
+            "ic_activity_shaded_names_another_table",
+            "shaded.files names a table that is not a _badsegments.tsv.",
+            _set(activity, "transform/parameters/shaded/files", [f"{PREFIX}_mask.tsv"]),
+        ),
+        (
+            "ic_activity_segments_input_another_table",
+            "The badsegments input is not a _badsegments.tsv.",
+            _set(
+                activity,
+                f"inputs/{segments_at}/file/location",
+                f"{PREFIX}_segments.tsv",
+            ),
         ),
         (
             "ic_activity_transform_reused",

@@ -71,12 +71,12 @@
                   "properties": {
                     "location": {
                       "type": "string",
-                      "pattern": "\\.tsv$(?!\n)"
+                      "pattern": "_badsegments\\.tsv$(?!\n)"
                     }
                   }
                 }
               },
-              "description": "The floor's bad segments are a TSV file of the run's product."
+              "description": "The floor's bad segments are its _badsegments.tsv, a TSV file of the run's product."
             }
           },
           {
@@ -277,17 +277,24 @@
                     {
                       "type": "array",
                       "minItems": 1,
-                      "maxItems": 8,
-                      "uniqueItems": true,
+                      "maxItems": 1,
                       "items": {
-                        "$ref": "../definitions/processingTypes.schema.json#/$defs/relativeLocation"
+                        "allOf": [
+                          {
+                            "$ref": "../definitions/processingTypes.schema.json#/$defs/relativeLocation"
+                          },
+                          {
+                            "type": "string",
+                            "pattern": "_badsegments\\.tsv$(?!\n)"
+                          }
+                        ]
                       }
                     },
                     {
                       "type": "null"
                     }
                   ],
-                  "description": "The tables that hold those rows (the floor's _badsegments.tsv and _samplemask.tsv), or null when the floor wrote no table: its window step was skipped and ASR repaired nothing."
+                  "description": "The table that holds those rows, the floor's _badsegments.tsv, alone, and the location of the badsegments input; or null when the floor wrote no table: its window step was skipped and ASR repaired nothing. _samplemask.tsv is never named: its sample indices are the grid the floor read, not the serving copy the view draws (nemarOrg/nemar-process#81)."
                 }
               },
               "additionalProperties": false

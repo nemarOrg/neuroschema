@@ -80,7 +80,6 @@ STORE_PATH = "sub-01/eeg/sub-01_task-rest_eeg.zarr"
 UNMIXING_AT = f"{PREFIX}_servingunmixing.tsv"
 COMPONENTS_AT = f"{PREFIX}_components.tsv"
 SEGMENTS_AT = f"{PREFIX}_badsegments.tsv"
-SAMPLEMASK_AT = f"{PREFIX}_samplemask.tsv"
 # The sentences nemar-process writes in browser_transform (nemar_ica/steps.py,
 # nemarOrg/nemar-process#81), mirrored so the declarations are the ones P5 writes.
 APPLIES_TO = "serving_copy channels listed, physical unit"
@@ -246,7 +245,7 @@ def declaration(
         "caption": None if match == "store_row" else CAPTION_UNCHECKED,
         "shaded": {
             "label": "burst",
-            "files": [SEGMENTS_AT, SAMPLEMASK_AT] if segments else None,
+            "files": [SEGMENTS_AT] if segments else None,
         },
     }
     typed = [[label, "EEG"] for label in header]
