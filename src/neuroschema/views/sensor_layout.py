@@ -24,6 +24,7 @@ from pathlib import Path
 import numpy as np
 
 from neuroschema.views.linalg import lu_solve
+from neuroschema.views.sensor_labels import MONTAGE_ORDER
 
 MONTAGES = Path(__file__).resolve().parents[3] / "views" / "montages"
 
@@ -134,11 +135,14 @@ def orientation(coordinate_system: str, montage: str | None = None) -> str:
 
     Measured positions name their BIDS coordinate system. Template positions
     (a sensor role with ``position_source`` ``template``) name instead the
-    montage of ``views/montages`` they were taken from (``nemar.sensor-labels.v1``),
-    with the coordinate system ``n/a``; every montage file is RAS, in meters.
+    montage they were taken from, exactly as ``nemar.sensor-labels.v1`` lists
+    it (:data:`~neuroschema.views.sensor_labels.MONTAGE_ORDER`), with the
+    coordinate system ``n/a``; every montage file is RAS, in meters.
     Any other combination raises :class:`SensorLayoutRefusal`
-    (``frame_unknown``): an unknown name, ``n/a`` without a montage, a name in
-    another case, and a montage beside a coordinate system other than ``n/a``.
+    (``frame_unknown``): an unknown name, ``n/a`` without a montage, a frame
+    or a montage named in another case, a montage the list does not have
+    (``PROVENANCE`` included, whatever the files beside the montages are),
+    and a montage beside a coordinate system other than ``n/a``.
     No frame is assumed.
     """
     if montage is None:
@@ -150,13 +154,15 @@ def orientation(coordinate_system: str, montage: str | None = None) -> str:
             f"{coordinate_system!r} is not a BIDS coordinate system of known "
             "orientation"
         )
-    elif coordinate_system == "n/a" and montage:
-        return "RAS"
-    else:
+    elif coordinate_system != "n/a":
         detail = (
             f"template positions from montage {montage!r} name the coordinate "
             f"system {coordinate_system!r}, not n/a"
         )
+    elif montage in MONTAGE_ORDER:
+        return "RAS"
+    else:
+        detail = f"{montage!r} is not a montage of nemar.sensor-labels.v1"
     raise SensorLayoutRefusal("frame_unknown", detail)
 
 
@@ -238,13 +244,14 @@ def sphere_center(points: np.ndarray) -> Fit:
 def montage_center(montage: str, directory: Path = MONTAGES) -> np.ndarray:
     """A montage's own center, RAS meters, as ``views/montages/<name>.json``
     stores it: the sphere fitted to all its electrodes (``nemar.sensor-labels.v1``
-    generates the files). An unknown montage raises ``frame_unknown``."""
-    path = directory / f"{montage}.json"
-    if not path.is_file():
+    generates the files). The name is matched exactly against that algorithm's
+    montage list, never through the file system (which may fold case): any
+    other name raises ``frame_unknown``."""
+    if montage not in MONTAGE_ORDER:
         raise SensorLayoutRefusal(
-            "frame_unknown", f"{montage!r} is not a montage of views/montages"
+            "frame_unknown", f"{montage!r} is not a montage of nemar.sensor-labels.v1"
         )
-    document = json.loads(path.read_text(encoding="utf-8"))
+    document = json.loads((directory / f"{montage}.json").read_text(encoding="utf-8"))
     return np.array(document["center"], dtype=np.float64)
 
 

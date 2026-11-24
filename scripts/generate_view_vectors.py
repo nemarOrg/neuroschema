@@ -21,6 +21,8 @@ The rules the reference needs beyond eegprep (dropping sensors that are not
 finite, merging near sensors, the frame table and the sphere fit) are written
 here a second time, independently of ``neuroschema.views``: the tests hold the
 Python reference renderer to these vectors, so the two copies check each other.
+Only data the specs list (the montage names of nemar.sensor-labels.v1) is
+imported.
 """
 
 from __future__ import annotations
@@ -38,6 +40,8 @@ from pathlib import Path
 os.environ.setdefault("MPLBACKEND", "Agg")
 
 import numpy as np
+
+from neuroschema.views.sensor_labels import MONTAGE_ORDER
 
 ROOT = Path(__file__).resolve().parent.parent
 VECTORS = ROOT / "views" / "vectors"
@@ -210,10 +214,11 @@ def eegprep_cart2topo(points):
 
 def to_als(xyz, frame, montage=None):
     """ALS positions, or None for a frame the spec refuses. Template positions
-    name a montage of views/montages (all RAS, in meters) and the frame n/a."""
+    name a montage of nemar.sensor-labels.v1, exactly as it lists them (all
+    RAS, in meters), and the frame n/a."""
     xyz = np.asarray(xyz, dtype=float)
     if montage is not None:
-        orientation = "RAS" if frame == "n/a" and montage else None
+        orientation = "RAS" if frame == "n/a" and montage in MONTAGE_ORDER else None
     else:
         orientation = "ALS" if frame in ALS else "RAS" if frame in RAS else None
     if orientation == "ALS":
@@ -1344,6 +1349,32 @@ def layout_cases():
                 [by_name[k] for k in keys],
                 "n/a",
                 montage="standard_1005",
+            )
+        )
+    for name, montage_name, why in [
+        (
+            "template_montage_wrong_case",
+            "gsn-hydrocel-32",
+            "GSN-HydroCel-32 in another case: montage names are matched exactly "
+            "against the montage list, never through a file system that may fold "
+            "case",
+        ),
+        (
+            "template_montage_provenance",
+            "PROVENANCE",
+            "PROVENANCE, the name of the file beside the montages that records "
+            "where they come from, which is not a montage",
+        ),
+    ]:
+        cases.append(
+            layout_case(
+                name,
+                f"Template positions naming the montage {why}: refused "
+                "(frame_unknown).",
+                names,
+                positions,
+                "n/a",
+                montage=montage_name,
             )
         )
     for number, frame in enumerate(UNKNOWN_FRAMES, start=1):

@@ -8,7 +8,7 @@ The vectors' theta and radius come from eegprep's `convertlocs(..., 'cart2topo')
 ## Input
 
 The positions of one recording's sensors, one row each: a name and `x`, `y` and `z`, Institute of Electrical and Electronics Engineers (IEEE) 754 binary64 values in one unit (any unit; the layout does not depend on it), in the frame a Brain Imaging Data Structure (BIDS) coordinate system names.
-Template positions, taken from a standard montage by `nemar.sensor-labels.v1` (a sensor role with `position_source` `template`), name that montage instead: their coordinate system is `n/a`, and `montage` is the name of a file of `views/montages`, every one of which is in a right-anterior-superior frame, in meters.
+Template positions, taken from a standard montage by `nemar.sensor-labels.v1` (a sensor role with `position_source` `template`), name that montage instead: their coordinate system is `n/a`, and `montage` is one of the montage names that algorithm lists, every one of which is in a right-anterior-superior frame, in meters.
 
 A view declares the transform in one of two forms (`schema/views/transform.nemar.sensor-layout.v1.schema.json`), and names the frame once in either:
 
@@ -26,7 +26,8 @@ A view declares the transform in one of two forms (`schema/views/transform.nemar
    A coordinate system of [ALS orientation](#frames) is kept as it is.
    One of right-anterior-superior (RAS) orientation (x right, y anterior, z superior) becomes ALS as `(x, y, z) -> (y, -x, z)`, the second component negated, not subtracted from 0.
    Template positions (coordinate system `n/a` and a `montage`) are RAS.
-   Anything else is refused with `frame_unknown`: any other name, including `Other`, `Pixels`, `individual` and a known name in another case; `n/a` without a montage; and a montage beside a coordinate system other than `n/a`, whose frame would be ambiguous.
+   The montage is compared exactly, case included, against the fourteen names of [`sensor-labels.md`](sensor-labels.md#montages), never looked up as a file: a file system may fold case, and `views/montages` also holds `PROVENANCE.json`, which is not a montage.
+   Anything else is refused with `frame_unknown`: any other name, including `Other`, `Pixels`, `individual` and a known name in another case; `n/a` without a montage; a montage that is not one of the fourteen (`gsn-hydrocel-32`, `PROVENANCE`); and a montage beside a coordinate system other than `n/a`, whose frame would be ambiguous.
    No frame is assumed.
 2. **Rows without a position.**
    A row whose x, y or z is not finite has no layout (no theta and no radius) and takes no part in the fit.
@@ -35,7 +36,7 @@ A view declares the transform in one of two forms (`schema/views/transform.nemar
    - **Template positions** (`n/a` and a `montage`) are centered on the montage's own center, the `center` its file in `views/montages` stores (right-anterior-superior meters, rotated into ALS as the positions are; method `montage`).
      That center is the sphere this step fits to all of the montage's electrodes, computed once when the montage files are generated (`scripts/generate_montages.py`, which `--check` holds to it).
      Template positions are never fitted themselves: a subset of a montage, such as its midline or one coronal row, fixes no sphere of its own, and about the montage's center each electrode lands where the full cap puts it.
-     A montage that `views/montages` does not have is refused with `frame_unknown`.
+     A montage outside the fourteen is refused with `frame_unknown` at step 1.
    - **Measured positions** are centered on the sphere fitted to all of them: every row with a finite position, whether or not a view draws a value for it, so a writer gives the recording's full set of measured positions (method `sphere`).
      With `n` finite positions `p`, the centroid `c0` is their sum, in row order, divided by `n`; `q = p - c0`; the scale `s` is the largest Euclidean length of a `q`; and `u = q / s`.
      If `s = 0` (no positions, or all at one point), they are refused.
@@ -119,7 +120,7 @@ The cases cover:
 - the bounds, each from both sides: a whole sphere squashed to singular ratios 0.055 (drawn) and 0.045 (refused), and spherical caps with sphere radii 2.8 (drawn) and 3.1 (refused) times their scale;
 - measured sets: F3, F4, C3, C4, P3 and P4 alone (drawn), and the nine midline positions Fpz to Oz (refused);
 - flat sets, each refused (`positions_flat`): a ring, a flat disk, a disk measured with noise, five collinear positions and five a hair off one line, three positions and four coincident ones;
-- template positions: the whole GSN-HydroCel-32 and standard_1005 montages, and the standard_1005 midline (Fpz to Oz) and coronal row (T7 to T8), drawn where the whole montage puts them; and a montage beside a named coordinate system (refused, `frame_unknown`);
+- template positions: the whole GSN-HydroCel-32 and standard_1005 montages, and the standard_1005 midline (Fpz to Oz) and coronal row (T7 to T8), drawn where the whole montage puts them; and a montage beside a named coordinate system, a montage named in another case and the montage `PROVENANCE` (each refused, `frame_unknown`);
 - eleven coordinate systems that are refused.
 Each case's positions are frozen in `scripts/view_vector_inputs.json` ([`sensor-field.md`](sensor-field.md#vectors)).
 

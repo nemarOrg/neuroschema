@@ -513,6 +513,25 @@ def _fit_the_subset(points, coordinate_system, montage):
     return fit.center, "montage", None, None
 
 
+def _montage_from_the_file_system(coordinate_system, montage=None):
+    """Template positions accepted for any montage name, then looked up as a
+    file: the R3 M9 fault (a case-folding file system finds another case, and
+    PROVENANCE.json has no center)."""
+    if montage is not None and coordinate_system == "n/a" and montage:
+        return "RAS"
+    return _orientation(coordinate_system, montage)
+
+
+def _center_from_the_file_system(montage, directory=sl.MONTAGES):
+    path = directory / f"{montage}.json"
+    if not path.is_file():
+        raise sl.SensorLayoutRefusal("frame_unknown", montage)
+    return np.array(json.loads(path.read_text())["center"], dtype=float)
+
+
+_orientation = sl.orientation
+
+
 LAYOUT_MUTATIONS = {
     "flat ratio 0.05 -> 0.01": ("FLAT_RATIO", 0.01),
     "flat ratio 0.05 -> 0.06": ("FLAT_RATIO", 0.06),
@@ -529,14 +548,27 @@ LAYOUT_MUTATIONS = {
     "a montage beside a named frame accepted": ("orientation", _template_any_frame),
     "always the centroid": ("sphere_center", _always_centroid),
     "theta not written in (-180, 180]": ("cart2topo", _no_wrap),
+    "montages found through the file system": (
+        ("orientation", _montage_from_the_file_system),
+        ("montage_center", _center_from_the_file_system),
+    ),
 }
+
+
+def _suite_fails_or_raises() -> bool:
+    try:
+        return layout_suite_fails()
+    except (KeyError, FileNotFoundError):
+        return True
 
 
 @pytest.mark.parametrize("mutation", list(LAYOUT_MUTATIONS))
 def test_sensor_layout_vectors_catch_a_mutation(monkeypatch, mutation):
     name, value = LAYOUT_MUTATIONS[mutation]
-    monkeypatch.setattr(sl, name, value)
-    assert layout_suite_fails(), mutation
+    pairs = [(name, value)] if isinstance(name, str) else [name, value]
+    for attribute, replacement in pairs:
+        monkeypatch.setattr(sl, attribute, replacement)
+    assert _suite_fails_or_raises(), mutation
 
 
 TEMPLATES = {"template_midline_9", "template_coronal_9"}
@@ -595,10 +627,29 @@ def test_each_montage_stores_its_own_center(path):
     assert document["center"] == [round(float(v), 9) + 0.0 for v in fit.center]
 
 
-def test_an_unknown_montage_is_refused():
+@pytest.mark.parametrize(
+    "montage", ["no-such-cap", "PROVENANCE", "biosemi64 ", "BIOSEMI64", "Biosemi64"]
+)
+def test_an_unknown_montage_is_refused(montage):
+    """Names are matched exactly against the montage list: another case, a
+    trailing space and the provenance file are no montage."""
     with pytest.raises(sl.SensorLayoutRefusal) as raised:
-        sl.sensor_layout(np.eye(3), "n/a", montage="no-such-cap")
+        sl.sensor_layout(np.eye(3), "n/a", montage=montage)
     assert raised.value.word == "frame_unknown"
+    # Each layer refuses on its own: the frame step and the center lookup.
+    with pytest.raises(sl.SensorLayoutRefusal):
+        sl.orientation("n/a", montage)
+    with pytest.raises(sl.SensorLayoutRefusal):
+        sl.montage_center(montage)
+
+
+def test_the_montage_list_is_the_label_algorithms():
+    from neuroschema.views.sensor_labels import MONTAGE_ORDER
+
+    files = {p.stem for p in (ROOT / "views" / "montages").glob("*.json")}
+    assert files == {*MONTAGE_ORDER, "PROVENANCE"}
+    for name in MONTAGE_ORDER:
+        assert sl.orientation("n/a", name) == "RAS"
 
 
 def test_positions_are_n_by_3():
