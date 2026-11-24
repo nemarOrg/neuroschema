@@ -844,6 +844,44 @@ CASES = [
         ("placed", None, "standard_1005"),
     ),
     (
+        "unicode_newer_than_some_runtimes",
+        "Characters whose Unicode normalization (NFKC) to ASCII depends on the "
+        "Unicode version a runtime ships: OZ in outlined letters (U+1CCE4 "
+        "U+1CCEF, Unicode 16), AF and an outlined 7 (U+1CCF7), Fp and the "
+        "subscript z of Unicode 18 (U+209F), and the modifier capital C "
+        "(U+A7F2, Unicode 14) before P1. The fold table maps none of them, so "
+        "every runtime leaves the four unmatched.",
+        eeg(
+            [
+                *TEN_TWENTY,
+                "\U0001cce4\U0001ccef",
+                "AF\U0001ccf7",
+                "Fp\u209f",
+                "\ua7f2P1",
+            ]
+        ),
+        ("placed", None, "standard_1005"),
+    ),
+    (
+        "unicode_compatibility_characters",
+        "Compatibility characters NFKC folds to ASCII in every runtime, but the "
+        "fold table does not: a subscript two (F\u2082), a Roman numeral one "
+        "hundred (U+216D) before 1, bold mathematical P, O and z (U+1D40F "
+        "U+1D428 U+1D433), and a superscript four (AF\u2074). They stay "
+        "unmatched; full-width letters and digits still fold (C3 in full width "
+        "is a duplicate of C3 and is not used here).",
+        eeg(
+            [
+                *TEN_TWENTY,
+                "F\u2082",
+                "\u216d1",
+                "\U0001d40f\U0001d428\U0001d433",
+                "AF\u2074",
+            ]
+        ),
+        ("placed", None, "standard_1005"),
+    ),
+    (
         "common_reference_suffix",
         "Every name but the reference's carries -Cz: the shared suffix is the "
         "recording's reference and is stripped.",

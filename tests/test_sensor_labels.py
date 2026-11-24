@@ -22,7 +22,7 @@ import pytest
 from jsonschema import Draft202012Validator
 
 from neuroschema.validate import load_schema
-from neuroschema.views import load_registry
+from neuroschema.views import load_registry, sensor_labels
 from neuroschema.views.sensor_labels import (
     ALGORITHM,
     BIPOLAR,
@@ -42,6 +42,7 @@ from neuroschema.views.sensor_labels import (
     classify,
     clean,
     finish,
+    fold,
     infer_positions,
     label_key,
     load_montages,
@@ -525,6 +526,86 @@ def test_normalized_key(name, key):
     assert keys([name]) == [key]
 
 
+# The fold table of step 1, as the spec states it: full-width ASCII to ASCII
+# and these compatibility spaces to U+0020; every other character stays.
+SPEC_FOLDED_SPACES = [0x00A0, *range(0x2000, 0x200B), 0x202F, 0x205F, 0x3000]
+
+
+def test_fold_is_the_specs_table_for_every_code_point():
+    """Step 1 maps each scalar value as the table says and nothing else, so it
+    gives one answer in every runtime, whatever Unicode version it ships."""
+    names = []
+    expected = []
+    for cp in range(0x110000):
+        if 0xD800 <= cp <= 0xDFFF:
+            continue
+        names.append(chr(cp))
+        if 0xFF01 <= cp <= 0xFF5E:
+            expected.append(chr(cp - 0xFEE0))
+        elif cp in SPEC_FOLDED_SPACES:
+            expected.append(" ")
+        else:
+            expected.append(chr(cp))
+    assert fold("".join(names)) == "".join(expected)
+
+
+def test_the_reference_does_not_normalize_unicode():
+    """No Unicode normalization: its tables differ between runtimes."""
+    source = Path(sensor_labels.__file__).read_text(encoding="utf-8")
+    assert "unicodedata" not in source and "normalize(" not in source
+
+
+@pytest.mark.parametrize(
+    ("name", "key"),
+    [
+        ("\uff26\uff50\uff11", "fp1"),  # full-width letters and digit
+        ("\uff26\uff50\uff11\uff0d\uff32\uff25\uff26", "fp1"),  # full-width -REF
+        ("\u3000Cz\u202f", "cz"),  # ideographic and narrow no-break spaces
+        ("P\u2009z", "p z"),  # a thin space inside stays a space
+        ("F\u2082", "f\u2082"),  # subscript two (NFKC: 2)
+        ("\u216d3", "\u216d3"),  # Roman numeral one hundred (NFKC: C)
+        ("\U0001ccd8\U0001ccef", "\U0001ccd8\U0001ccef"),  # outlined CZ, Unicode 16
+        ("Fp\u209f", "fp\u209f"),  # subscript z, Unicode 18
+        ("\ua7f2P1", "\ua7f2p1"),  # modifier capital C, Unicode 14
+        ("\U0001d402\U0001d433", "\U0001d402\U0001d433"),  # bold Cz
+        ("C\u00b3", "c\u00b3"),  # superscript three
+        ("\u212aZ", "\u212az"),  # Kelvin sign
+        ("\u0421z", "\u0421z"),  # Cyrillic Es
+    ],
+)
+def test_the_fold_table_and_nothing_else(name, key):
+    assert keys([name]) == [key]
+
+
+def test_a_key_that_is_not_ascii_matches_nothing():
+    """Every name above that is not ASCII after the fold stays unplaced, even
+    beside a full set that is placed."""
+    odd = ["C\u2083", "\U0001ccd8\U0001ccef", "\u216d4", "Fp\u209f"]
+    result = infer([*TEN_TWENTY, *odd])
+    assert result.outcome == "placed"
+    assert [c.electrode for c in result.channels[-len(odd) :]] == [None] * len(odd)
+
+
+def test_a_key_outside_ascii_matches_no_montage_at_all():
+    """Even a montage that held such a key would not match it: the ASCII rule
+    is the algorithm's, not an accident of the montages. Derived input: the
+    real 10-05 montage with one more electrode keyed by a subscript name."""
+    ten_five = BY_NAME["standard_1005"]
+    positions = dict(ten_five.positions)
+    positions["c\u2083"] = ("C\u2083", (0.01, 0.02, 0.09))
+    odd = dataclasses.replace(ten_five, positions=positions)
+    result = infer([*TEN_TWENTY, "C\u2083"], montages=(odd,))
+    assert result.outcome == "placed"
+    assert result.channels[-1].electrode is None
+
+
+def test_a_montage_label_must_be_ascii(tmp_path):
+    doc = montage_document("biosemi16")
+    doc["electrodes"][0][0] = "A\u2081"
+    with pytest.raises(ValueError, match="is not ASCII"):
+        montage_from_json(doc)
+
+
 def test_clean_keeps_case_and_inner_hyphens():
     assert clean("  EEG  Fp1-REF ") == "Fp1-REF"
     assert finish(" 'Cz.' ") == "cz"
@@ -797,6 +878,8 @@ def test_spec_names_every_list_member_and_threshold():
             row = f"| `{montage}` | `{source}` is `{target}` |"
             assert row in SPEC, row
     for phrase in [
+        "U+FF01 to U+FF5E, to U+0021 to U+007E",
+        "U+00A0, U+2000 to U+200A, U+202F, U+205F and U+3000",
         "fewer than 8 candidates",
         "best is below 8",
         "5 \u00d7 best < 4 \u00d7 candidates",

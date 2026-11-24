@@ -68,14 +68,19 @@ A montage label's key is the label normalized as a channel name is (steps 1 to 7
 
 ## Normalizing a name
 
-1. Apply Unicode Normalization Form KC (NFKC), which turns full-width letters and digits and the no-break space into their plain forms.
+1. Fold the name by this table, and leave every other character as it is:
+   - the full-width forms of ASCII, U+FF01 to U+FF5E, to U+0021 to U+007E (`Ｃ３` is `C3`, and `－`, U+FF0D, is a hyphen-minus);
+   - the no-break and typographic spaces U+00A0, U+2000 to U+200A, U+202F, U+205F and U+3000 to the space, U+0020.
+
+   The table is fixed, so every runtime folds a name alike: Unicode normalization is not used, because the characters it maps grow with each Unicode version a runtime ships (Python 3.11 to 3.14 and current JavaScript engines carry Unicode 14 to 18, and disagree on outlined letters, modifier capitals and new subscripts).
+   A character the table does not fold stays, and a key with any character outside ASCII matches no montage: a subscript (`O₂`), a Roman numeral (`Ⅽ3`), a mathematical letter and a Cyrillic look-alike leave the name unmatched.
 2. Trim whitespace from both ends, and replace each run of whitespace inside the name with one space.
    Whitespace here is exactly TAB, LF, VT, FF and CR (U+0009 to U+000D) and space (U+0020).
-   NFKC has already turned the no-break space and the other compatibility spaces into U+0020; U+0085, U+2028, U+2029 and U+FEFF are not whitespace here and stay in the name (so `Cz` followed by U+0085 matches nothing).
+   Step 1 has already turned the no-break and typographic spaces into U+0020; U+0085, U+2028, U+2029 and U+FEFF are not whitespace here and stay in the name (so `Cz` followed by U+0085 matches nothing).
 3. Drop a leading type prefix: the letters E, E, G in any case, followed by one or more of space, hyphen-minus (U+002D), underscore and colon (`EEG Fp1`, `EEG-Fp1`, `eeg:_Fp1`), or the letters P, O, L in any case, followed by one or more spaces (Nihon Kohden's `POL Fp1`).
    `EEG1`, `EEGFp1` and `POLFp1` keep theirs.
 4. Split at the last hyphen-minus (U+002D), as [Reference suffixes and bipolar names](#reference-suffixes-and-bipolar-names) says.
-   No other dash is a split point: U+2010 (hyphen), which NFKC keeps, stays in the name, so `Fp1‐REF` written with U+2010 matches nothing.
+   No other dash is a split point: U+2010 (hyphen), which step 1 keeps, stays in the name, so `Fp1‐REF` written with U+2010 matches nothing.
 5. Strip spaces from both ends, dots from the end, and straight quotation marks (`"` and `'`) from both ends, repeating until none is left (`Cz..` is `Cz`, `'P3.'` is `P3`).
 6. Fold the ASCII letters A to Z to a to z and leave every other character.
    Every montage label is ASCII, so full Unicode case folding could not change a match, and ASCII folding keeps implementations identical.
@@ -89,7 +94,7 @@ A space inside a name stays (`P 4` matches nothing).
 
 Each channel is decided in this order:
 
-1. A channel's type is trimmed of the step-2 whitespace at both ends and its ASCII letters A to Z are folded to a to z; it is not NFKC-normalized (a type written with full-width letters, or with U+FEFF before it, is another type).
+1. A channel's type is trimmed of the step-2 whitespace at both ends and its ASCII letters A to Z are folded to a to z; it is not folded by step 1 (a type written with full-width letters, or with U+FEFF before it, is another type).
    A channel whose type is then `eeg` is in play.
    A channel with no type, an empty type or `n/a` is untyped, and is in play unless its name after steps 1 to 3, folded to lowercase, starts with one of `eog`, `heog`, `veog`, `ecg`, `ekg`, `emg`, `trig`, `status`, `stim`, `event`, `marker`, `resp`, `gsr`, `photic`, `exg`, `spo2`, `pleth`, `pulse`, `position` and `light` (status `excluded_name`).
    A channel of any other type is excluded (status `excluded_type`).
@@ -219,5 +224,5 @@ A change to any step, list, threshold or alias, or to a montage's positions (inc
 
 Each case of the vectors file gives a recording's `channels` as `[name, type]` pairs (type null when absent) and the `result` above.
 The vectors file lists the SHA-256 of each montage file it was computed with; an implementation checks its copies against them, then reproduces every result exactly.
-The cases cover the normalization steps, the exclusions, each reference name and the common reference, bipolar names, each count, share and coverage threshold at and beside its boundary, each refusal, the family and montage aliases, every montage but `GSN-HydroCel-32` (its names are also the BioSemi 160 cap's E bank), the nested nets and the coincident Cz variants.
+The cases cover the normalization steps (the fold table, and characters outside it whose normalization depends on the runtime's Unicode version: outlined letters and digits, a modifier capital, subscripts, a Roman numeral, mathematical letters, a superscript), the exclusions, each reference name and the common reference, bipolar names, each count, share and coverage threshold at and beside its boundary, each refusal, the family and montage aliases, every montage but `GSN-HydroCel-32` (its names are also the BioSemi 160 cap's E bank), the nested nets and the coincident Cz variants.
 No two real montages place an electrode within 1e-9 m of each other without placing it at the same point, so `tests/test_sensor_labels.py` tests that tolerance on a montage derived from a real one.

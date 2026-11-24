@@ -18,7 +18,6 @@ from __future__ import annotations
 import json
 import math
 import re
-import unicodedata
 from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
@@ -142,6 +141,14 @@ REASONS = (
     "net_coverage_low",
 )
 
+# Step 1's fold table, the same in every runtime: full-width ASCII (U+FF01 to
+# U+FF5E) to ASCII, and the compatibility spaces to U+0020. Nothing else is
+# folded, so a name keeps any other character, and a key that is not ASCII
+# matches no montage.
+_FOLD = {
+    **{cp: cp - 0xFEE0 for cp in range(0xFF01, 0xFF5F)},
+    **{cp: 0x20 for cp in (0x00A0, *range(0x2000, 0x200B), 0x202F, 0x205F, 0x3000)},
+}
 _WHITESPACE = "\t\n\v\f\r "
 _WHITESPACE_RUN = re.compile(r"[\t\n\v\f\r ]+")
 # A type prefix: EEG and a separator, or Nihon Kohden's POL and a space.
@@ -229,10 +236,18 @@ def ascii_lower(text: str) -> str:
     return text.translate(_UPPER)
 
 
+def fold(text: str) -> str:
+    """Step 1: full-width ASCII to ASCII and the compatibility spaces to a space.
+
+    The table is fixed (:data:`_FOLD`), unlike Unicode normalization, whose
+    mappings grow with each Unicode version a runtime ships.
+    """
+    return text.translate(_FOLD)
+
+
 def clean(name: str) -> str:
-    """Steps 1 to 3: NFKC, trim and collapse whitespace, drop a type prefix."""
-    text = unicodedata.normalize("NFKC", name)
-    text = _WHITESPACE_RUN.sub(" ", text.strip(_WHITESPACE))
+    """Steps 1 to 3: fold, trim and collapse whitespace, drop a type prefix."""
+    text = _WHITESPACE_RUN.sub(" ", fold(name).strip(_WHITESPACE))
     prefix = _TYPE_PREFIX.match(text)
     return text[prefix.end() :] if prefix else text
 
@@ -352,7 +367,7 @@ def _hits(montage: Montage, channels: Sequence[Channel]) -> dict[int, str]:
         if channel.status != CANDIDATE:
             continue
         key = redirect.get(channel.key, channel.key)
-        if key in montage.positions:
+        if key.isascii() and key in montage.positions:
             hits[i] = key
     return hits
 
@@ -482,6 +497,8 @@ def montage_from_json(document: Mapping) -> Montage:
     labels = []
     for label, x, y, z in document["electrodes"]:
         key = label_key(label)
+        if not key.isascii():
+            raise ValueError(f"montage {document['name']!r}: {label!r} is not ASCII")
         if key in positions:
             raise ValueError(
                 f"montage {document['name']!r}: {label!r} and "
