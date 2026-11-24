@@ -2145,6 +2145,11 @@ def data_quality_verdicts() -> list[tuple[str, str, dict]]:
         _set(entry, f"{ica}/input_kind", "bids"), f"{ica}/profile", "archive"
     )
     metric = "nemar-quality:percentBrainComponents"
+    skipped = {
+        "key": "icactivity",
+        "kind": "nemar.ic-activity",
+        "reason": "labels_unusable",
+    }
     return [
         ("dataquality_record", "The example's record entry.", entry),
         (
@@ -2163,6 +2168,23 @@ def data_quality_verdicts() -> list[tuple[str, str, dict]]:
             "An entry of the archive whose views name stores of the serving copy: "
             "a store's profile is its entry's.",
             archive,
+        ),
+        (
+            "dataquality_views_skipped",
+            "A view the run did not write for this recording, with the reason.",
+            _set(entry, f"{ica}/views_skipped", [skipped]),
+        ),
+        (
+            "dataquality_views_skipped_closed",
+            "A skipped view is {key, kind, reason}, closed.",
+            _set(entry, f"{ica}/views_skipped", [skipped | {"note": "x"}]),
+        ),
+        (
+            "dataquality_views_skipped_reason",
+            "A reason is a lowercase word.",
+            _set(
+                entry, f"{ica}/views_skipped", [skipped | {"reason": "Labels Unusable"}]
+            ),
         ),
         (
             "dataquality_plugin_name_with_dot",
