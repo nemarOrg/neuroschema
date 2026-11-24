@@ -37,3 +37,6 @@ coverage.xml
 
 # Ruff
 .ruff_cache/
+
+# Bun (scripts/ajv)
+node_modules/

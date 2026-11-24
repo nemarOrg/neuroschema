@@ -154,6 +154,12 @@ def test_id_is_the_base_and_the_path(path):
     )
 
 
+def test_the_ajv_check_uses_the_same_ids():
+    """scripts/ajv/check.ts (CI job ajv) checks each $id against the same base."""
+    check = (ROOT / "scripts" / "ajv" / "check.ts").read_text(encoding="utf-8")
+    assert f'const BASE = "{SCHEMA_BASE}";' in check
+
+
 def test_nothing_is_fetched():
     """A $ref to a schema that is not in schema/ fails; it is never fetched."""
     _schema, resolver = load_schema(DEFINITIONS / "view.schema.json")

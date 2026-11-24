@@ -56,6 +56,24 @@ jobs:
           uv run --locked --python 3.12 --extra views --group vectors
           python scripts/generate_ic_activity_vectors.py --check
 
+  ajv:
+    # Compiles every schema with ajv 8 in strict mode, as a TypeScript renderer
+    # does, and replays the verdict corpus and the view examples against it.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+
+      - name: Install ajv
+        run: bun install --frozen-lockfile --cwd scripts/ajv
+
+      - name: Compile the schemas and replay the verdicts
+        run: bun scripts/ajv/check.ts
+
   schema-validate:
     runs-on: ubuntu-latest
     steps:

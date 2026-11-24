@@ -349,3 +349,6 @@ Only `valid` binds an implementation; `errors` say why, for a reader.
 The corpus covers the envelope, each generic kind of this page and the histogram content; presets add their own cases.
 
 `scripts/generate_kind_vectors.py` writes both files from the cases it defines, with the Python reference and jsonschema, and `--check` fails when a committed file differs from what it would write.
+`scripts/ajv/check.ts`, which CI runs as the job `ajv`, compiles every schema with ajv 8 and replays the corpus against it, so the two engines are held to one verdict.
+It adds each file as it is, under its own absolute `$id` (the relative `$ref`s then resolve by RFC 3986), and compiles in strict mode: `strict: true` with `strictRequired: false` (a `required` in an `if`, `not` or `oneOf` branch names a property its parent defines), the annotation keyword `x-extension-managers` declared, and formats not validated, as in the Python reference.
+A TypeScript renderer that validates with ajv loads the schemas the same way.
