@@ -68,6 +68,10 @@ Quality views replace figures: a view is data a browser draws, declared with a n
 - One table words every note and digest state (`docs/views/presets.md`, Notes and states).
 - A model holds no negative zero in any number (counts, totals, limits), and the vectors hold counts written `-0`.
 - CI: a job `ajv` compiles every schema with ajv 8 in strict mode and replays the verdict corpus (`scripts/ajv/check.ts`).
+- From the release review (S6c-2, records and docs): `dataQuality` record entries may list `views_skipped`, `[{key, kind, reason}]`, the views a run did not write for a recording and why, with a words table in `docs/views.md` (`labels_unusable`, `plugin_failed`, `step_failed`, `step_skipped`, `cap_exceeded`).
+- `nemar.ic-activity`: the display filter runs over the window and up to a second of real context on each side (`ceil(rate)` samples), padded only at the recording's own ends, and `docs/views/ic-activity.md` states its response (-6 dB at `highpass_hz`, -3 dB at about 1.246 times it) and the transient context leaves; activations are labeled `a.u.`. The vectors gain windows with context on both sides, at the recording's ends and with less than a second before.
+- `nemar.histogram`: bins of unequal width are drawn by density, count over width (the model's `heights`, each bin's `width` and `density`, and `max_density`), and the content and a `dataQuality` distribution's histogram may count `missing` values apart, shown beside the bars.
+- `nemar.spectrum`'s `welch` is stated in full (mean-detrended windows, mean averaging, one-sided, the 0 Hz row left out), and `nemar.ic-classes` labels "summed variance of components classed X".
 - Vectors: escaped duplicate names, lone surrogates and noncharacters, nesting 64 and 65 deep, integers past 2^53, URL-escaping locations, names that imitate ICLabel, and a vector for every new word and each new pair of neighboring checks.
 - `qualityMetric`: the producer is exactly one of `plugin` and `recipe`, so a recipe's own metric names its recipe.
 - `processingTypes`: `figures` leaves the `checkpointName` examples.
