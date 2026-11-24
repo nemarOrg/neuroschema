@@ -37,6 +37,7 @@ from neuroschema.views.registry import (
     known_kinds,
     load_registry,
 )
+from neuroschema.views.sensor_labels import type_class
 
 MODELS_FORMAT = "nemar.kinds-models.v1"
 VIEW_SCHEMA = REPO_ROOT / "schema" / "definitions" / "view.schema.json"
@@ -607,25 +608,10 @@ _AXIS_KEYS = ("dim", "type", "unit")
 NO_PLACE = "n/a"
 """A place cell that holds no number: that sensor has no place."""
 
-_TYPE_WHITESPACE = "\t\n\v\f\r "
-_ASCII_UPPER = str.maketrans("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")
-
-
-def sensor_type_class(text: str | None) -> str:
-    """``eeg``, ``untyped`` or ``other``: a ``sensor_type`` cell, read as
-    ``nemar.sensor-labels.v1`` reads a channel's type.
-
-    The text is trimmed of TAB, LF, VT, FF, CR and space at both ends and its
-    letters A to Z are folded to a to z; then ``eeg`` is EEG, an empty cell or
-    ``n/a`` is untyped, and anything else (``SEEG``, ``ECOG``, ``DBS``, ``EOG``)
-    is another type.
-    """
-    if text is None:
-        return "untyped"
-    folded = text.strip(_TYPE_WHITESPACE).translate(_ASCII_UPPER)
-    if folded in ("", "n/a"):
-        return "untyped"
-    return "eeg" if folded == "eeg" else "other"
+sensor_type_class = type_class
+"""``eeg``, ``untyped`` or ``other``: a ``sensor_type`` cell, read as
+``nemar.sensor-labels.v1`` reads a channel's type (one definition,
+:func:`neuroschema.views.sensor_labels.type_class`)."""
 
 
 def drawn_rows(
