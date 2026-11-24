@@ -144,7 +144,7 @@ The source decides the values' `sensor` coordinates and how a renderer places ea
 2. **Positions.**
    The coordinates are `{"role": "positions", "column": "name"}`: the values' sensors are the positions' rows, by position.
    The renderer projects the drawn rows' positions (below) with `nemar.sensor-layout.v1` in the frame the role names (`coordinate_system`, or `n/a` with a `montage`), and draws the projected layout; a row without a finite position has no place and is dropped (step 1).
-   The projection receives the drawn rows only, in row order, so measured positions are centered on a sphere fitted to the EEG rows alone.
+   The projection is given the drawn rows only, in row order, and fits every row it is given, so with typed rows the sphere is fitted to the EEG rows alone.
    If the projection is refused (`frame_unknown` or `positions_flat`), the renderer places the drawn rows by their names, as in 3, and says why the positions could not be used; if that placement is refused too, its word takes every map's place.
 3. **Names.**
    The coordinates are names in the values file, `{"column": "<name column>"}` along the rows or `{"header": true}` along the columns, and a renderer places the names with `nemar.sensor-labels.v1` (a separate algorithm, specified beside this one), each with its row's type when the names came from a positions role and no type otherwise.
