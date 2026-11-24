@@ -39,8 +39,8 @@ MIN_SENSORS = 8
 CONTOUR_COUNT = 6
 """Interior contour levels."""
 FLAT_FIELD = "flat_field"
-"""The note of a flat field, every sensor one value: "all sensors have the same
-value". The map is that value in every cell, with no interpolation."""
+"""The note of a flat field, every usable sensor one value: "all sensors have
+the same value". Its map is that value in every cell."""
 COLOR_MARGIN = 0.05
 """The color axis widens the limits by this share: of each limit's magnitude
 for ``absmax`` (EEGLAB's ``caxis``), of their range for ``minmax``."""
@@ -251,13 +251,28 @@ def color_axis(pair: tuple[float, float], rule: str) -> tuple[float, float]:
 
 
 def is_flat(values: np.ndarray) -> bool:
-    """A flat field: every usable sensor's value is equal.
+    """A flat field: every usable sensor's value is equal, exactly.
 
-    The biharmonic interpolant of equal values is not constant, because it has
-    no constant term, so it would ripple about the value: the ripple is the
-    spline's, not the data's. A flat field is drawn at its value instead.
+    Its map is that value in every cell (the deviations from the mean are 0),
+    and it carries the note :data:`FLAT_FIELD`.
     """
     return bool(values.min() == values.max())
+
+
+def center(v: np.ndarray) -> float:
+    """``m``, the mean of the interpolated values ``v``, in their order:
+    ``v[0] + ((v[0] - v[0]) + (v[1] - v[0]) + ... + (v[n-1] - v[0])) / n``.
+
+    Equal values give ``m`` equal to them exactly, so a flat field's deviations
+    are exactly 0. The map interpolates the deviations ``v - m`` and adds ``m``
+    back, so it is the same map, moved, whatever constant the values carry: the
+    spline has no constant term, and a constant interpolated with it ripples.
+    """
+    first = float(v[0])
+    total = 0.0
+    for value in v:
+        total += float(value) - first
+    return first + total / len(v) + 0.0
 
 
 def contour_levels(z: np.ndarray) -> tuple[float, ...]:
@@ -336,20 +351,21 @@ def sensor_field(
             "head_outside_grid", "no grid cell lies inside the head circle"
         )
 
-    flat = is_flat(values[rows])
-    if flat:
-        # 8 and 9. A flat field: every cell is the one value, uninterpolated.
-        z = np.full(qx.shape, float(values[rows[0]]) + 0.0)
-    else:
-        # 8. Biharmonic interpolation: solve G w = v.
-        d = np.hypot(px[:, None] - px[None, :], py[:, None] - py[None, :])
-        w = lu_solve(green(d), v)
+    # 8. Biharmonic interpolation of the deviations from the mean: solve
+    # G w = v - m. A flat field's deviations are exactly 0, so are its
+    # weights, and every cell is m, its value: no special case draws it.
+    m = center(v)
+    d = np.hypot(px[:, None] - px[None, :], py[:, None] - py[None, :])
+    with np.errstate(over="ignore", invalid="ignore"):
+        w = lu_solve(green(d), v - m)
 
-        # 9. Evaluation. A weight that is not finite (a zero pivot, or an
-        # overflow) makes the cells not finite, so step 10's check serves.
-        dq = np.hypot(qx[:, :, None] - px, qy[:, :, None] - py)
-        with np.errstate(over="ignore", invalid="ignore"):
-            z = green(dq) @ w
+    # 9. Evaluation, with the mean added back. A weight that is not finite (a
+    # zero pivot, or an overflow) makes the cells not finite, so step 10's
+    # check serves.
+    dq = np.hypot(qx[:, :, None] - px, qy[:, :, None] - py)
+    with np.errstate(over="ignore", invalid="ignore"):
+        z = m + green(dq) @ w
+    flat = is_flat(values[rows])
     # 10. The mask.
     z[masked] = np.nan
     if not np.isfinite(z[~masked]).all():

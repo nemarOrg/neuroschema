@@ -109,6 +109,28 @@ ALIASES = {"MNI152NLin6ASym": "MNI152NLin6Asym"}
 BIDS_ENUMS = BIDS_SPEC.replace(
     "src/appendices/coordinate-systems.md", "src/schema/objects/enums.yaml"
 )
+# The 19 electrodes of the 10-20 system as the presets example lays them out.
+TEN_TWENTY = [
+    ("Fp1", -18, 0.511),
+    ("Fp2", 18, 0.511),
+    ("F7", -54, 0.511),
+    ("F3", -39.9, 0.333),
+    ("Fz", 0, 0.256),
+    ("F4", 39.9, 0.333),
+    ("F8", 54, 0.511),
+    ("T7", -90, 0.511),
+    ("C3", -90, 0.256),
+    ("Cz", 0, 0),
+    ("C4", 90, 0.256),
+    ("T8", 90, 0.511),
+    ("P7", -126, 0.511),
+    ("P3", -140.1, 0.333),
+    ("Pz", 180, 0.256),
+    ("P4", 140.1, 0.333),
+    ("P8", 126, 0.511),
+    ("O1", -162, 0.511),
+    ("O2", 162, 0.511),
+]
 UNKNOWN_FRAMES = ["Other", "n/a", "", "Pixels", "individual", "study", "scanner"]
 UNKNOWN_FRAMES += ["eeglab", "captrak", "MNI", "CapTrak "]
 
@@ -350,6 +372,16 @@ def planar(theta, radius):
     return np.cos(t) * r, np.sin(t) * r
 
 
+def deviation_center(values):
+    """The spec's mean: the first value plus the mean of the differences from
+    it, summed in order, so equal values give themselves exactly."""
+    first = float(values[0])
+    total = 0.0
+    for value in values:
+        total += float(value) - first
+    return first + total / len(values) + 0.0
+
+
 def merged_inputs(theta, radius, values):
     """Usable rows, merge groups (kept row first) and the kept sensors."""
     theta, radius, values = (
@@ -411,7 +443,17 @@ def field_case_from(name, description, sensors, extra=None):
         return case
     outer_kept = max(radius[k] for k in kept)
     option = None if outer_kept == outer else plotrad_all
-    zi, plotrad, gx, gy = eegprep_topoplot(theta[kept], radius[kept], means, option)
+    # The spec interpolates the deviations from the mean m of the interpolated
+    # values and adds m back; eegprep is given the deviations.
+    m = deviation_center([means[kept.index(k)] for k in interpolated])
+    deviations = [mean - m for mean in means]
+    finite = math.isfinite(m) and all(map(math.isfinite, deviations))
+    # Deviations that overflow make the weights and cells not finite; eegprep
+    # drops a value that is not finite, so it draws zeros, for the grid alone.
+    zi, plotrad, gx, gy = eegprep_topoplot(
+        theta[kept], radius[kept], deviations if finite else [0.0] * len(kept), option
+    )
+    zi = m + zi if finite else np.full_like(zi, np.nan)
     if plotrad != plotrad_all:
         sys.exit(f"{name}: eegprep's plotrad {plotrad!r} is not {plotrad_all!r}")
     inside_head = np.sqrt(gx[:, None] * gx[:, None] + gy[None, :] * gy[None, :]) <= 0.5
@@ -419,9 +461,6 @@ def field_case_from(name, description, sensors, extra=None):
         case["refused"] = "head_outside_grid"
         return case
     flat = len({float(values[i]) for i in usable}) == 1
-    if flat:
-        # eegprep interpolates equal values and ripples; the spec draws the value.
-        zi = np.where(inside_head, float(values[usable[0]]) + 0.0, np.nan)
     if not np.isfinite(zi[inside_head]).all():
         case["refused"] = "interpolation_failed"
         return case
@@ -715,8 +754,9 @@ def field_cases():
             "constant_values",
             "montage_32 with every value 2.5: a flat field. The biharmonic "
             "interpolant of equal values is not constant (it has no constant "
-            "term) and ripples in EEGLAB and eegprep; the spec draws 2.5 in every "
-            "cell, with no contours and the note flat_field.",
+            "term) and ripples in EEGLAB and eegprep; with the mean removed, the "
+            "deviations are 0 and every cell is 2.5, with no contours and the "
+            "note flat_field.",
             labels,
             theta,
             radius,
@@ -852,6 +892,92 @@ def field_cases():
                 base * 0.5 + offset,
             )
         )
+    flat = np.full(32, 5.0)
+    for name, description, case_theta, case_radius, values, extra_rows in [
+        (
+            "flat_nan_value",
+            "montage_32 with every value 5 but row 3's, which is not finite: the "
+            "usable sensors are equal, so the map is 5 with the note flat_field.",
+            theta,
+            radius,
+            np.where(np.arange(32) == 3, np.nan, flat),
+            None,
+        ),
+        (
+            "flat_no_place",
+            "montage_32 with every value 5 but row 3's, 9, at a theta that is not "
+            "finite: row 3 is not usable, so the field is flat (note flat_field).",
+            np.where(np.arange(32) == 3, np.nan, theta),
+            radius,
+            np.where(np.arange(32) == 3, 9.0, flat),
+            None,
+        ),
+        (
+            "flat_not_interpolated",
+            "montage_32 at 5, and a sensor of 9 at theta 0 and radius 1.2, beyond "
+            "the interpolation square and plotrad: not every usable sensor is 5, "
+            "so there is no note, but every interpolated one is, so the map is 5 "
+            "in every cell, with no contours.",
+            theta,
+            radius,
+            flat,
+            ("FRONT", 0.0, 1.2, 9.0),
+        ),
+        (
+            "flat_minus_zero",
+            "montage_32 at 0, row 0 at -0: equal values (-0 equals 0), so the note "
+            "flat_field, and every cell is 0, never -0.",
+            theta,
+            radius,
+            np.where(np.arange(32) == 0, -0.0, np.zeros(32)),
+            None,
+        ),
+        (
+            "near_flat_one_ulp",
+            "montage_32 at 30 and the next binary64 above 30, alternating: not "
+            "equal, so no note; the map is its mean plus a ripple a few ulps wide, "
+            "compared within the magnitude tolerance.",
+            theta,
+            radius,
+            np.where(np.arange(32) % 2 == 0, np.nextafter(30.0, 31.0), 30.0),
+            None,
+        ),
+        (
+            "near_flat_one_nano_db",
+            "montage_32 at 30 dB but row 0 at 30 + 1e-9: not flat, so no note, "
+            "and the map is the mean plus the one sensor's bump.",
+            theta,
+            radius,
+            np.where(np.arange(32) == 0, 30.0 + 1e-9, 30.0),
+            None,
+        ),
+    ]:
+        labels_k = list(labels)
+        if extra_rows:
+            extra_name, extra_theta, extra_radius, extra_value = extra_rows
+            labels_k.append(extra_name)
+            case_theta = [*case_theta, extra_theta]
+            case_radius = [*case_radius, extra_radius]
+            values = [*values, extra_value]
+        cases.append(
+            field_case(name, description, labels_k, case_theta, case_radius, values)
+        )
+    ten_twenty = [(n, float(t), float(r)) for n, t, r in TEN_TWENTY]
+    at_10_hz = np.array([28 - 10 / 6 + 6 + (3 * k % 5) / 2 for k in range(19)])
+    shape = (at_10_hz - at_10_hz.min()) / (at_10_hz.max() - at_10_hz.min())
+    cases.append(
+        field_case(
+            "near_flat_minus_110_db",
+            "The 19 electrodes of the 10-20 system at -110 dB plus 0.05 dB of the "
+            "presets example's 10 Hz pattern: without the mean removed, the "
+            "spline's ripple of -110 would fill the color axis; with it, the map "
+            "is the pattern.",
+            [n for n, _t, _r in ten_twenty],
+            [t for _n, t, _r in ten_twenty],
+            [r for _n, _t, r in ten_twenty],
+            -110.0 + 0.05 * shape,
+        )
+    )
     labels, theta, radius = layouts[128]
     cases.append(
         field_case(
@@ -1046,8 +1172,9 @@ def sensor_field_vectors(ref):
             "refused with. z[i][j] is the value at (x[i], y[j]); null is a masked "
             "cell. Sensor indices are input rows from 0; merged lists each merge "
             "group, the kept sensor first. The expected maps are eegprep's topoplot "
-            "of the merged, finite sensors, except a flat field (every usable value "
-            "equal), which is that value in every cell, with the note flat_field. "
+            "of the merged, finite sensors' deviations from their mean, plus the "
+            "mean; a flat field (every usable value equal) carries the note "
+            "flat_field. "
             "A case whose sensors give x, y and z "
             "instead of theta_deg and radius places them by 3D positions in the "
             "frame coordinate_system names (or n/a with a montage): "
@@ -1058,7 +1185,7 @@ def sensor_field_vectors(ref):
         "reference": ref,
         "tolerance": {
             "cells_relative_to_range": 1e-6,
-            "constant_map_cells": 1e-12,
+            "cells_relative_to_magnitude": 1e-12,
             "geometry_relative": 1e-12,
         },
         "grid_size": GRID,
@@ -1630,7 +1757,10 @@ def differences(new, old, path="", scale=None, extent=None):
         local = scale
         if isinstance(grid, list) and grid and isinstance(grid[0], list):
             finite = [v for row in grid for v in row if v is not None]
-            local = max(finite) - min(finite) or 1.0
+            # The map's range, and a share of its magnitude: a near-flat map's
+            # cells are its mean plus a ripple a few ulps wide.
+            magnitude = max(1.0, *(abs(v) for v in finite))
+            local = max(finite) - min(finite) + 1e-3 * magnitude
         for key in new:
             if key in SCALED_KEYS or scale is not None:
                 tol = local
