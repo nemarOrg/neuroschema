@@ -41,7 +41,9 @@ The writer sets `shaded.files` and `bad_segment_table` from the record, null and
 
 **Named.** A declared table is the one the record names, and a renderer checks it before it fetches anything (`table_location_mismatch`), because a view that read a decoy table with no rows would draw a clean window.
 A `nemar.ic-activity`'s `badsegments` input is at `shaded.files[0]`, which comes from the record ([ic-activity.md](ic-activity.md#the-checks-in-order)).
-A `nemar.signal-window`'s tables are the recording's: each lies in the directory of the `signal` store's `recording`, its name begins with the recording's entities (the recording's file name up to its last `_`, `sub-01_task-rest` for `sub-01_task-rest_eeg.set`) and ends in `_channels.tsv` or `_badsegments.tsv` (the schema checks the suffix), and the two share one stem (`sub-01_task-rest_desc-nemarfloor`), as the floor writes them.
+A `nemar.signal-window`'s tables are the recording's: each lies in the directory of the `signal` store's `recording` and is named `<stem>_channels.tsv` or `<stem>_badsegments.tsv` (the schema checks the suffix), and the two share one stem, as the floor writes them.
+The stem is a product's of that recording, as nemar-process names one: the recording's entities (its file name up to its last `_`, `sub-01_task-rest` for `sub-01_task-rest_eeg.set`) and then `_desc-<label>` (`sub-01_task-rest_desc-nemarfloor`), or, when the recording's last entity is a `desc`, the label appended to its value (`sub-01_task-rest_desc-cleannemarfloor` for `sub-01_task-rest_desc-clean_eeg.set`), the label being letters and digits.
+Anything else after the entities names another recording (`_run-2`, the `ingstate` of `task-restingstate`, `_acq-other`), and is refused.
 
 **Verified.** A declared table is verified like any data file, and a fault refuses the whole view.
 It declares at most `caps.bytes_per_role` bytes (`cap_exceeded`, checked before the file is fetched), it is present, and its length is its `size` and its SHA-256 its `sha256` (`file_missing`, `file_size_mismatch`, `file_digest_mismatch`); when a view declares both tables, the channels' file is checked first.

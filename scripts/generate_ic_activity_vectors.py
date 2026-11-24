@@ -807,6 +807,37 @@ def refusals() -> list[Case]:
         "with nothing shaded (probe p7).",
         (view, files),
     )
+    view, files = _small_view(segments=True)
+    other = "sub-01/eeg/sub-01_task-rest_run-2_desc-nemarica"
+    for given in view["inputs"]:
+        if "file" in given:
+            role, old = given["role"], given["file"]["location"]
+            moved = other + old.removeprefix(PREFIX)
+            files[moved] = files.pop(old)
+            given["file"]["location"] = moved
+            if role == "unmixing":
+                view["transform"]["parameters"]["matrix"] = moved
+            if role == "badsegments":
+                view["transform"]["parameters"]["shaded"]["files"] = [moved]
+    refused(
+        "tables_of_another_recording",
+        "The matrix, the components and the bad segments of run 2, named for it "
+        "and consistent with matrix and shaded.files: not the recording's, so "
+        "table_location_mismatch (review r29).",
+        (view, files),
+    )
+    view, files = _small_view()
+    moved = "sub-01/eeg/sub-01_task-rest_desc-nemarfloor_components.tsv"
+    files[moved] = files.pop(COMPONENTS_AT)
+    for given in view["inputs"]:
+        if given["role"] == "components":
+            given["file"]["location"] = moved
+    refused(
+        "tables_two_stems",
+        "The components table under another stem (desc-nemarfloor) than the "
+        "matrix's (desc-nemarica): table_location_mismatch.",
+        (view, files),
+    )
     view, files = _small_view()
     view["transform"]["parameters"]["matrix"] = f"{PREFIX}_unmixing.tsv"
     refused(

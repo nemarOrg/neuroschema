@@ -124,6 +124,7 @@ A renderer runs these checks in this order, and the first that fails gives the w
    The declaration is valid (`declaration_invalid`): it has a digest and meets `view.schema.json#/$defs/view`, which applies the transform's schema to every view that names the transform, whatever its kind ([generic-kinds.md](generic-kinds.md#building-a-model)).
 2. **The inputs' locations.**
    Each file input is where the record says (`table_location_mismatch`): the `unmixing` input's location is the transform's `matrix`, then the `badsegments` input's, when there is one, is `shaded.files[0]`.
+   Then the `unmixing`, `components` and `badsegments` tables are the recording's: each is named `<stem>_<suffix>.tsv` beside the `signal` store's `recording`, with the stem of a product of it, and all share one stem ([the floor's tables](presets.md#the-floors-tables) gives the rule).
    A view cannot read one table and name another, such as a decoy table with no rows in place of the floor's.
 3. **The decomposition's store.**
    For a decomposition of the serving copy, `decomposition_input.store` names the `signal` store (`store_mismatch`): its `path` is the store's `path` (or its `recording`, when it has no `path`) and its `group` the store's `group`, then its `content_sha256` is the store's.

@@ -3129,6 +3129,14 @@ def _relocated(case: tuple, role: str, location: str) -> tuple:
     return view, files, store, caps
 
 
+def _recorded_as(case: tuple, recording: str) -> tuple:
+    """A signal window case whose store is that of another recording path."""
+    view, files, store, caps = copy.deepcopy(case)
+    signal = next(i for i in view["inputs"] if i["role"] == "signal")["store"]
+    signal["recording"] = recording
+    return view, files, store, caps
+
+
 def _dropped(case: tuple, role: str) -> tuple:
     """A signal window case that does not declare its table for the role."""
     view, files, store, caps = copy.deepcopy(case)
@@ -3382,6 +3390,71 @@ def signal_window_check_cases() -> list[tuple[str, str, dict, dict, dict]]:
                 at(151.5, 2),
                 "badsegments",
                 "sub-01/eeg/sub-01_task-rest_desc-nemarfloor_badsegments.tsv",
+            ),
+        ),
+        (
+            "signal_window_tables_run",
+            "Both tables of run 2 (sub-01_task-rest_run-2), whose name begins "
+            "with the recording's entities: "
+            "after the entities only _desc-<label> may follow, so "
+            "table_location_mismatch (review r29).",
+            *_relocated(
+                _relocated(
+                    at(151.5, 2),
+                    "channels",
+                    "sub-01/eeg/sub-01_task-rest_run-2_desc-nemarica_channels.tsv",
+                ),
+                "badsegments",
+                "sub-01/eeg/sub-01_task-rest_run-2_desc-nemarica_badsegments.tsv",
+            ),
+        ),
+        (
+            "signal_window_tables_task_prefix",
+            "Both tables of task restingstate, whose name begins with "
+            "sub-01_task-rest: "
+            "after the entities only _desc-<label> may follow, so "
+            "table_location_mismatch (review r29).",
+            *_relocated(
+                _relocated(
+                    at(151.5, 2),
+                    "channels",
+                    "sub-01/eeg/sub-01_task-restingstate_desc-nemarica_channels.tsv",
+                ),
+                "badsegments",
+                "sub-01/eeg/sub-01_task-restingstate_desc-nemarica_badsegments.tsv",
+            ),
+        ),
+        (
+            "signal_window_tables_acq",
+            "Both tables of acquisition other (sub-01_task-rest_acq-other): "
+            "after the entities only _desc-<label> may follow, so "
+            "table_location_mismatch (review r29).",
+            *_relocated(
+                _relocated(
+                    at(151.5, 2),
+                    "channels",
+                    "sub-01/eeg/sub-01_task-rest_acq-other_desc-nemarica_channels.tsv",
+                ),
+                "badsegments",
+                "sub-01/eeg/sub-01_task-rest_acq-other_desc-nemarica_badsegments.tsv",
+            ),
+        ),
+        (
+            "signal_window_tables_desc_recording",
+            "A recording whose last entity is a desc (desc-clean): the tables "
+            "append the label to its value (desc-cleannemarica), as nemar-process "
+            "names them, and are the recording's.",
+            *_recorded_as(
+                _relocated(
+                    _relocated(
+                        at(151.5, 2),
+                        "channels",
+                        "sub-01/eeg/sub-01_task-rest_desc-cleannemarica_channels.tsv",
+                    ),
+                    "badsegments",
+                    "sub-01/eeg/sub-01_task-rest_desc-cleannemarica_badsegments.tsv",
+                ),
+                "sub-01/eeg/sub-01_task-rest_desc-clean_eeg.set",
             ),
         ),
         (
