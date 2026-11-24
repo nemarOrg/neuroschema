@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "rights.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/definitions/rights.schema.json",
   "title": "Rights",
   "description": "A structured rights/license entry with URI and machine-readable identifier. Aligns with DataCite Rights (property 16). Complements the simpler 'license' string field in core by providing full SPDX identifiers and URIs needed for DOI registration and FAIR compliance.",
   "type": "object",

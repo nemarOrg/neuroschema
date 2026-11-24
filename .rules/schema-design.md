@@ -18,7 +18,7 @@
 
 - Extensions MUST define `"additionalProperties": true` to allow forward compatibility.
 - Extension schemas live in `schema/extensions/`.
-- Each extension gets a `$id` matching its filename.
+- Every schema file's `$id` is the absolute URI `https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/` plus its path under `schema/` (`neuroschema.validate.SCHEMA_BASE`), so a relative `$ref` resolves by RFC 3986 in every engine, ajv included. The `$id` is an identifier: the validator loads every file from `schema/` and never fetches one.
 - Extensions can reference definitions from `schema/definitions/`.
 - Objects nested inside an extension may be closed (`additionalProperties: false`); only the namespace root must stay open.
 - Never declare `$id` below a file's root: vendoring rewrites only root `$id`s, and the validator's store maps only root `$id`s.

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "transform.nemar.sensor-layout.v1.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/views/transform.nemar.sensor-layout.v1.schema.json",
   "title": "View Transform nemar.sensor-layout, Version 1",
   "description": "Applied on top of the envelope to a view declaration whose transform is nemar.sensor-layout.v1 (docs/views/sensor-layout.md): three-dimensional sensor positions to a layout of theta and radius. The positions are either a stored data role positions, which names its own frame (coordinate_system, or n/a with a montage), so the transform takes no parameters; or the view's one input, the role positions, a TSV file of the run's product with the columns name, x, y and z, whose frame the transform's parameters name. The frame is declared once, never twice.",
   "type": "object",

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "neuroschema.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/neuroschema.schema.json",
   "title": "Neuroschema",
   "description": "Root schema for FAIR neuroimaging metadata. Supports two document types: dataset-level summaries and record-level (per-data-file) metadata. The core fields are stable and platform-neutral; domain-specific fields live under the 'extensions' namespace.",
   "type": "object",

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "transform.nemar.ic-activity.v1.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/views/transform.nemar.ic-activity.v1.schema.json",
   "title": "View Transform nemar.ic-activity, Version 1",
   "description": "Applied on top of the envelope to a view declaration whose transform is nemar.ic-activity.v1 (docs/views/ic-activity.md): component activations as one plain multiply, the browser's unmixing matrix times the serving copy's physical values of the decomposition's channels, with no preprocessing. It reads three inputs, each once: unmixing (a TSV file of the run's product: one column per channel, headed by its label, and one row per component), signal (the recording's store in the serving copy) and components (a TSV file whose column component names the rows of unmixing). The parameters are the record's browser_transform block: the matrix and its columns, how the columns find their store rows (match: store_row, by the rows the decomposition read, or label, by channel label), the unit the matrix takes, a caption, and the spans a view shades.",
   "type": "object",

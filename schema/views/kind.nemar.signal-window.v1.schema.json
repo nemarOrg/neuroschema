@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "kind.nemar.signal-window.v1.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/views/kind.nemar.signal-window.v1.schema.json",
   "title": "View Kind nemar.signal-window, Version 1",
   "description": "A window of the recording as the serving copy holds it, opened in the signal viewer, a preset over nemar.lines version 1, applied on top of the envelope to a view declaration whose kind is nemar.signal-window and kind_version 1. The role signal is the recording's store; the window starts at parameters.start_s and lasts parameters.duration_s. The role channels (always) and the role badsegments (when the floor wrote it, parameters.bad_segment_table) are the floor's decisions, which a renderer marks over the window (bad channels and bad segments). Nothing is computed or stored: the view names a window of data the viewer already reads under the dataset's read rule. docs/views/presets.md is normative.",
   "type": "object",

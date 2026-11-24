@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "contributor.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/definitions/contributor.schema.json",
   "title": "Contributor",
   "description": "A contributor with a typed role, beyond the primary authors/creators. Aligns with DataCite Contributor (property 7). Common roles for neuroimaging datasets include DataCollector, ProjectLeader, and HostingInstitution.",
   "type": "object",

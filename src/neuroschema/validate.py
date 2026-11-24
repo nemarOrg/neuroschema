@@ -24,6 +24,15 @@ from pathlib import Path
 from jsonschema import Draft202012Validator, RefResolver, ValidationError
 
 SCHEMA_DIR = Path(__file__).resolve().parent.parent.parent / "schema"
+# Every schema's $id is this base plus its path under schema/: an absolute URI,
+# so a relative $ref resolves by RFC 3986 in every engine (ajv included). It is
+# an identifier; the validator reads each file from schema/ and fetches nothing.
+SCHEMA_BASE = "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/"
+
+
+def schema_id(schema_file: Path, schema_dir: Path = SCHEMA_DIR) -> str:
+    """The $id a schema file carries: :data:`SCHEMA_BASE` plus its path."""
+    return SCHEMA_BASE + Path(schema_file).relative_to(schema_dir).as_posix()
 
 
 def _build_store(schema_dir: Path) -> dict[str, dict]:
@@ -36,8 +45,7 @@ def _build_store(schema_dir: Path) -> dict[str, dict]:
     store: dict[str, dict] = {}
     for schema_file in schema_dir.rglob("*.schema.json"):
         try:
-            with open(schema_file) as f:
-                schema = json.load(f)
+            schema = json.loads(schema_file.read_text(encoding="utf-8"))
         except json.JSONDecodeError as exc:
             raise json.JSONDecodeError(
                 f"Failed to parse {schema_file}: {exc.msg}",
@@ -50,6 +58,11 @@ def _build_store(schema_dir: Path) -> dict[str, dict]:
             store[uri] = schema
             store[schema["$id"]] = schema
     return store
+
+
+def _no_fetch(uri: str) -> dict:
+    """Refuse to fetch a schema: every $id is in the store, or the ref is wrong."""
+    raise LookupError(f"schema {uri} is not in {SCHEMA_DIR}; nothing is fetched")
 
 
 def load_schema(
@@ -71,14 +84,14 @@ def load_schema(
     if schema_path is None:
         schema_path = schema_dir / "neuroschema.schema.json"
 
-    with open(schema_path) as f:
-        schema = json.load(f)
+    schema = json.loads(Path(schema_path).read_text(encoding="utf-8"))
 
     store = _build_store(schema_dir)
     resolver = RefResolver(
         base_uri=f"file://{schema_path.parent}/",
         referrer=schema,
         store=store,
+        handlers={"http": _no_fetch, "https": _no_fetch},
     )
     return schema, resolver
 

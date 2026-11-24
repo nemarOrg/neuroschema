@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "externalLinks.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/definitions/externalLinks.schema.json",
   "title": "External Links",
   "description": "Relevant external hyperlinks for the dataset.",
   "type": "object",

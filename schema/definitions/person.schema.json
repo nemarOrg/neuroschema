@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "person.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/definitions/person.schema.json",
   "title": "Person",
   "description": "A structured person record for authors or contributors. Includes name components, ORCID, and affiliations for DataCite compatibility.",
   "type": "object",

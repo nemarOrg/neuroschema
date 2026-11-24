@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "kind.nemar.ic-classes.v1.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/views/kind.nemar.ic-classes.v1.schema.json",
   "title": "View Kind nemar.ic-classes, Version 1",
   "description": "The independent components of one decomposition counted by their dominant class, a preset over nemar.histogram version 1, applied on top of the envelope to a view declaration whose kind is nemar.ic-classes and kind_version 1. One stored JSON file is read as the role histogram; its content meets content.nemar.ic-classes.v1, a histogram by category (categories and counts) with the variance each class's components account for (summed_variance_pct) and the number of components (n_components). docs/views/presets.md is normative; a renderer that knows only nemar.histogram draws the categories and counts.",
   "type": "object",

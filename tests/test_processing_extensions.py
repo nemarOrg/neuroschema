@@ -14,7 +14,13 @@ from pathlib import Path
 import pytest
 from jsonschema import Draft202012Validator
 
-from neuroschema.validate import load_schema, validate_document, validate_file
+from neuroschema.validate import (
+    SCHEMA_BASE,
+    load_schema,
+    schema_id,
+    validate_document,
+    validate_file,
+)
 from tests.helpers import (
     cascade_problems,
     count_problems,
@@ -119,7 +125,7 @@ class TestQualityMetric:
         assert errors_for(METRIC, doc) == {("pattern", "plugin/version")}
 
 
-# ── Schema graph: every $id is its file name and every $ref resolves ───────
+# ── Schema graph: every $id is absolute and every $ref resolves ────────────
 
 
 ALL_SCHEMAS = sorted(SCHEMA_DIR.rglob("*.schema.json"))
@@ -138,9 +144,21 @@ def _refs(node):
 
 
 @pytest.mark.parametrize("path", ALL_SCHEMAS, ids=lambda p: p.name)
-def test_id_is_file_name(path):
-    schema = json.loads(path.read_text())
-    assert schema["$id"] == path.name
+def test_id_is_the_base_and_the_path(path):
+    """An absolute $id, so a relative $ref resolves by RFC 3986 in every engine."""
+    schema = json.loads(path.read_text(encoding="utf-8"))
+    assert (
+        schema["$id"]
+        == schema_id(path)
+        == SCHEMA_BASE + str(path.relative_to(SCHEMA_DIR).as_posix())
+    )
+
+
+def test_nothing_is_fetched():
+    """A $ref to a schema that is not in schema/ fails; it is never fetched."""
+    _schema, resolver = load_schema(DEFINITIONS / "view.schema.json")
+    with pytest.raises(Exception, match="nothing is fetched"):
+        resolver.resolve(SCHEMA_BASE + "definitions/absent.schema.json")
 
 
 @pytest.mark.parametrize("path", ALL_SCHEMAS, ids=lambda p: p.name)

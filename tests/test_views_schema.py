@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 from jsonschema import Draft202012Validator
 
-from neuroschema.validate import load_schema, validate_document
+from neuroschema.validate import load_schema, schema_id, validate_document
 from neuroschema.views import (
     REGISTRY_FORMAT,
     CanonicalizationError,
@@ -682,7 +682,7 @@ class TestRegistry:
             assert match, path.name
             assert match["kind"] == entry["kind"]
             assert int(match["version"]) == entry["kind_version"]
-            assert json.loads(path.read_text())["$id"] == path.name
+            assert json.loads(path.read_text())["$id"] == schema_id(path)
 
     def test_view_schema_checks_exactly_the_registered_kinds(self):
         dispatch = _dispatch()

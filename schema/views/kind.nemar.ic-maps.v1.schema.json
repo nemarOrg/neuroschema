@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "kind.nemar.ic-maps.v1.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/views/kind.nemar.ic-maps.v1.schema.json",
   "title": "View Kind nemar.ic-maps, Version 1",
   "description": "The scalp maps of the independent components of one decomposition, a preset over nemar.sensor-field version 1, applied on top of the envelope to a view declaration whose kind is nemar.ic-maps and kind_version 1. The role values is the mixing matrix, the sensors along the rows (the layout's rows, by position) and one map per component column (the dimension component, named by the header); the role layout places the sensors; the role components has one row per component, which a renderer prints as that component's text row. docs/views/presets.md is normative; a renderer that knows only nemar.sensor-field draws the values and the layout as maps, because they meet its role contract, and offers the components file for download.",
   "type": "object",

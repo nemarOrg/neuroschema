@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "kind.nemar.lines.v1.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/views/kind.nemar.lines.v1.schema.json",
   "title": "View Kind nemar.lines, Version 1",
   "description": "Generic line chart, applied on top of the envelope to a view declaration whose kind is nemar.lines and kind_version 1. One stored TSV file is read as the role values. One dimension runs along the rows: its coordinates are a numeric column of the file, strictly increasing, and they form the x axis. The other runs along the columns: each declared column other than the x column is one series. The series labels are the column names, or, for a preset over this kind, a column of another of the preset's roles. A renderer builds the model in docs/views/generic-kinds.md. This is a generic kind, so it has no base, no inputs, no transform and no parameters.",
   "type": "object",

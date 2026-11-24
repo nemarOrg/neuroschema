@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "dataSummary.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/definitions/dataSummary.schema.json",
   "title": "Data Summary",
   "description": "Aggregate statistics about the data content of a dataset. These are computed summaries across all recordings (ranges, counts, distributions).",
   "type": "object",
