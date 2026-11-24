@@ -9,7 +9,9 @@ vectors catch a renderer that gets the window rule wrong. No mocks.
 
 from __future__ import annotations
 
+import copy
 import hashlib
+import inspect
 import json
 import math
 import re
@@ -17,13 +19,21 @@ from pathlib import Path
 
 import pytest
 
-from neuroschema.views import load_registry
-from neuroschema.views.models import Refusal, content_validator, view_validator
+from neuroschema.views import load_registry, models
+from neuroschema.views.models import (
+    Refusal,
+    content_validator,
+    declaration_valid,
+    view_validator,
+)
 from neuroschema.views.presets import (
     PRESET_CHECKS_FORMAT,
     check_preset,
+    check_rate,
+    check_table_locations,
     read_channels,
     read_segments,
+    table_stem,
     window_samples,
 )
 
@@ -51,7 +61,9 @@ def test_cases_replay(case):
 
 @pytest.mark.parametrize("case", CASES, ids=[c["name"] for c in CASES])
 def test_every_case_declares_a_valid_view(case):
-    assert view_validator().is_valid(case["view"])
+    """Every case's view is valid, but a case whose word is declaration_invalid."""
+    invalid = case["expected"].get("word") == "declaration_invalid"
+    assert view_validator().is_valid(case["view"]) is not invalid
 
 
 def test_vector_file():
@@ -72,12 +84,13 @@ def _doc_words() -> dict[tuple[str, str], str]:
     section = SPEC.read_text().split("\n## Words\n", 1)[1].split("\n## ", 1)[0]
     words = {}
     for cells, preset, outcome in re.findall(
-        r"^\| (`[a-z_]+`(?:, `[a-z_]+`)*) \| `([a-z.-]+)` \| (base|nothing drawn) \|",
+        r"^\| (`[a-z_]+`(?:, `[a-z_]+`)*) \| `([a-z.-]+)` \| "
+        r"(base|fallback|nothing drawn) \|",
         section,
         re.M,
     ):
         for word in re.findall(r"`([a-z_]+)`", cells):
-            words[(word, preset)] = "base" if outcome == "base" else "nothing"
+            words[(word, preset)] = {"nothing drawn": "nothing"}.get(outcome, outcome)
     return words
 
 
@@ -86,10 +99,95 @@ GRAMMAR = {"tsv_encoding", "tsv_line_endings", "tsv_header_repeated", "tsv_ragge
 
 def _raised_words() -> set[str]:
     """The words the reference raises: its own, and the generic readers' it
-    calls (the TSV grammar, a cell's number, the caps)."""
+    calls (the TSV grammar, a cell's number, the caps, and the one definition
+    of ``sensors_mismatch`` it shares with a scalp map's model)."""
     source = (ROOT / "src" / "neuroschema" / "views" / "presets.py").read_text()
-    own = set(re.findall(r'(?:PresetRefused|KindRefused)\("([a-z_]+)"', source))
+    source += inspect.getsource(models.check_sensor_names)
+    own = set(re.findall(r'(?:PresetRefused|KindRefused)\(\s*"([a-z_]+)"', source))
     return own | GRAMMAR | {"cell_not_number", "cell_not_finite", "cap_exceeded"}
+
+
+def _notes_and_states() -> dict[str, str]:
+    """The Notes and states table of presets.md: name -> state or note."""
+    section = (
+        SPEC.read_text().split("\n## Notes and states\n", 1)[1].split("\n## ", 1)[0]
+    )
+    return dict(re.findall(r"^\| `([a-z_]+)` \| (state|note) \|", section, re.M))
+
+
+REC = "sub-01/eeg/sub-01_task-rest_eeg.set"
+DESC = "sub-01/eeg/sub-01_task-rest_desc-clean_eeg.set"
+PRE = "sub-01/eeg/sub-01_task-rest_desc-pre_eeg.set"
+MID = "sub-01/eeg/sub-01_desc-x_task-rest_eeg.set"
+TABLES = "sub-01/eeg/sub-01_task-rest"
+
+
+@pytest.mark.parametrize(
+    ("location", "recording", "stem"),
+    [
+        (
+            f"{TABLES}_desc-nemarfloor_channels.tsv",
+            REC,
+            "sub-01_task-rest_desc-nemarfloor",
+        ),
+        (
+            f"{TABLES}_desc-cleannemarfloor_channels.tsv",
+            DESC,
+            "sub-01_task-rest_desc-cleannemarfloor",
+        ),
+        # A desc entity that is not last takes the label in place, as
+        # nemar-process's naming.product_stem does.
+        (
+            "sub-01/eeg/sub-01_desc-xnemarfloor_task-rest_channels.tsv",
+            MID,
+            "sub-01_desc-xnemarfloor_task-rest",
+        ),
+        ("sub-01/eeg/sub-01_desc-x_task-rest_desc-nemarfloor_channels.tsv", MID, None),
+        # Siblings: another recording's products (review r29, round 2).
+        (f"{TABLES}_desc-preprocnemarfloor_channels.tsv", REC, None),
+        (f"{TABLES}_desc-preprocnemarfloor_channels.tsv", PRE, None),
+        (f"{TABLES}_run-2_desc-nemarfloor_channels.tsv", REC, None),
+        ("sub-01/eeg/sub-01_task-restingstate_desc-nemarfloor_channels.tsv", REC, None),
+        (f"{TABLES}_acq-other_desc-nemarfloor_channels.tsv", REC, None),
+        # Another recipe's label.
+        (f"{TABLES}_desc-nemarica_channels.tsv", REC, None),
+        (f"{TABLES}_desc-nemar-floor_channels.tsv", REC, None),
+        (f"{TABLES}_desc-clean_desc-x_channels.tsv", DESC, None),
+        ("sub-01/meg/sub-01_task-rest_desc-nemarfloor_channels.tsv", REC, None),
+        (f"{TABLES}_channels.tsv", REC, None),
+        (f"{TABLES}_desc-nemarfloor_channels.json", REC, None),
+    ],
+)
+def test_a_table_stem_follows_the_recordings_entities(location, recording, stem):
+    """The stem is exactly the one nemar-process's naming.product_stem gives the
+    recording under the label of the view's recipe (here nemar-floor, label
+    nemarfloor): no sibling recording's product, and no other recipe's, passes
+    (review r29, rounds 1 and 2)."""
+    assert table_stem(location, recording, "nemarfloor") == stem
+
+
+def test_a_plugins_signal_window_cannot_tie_its_tables():
+    case = next(c for c in CASES if c["name"] == "signal_window")
+    view = copy.deepcopy(case["view"])
+    view["source"] = {"plugin": {"name": "acme-window", "version": "1.0.0"}}
+    with pytest.raises(Refusal) as raised:
+        check_table_locations(view)
+    assert raised.value.word == "table_location_mismatch"
+
+
+def test_one_table_words_every_note_and_state():
+    """Every state and note a vector gives, for either computed preset, has one
+    row, and one sentence, in the table (F7)."""
+    activity = json.loads(
+        (ROOT / "views" / "vectors" / "ic-activity.v1.json").read_text(encoding="utf-8")
+    )
+    given = {c["expected"]["state"]: "state" for c in activity["cases"]}
+    given |= {n: "note" for c in activity["cases"] for n in c["expected"]["notes"]}
+    for case in WINDOWS:
+        if case["expected"]["word"] is None:
+            given[case["expected"]["state"]] = "state"
+            given |= {n: "note" for n in case["expected"]["notes"]}
+    assert given == _notes_and_states()
 
 
 def test_words_table_matches_the_reference():
@@ -100,12 +198,16 @@ def test_every_word_has_a_vector_with_its_outcome():
     """Each (word, preset) of the table is some case's, with the table's
     outcome; the grammar's words other than tsv_ragged, and the caps, are the
     generic kinds' and vectored there."""
+    doc = _doc_words()
     seen = {
         (c["expected"]["word"], c["view"]["kind"]): c["expected"]["outcome"]
         for c in CASES
-        if c["expected"]["word"] and c["expected"]["outcome"] != "fallback"
+        if c["expected"]["word"]
+        and (
+            c["expected"]["outcome"] != "fallback"
+            or (c["expected"]["word"], c["view"]["kind"]) in doc
+        )
     }
-    doc = _doc_words()
     generic = GRAMMAR - {"tsv_ragged"} | {"cap_exceeded", "cell_not_finite"}
     for (word, preset), outcome in doc.items():
         if word in generic:
@@ -149,6 +251,18 @@ def _total_check(case):
     return None if total == content.get("n_components") else "components_total"
 
 
+def _declaration_check(case):
+    return None if declaration_valid(case["view"]) else "declaration_invalid"
+
+
+def _locations_check(case):
+    try:
+        check_table_locations(case["view"])
+    except Refusal as exc:
+        return exc.word
+    return None
+
+
 def _files_check(case):
     try:
         check_signal_window_files(case)
@@ -185,6 +299,14 @@ def _digest_check(case):
     return "store_digest_mismatch"
 
 
+def _rate_check(case):
+    try:
+        check_rate(case["store"]["rate"])
+    except Refusal as exc:
+        return exc.word
+    return None
+
+
 def _tables_check(case):
     caps = load_registry()["caps"] | case.get("caps", {})
     for role, read in (("channels", read_channels), ("badsegments", read_segments)):
@@ -207,6 +329,18 @@ def _bad_channels_check(case):
     labels = case["store"]["labels"]
     unknown = [r for r in rows if r["status"] == "bad" and r["name"] not in labels]
     return "bad_channel_unknown" if unknown else None
+
+
+def _channel_rows_check(case):
+    caps = load_registry()["caps"] | case.get("caps", {})
+    entry = next(i for i in case["view"]["inputs"] if i["role"] == "channels")
+    try:
+        rows = read_channels(files_of(case)[entry["file"]["location"]], caps)
+    except Refusal:
+        return None  # the tables' check refuses this one
+    named = {r["name"] for r in rows}
+    missing = [label for label in case["store"]["labels"] if label not in named]
+    return "channel_row_missing" if missing else None
 
 
 def _window_check(case):
@@ -233,10 +367,14 @@ ORDERS = {
     "nemar.signal-window": (
         WINDOWS,
         [
+            _declaration_check,
+            _locations_check,
             _files_check,
             _digest_check,
+            _rate_check,
             _tables_check,
             _bad_channels_check,
+            _channel_rows_check,
             _window_check,
         ],
     ),

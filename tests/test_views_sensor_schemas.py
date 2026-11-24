@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 from jsonschema import Draft202012Validator
 
-from neuroschema.validate import load_schema
+from neuroschema.validate import load_schema, schema_id
 from neuroschema.views import (
     Drawing,
     draw_as,
@@ -767,7 +767,7 @@ class TestRegistry:
             match = TRANSFORM_FILE.match(path.name)
             assert match, path.name
             assert match["name"] == entry["name"]
-            assert json.loads(path.read_text())["$id"] == path.name
+            assert json.loads(path.read_text())["$id"] == schema_id(path)
 
     def test_view_schema_checks_exactly_the_registered_transforms(self):
         dispatch = _transform_dispatch()

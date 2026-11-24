@@ -1,0 +1,9 @@
+{
+  "name": "neuroschema-ajv-check",
+  "private": true,
+  "description": "Compiles every neuroschema schema with ajv 8 in strict mode and replays the verdict corpus (CI job ajv).",
+  "type": "module",
+  "dependencies": {
+    "ajv": "8.17.1"
+  }
+}

@@ -14,7 +14,13 @@ from pathlib import Path
 import pytest
 from jsonschema import Draft202012Validator
 
-from neuroschema.validate import load_schema, validate_document, validate_file
+from neuroschema.validate import (
+    SCHEMA_BASE,
+    load_schema,
+    schema_id,
+    validate_document,
+    validate_file,
+)
 from tests.helpers import (
     cascade_problems,
     count_problems,
@@ -119,7 +125,7 @@ class TestQualityMetric:
         assert errors_for(METRIC, doc) == {("pattern", "plugin/version")}
 
 
-# ── Schema graph: every $id is its file name and every $ref resolves ───────
+# ── Schema graph: every $id is absolute and every $ref resolves ────────────
 
 
 ALL_SCHEMAS = sorted(SCHEMA_DIR.rglob("*.schema.json"))
@@ -138,9 +144,72 @@ def _refs(node):
 
 
 @pytest.mark.parametrize("path", ALL_SCHEMAS, ids=lambda p: p.name)
-def test_id_is_file_name(path):
-    schema = json.loads(path.read_text())
-    assert schema["$id"] == path.name
+def test_id_is_the_base_and_the_path(path):
+    """An absolute $id, so a relative $ref resolves by RFC 3986 in every engine."""
+    schema = json.loads(path.read_text(encoding="utf-8"))
+    assert (
+        schema["$id"]
+        == schema_id(path)
+        == SCHEMA_BASE + str(path.relative_to(SCHEMA_DIR).as_posix())
+    )
+
+
+SAFE = 2**53 - 1
+
+
+def _integers(node, path=""):
+    if isinstance(node, dict):
+        kind = node.get("type")
+        if kind == "integer" or (isinstance(kind, list) and "integer" in kind):
+            yield path, node
+        for key, value in node.items():
+            yield from _integers(value, f"{path}/{key}")
+    elif isinstance(node, list):
+        for index, value in enumerate(node):
+            yield from _integers(value, f"{path}/{index}")
+
+
+@pytest.mark.parametrize("path", ALL_SCHEMAS, ids=lambda p: p.name)
+def test_every_integer_is_within_2_53(path):
+    """An integer past 2^53 - 1 has two readings (exact in Python, the nearest
+    binary64 in JSON.parse), and so two verdicts (probe p9); every integer the
+    schemas take is capped at 2^53 - 1 in magnitude."""
+    for where, node in _integers(json.loads(path.read_text(encoding="utf-8"))):
+        low = node.get("minimum", node.get("exclusiveMinimum"))
+        high = node.get("maximum", node.get("exclusiveMaximum"))
+        assert low is not None and low >= -SAFE, f"{path.name}{where}"
+        assert high is not None and high <= SAFE, f"{path.name}{where}"
+
+
+PYPROJECT_VERSION = re.search(
+    r'^version = "([^"]+)"$', (ROOT / "pyproject.toml").read_text(), re.M
+)[1]
+
+
+@pytest.mark.xfail(
+    PYPROJECT_VERSION == "0.5.0",
+    strict=True,
+    reason="the ids name the release tag v0.6.0; S5 bumps pyproject to 0.6.0",
+)
+def test_the_ids_name_the_released_version():
+    """Each $id names the release tag of the version it ships in, so a consumer
+    pinned to a version reads that version's files; the release that bumps
+    pyproject.toml bumps the tag in SCHEMA_BASE with it (review r29)."""
+    tag = re.fullmatch(r".*/neuroschema/v([^/]+)/schema/", SCHEMA_BASE)[1]
+    assert tag == PYPROJECT_VERSION
+
+
+def test_the_ajv_check_uses_the_same_ids():
+    """scripts/ajv/check.ts (CI job ajv) checks each $id against the same base."""
+    check = (ROOT / "scripts" / "ajv" / "check.ts").read_text(encoding="utf-8")
+    assert f'const BASE = "{SCHEMA_BASE}";' in check
+
+
+def test_nothing_is_fetched():
+    """A $ref to a schema that is not in schema/ fails; it is never fetched."""
+    _schema, resolver = load_schema(DEFINITIONS / "view.schema.json")
+    with pytest.raises(Exception, match="nothing is fetched"):
+        resolver.resolve(SCHEMA_BASE + "definitions/absent.schema.json")
 
 
 @pytest.mark.parametrize("path", ALL_SCHEMAS, ids=lambda p: p.name)
@@ -262,6 +331,75 @@ def dq_dataset():
     }
 
 
+CONDITIONS = {"allOf", "anyOf", "oneOf", "if", "then", "else", "not", "contains"}
+
+
+def _objects(node, path=""):
+    """Every subschema that names properties: an object shape (a condition's
+    subschemas constrain a shape, and are not one)."""
+    if isinstance(node, dict):
+        if "properties" in node and node.get("type") == "object":
+            yield path, node
+        for key, value in node.items():
+            if key not in CONDITIONS:
+                yield from _objects(value, f"{path}/{key}")
+    elif isinstance(node, list):
+        for index, value in enumerate(node):
+            yield from _objects(value, f"{path}/{index}")
+
+
+def test_data_quality_is_closed_everywhere():
+    """dataQuality holds the views a browser draws, so it is closed at its root
+    and in every $defs entry (L1): no member rides along unchecked."""
+    schema = json.loads(DATA_QUALITY.read_text(encoding="utf-8"))
+    assert schema["additionalProperties"] is False
+    shapes = [
+        (where, node)
+        for where, node in _objects(schema)
+        if where == "" or where.startswith("/$defs/")
+    ]
+    assert len(shapes) >= 7
+    for where, node in shapes:
+        closed = node.get("additionalProperties") is False
+        keyed = "additionalProperties" in node and "propertyNames" in node
+        assert closed or keyed, where
+
+
+@pytest.mark.parametrize(
+    ("member", "builder"),
+    [("views", dq_record), ("dataset_level_counts", dq_record), ("x", dq_dataset)],
+)
+def test_data_quality_root_refuses_a_stray_member(member, builder):
+    """A views list or a counts block beside recipes, which no schema would
+    check (probe p11), is refused at the root."""
+    doc = builder() | {member: [{"kind": "anything", "data": [{"location": "/x"}]}]}
+    assert errors_for(DATA_QUALITY, doc) == {("additionalProperties", "")}
+
+
+@pytest.mark.parametrize(
+    ("input_kind", "profile", "store"),
+    [("bids", "archive", "serving"), ("zarr", "serving", "archive")],
+)
+def test_each_view_store_names_the_copy_its_entry_read(input_kind, profile, store):
+    """Each store input of an entry's views names the copy the entry's run read
+    (probe p11: a record of the archive whose views declare serving stores)."""
+    doc = json.loads(
+        (EXAMPLES_DIR / "views" / "dataquality-record-nemar-ica.json").read_text()
+    )
+    entry = doc["recipes"]["nemar-ica"]
+    entry.update(input_kind=input_kind, profile=profile)
+    failing = set()
+    for k, view in enumerate(entry["views"]):
+        for j, given in enumerate(view.get("inputs", [])):
+            if "store" in given:
+                given["store"]["profile"] = store
+                failing.add(
+                    ("const", f"recipes/nemar-ica/views/{k}/inputs/{j}/store/profile")
+                )
+    assert failing
+    assert failing <= errors_for(DATA_QUALITY, doc)
+
+
 class TestDataQualityRecord:
     def test_valid(self):
         assert errors_for(DATA_QUALITY, dq_record()) == set()
@@ -307,16 +445,73 @@ class TestDataQualityRecord:
     def test_format_must_match_extension(self):
         doc = dq_record()
         self._data(doc)["location"] = "views/channels.json"
-        assert errors_for(DATA_QUALITY, doc) == {("pattern", f"{V0D}/location")}
+        assert errors_for(DATA_QUALITY, doc) == {
+            ("pattern", f"{V0D}/location"),
+            ("const", f"{V0D}/format"),
+        }
 
     @pytest.mark.parametrize(
         "location",
-        ["/a.tsv", "../a.tsv", "a/../b.tsv", "https://h/a.tsv", "a\\b.tsv"],
+        [
+            "/a.tsv",
+            "../a.tsv",
+            "a/../b.tsv",
+            "https://h/a.tsv",
+            "a\\b.tsv",
+            # Probe p13: each escapes the product once a renderer resolves it as
+            # a URL, or names another file than its text.
+            "%2e%2e/secret.tsv",
+            ".%2e/secret.tsv",
+            "a/%2E%2E/b.tsv",
+            " ../a.tsv",
+            "a.tsv ",
+            "?x=1.tsv",
+            "a/b.tsv?x",
+            "#frag.tsv",
+            "a/./b.tsv",
+            "./a.tsv",
+            "a//b.tsv",
+            "a/b.tsv/",
+            "x\u202ecod.tsv",
+            "x\u2066y.tsv",
+            "x\u200fy.tsv",
+            "x\u061cy.tsv",
+            "a\u0085b.tsv",
+            "a\x9fb.tsv",
+            "a\x7fb.tsv",
+            # Review r29: a JavaScript . does not match U+2028 or U+2029, so a
+            # lookahead written with . stopped there and let these through.
+            "a\u2028/../../x.tsv",
+            "a\u2029/../x.tsv",
+            "a\u2028/./x.tsv",
+            "a\u2028//x.tsv",
+            "a\u2028/",
+            "a\u2028 ",
+            "x\u2028.tsv",
+        ],
     )
     def test_bad_location(self, location):
         doc = dq_record()
         self._data(doc)["location"] = location
         assert errors_for(DATA_QUALITY, doc) == {("pattern", f"{V0D}/location")}
+
+    @pytest.mark.parametrize(
+        "location",
+        [
+            "a b/c.tsv",
+            ".../a.tsv",
+            "a/.hidden.tsv",
+            "a..b/c.tsv",
+            "\u00b5/a.tsv",
+            ".. /a.tsv",
+        ],
+    )
+    def test_names_that_resolve_as_themselves(self, location):
+        """A space inside a name, dots that are no dot segment and text outside
+        ASCII stay one file under every URL resolution (probe p13.js)."""
+        doc = dq_record()
+        self._data(doc)["location"] = location.removesuffix(".tsv") + ".tsv"
+        assert errors_for(DATA_QUALITY, doc) == set()
 
     def test_empty_location(self):
         doc = dq_record()
@@ -922,6 +1117,29 @@ def test_plugin_name_rejects_trailing_newline():
     ]
 
 
+@pytest.mark.parametrize(
+    ("name", "valid"),
+    [
+        ("nemar-quality", True),
+        ("Nemar_Quality2", True),
+        ("p" * 64, True),
+        ("p" * 65, False),
+        ("org.nemar.quality", False),
+        ("1plugin", False),
+        ("-plugin", False),
+        ("nemar quality", False),
+    ],
+)
+def test_plugin_names_take_the_metric_prefix_grammar(name, valid):
+    """Every plugin name can prefix its metrics: a plugin named with a dot
+    could not (probe p11, L5), so no plugin name has one."""
+    assert (_def_errors("plugin", PLUGIN | {"name": name}) == []) is valid
+    if valid:
+        metric = f"{name}:{'m' * 63}"
+        assert len(metric) <= 128
+        assert _def_errors("metricName", metric) == []
+
+
 def test_sj_version_rejects_trailing_newline():
     doc = sj_links()
     doc["recipes"]["nemar-floor"]["sj_version"] = "0.1.0\n"
@@ -1118,7 +1336,7 @@ def _set(builder, path, value):
 CASES = [
     # (schema, builder, path set, value, expected failures)
     (PROCESSING, proc_record, f"{ICA}/checkpoints/import/step", "load", "type"),
-    (DATA_QUALITY, dq_record, f"{V0D}/location", "views/channels.json", "pattern"),
+    (DATA_QUALITY, dq_record, f"{V0D}/location", "views/channels.txt", "pattern"),
     # A nullable shared type is anyOf[pattern, null], so a bad value reports anyOf.
     (PROCESSING, proc_record, f"{ICA}/checkpoints/ica/step", "-ica", "anyOf"),
     (PROCESSING, proc_record, f"{ICA}/checkpoints/ica/code", "Bad", "anyOf"),
@@ -1195,7 +1413,41 @@ def test_null_dataset_version_and_range_min_are_allowed():
 
 
 # Older patterns with a bare $, tracked in nemarOrg/neuroschema#20.
-NEWLINE_GAP_ALLOWLIST = {("dataPaper.schema.json", "^10\\.\\d{4,9}/\\S+$")}
+NEWLINE_GAP_ALLOWLIST = {
+    ("dataset.schema.json", "^[a-z]{2}[0-9]+$"),
+    ("record.schema.json", "^[a-z]{2}[0-9]+$"),
+    ("neuroschema.schema.json", "^[0-9]+\\.[0-9]+\\.[0-9]+$"),
+}
+# Patterns with a token whose meaning differs between Python's re and
+# JavaScript's RegExp with the u flag, tracked in nemarOrg/neuroschema#20.
+TOKEN_ALLOWLIST: set[tuple[str, str]] = set()
+# A bare . (JavaScript's stops at a line terminator; Python's at a line feed
+# only), and the classes \s, \S, \d, \D, \w, \W, \b, \B (Unicode in Python,
+# narrower or other sets in JavaScript). The class [\s\S] means any character
+# in both, and is allowed.
+DIVERGENT = set("sSdDwWbB")
+
+
+def divergent_tokens(pattern: str) -> list[str]:
+    """The engine-dependent tokens of a pattern: a . outside a class, and the
+    shorthand classes, inside a class or out, but for the idiom [\\s\\S]."""
+    found, in_class, i = [], False, 0
+    text = pattern.replace("[\\s\\S]", "")
+    while i < len(text):
+        char = text[i]
+        if char == "\\":
+            if text[i + 1 : i + 2] in DIVERGENT:
+                found.append(text[i : i + 2])
+            i += 2
+            continue
+        if in_class:
+            in_class = char != "]"
+        elif char == "[":
+            in_class = True
+        elif char == ".":
+            found.append(".")
+        i += 1
+    return found
 
 
 def _patterns(node):
@@ -1211,26 +1463,45 @@ def _patterns(node):
 
 
 def anchor_problems(paths) -> list[str]:
+    """Patterns with a bare $ (Python's matches before a final newline), or with
+    a token Python and JavaScript read apart (review r29, round 2)."""
     problems = []
     for path in paths:
         for pattern in _patterns(json.loads(path.read_text())):
-            if (path.name, pattern) in NEWLINE_GAP_ALLOWLIST:
-                continue
-            if "$" in pattern and not pattern.endswith("$(?!\n)"):
+            key = (path.name, pattern)
+            if (
+                key not in NEWLINE_GAP_ALLOWLIST
+                and "$" in pattern
+                and not pattern.endswith("$(?!\n)")
+            ):
                 problems.append(f"{path.name}: {pattern!r}")
+            if key not in TOKEN_ALLOWLIST and divergent_tokens(pattern):
+                problems.append(f"{path.name}: {pattern!r} {divergent_tokens(pattern)}")
     return problems
 
 
 def test_anchored_patterns_close_the_newline_gap():
-    paths = sorted(
-        [
-            *EXTENSIONS.glob("*.schema.json"),
-            *DEFINITIONS.glob("*.schema.json"),
-            *VIEWS.glob("*.schema.json"),
-        ]
-    )
+    """Every pattern of every schema, the core and the root included."""
+    paths = ALL_SCHEMAS
     assert VIEWS.is_dir() and any(p.parent == VIEWS for p in paths)
     assert anchor_problems(paths) == []
+
+
+@pytest.mark.parametrize(
+    ("pattern", "tokens"),
+    [
+        ("^a.b$(?!\n)", ["."]),
+        ("^[a.b]$(?!\n)", []),
+        ("^\\.$(?!\n)", []),
+        ("^\\d+$(?!\n)", ["\\d"]),
+        ("^[\\w-]+$(?!\n)", ["\\w"]),
+        ("^\\S+\\b$(?!\n)", ["\\S", "\\b"]),
+        ("^(?![\\s\\S]*//)[a]+$(?!\n)", []),
+        ("^(?!.*//)[a]+$(?!\n)", ["."]),
+    ],
+)
+def test_divergent_tokens(pattern, tokens):
+    assert divergent_tokens(pattern) == tokens
 
 
 def test_anchor_check_catches_a_bare_dollar(tmp_path):

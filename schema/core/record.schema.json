@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "record.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/core/record.schema.json",
   "title": "Record Metadata",
   "description": "Per-data-file metadata for an individual recording within a neuroimaging dataset. A data file is a primary recording (e.g., .set, .edf, .vhdr) along with its BIDS sidecar context. Each record has its own modality (required) and can override dataset-level signal properties via signal_properties.",
   "type": "object",

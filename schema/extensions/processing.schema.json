@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "processing.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/extensions/processing.schema.json",
   "title": "Processing Extension",
   "description": "Checkpoint outcomes of NEMAR recipe runs, written by the NEMAR backend. `level` selects the shape: `record` (per recipe, each checkpoint's outcome for one recording) or `dataset` (per recipe, the declared checkpoints and the reconciled counts). Not schema-enforced, enforced by the writer: after a recording's first non-passed checkpoint every later declared checkpoint is `skipped` with the same `code` and `step`; `declared_checkpoints` is the recipe version's registry list in order followed by `stored`, which the backend sets; the keys of `counts` equal `declared_checkpoints`; every checkpoint's counts sum to the same total.",
   "type": "object",

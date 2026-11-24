@@ -27,7 +27,7 @@ However a preset is drawn, every file it names, in `data` or as a `file` input, 
 
 A renderer that knows a preset with stored data first builds its base's model, as [generic-kinds.md](generic-kinds.md#building-a-model) says for `nemar.lines` and `nemar.histogram` and [sensor-field.md](sensor-field.md#the-model) for `nemar.sensor-field`.
 When the base refuses the files, the view shows as tables with the base's word, the fallback of the base's rules, and the preset's own checks do not run; the vectors give that the outcome `fallback`.
-When the base draws, the preset's own checks run in the order this page gives, and the first that fails gives the word: the renderer draws the view by its base and keeps the word, so the page can say why the preset's extras are missing, or, for `nemar.signal-window`, draws nothing.
+When the base draws, the preset's own checks run in the order this page gives, and the first that fails gives the word, with its outcome: `base`, the renderer draws the view by its base and keeps the word, so the page can say why the preset's extras are missing; `fallback`, it shows the view as the fallback's tables with the word, because the base's drawing would mislead; or `nothing`, for `nemar.signal-window`, it draws nothing.
 `neuroschema.views.presets.check_preset` is the Python reference of these checks, and [`views/vectors/preset-checks.v1.json`](../../views/vectors/preset-checks.v1.json) (`nemar.preset-checks.v1`) holds the cases every renderer reproduces.
 
 ### The floor's tables
@@ -40,15 +40,24 @@ The floor always writes `_channels.tsv`, so a `nemar.signal-window` always decla
 It writes `_badsegments.tsv` unless its window step was skipped and ASR repaired nothing, so a `nemar.ic-activity` declares `badsegments` exactly when its transform's `shaded.files` is not null, and a `nemar.signal-window` exactly when its `bad_segment_table` is true.
 The writer sets `shaded.files` and `bad_segment_table` from the record, null and false only when the floor wrote no table.
 
+**Named.** A declared table is the one the record names, and a renderer checks it before it fetches anything (`table_location_mismatch`), because a view that read a decoy table with no rows would draw a clean window.
+A `nemar.ic-activity`'s `badsegments` input is at `shaded.files[0]`, which comes from the record ([ic-activity.md](ic-activity.md#the-checks-in-order)).
+A `nemar.signal-window`'s tables are the recording's: each lies in the directory of the `signal` store's `recording` and is named `<stem>_channels.tsv` or `<stem>_badsegments.tsv` (the schema checks the suffix), so the two share one stem, as the recipe writes them.
+The stem is exactly the one nemar-process gives that recording's products under the label of the recipe that wrote the view, `L`, its id without hyphens (`naming.product_stem` and `naming.label`; `nemarica` for `nemar-ica`): the recording's file name without its last `_<suffix>.<ext>`, with its first `desc-<x>` entity becoming `desc-<x>L` in place (`sub-01_task-rest_desc-cleannemarica` for `sub-01_task-rest_desc-clean_eeg.set`), or, when it has none, `_desc-L` appended (`sub-01_task-rest_desc-nemarica` for `sub-01_task-rest_eeg.set`).
+Any other stem is refused: another recording's (`_run-2`, the `ingstate` of `task-restingstate`, `_acq-other`, or the sibling `sub-01_task-rest_desc-preproc`, whose products begin the same way) or another recipe's (`desc-nemarfloor` in a view nemar-ica wrote).
+A view a plugin wrote names no recipe, so its tables cannot be tied, and are refused.
+
 **Verified.** A declared table is verified like any data file, and a fault refuses the whole view.
-It is present, its length is its `size` and its SHA-256 its `sha256` (`file_missing`, `file_size_mismatch`, `file_digest_mismatch`), and it holds at most `caps.bytes_per_role` bytes (`cap_exceeded`); when a view declares both tables, the channels' file is checked first.
+It declares at most `caps.bytes_per_role` bytes (`cap_exceeded`, checked before the file is fetched), it is present, and its length is its `size` and its SHA-256 its `sha256` (`file_missing`, `file_size_mismatch`, `file_digest_mismatch`); when a view declares both tables, the channels' file is checked first.
 It meets the TSV grammar, with its words ([generic-kinds.md](generic-kinds.md#tsv)), and holds at most `caps.cells_per_role` cells counting every header column (`cap_exceeded`).
 It has its columns (`column_missing`): `onset`, `duration` and `label` for the bad segments, and `name` and `status` for the channels.
 A column is found by its name in any position of the header, and the names are looked for in that order; other columns are ignored.
-Every `onset` cell and then every `duration` cell is a number (`cell_not_number`, `cell_not_finite`); the other columns are text.
+Every `onset` cell and then every `duration` cell is a number (`cell_not_number`, `cell_not_finite`), then every duration is above 0 (`duration_not_positive`): a span of no length or a negative one marks nothing, and the floor writes none.
+Every `status` cell of the channels is one of BIDS's `good`, `bad` and `n/a`, compared as exact strings (`channel_status_unknown`): a near miss such as `BAD`, `Bad` or `excluded` is refused, never read as a good channel.
+The other columns are text.
 The channels are read before the bad segments.
 
-**Said.** A view with no bad-segment table, because the record names none, is drawn and carries the note `no_bad_segment_table`, which a renderer shows as "no bad-segment table; nothing is shaded": nothing is left unshaded silently.
+**Said.** A view with no bad-segment table, because the record names none, is drawn and carries the note `no_bad_segment_table`, which a renderer shows with [its sentence](#notes-and-states): nothing is left unshaded or unmarked silently.
 The vectors give the note in `notes`.
 
 ## `nemar.spectrum` version 1
@@ -75,13 +84,15 @@ The parameters record how the spectrum was computed; a renderer prints them and 
 A renderer that knows this kind draws the `nemar.lines` model of the values, and below it a scalp map of the sensors' values at one frequency row: the row the readout snaps to, or, before the reader picks one, the row nearest each frequency of `initial_maps_hz` by the same rule.
 A map is the row's cells as one value per sensor, drawn with `nemar.sensor-field.v1` with `minmax` limits (the decibels are not signed about zero), and placed by the layout or by the sensors' names.
 Its model is the `nemar.sensor-field` model ([sensor-field.md](sensor-field.md#the-model)) of the series' stored cells at those rows: one map per row, labeled by the row's stored frequency text (the dimension `freq`, in Hz), with the sensors and their places read and checked as that page's order of checks says from step 7 on, the layout's rows being the sensors, or the header's names without a layout.
-The lines have already read the layout's names, so what is left to check is its place columns and that its names are the sensor columns'.
-A fault in them (for example a theta that is not a number), or a layout whose names are not the sensor columns' (`sensors_mismatch`), puts that word in every map's place, and a map the placement or the scalp-map algorithm refuses (for example `too_few_sensors`) shows that word in its place; either way, the lines are drawn all the same.
-When the base refuses the values, there are no lines and no maps.
+The lines have already read the layout's names, and the preset's own check (below) has found them to be the sensor columns', so what is left to check is the layout's place columns.
+A fault in them (for example a theta that is not a number) puts that word in every map's place, and a map the placement or the scalp-map algorithm refuses (for example `too_few_sensors`) shows that word in its place; either way, the lines are drawn all the same.
+When the base refuses the values, or the layout's names are not the sensor columns (`sensors_mismatch`, by the one rule a scalp map's model reads too: [sensor-field.md](sensor-field.md#the-order-of-checks)), the view shows as the fallback's tables, and there are no lines and no maps, even when a place column is at fault as well.
 A file that is not the one recorded draws nothing, neither the lines nor the maps: `spectrum_maps` raises `ViewRefused`, as `build_model` does.
-`neuroschema.views.presets.spectrum_maps` is the Python reference, and the [model vectors](generic-kinds.md#the-model-vectors)' `nemar.spectrum` cases list `maps`: the frequencies asked for (`hz`), the `rows` they snap to, and the maps' `model`, or the word that `refused` them.
+`neuroschema.views.presets.spectrum_maps` is the Python reference, and the [model vectors](generic-kinds.md#the-model-vectors)' `nemar.spectrum` cases list `maps`: the frequencies asked for (`hz`), the `rows` they snap to, and the maps' `model`, or the word that `refused` them, all three `null` when the view falls back; and `preset`, the outcome of the preset's own check, as the [preset-check vectors](#the-preset-check-vectors) state it.
 
-The writer makes sure that the rows rise strictly from 0 to at most `upper_hz`, and, with a layout, that the values' sensor columns are the layout's rows in order.
+The writer makes sure that the rows rise strictly to at most `upper_hz`, and, with a layout, that the values' sensor columns are the layout's rows in order.
+A renderer does not rely on the writer for the last rule: after the base's model is built, it checks, with a layout, that the values' sensor columns (every declared column but `freq_hz`) are the layout's `name` cells, top to bottom, compared as text (`sensors_mismatch`).
+The base labels each series by the layout's name at its position, so a header that named other sensors would draw each spectrum under another sensor's name; which of the two is right cannot be told, so the view shows as the fallback's tables ([generic-kinds.md](generic-kinds.md#the-fallback)), with the word, and no lines or maps are drawn.
 
 ## `nemar.ic-maps` version 1
 
@@ -95,7 +106,7 @@ There are no parameters.
 A renderer that knows this kind first builds the `nemar.sensor-field` model of the values and the layout ([sensor-field.md](sensor-field.md#the-model)); when that refuses the files, the view falls back to its tables and no text row is checked.
 Otherwise it draws one map per component with `nemar.sensor-field.v1` and `absmax` limits, because a component's polarity is arbitrary, and prints each component's text row beside its map: the cells of its row of `components`, each with its column's name and unit, as stored text.
 The text row of the component labeled L is the row of `components` whose `component` cell is L.
-The renderer reads the components table under the TSV grammar ([generic-kinds.md](generic-kinds.md#tsv), with its words), checks it has the column `component` (`column_missing`), and checks that its `component` cells, top to bottom, are the values' declared column names in declared order, compared as text (`components_mismatch`): one row per map, in the maps' order.
+The renderer reads the components table as a data file, in this order: its declared size within the cap on bytes, the file (present, size, SHA-256), the TSV grammar ([generic-kinds.md](generic-kinds.md#tsv), with its words), and at most `caps.cells_per_role` cells counting every header column (`cap_exceeded`); then it checks the table has the column `component` (`column_missing`), and that its `component` cells, top to bottom, are the values' declared column names in declared order, compared as text (`components_mismatch`): one row per map, in the maps' order.
 When any of these fails, it draws the maps by the base, without text rows, and keeps the word.
 A renderer that knows only `nemar.sensor-field` draws the maps and offers the components table for download.
 
@@ -105,7 +116,8 @@ The independent components of one decomposition counted by the class each is mos
 
 - **`histogram`** is one JSON file (`_icclasses.json`) whose content meets [`content.nemar.ic-classes.v1`](../../schema/views/content.nemar.ic-classes.v1.schema.json): a `nemar.histogram` content binned by category, `categories` (the classes in the classifier's order) and `counts` (the number of components whose dominant class each is), with `classifier`, `summed_variance_pct` (for each class, the sum of its components' `variance_pct`) and `n_components`.
   With `classifier` `ICLabel`, `categories` is exactly ICLabel's seven classes in ICLabel's order and spelling: `Brain`, `Muscle`, `Eye`, `Heart`, `Line Noise`, `Channel Noise`, `Other` (eegprep's `DEFAULT_ICLABEL_CLASSES`).
-  The name is spelled `ICLabel`: any other case of it is refused, so a change of case cannot open the classes.
+  The name is spelled `ICLabel`: any other case of it, or `I`, `l`, `1` or `|` in place of one another (`ICLabeI`, `lCLabel`), is refused, so a change of case or a look-alike cannot open the classes.
+  The classifier and every category are printable ASCII (U+0020 to U+007E, with no space at either end), so no look-alike from outside ASCII (a Cyrillic letter, a Roman numeral, a fullwidth form, a variation selector or a format character) can pass for a known name.
   Any other classifier names its own classes.
 
 ```json
@@ -152,11 +164,15 @@ The view computes nothing and has no transform: the renderer opens the signal vi
 The window holds the samples k of the recording (0 <= k < S, for S samples at rate r) whose time `k / r`, one binary64 division, satisfies `start_s <= k / r < end`, where `end = start_s + duration_s`, one binary64 sum: the first is the least such k, and a window past the recording's end is clipped to its last sample.
 A renderer finds them from these times, not from `ceil(start_s * r)`, which can start a sample late at a rate such as 500/7 Hz.
 NEMAR's recipes declare the 2-second window inside the floor's good samples nearest the recording's middle (`midsegment`).
-The renderer runs five checks in this order, and the first that fails gives the word; each draws nothing.
-First the tables' files (channels, then badsegments) are the ones recorded.
+The renderer runs nine checks in this order, and the first that fails gives the word; each draws nothing.
+First the declaration is valid (`declaration_invalid`).
+Then the tables are named as the recording's (`table_location_mismatch`, [the floor's tables](#the-floors-tables)).
+Then the tables' files (channels, then badsegments) are the ones recorded.
 Then the store digest, as [ic-activity.md](ic-activity.md#the-checks-in-order) checks it: when the view declares one and the serving copy publishes another, nothing is drawn (`store_digest_mismatch`), because the decisions marked over the window were made on other data; when either is absent, the window is drawn and the state is `not_checked`.
+Then the store's sampling rate is a finite number above 0 (`rate_invalid`).
 Then the tables, channels first, are read as [the floor's tables](#the-floors-tables) says.
 Then each bad channel's name is the label of a store row (`bad_channel_unknown`).
+Then each store row's label names a row of the channels table (`channel_row_missing`): the floor writes a row for every channel, so a store row with none is a decision dropped, and could be a bad channel drawn as good.
 Last, a window that holds no sample (one that starts at or after the recording's end, or lies between two samples) draws nothing (`window_outside`).
 The vectors give, for a window drawn, its state, its `first` sample and `count`, the names of its `bad_channels` (status `bad`, in file order), its `segments` (every row of the bad segments, `{onset, duration, label}`, in file order) and its `notes`.
 
@@ -164,26 +180,48 @@ The vectors give, for a window drawn, its state, its `first` sample and `count`,
 
 | Word | Preset | Outcome | Meaning |
 |---|---|---|---|
+| `sensors_mismatch` | `nemar.spectrum` | fallback | With a layout, the values' sensor columns are not the layout's names, in order. |
 | `tsv_encoding`, `tsv_line_endings`, `tsv_header_repeated`, `tsv_ragged` | `nemar.ic-maps` | base | The components table breaks the TSV grammar ([generic-kinds.md](generic-kinds.md#words)). |
+| `cap_exceeded` | `nemar.ic-maps` | base | The components table exceeds the registry's caps on bytes or cells. |
 | `column_missing` | `nemar.ic-maps` | base | The components table has no column `component`. |
 | `components_mismatch` | `nemar.ic-maps` | base | The components table's `component` cells are not the values' header names, in order. |
 | `content_invalid` | `nemar.ic-classes` | base | The content fails `content.nemar.ic-classes.v1` (it meets the histogram's). |
 | `variance_length` | `nemar.ic-classes` | base | `summed_variance_pct` does not have one entry per category. |
 | `components_total` | `nemar.ic-classes` | base | The counts do not sum to `n_components`. |
+| `declaration_invalid` | `nemar.signal-window` | nothing drawn | The declaration fails `view.schema.json#/$defs/view` or has no digest (for example, `bad_segment_table` true and no `badsegments` declared). |
+| `table_location_mismatch` | `nemar.signal-window` | nothing drawn | A floor table is not beside the recording, or its stem is not the one the view's recipe gives the recording's products (so the two tables share one stem). |
 | `tsv_encoding`, `tsv_line_endings`, `tsv_header_repeated`, `tsv_ragged` | `nemar.signal-window` | nothing drawn | A floor table breaks the TSV grammar. |
 | `column_missing` | `nemar.signal-window` | nothing drawn | The bad segments lack `onset`, `duration` or `label`, or the channels lack `name` or `status`. |
 | `cell_not_number`, `cell_not_finite` | `nemar.signal-window` | nothing drawn | A bad segment's `onset` or `duration` is not a finite JSON number. |
 | `cap_exceeded` | `nemar.signal-window` | nothing drawn | A floor table exceeds the registry's caps on bytes or cells. |
+| `channel_status_unknown` | `nemar.signal-window` | nothing drawn | A channel's `status` is not `good`, `bad` or `n/a`. |
+| `duration_not_positive` | `nemar.signal-window` | nothing drawn | A bad segment's `duration` is not above 0. |
+| `rate_invalid` | `nemar.signal-window` | nothing drawn | The store's sampling rate is not a finite number above 0. |
 | `store_digest_mismatch` | `nemar.signal-window` | nothing drawn | The serving copy publishes a digest other than the one the view declares. |
 | `bad_channel_unknown` | `nemar.signal-window` | nothing drawn | A channel the floor marked bad is no store row's label, compared as exact strings. |
+| `channel_row_missing` | `nemar.signal-window` | nothing drawn | A store row's label names no row of the channels table: a floor decision dropped. |
 | `window_outside` | `nemar.signal-window` | nothing drawn | The window holds no sample of the recording. |
 
 The words of a preset's base, of `nemar.sensor-field.v1` and of `nemar.ic-activity.v1` keep their meanings and outcomes; a file that is not the one recorded (`file_missing`, `file_size_mismatch`, `file_digest_mismatch`) draws nothing, as for every kind.
 
+## Notes and states
+
+A drawn `nemar.ic-activity` or `nemar.signal-window` carries one store digest state and any notes, and a renderer shows each with its sentence, worded as here and nowhere else.
+The vectors give the state in `state` and the notes in `notes`.
+
+| Name | Is a | Preset | Sentence |
+|---|---|---|---|
+| `matches` | state | both | The serving copy matches the digest NEMAR recorded. |
+| `not_checked` | state | both | The serving copy was not checked against a digest NEMAR recorded. |
+| `no_bad_segment_table` | note | both | No bad-segment table was written, so nothing is shaded or marked as a bad segment. |
+| `no_shaded_rows` | note | `nemar.ic-activity` | The bad-segment table has no row labeled for the spans ASR repaired, so nothing is shaded. |
+
+`matches` claims no more than the digests' agreement ([docs/views.md](../views.md#digests-and-what-they-prove)), and `not_checked` is the state whenever the view declares no digest or the serving copy publishes none.
+
 ## The preset-check vectors
 
 `preset-checks.v1.json` has `format`, `spec`, `description` and `cases`.
-Each case has a `name`, what it `covers`, a `view` (built from the [example](../../examples/views/dataquality-record-nemar-ica.json)), its `files` (each location's UTF-8 text: for `nemar.ic-maps`, the mixing matrix and the layout its base reads as well as the components table), for a signal window the `store` (its row `labels`, `samples`, `rate` and the digest the serving copy publishes, or null), optionally `caps` in place of the registry's caps of the same names, and the `expected` outcome: `word` null when the checks pass, with, for a signal window, the `state`, the window's `first` sample and `count`, its `bad_channels`, its `segments` and its `notes`; otherwise the `word` and its `outcome`, `base`, `nothing` or `fallback` (the base refused the file first, with its own word).
+Each case has a `name`, what it `covers`, a `view` (built from the [example](../../examples/views/dataquality-record-nemar-ica.json)), its `files` (each location's UTF-8 text: for `nemar.ic-maps`, the mixing matrix and the layout its base reads as well as the components table), for a signal window the `store` (its row `labels`, `samples`, `rate` and the digest the serving copy publishes, or null), optionally `caps` in place of the registry's caps of the same names, and the `expected` outcome: `word` null when the checks pass, with, for a signal window, the `state`, the window's `first` sample and `count`, its `bad_channels`, its `segments` and its `notes`; otherwise the `word` and its `outcome`, `base`, `nothing` or `fallback` (the view shows as the fallback's tables: the base refused the file first, with its own word, or the preset's check found the base's drawing would mislead, `sensors_mismatch`).
 The cases cover every word of this page, each pair of neighboring checks with two faults, and a window at 500/7 Hz where the times rule and a rounded product disagree.
 `scripts/generate_kind_vectors.py` writes them with the Python reference.
 

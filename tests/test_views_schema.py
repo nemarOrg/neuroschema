@@ -15,12 +15,13 @@ from pathlib import Path
 import pytest
 from jsonschema import Draft202012Validator
 
-from neuroschema.validate import load_schema, validate_document
+from neuroschema.validate import load_schema, schema_id, validate_document
 from neuroschema.views import (
     REGISTRY_FORMAT,
     CanonicalizationError,
     Drawing,
     canonicalize,
+    download_headers,
     draw_as,
     kind_schema_path,
     known_kinds,
@@ -65,6 +66,21 @@ def test_vector_digest_is_the_sha256_of_its_canonical_text(case):
 def test_digest_refusals(refusal):
     with pytest.raises(CanonicalizationError):
         view_digest(parse_declaration(refusal["json"]))
+
+
+STANDARD = [r for r in REFUSALS if "duplicate" not in r["name"]]
+
+
+@pytest.mark.parametrize("refusal", STANDARD, ids=[r["name"] for r in STANDARD])
+def test_the_digest_refuses_what_a_standard_parser_reads(refusal):
+    """A JavaScript implementation parses with JSON.parse and applies the
+    refusals while it canonicalizes, so the digest of what a standard parser
+    returns refuses every refusal but a duplicate name, which only the parse
+    can see: a lone surrogate, a noncharacter, a number that is not finite and
+    nesting deeper than 64 alike."""
+    value = json.loads(refusal["json"])
+    with pytest.raises(CanonicalizationError):
+        view_digest(value)
 
 
 @pytest.mark.parametrize("case", CASES, ids=[c["name"] for c in CASES])
@@ -143,7 +159,7 @@ def test_refusals_raised_while_parsing_keep_their_message(text, message):
 
 def test_an_integer_past_python_int_digits_is_refused():
     """json.loads raises a bare ValueError past int_max_str_digits (4,300)."""
-    with pytest.raises(CanonicalizationError, match="no digest"):
+    with pytest.raises(CanonicalizationError, match="integer literal too long"):
         parse_declaration('{"n":1' + "0" * 5000 + "}")
 
 
@@ -152,6 +168,52 @@ def test_duplicate_member_name_is_refused_at_any_depth():
         parse_declaration('{"k":1,"k":1}')
     with pytest.raises(CanonicalizationError, match="duplicate member name 'name'"):
         parse_declaration('{"a":[{"b":{"name":"x","name":"x"}}]}')
+
+
+@pytest.mark.parametrize(
+    ("location", "file_format", "content_type", "disposition"),
+    [
+        (
+            "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+            "tsv",
+            "text/tab-separated-values",
+            'attachment; filename="sub-01_task-rest_desc-nemarica_channels.tsv"; '
+            "filename*=UTF-8''sub-01_task-rest_desc-nemarica_channels.tsv",
+        ),
+        (
+            "x/report.html",
+            "html",
+            "application/octet-stream",
+            "attachment; filename=\"report.html\"; filename*=UTF-8''report.html",
+        ),
+        (
+            'x/µV "map" 100%.json',
+            "json",
+            "application/json",
+            'attachment; filename="_V _map_ 100_.json"; '
+            "filename*=UTF-8''%C2%B5V%20%22map%22%20100%25.json",
+        ),
+    ],
+)
+def test_download_headers(location, file_format, content_type, disposition):
+    """Every download is an attachment named by RFC 6266 with nosniff, and a
+    format the registry does not list is octet-stream (review r29)."""
+    headers = download_headers(location, file_format)
+    assert headers == {
+        "Content-Type": content_type,
+        "Content-Disposition": disposition,
+        "X-Content-Type-Options": "nosniff",
+    }
+
+
+def test_a_declared_size_is_within_the_cap_on_bytes():
+    """A file's size is capped at the registry's caps.bytes_per_role, so a
+    renderer can refuse a file before it fetches it (L3)."""
+    view = ROOT / "schema" / "definitions" / "view.schema.json"
+    defs = json.loads(view.read_text())
+    cap = load_registry()["caps"]["bytes_per_role"]
+    for name in ("viewData", "fileInput"):
+        assert defs["$defs"][name]["properties"]["size"]["maximum"] == cap
 
 
 def test_vector_file_header():
@@ -453,9 +515,36 @@ class TestViewData:
         ("fmt", "location"), [("tsv", "views/a.json"), ("json", "views/a.tsv")]
     )
     def test_known_format_matches_extension(self, fmt, location):
+        """Both directions fail: the format's extension, and the extension's format."""
         view = unknown_kind()
         view["data"][0].update(format=fmt, location=location)
-        assert view_errors(view) == {("pattern", "data/0/location")}
+        assert view_errors(view) == {
+            ("pattern", "data/0/location"),
+            ("const", "data/0/format"),
+        }
+
+    @pytest.mark.parametrize(
+        ("fmt", "location", "names"),
+        [
+            ("html", "views/a.tsv", "tsv"),
+            ("csv", "views/a.json", "json"),
+            ("html", "views/a.TsV", "tsv"),
+            ("svg", "views/a.JSON", "json"),
+        ],
+    )
+    def test_extension_names_the_format(self, fmt, location, names):
+        """A .tsv or .json file, in any case, is of that format (L4, probe p18)."""
+        view = unknown_kind()
+        view["data"][0].update(format=fmt, location=location)
+        assert view_errors(view) == {("const", "data/0/format")}
+
+    @pytest.mark.parametrize(
+        ("fmt", "location"), [("html", "views/index.html"), ("npy", "views/a.npy")]
+    )
+    def test_unregistered_format_under_its_own_extension(self, fmt, location):
+        view = unknown_kind()
+        view["data"][0].update(format=fmt, location=location)
+        assert view_errors(view) == set()
 
     @pytest.mark.parametrize("fmt", ["TSV", "t-sv", "x" * 17])
     def test_bad_format_name(self, fmt):
@@ -682,7 +771,7 @@ class TestRegistry:
             assert match, path.name
             assert match["kind"] == entry["kind"]
             assert int(match["version"]) == entry["kind_version"]
-            assert json.loads(path.read_text())["$id"] == path.name
+            assert json.loads(path.read_text())["$id"] == schema_id(path)
 
     def test_view_schema_checks_exactly_the_registered_kinds(self):
         dispatch = _dispatch()
@@ -697,6 +786,14 @@ class TestRegistry:
                 assert entry["base_version"] is None
             else:
                 assert (entry["base"], entry["base_version"]) in kinds
+                assert kinds[(entry["base"], entry["base_version"])]["base"] is None
+
+    def test_the_envelope_refuses_every_preset_as_a_base(self):
+        """The envelope's list of names no base may take is the registry's presets."""
+        envelope = json.loads(VIEW_SCHEMA.read_text())["$defs"]["view"]
+        refused = envelope["properties"]["base"]["not"]["enum"]
+        presets = [e["kind"] for e in REGISTRY["kinds"] if e["base"] is not None]
+        assert sorted(refused) == sorted(presets)
 
     def test_roles_name_registered_formats(self):
         """Every kind has roles, except a computed kind, which has inputs."""
@@ -722,9 +819,23 @@ class TestRegistry:
                 "location"
             ]["pattern"]
             for r in rules
+            if "format" in r["if"]["properties"]
         }
+        by_extension = {
+            r["then"]["properties"]["format"]["const"]: r["if"]["properties"][
+                "location"
+            ]["pattern"]
+            for r in rules
+            if "location" in r["if"]["properties"]
+        }
+        assert set(by_format) == set(by_extension) == set(REGISTRY["formats"])
         for name, spec in REGISTRY["formats"].items():
             assert by_format[name] == re.escape(spec["extension"]) + "$(?!\n)"
+            any_case = "".join(
+                f"[{c.upper()}{c}]" if c.isalpha() else re.escape(c)
+                for c in spec["extension"]
+            )
+            assert by_extension[name] == any_case + "$(?!\n)"
 
     def test_registry_roles_match_each_kind_schema(self):
         """The registry's roles, formats and dims are what the kind schema admits."""
@@ -867,6 +978,43 @@ class TestRendererRule:
         view = self._preset(table())
         view["data"].append(unknown_kind()["data"][0])
         assert draw_as(view, REGISTRY) == Drawing("base", "nemar.table", 1)
+
+    @pytest.mark.parametrize("field", ["kind_version", "base_version"])
+    def test_a_boolean_version_is_no_version(self, field):
+        """True == 1 in Python, and they hash alike; JSON's true is no version,
+        so it never finds version 1 of a kind or a base (review r29, round 2)."""
+        if field == "kind_version":
+            view = table() | {"kind_version": True}
+        else:
+            view = self._preset(table()) | {"base_version": True}
+        assert draw_as(view, REGISTRY) == Drawing("table", None, None)
+
+    @pytest.mark.parametrize("preset", ["nemar.spectrum", "nemar.ic-classes"])
+    def test_a_preset_is_no_base(self, preset):
+        """An unknown kind that names a preset as its base (probe p2: the
+        reference raised LookupError) is invalid, and draws as a table."""
+        view = self._preset(table()) | {"base": preset, "base_version": 1}
+        assert view_errors(view) == {("not", "base")}
+        assert draw_as(view, REGISTRY) == Drawing("table", None, None)
+
+    def test_no_view_draws_over_a_preset(self):
+        """A spectrum's own data meet nemar.spectrum's role contract, yet an
+        unknown kind naming nemar.spectrum as its base draws as a table: only a
+        generic kind is a base."""
+        example = json.loads(
+            (
+                ROOT / "examples" / "views" / "dataquality-record-nemar-ica.json"
+            ).read_text()
+        )
+        spectrum = next(
+            v
+            for v in example["recipes"]["nemar-ica"]["views"]
+            if v["kind"] == "nemar.spectrum"
+        )
+        entry = known_kinds(REGISTRY)[("nemar.spectrum", 1)]
+        assert meets_role_contract(spectrum, entry)
+        view = spectrum | {"kind": "acme.spectrum2", "base": "nemar.spectrum"}
+        assert draw_as(view, REGISTRY) == Drawing("table", None, None)
 
     def test_unknown_kind_missing_its_base_contract_draws_as_a_table(self):
         """Role frames, format npy, no columns: nothing a table renderer reads."""

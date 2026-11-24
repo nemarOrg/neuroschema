@@ -16,7 +16,7 @@ In the signalJourney record a run writes, the same declarations sit in `extensio
 |---|---|---|
 | `key` | yes | The view's key, unique within its recipe entry (`^[a-z][a-z0-9_]{0,63}$`). |
 | `kind`, `kind_version` | yes | The kind, namespaced (`nemar.table`), and its version (1 to 999). |
-| `base`, `base_version` | for a preset | The generic kind a preset draws over; always given together. |
+| `base`, `base_version` | for a preset | The generic kind a preset draws over; always given together. A preset is never a base: the envelope refuses a `base` that names one. |
 | `caption` | yes | Shown with the view (1 to 500 characters). |
 | `source` | yes | `{"plugin": {name, version}}` or `{"recipe": {name, version}}`, exactly one. |
 | `scope` | no | `recording` when absent; see [Scope](#scope). |
@@ -42,7 +42,7 @@ Any other kind or version passes on the envelope alone: an unknown kind is never
 A renderer applies this rule:
 
 1. If it knows the view's kind and version, it draws the view with that kind's renderer.
-2. Otherwise, if it knows the base and base version and the view's data meet the base's role contract, it draws the view with the generic renderer for the base, and offers every other file in the view's `data` for download.
+2. Otherwise, if it knows the base and base version as a generic kind and the view's data meet the base's role contract, it draws the view with the generic renderer for the base, and offers every other file in the view's `data` for download. A preset is never a base, so a view that names one shows as a table (and the envelope refuses it).
 3. Otherwise it shows the data as a table, with a download of each file.
 
 No view hides data: however a view is drawn, every file in its `data` is either drawn or offered for download.
@@ -108,14 +108,22 @@ Each entry of `data` is one file read as one role.
 | Field | Required | Meaning |
 |---|---|---|
 | `role` | yes | The role the file plays in the kind (`values`, `layout`, `table`). |
-| `location` | yes | Path inside the run's product; the same string as its signalJourney `outputTargets` location. |
-| `format` | yes | A registered format (`tsv` or `json`); a `tsv` file ends in `.tsv` and a `json` file in `.json`. |
+| `location` | yes | Path inside the run's product; the same string as its signalJourney `outputTargets` location. See [Locations](#locations). |
+| `format` | yes | The file's format (`tsv` or `json`, or one the registry does not list); a `tsv` file ends in `.tsv` and a `json` file in `.json`, and a file whose name ends in `.tsv` or `.json`, in any case, is of that format. |
 | `size`, `sha256` | yes | The file's size in bytes and the Secure Hash Algorithm 256 (SHA-256) digest of its bytes. |
 | `columns` | no | `[{name, type, unit?}]`: the columns this role reads; `type` is `number`, `integer` or `string`. |
 | `dims` | no | `[{name, axis, type, unit?, coords}]`: the dimensions; see [Dimensions](#dimensions). |
 | `coordinate_system` | no | For a role of sensor positions: the Brain Imaging Data Structure (BIDS) name of the coordinate system, or `n/a`. |
 | `position_source` | no | For a role of sensor positions: `measured` (from the dataset's own files, which NEMAR does not verify) or `template`. |
 | `montage` | no | For a role of `template` positions: the montage they were taken from, by its name in `views/montages` ([`nemar.sensor-labels.v1`](views/sensor-labels.md)). A `template` role carries `montage` and `coordinate_system` `n/a`, and its positions are read as right-anterior-superior (RAS) meters, the montage's frame. |
+
+### Locations
+
+A location (`relativeLocation`, the `location` of a data entry or a file input, and every other path a view names) is a relative POSIX path: Unicode text, written in UTF-8 like the rest of the record, that names one file of the run's product and is never a URL.
+It has no leading slash, no URI scheme, no `.` or `..` segment, no empty segment, no backslash, none of `%`, `?` and `#`, no leading or trailing space, no control character (C0, DEL or C1), no line or paragraph separator (U+2028, U+2029) and no bidirectional control (U+061C, U+200E, U+200F, U+202A to U+202E, U+2066 to U+2069).
+The pattern's lookaheads match any character with `[\s\S]`, never `.`, which in JavaScript stops at a line terminator.
+So it means the same file in every reader: a URL parser strips a leading or trailing space and decodes `%2e%2e` as `..`, `?` and `#` would end the path, and a bidirectional control can show one name as another.
+A renderer that fetches a file builds its URL from the location by percent-encoding the UTF-8 bytes of each `/`-separated segment (JavaScript's `encodeURIComponent`) and joining the segments with `/` under the product's base; it compares locations as text.
 
 A role reads only the columns it declares, so one file can serve two roles (a file of sensor names, layout and positions can be the `layout` role with one set of columns and the `positions` role with another).
 The sensor type of each row is the `sensor_type` column.
@@ -169,6 +177,15 @@ Nothing writes or reads a reserved scope yet.
 ## Formats
 
 The formats are an open registry; `tsv` and `json` are defined.
+The extension and the format name each other in both directions: a `tsv` file's location ends in `.tsv` and a `json` file's in `.json`, and a location that ends in `.tsv` or `.json` in any case is of that format, so a `.TSV` file or an `.html` file named `.tsv` is invalid.
+
+A file of a format the registry does not list is offered for download only.
+A renderer never draws it, embeds it, previews it or navigates to it, and serves it with the content type `application/octet-stream`, whatever the file's extension or bytes: an `html` or `svg` file a plugin declares would otherwise run as a page under the renderer's origin.
+A file of a registered format is served with the registry's `media_type`.
+
+Every download, of any format, is served with `X-Content-Type-Options: nosniff` and as an attachment named for the last segment of its location, by RFC 6266 with RFC 8187's encoding: `Content-Disposition: attachment; filename="<fallback>"; filename*=UTF-8''<name>`.
+`<name>` is the segment's UTF-8 bytes percent-encoded, every byte but the ASCII letters, digits, `-`, `.`, `_` and `~`, and `<fallback>` is the segment with each character outside printable ASCII, and each `"`, `\` and `%`, replaced by `_`, for a client that reads only `filename`.
+`neuroschema.views.download_headers` is the reference.
 
 ### TSV
 
@@ -181,7 +198,18 @@ The recipes' writer, which prints numbers with `.17g`, conforms.
 
 ### JSON
 
-UTF-8 JSON, with no duplicate member names and no `NaN` or `Infinity`.
+Internet JSON (I-JSON, RFC 7493), the rules for every JSON text neuroschema reads: a view's JSON file, a view declaration (the [view digest's input](views/view-digest.md#input)) and a document `neuroschema.validate` checks.
+
+- The text is UTF-8 with no byte order mark.
+- No object has two members of one name, however the names are escaped (`"a"` and `"\u0061"` are one name).
+- There is no `NaN` or `Infinity`, and every number is finite as a binary64: `1e400` is not.
+- No string or member name holds a lone surrogate (U+D800 to U+DFFF) or a noncharacter (U+FDD0 to U+FDEF, and the last two code points of each plane, U+FFFE, U+FFFF, U+1FFFE and so on to U+10FFFF: 66 code points), written as itself or escaped.
+- Arrays and objects nest at most 64 deep: `[[1]]` is 2 deep and a scalar 0.
+
+Each number is the binary64 nearest its text, as JavaScript's `JSON.parse` reads it, and a schema check applies to that reading: 9007199254740993 is checked as 9007199254740992.
+`neuroschema.ijson` is the Python reader.
+A JavaScript reader decodes the bytes with `new TextDecoder("utf-8", {fatal: true, ignoreBOM: true})`, which throws on bytes that are not UTF-8 (without `fatal` it would put U+FFFD in their place) and keeps a byte order mark as U+FEFF (without `ignoreBOM` it would drop it silently), and refuses text that begins with U+FEFF.
+It then parses with `JSON.parse` after a scan that refuses a repeated name and nesting past 64, and checks every string with `String.prototype.isWellFormed` and for the noncharacters.
 
 ## Caps
 
@@ -204,6 +232,7 @@ Two declarations with one digest are the same declaration; the digest is not a s
 ## What the schema checks and what the writer must check
 
 The schema checks the envelope, each registered kind and transform, identifier patterns, the extension of a `tsv` or `json` file, the unit of `time`, a store digest for a serving run, and the scope rule.
+Every integer it takes is at most 2^53 - 1 in magnitude, and every verdict is on the binary64 reading of the declaration ([JSON](#json)), so jsonschema and ajv agree on it.
 JSON Schema cannot compare one value with another, so the writer enforces:
 
 - view keys are unique within a recipe entry, and roles are unique within a view;

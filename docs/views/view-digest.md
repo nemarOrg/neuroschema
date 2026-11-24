@@ -8,9 +8,10 @@ This page is normative; [`views/vectors/view-digest.v1.json`](../../views/vector
 
 The input is one view declaration, a JSON object, exactly as written in the record (the signalJourney record's `extensions.nemar.views`, or the record-level `dataQuality` entry projected from it).
 A field that a reader adds, such as an address a route attaches, is not part of it: a reader digests the declaration before it adds anything.
-The declaration is Internet JSON (I-JSON, RFC 7493): its text is UTF-8 with no byte order mark, and no object has two members with one name, at any depth.
+The declaration is Internet JSON (I-JSON, RFC 7493), under [the JSON grammar of docs/views.md](../views.md#json): its text is UTF-8 with no byte order mark, no object has two members with one name at any depth however the names are escaped, no string or member name holds a lone surrogate or a noncharacter, and nothing nests more than 64 deep.
 An implementation that reads the declaration from bytes refuses any other encoding, including UTF-16, UTF-32 and a UTF-8 byte order mark, which some parsers accept (Python's `json.loads` detects all three).
-An implementation that reads the declaration from text refuses a duplicate name while it parses, because a standard parser keeps the last member silently (Python's `json.loads` and JavaScript's `JSON.parse` both do): Python passes an `object_pairs_hook` that refuses a repeated name (`neuroschema.views.parse_declaration`), and JavaScript needs a parser or a scan that reports one.
+An implementation that reads the declaration from text refuses a duplicate name while it parses, because a standard parser keeps the last member silently (Python's `json.loads` and JavaScript's `JSON.parse` both do), and it compares names after their escapes are decoded: Python passes an `object_pairs_hook` that refuses a repeated name (`neuroschema.views.parse_declaration`, which reads with `neuroschema.ijson`), and JavaScript needs a parser or a scan that reports one.
+It also refuses nesting deeper than 64 before it parses, so no parser recurses past it.
 Otherwise the declaration is parsed with a standard JSON parser, so each number is the Institute of Electrical and Electronics Engineers (IEEE) 754 binary64 value nearest its text, as JavaScript's `JSON.parse` reads it; an integer beyond 2^53 becomes the nearest binary64 (9007199254740993 reads as 9007199254740992).
 
 ## Canonical form
@@ -27,7 +28,7 @@ Otherwise the declaration is parsed with a standard JSON parser, so each number 
 7. The text is encoded as UTF-8 (Unicode Transformation Format, 8-bit), and the digest is the SHA-256 of those bytes.
 
 In JavaScript, rules 2, 5 and 6 are what `JSON.stringify` does for a single value, and rule 4 is the default `Array.prototype.sort` of the names.
-A JavaScript implementation must still apply the [refusals](#refusals) itself, before it writes anything: it checks every string and every member name with `String.prototype.isWellFormed` and every number with `Number.isFinite`, because `JSON.stringify` does not fail on either.
+A JavaScript implementation must still apply the [refusals](#refusals) itself, before it writes anything: it checks every string and every member name with `String.prototype.isWellFormed` and for the 66 noncharacters, every number with `Number.isFinite`, and the depth of every array and object, because `JSON.stringify` does not fail on any of them.
 It writes a lone surrogate as a `\u` escape and a non-finite number as `null`, which would give a digest where there must be none.
 In Python, `json.dumps` is not enough: it prints `100.0` and `1e-07`, sorts by code point, and escapes every character above U+007F by default.
 
@@ -38,7 +39,8 @@ A declaration has no digest, and an implementation raises an error rather than g
 - it is not a JSON object;
 - an object in it has two members with one name;
 - its text is not JSON, such as the `NaN` and `Infinity` literals Python's `json.loads` accepts;
-- a string or a member name holds a lone surrogate (a code unit from U+D800 to U+DFFF that is not part of a pair);
+- a string or a member name holds a lone surrogate (a code unit from U+D800 to U+DFFF that is not part of a pair) or a noncharacter (U+FDD0 to U+FDEF, and U+FFFE and U+FFFF of each plane), written as itself or escaped;
+- arrays and objects in it nest more than 64 deep (the declaration object itself is 1 deep);
 - a number is not finite as a binary64: a JavaScript parser reads `1e400`, and an integer literal beyond binary64 range such as 1 followed by 400 zeros, as `Infinity`; Python reads that integer exactly, and refuses it when it makes it a binary64 (an integer literal of more than 4,300 digits Python refuses while it parses).
 
 ## What the digest shows
@@ -51,6 +53,6 @@ The digest is not a signature: it shows that two copies agree, not who wrote the
 
 Each case of the vectors file gives a `declaration`, its `canonical` text and its `sha256`.
 An implementation parses the vectors file with its standard JSON parser, canonicalizes each declaration, and compares the UTF-8 bytes with `canonical` and their SHA-256 with `sha256`.
-Each refusal gives text in `json`, which the implementation parses with its duplicate-name check and must refuse, while parsing or while canonicalizing.
+Each refusal gives text in `json`, which the implementation parses with its duplicate-name check and must refuse, while parsing or while canonicalizing; the refusals hold escaped duplicate names, lone surrogates and noncharacters (escaped, raw and written as a surrogate pair) and nesting 65 deep, and a case nests exactly 64 deep.
 The cases cover member order (at every depth, and UTF-16 against code point order), number printing (the ECMAScript boundaries and the RFC 8785 Appendix B values), integers beyond binary64 precision, string escapes, and two declarations of the kind a recipe or plugin writes.
 The canonical texts were computed with ECMAScript's own `JSON.stringify` and checked against the Python reference.

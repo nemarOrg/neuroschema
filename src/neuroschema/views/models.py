@@ -24,14 +24,11 @@ from dataclasses import dataclass
 from itertools import pairwise
 from typing import Any
 
-from jsonschema import Draft202012Validator
+from jsonschema import Draft202012Validator, ValidationError
 
+from neuroschema import ijson
 from neuroschema.validate import load_schema
-from neuroschema.views.digest import (
-    CanonicalizationError,
-    canonicalize,
-    parse_declaration,
-)
+from neuroschema.views.digest import CanonicalizationError, canonicalize
 from neuroschema.views.registry import (
     REPO_ROOT,
     Drawing,
@@ -151,34 +148,17 @@ def cell_value(text: str, value_type: str) -> float | str:
 def read_json(data: bytes) -> Any:
     """Read a JSON file under the grammar of docs/views.md (``json_invalid``).
 
-    Strict UTF-8 with no byte order mark, no repeated member name, no ``NaN``
-    or ``Infinity`` literal, and every number finite as a binary64: ``1e400``
-    is not, and neither is an integer literal beyond binary64 range, which
-    Python reads exactly and JavaScript reads as ``Infinity``.
+    Internet JSON (``neuroschema.ijson``): strict UTF-8 with no byte order
+    mark, no repeated member name however it is escaped, no ``NaN`` or
+    ``Infinity`` literal, every number finite as a binary64 (``1e400`` is not,
+    and neither is an integer literal beyond binary64 range, which Python reads
+    exactly and JavaScript reads as ``Infinity``), no lone surrogate or
+    noncharacter in a string, and at most 64 levels of nesting.
     """
     try:
-        value = parse_declaration(data)
-    except CanonicalizationError as exc:
+        return ijson.parse(data)
+    except ijson.IJsonError as exc:
         raise KindRefused("json_invalid", str(exc)) from exc
-    if not _all_finite(value):
-        raise KindRefused("json_invalid", "a number is not finite")
-    return value
-
-
-def _all_finite(value: Any) -> bool:
-    if isinstance(value, int):  # a bool is an int, and converts
-        try:
-            float(value)
-        except OverflowError:
-            return False
-        return True
-    if isinstance(value, float):
-        return math.isfinite(value)
-    if isinstance(value, dict):
-        return all(_all_finite(v) for v in value.values())
-    if isinstance(value, list):
-        return all(_all_finite(v) for v in value)
-    return True
 
 
 # ── Readouts and bins ─────────────────────────────────────────────────────
@@ -202,8 +182,12 @@ def locate_bin(edges: Sequence[float], value: float) -> int:
     """The bin holding ``value``: ``[e_i, e_i+1)``, the last bin closed.
 
     Returns -1 below the first edge (underflow) and the number of bins above
-    the last edge (overflow).
+    the last edge (overflow). Raises ``ValueError`` for NaN, which no bin holds
+    (every comparison with it is false, so it would land in a bin silently);
+    a renderer marks nothing for it.
     """
+    if math.isnan(value):
+        raise ValueError("NaN has no bin")
     bins = len(edges) - 1
     if value < edges[0]:
         return -1
@@ -220,27 +204,67 @@ def number_text(value: float) -> str:
 # ── Building a model ──────────────────────────────────────────────────────
 
 
+class Binary64Validator:
+    """A jsonschema validator that checks the binary64 reading of an instance.
+
+    It validates :func:`neuroschema.ijson.binary64` of what it is given, the
+    value JavaScript's ``JSON.parse`` would read, so its verdict is the one ajv
+    gives for the same text: an integer past 2^53 is checked as the nearest
+    binary64 (``uniqueItems``, ``maximum``). A value with no binary64 reading
+    (a float that is not finite, an integer past binary64 range) is invalid,
+    with one error whose validator is ``binary64``.
+    """
+
+    def __init__(self, validator: Draft202012Validator) -> None:
+        self.validator = validator
+
+    def iter_errors(self, instance: object):
+        try:
+            reading = ijson.binary64(instance)
+        except ijson.IJsonError as exc:
+            yield ValidationError(str(exc), validator="binary64", instance=instance)
+            return
+        yield from self.validator.iter_errors(reading)
+
+    def is_valid(self, instance: object) -> bool:
+        return next(self.iter_errors(instance), None) is None
+
+
 @functools.cache
-def _validator(path: str, fragment: str) -> Draft202012Validator:
+def _validator(path: str, fragment: str) -> Binary64Validator:
     schema_path = REPO_ROOT / path
     _schema, resolver = load_schema(schema_path)
-    return Draft202012Validator(
-        {"$ref": f"file://{schema_path}{fragment}"}, resolver=resolver
+    return Binary64Validator(
+        Draft202012Validator(
+            {"$ref": f"file://{schema_path}{fragment}"}, resolver=resolver
+        )
     )
 
 
-def view_validator() -> Draft202012Validator:
-    """A validator for one view declaration (``view.schema.json#/$defs/view``)."""
+def view_validator() -> Binary64Validator:
+    """A validator for one view declaration (``view.schema.json#/$defs/view``),
+    on the binary64 reading of the declaration (:class:`Binary64Validator`)."""
     return _validator(str(VIEW_SCHEMA.relative_to(REPO_ROOT)), "#/$defs/view")
 
 
-def histogram_content_validator() -> Draft202012Validator:
-    """A validator for the content of a histogram role."""
+def schema_validator(relative: str) -> Binary64Validator:
+    """A validator for a schema file, by its path under ``schema/``."""
+    return _validator(f"schema/{relative}", "")
+
+
+def data_quality_validator() -> Binary64Validator:
+    """A validator for a ``dataQuality`` entry, on its binary64 reading."""
+    return _validator("schema/extensions/dataQuality.schema.json", "")
+
+
+def histogram_content_validator() -> Binary64Validator:
+    """A validator for the content of a histogram role, on its binary64 reading."""
     return _validator(str(HISTOGRAM_CONTENT.relative_to(REPO_ROOT)), "")
 
 
-def content_validator(name: str) -> Draft202012Validator:
-    """A validator for a content schema of ``schema/views/``, by its file name."""
+def content_validator(name: str) -> Binary64Validator:
+    """A validator for a content schema of ``schema/views/``, by its file name,
+    on the binary64 reading of the content."""
     return _validator(f"schema/views/{name}", "")
 
 
@@ -252,28 +276,40 @@ class _Reader:
         self.files = files
         self.caps = caps
         self._tsv: dict[str, Tsv] = {}
+        self._sha256: dict[str, str] = {}
 
     def entry(self, role: str) -> Mapping | None:
         entries = [e for e in self.view.get("data", []) if e.get("role") == role]
         return entries[0] if len(entries) == 1 else None
 
     def verified(self, entry: Mapping) -> bytes:
+        """The entry's bytes: its declared size within the cap on bytes, checked
+        before the file is fetched (``cap_exceeded``), then the file present, of
+        its declared size and SHA-256 (``file_missing``, ``file_size_mismatch``,
+        ``file_digest_mismatch``). Every entry is checked, even one that shares
+        its location with another."""
         location = entry["location"]
+        if entry["size"] > self.caps["bytes_per_role"]:
+            raise KindRefused("cap_exceeded", f"{location}: {entry['size']} bytes")
         if location not in self.files:
             raise ViewRefused("file_missing", location, location)
         data = bytes(self.files[location])
         if len(data) != entry["size"]:
             raise ViewRefused("file_size_mismatch", location, location)
-        if hashlib.sha256(data).hexdigest() != entry["sha256"]:
+        if location not in self._sha256:
+            self._sha256[location] = hashlib.sha256(data).hexdigest()
+        if self._sha256[location] != entry["sha256"]:
             raise ViewRefused("file_digest_mismatch", location, location)
-        if len(data) > self.caps["bytes_per_role"]:
-            raise KindRefused("cap_exceeded", f"{location}: bytes")
         return data
 
     def tsv(self, entry: Mapping) -> Tsv:
+        """The entry's file as a TSV, verified for this entry: two entries that
+        share a location are each checked against their own size and SHA-256,
+        and the file is parsed once."""
+        data = self.verified(entry)
         location = entry["location"]
         if location not in self._tsv:
-            self._tsv[location] = read_tsv(self.verified(entry))
+            self._tsv[location] = read_tsv(data)
         return self._tsv[location]
 
 
@@ -328,7 +364,11 @@ def _parse_column(tsv: Tsv, column: Mapping) -> tuple[list, list[str]]:
 
 
 def _role_labels(reader: _Reader, dim: Mapping, count: int) -> list[str]:
-    """Coordinates by position from a column of another role of the view."""
+    """Coordinates by position from a column of another role of the view.
+
+    The role is checked as every role is: its file (the cap on bytes, then
+    present, size, SHA-256), the TSV grammar and the cap on cells, counting
+    every header column, before its column is looked for."""
     role, name = dim["coords"]["role"], dim["coords"]["column"]
     other = reader.entry(role)
     if other is None or other.get("format") != "tsv":
@@ -337,6 +377,8 @@ def _role_labels(reader: _Reader, dim: Mapping, count: int) -> list[str]:
     if column is None:
         raise KindRefused("coords_unresolved", f"{dim['name']}: {role}.{name}")
     tsv = reader.tsv(other)
+    if len(tsv.rows) * len(tsv.header) > reader.caps["cells_per_role"]:
+        raise KindRefused("cap_exceeded", f"{role}: {len(tsv.rows)} rows")
     if name not in tsv.header:
         raise KindRefused("column_missing", f"{role}.{name}")
     _match(dim, column)
@@ -645,9 +687,23 @@ def _sensor_role(
             cell_value(text, kind or declared_column["type"])
         if declared_column["name"] == "sensor_type":
             types = texts
-    if names is not None and tsv.cells(name) != list(names):
-        raise KindRefused("sensors_mismatch", f"{role}: names differ from the header")
+    if names is not None:
+        check_sensor_names(role, tsv.cells(name), names)
     return _Sensors(tsv.cells(name), role, entry, places, types)
+
+
+def check_sensor_names(role: str, cells: Sequence[str], names: Sequence[str]) -> None:
+    """``sensors_mismatch``, its one definition: when the sensors run along the
+    values' columns and a role places them, the role's name cells, top to
+    bottom, are the value columns' names in declared order, compared as exact
+    text, so no value is drawn at another sensor's place.
+
+    A scalp map's model reads it last of its sensor role's checks
+    (:func:`_sensor_role`), and ``nemar.spectrum``'s own check
+    (``presets.check_spectrum``) reads it after the base draws, before any map.
+    """
+    if list(cells) != list(names):
+        raise KindRefused("sensors_mismatch", f"{role}: names differ from the header")
 
 
 def _label_column(dims: Sequence[Mapping], declared: Sequence[Mapping]):
@@ -1030,8 +1086,20 @@ def build_model(
         raise
 
 
+def declaration_valid(view: Mapping) -> bool:
+    """Whether a declaration is valid: it has a digest (``nemar.view-digest.v1``:
+    no lone surrogate or noncharacter in a string, every number finite, at most
+    64 levels deep) and, read as binary64 numbers (:func:`neuroschema.ijson.binary64`),
+    it meets ``view.schema.json#/$defs/view``."""
+    try:
+        canonicalize(view)
+    except CanonicalizationError:
+        return False
+    return view_validator().is_valid(view)
+
+
 def _build(view: Mapping, files: Mapping[str, bytes], registry: Mapping) -> dict:
-    if not view_validator().is_valid(view):
+    if not declaration_valid(view):
         raise ViewRefused("declaration_invalid")
     drawing = draw_as(view, registry)
     pair = (drawing.kind, drawing.kind_version)

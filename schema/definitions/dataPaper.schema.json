@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "dataPaper.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/definitions/dataPaper.schema.json",
   "title": "Data Paper",
   "description": "A paper, or a deposit of the same data, that a trusted judgment classified as this dataset's own data paper: it introduces, describes, or releases the data in this specific dataset. Unlike the relation type on a related identifier, which is only a hint, membership here is a judged verdict.",
   "type": "object",
@@ -8,8 +8,8 @@
   "properties": {
     "doi": {
       "type": "string",
-      "description": "DOI of the data paper, without a resolver prefix (e.g., '10.1038/s41597-019-0027-4'). DOIs are case-insensitive; the producer serves them in canonical lowercase, so consumers must compare case-insensitively (for example against related_identifiers[].identifier).",
-      "pattern": "^10\\.\\d{4,9}/\\S+$"
+      "description": "DOI of the data paper, without a resolver prefix (e.g., '10.1038/s41597-019-0027-4'): 10., four to nine ASCII digits, a slash, and a suffix of printable ASCII with no space. The classes are explicit, so Python and JavaScript read the pattern alike (\\d and \\S differ between them). DOIs are case-insensitive; the producer serves them in canonical lowercase, so consumers must compare case-insensitively (for example against related_identifiers[].identifier).",
+      "pattern": "^10\\.[0-9]{4,9}/[!-~]+$(?!\n)"
     },
     "title": {
       "type": ["string", "null"],
@@ -17,6 +17,8 @@
     },
     "year": {
       "type": ["integer", "null"],
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991,
       "description": "Publication year. Null when unknown."
     },
     "venue": {

@@ -22,14 +22,17 @@ import sys
 from collections.abc import Callable
 from pathlib import Path
 
+from neuroschema.ijson import FORBIDDEN
 from neuroschema.views import load_registry
 from neuroschema.views.models import (
     MODELS_FORMAT,
     ViewRefused,
     build_model,
     content_validator,
+    data_quality_validator,
     histogram_content_validator,
     locate_bin,
+    schema_validator,
     snap_row,
     view_validator,
 )
@@ -348,6 +351,21 @@ def preset_spectrum(
         base_version=1,
         parameters={"method": "welch"},
     )
+
+
+def _shared_location(first: str) -> dict:
+    """A preset over nemar.lines whose layout names the values' own file, with
+    the values' size and another digest (probe p2: one entry hides another)."""
+    spectrum = preset_spectrum()
+    values, layout = spectrum["data"]
+    layout = layout | {
+        "location": values["location"],
+        "size": values["size"],
+        "sha256": "0" * 64,
+        "columns": [col("freq_hz", "string")],
+    }
+    spectrum["data"] = [values, layout] if first == "values" else [layout, values]
+    return spectrum
 
 
 def lines_cases() -> list[Case]:
@@ -824,7 +842,27 @@ def histogram_cases() -> list[Case]:
         summed_variance_pct=[80.5, 19.5],
         n_components=35,
     )
+    nested_64 = (
+        b'{"categories": ["a"], "counts": [1], "x": ' + b"[" * 63 + b"]" * 63 + b"}\n"
+    )
+    negative_zeros = (
+        b'{"edges": [-0, 1], "counts": [-0.0], "underflow": -0, "overflow": 0}\n'
+    )
     cases = [
+        Case(
+            "histogram_nested_64",
+            "A file nested exactly 64 deep, in a member this kind does not read: "
+            "drawn.",
+            histogram_view(nested_64),
+            {HIST_AT: nested_64},
+        ),
+        Case(
+            "histogram_negative_zero_counts",
+            "Counts and an edge written -0 and -0.0 read as 0: the model holds no "
+            "negative zero, so the total and max_count are 0, not -0.",
+            histogram_view(negative_zeros),
+            {HIST_AT: negative_zeros},
+        ),
         Case(
             "histogram_edges",
             "Bins [e_i, e_i+1), the last closed; underflow and overflow; labels "
@@ -937,6 +975,54 @@ def histogram_cases() -> list[Case]:
             "histogram_byte_order_mark",
             b"\xef\xbb\xbf" + ICLABEL,
             "A byte order mark: json_invalid.",
+        ),
+        (
+            "histogram_not_utf8",
+            b'{"categories": ["a\xff"], "counts": [1]}\n',
+            "A byte that is not UTF-8 (0xFF): json_invalid, where a decoder "
+            "without fatal would read U+FFFD (review r29).",
+        ),
+        (
+            "histogram_escaped_duplicate_member",
+            b'{"categories": ["a"], "counts": [1], "\\u0063ounts": [2]}\n',
+            "A member named twice, once escaped (counts and \\u0063ounts are one "
+            "name): json_invalid.",
+        ),
+        (
+            "histogram_lone_surrogate",
+            b'{"categories": ["\\ud800"], "counts": [1]}\n',
+            "A category holding an escaped lone surrogate: json_invalid.",
+        ),
+        (
+            "histogram_lone_surrogate_in_name",
+            b'{"categories": ["a"], "counts": [1], "\\udc00": 1}\n',
+            "A member name holding a lone surrogate, in a member this kind does "
+            "not read: json_invalid.",
+        ),
+        (
+            "histogram_noncharacter",
+            b'{"categories": ["\\ufdd0"], "counts": [1]}\n',
+            "A category holding the noncharacter U+FDD0: json_invalid.",
+        ),
+        (
+            "histogram_noncharacter_raw",
+            '{"categories": ["a\uffff"], "counts": [1]}\n'.encode(),
+            "A category holding the noncharacter U+FFFF as UTF-8 bytes: json_invalid.",
+        ),
+        (
+            "histogram_noncharacter_astral",
+            b'{"categories": ["\\ud83f\\udffe"], "counts": [1]}\n',
+            "A category holding U+1FFFE, a noncharacter written as a surrogate "
+            "pair: json_invalid.",
+        ),
+        (
+            "histogram_nested_65",
+            b'{"categories": ["a"], "counts": [1], "x": '
+            + b"[" * 64
+            + b"]" * 64
+            + b"}\n",
+            "A member this kind does not read, nested so the file is 65 deep: "
+            "json_invalid.",
         ),
     ]:
         cases.append(Case(name, covers, histogram_view(data), {HIST_AT: data}))
@@ -1094,6 +1180,23 @@ def order_cases() -> list[Case]:
         columns=[col("number", "integer")],
     )
     return [
+        Case(
+            "order_bytes_cap_before_fetch",
+            "A declared size over the byte cap and no file: cap_exceeded, from the "
+            "declaration before the file is fetched, so the view falls back "
+            "rather than refusing on file_missing.",
+            lines_view(),
+            {},
+            caps={"bytes_per_role": 10},
+        ),
+        Case(
+            "order_bytes_cap_before_digest",
+            "A declared size over the byte cap and other bytes of that size: "
+            "cap_exceeded, before the digest is computed.",
+            lines_view(),
+            {SPECTRUM_AT: SPECTRUM.replace(b"12.5", b"12.6")},
+            caps={"bytes_per_role": 10},
+        ),
         lines_case(
             "order_bytes_cap_before_grammar",
             "Over the byte cap and CRLF line endings: cap_exceeded.",
@@ -1223,6 +1326,32 @@ def order_cases() -> list[Case]:
             "and refuses the view either way.)",
             undeclared_layout,
             {f"{PREFIX}_numbered.tsv": NUMBERED, LAYOUT_AT: ragged_layout},
+        ),
+        Case(
+            "caps_role_cells",
+            "The layout a preset's labels come from holds 12 cells, every header "
+            "column counted, over a cap on cells lowered to 10 that the values' 8 "
+            "meet: cap_exceeded, the coordinate role held to the caps as every "
+            "role is.",
+            preset_spectrum(),
+            {f"{PREFIX}_numbered.tsv": NUMBERED, LAYOUT_AT: LAYOUT},
+            caps={"cells_per_role": 10},
+        ),
+        Case(
+            "order_role_grammar_before_cap",
+            "The layout's file has a ragged row and is over the cap on cells: "
+            "tsv_ragged.",
+            preset_spectrum(ragged_layout),
+            {f"{PREFIX}_numbered.tsv": NUMBERED, LAYOUT_AT: ragged_layout},
+            caps={"cells_per_role": 10},
+        ),
+        Case(
+            "order_role_cap_before_column_missing",
+            "The layout is over the cap on cells and lacks the declared name: "
+            "cap_exceeded.",
+            preset_spectrum(unnamed),
+            {f"{PREFIX}_numbered.tsv": NUMBERED, LAYOUT_AT: unnamed},
+            caps={"cells_per_role": 10},
         ),
         Case(
             "order_role_grammar_before_column_missing",
@@ -1420,19 +1549,54 @@ def refusals() -> list[Case]:
             },
         ),
         (
+            "refusal_shared_location_digest",
+            "The layout a preset's labels come from shares its location with the "
+            "values and declares other bytes of their size: each entry is "
+            "verified, so file_digest_mismatch (probe p2).",
+            _shared_location(first="values"),
+            {f"{PREFIX}_numbered.tsv": NUMBERED},
+        ),
+        (
+            "refusal_shared_location_digest_first",
+            "The same, with the entry that declares other bytes listed first: "
+            "file_digest_mismatch.",
+            _shared_location(first="layout"),
+            {f"{PREFIX}_numbered.tsv": NUMBERED},
+        ),
+        (
+            "refusal_caption_lone_surrogate",
+            "A caption holding a lone surrogate meets the schema but has no "
+            "digest: declaration_invalid.",
+            lines_view() | {"caption": "Spectrum \ud800"},
+            {SPECTRUM_AT: SPECTRUM},
+        ),
+        (
+            "refusal_caption_noncharacter",
+            "A caption holding the noncharacter U+FFFE: declaration_invalid.",
+            lines_view() | {"caption": "Spectrum \ufffe"},
+            {SPECTRUM_AT: SPECTRUM},
+        ),
+        (
+            "refusal_kind_version_true",
+            "A nemar.lines view whose kind_version is true: no version, so the "
+            "declaration is invalid, never drawn as version 1.",
+            lines_view() | {"kind_version": True},
+            {SPECTRUM_AT: SPECTRUM},
+        ),
+        (
+            "refusal_preset_as_base",
+            "An unknown kind over the preset nemar.spectrum: a preset is no base, "
+            "so declaration_invalid (probe p2).",
+            lines_view()
+            | {"kind": "acme.spectrum2", "base": "nemar.spectrum", "base_version": 1},
+            {SPECTRUM_AT: SPECTRUM},
+        ),
+        (
             "order_declaration_before_files",
             "An invalid declaration and no files: declaration_invalid, and no "
             "file is offered, since the declaration that names them is not valid.",
             lines_view(base="nemar.table", base_version=1),
             {},
-        ),
-        (
-            "order_digest_before_bytes_cap",
-            "Other bytes of the declared size, over the byte cap: "
-            "file_digest_mismatch.",
-            lines_view(),
-            {SPECTRUM_AT: wrong},
-            {"bytes_per_role": 10},
         ),
     ]
     maps, files = field_view(mixing(), chanlocs())
@@ -2981,9 +3145,21 @@ def spectrum_maps_cases() -> list[Case]:
         (
             "spectrum_maps_sensors_mismatch",
             "A layout listed in the other order than the sensor columns: the "
-            "lines are drawn, and every map shows sensors_mismatch, never a value "
-            "at another sensor's place.",
+            "preset's own check finds sensors_mismatch (the definition a scalp "
+            "map reads), the view shows as the fallback's tables, and there are "
+            "no lines and no maps, never a value at another sensor's place.",
             spectrum_view(values, layout=chanlocs(TEN_TWENTY[::-1])),
+            [10],
+        ),
+        (
+            "spectrum_maps_mismatch_before_place_fault",
+            "A layout in the other order with a theta NA: the preset's check "
+            "runs before any map reads a place, so sensors_mismatch, the "
+            "fallback, and no maps (cell_not_number alone draws the lines).",
+            spectrum_view(
+                values,
+                layout=_replace(chanlocs(TEN_TWENTY[::-1]), "\t-54\t", "\tNA\t"),
+            ),
             [10],
         ),
         (
@@ -3083,6 +3259,33 @@ def view_verdicts() -> list[tuple[str, str, dict]]:
             _set(table, "data/0/location", "x/channels.json"),
         ),
         (
+            "envelope_tsv_location_uppercase",
+            "A tsv file whose location ends .TSV.",
+            _set(table, "data/0/location", "x/channels.TSV"),
+        ),
+        (
+            "envelope_tsv_extension_other_format",
+            "A file named .tsv declared in another format (html): the extension "
+            "names the format, in both directions.",
+            _set(_set(unknown, "data/0/format", "html"), "data/0/location", "x/a.tsv"),
+        ),
+        (
+            "envelope_json_extension_other_format",
+            "A file named .JSON declared as csv.",
+            _set(_set(unknown, "data/0/format", "csv"), "data/0/location", "x/a.JSON"),
+        ),
+        (
+            "envelope_base_is_a_preset",
+            "An unknown kind over the preset nemar.ic-classes: a preset is no base.",
+            unknown | {"base": "nemar.ic-classes", "base_version": 1},
+        ),
+        (
+            "envelope_unregistered_format",
+            "A format the registry does not list, under its own extension, is "
+            "valid: a renderer offers it for download only.",
+            _set(_set(unknown, "data/0/format", "html"), "data/0/location", "x/a.html"),
+        ),
+        (
             "envelope_time_in_ms",
             "A time dimension in ms.",
             _set(lines, x_dim, FREQ | {"name": "time", "unit": "ms"}),
@@ -3112,7 +3315,96 @@ def view_verdicts() -> list[tuple[str, str, dict]]:
             "An axis other than rows and columns.",
             _set(dims, "data/1/dims/0/axis", "depth"),
         ),
+        (
+            "envelope_location_percent",
+            "A location with a percent escape, which a URL parser decodes: "
+            "%2e%2e is ..",
+            _set(table, "data/0/location", "%2e%2e/secret.tsv"),
+        ),
+        (
+            "envelope_location_leading_space",
+            "A location with a leading space, which a URL parser strips before "
+            "it resolves ..",
+            _set(table, "data/0/location", " ../x.tsv"),
+        ),
+        (
+            "envelope_location_query",
+            "A location with a ?, which would end the URL's path.",
+            _set(table, "data/0/location", "x/t.tsv?x=1.tsv"),
+        ),
+        (
+            "envelope_location_fragment",
+            "A location with a #, which would end the URL's path.",
+            _set(table, "data/0/location", "x/#t.tsv"),
+        ),
+        (
+            "envelope_location_dot_segment",
+            "A location with a . segment, another name for a file.",
+            _set(table, "data/0/location", "x/./t.tsv"),
+        ),
+        (
+            "envelope_location_empty_segment",
+            "A location with an empty segment (//).",
+            _set(table, "data/0/location", "x//t.tsv"),
+        ),
+        (
+            "envelope_location_bidi",
+            "A location with U+202E, which shows the name reversed.",
+            _set(table, "data/0/location", "x/t\u202eqsv.tsv"),
+        ),
+        (
+            "envelope_location_c1",
+            "A location with the C1 control U+0085.",
+            _set(table, "data/0/location", "x/t\u0085.tsv"),
+        ),
+        (
+            "envelope_location_del",
+            "A location with DEL, U+007F.",
+            _set(table, "data/0/location", "x/t\u007f.tsv"),
+        ),
+        (
+            "envelope_location_line_separator_dot_segment",
+            "A line separator (U+2028) before a .. segment: a JavaScript . stops "
+            "at it, so a lookahead written with . would not see the segment.",
+            _set(table, "data/0/location", "x/a\u2028/../t.tsv"),
+        ),
+        (
+            "envelope_location_line_separator_double_slash",
+            "A line separator before an empty segment.",
+            _set(table, "data/0/location", "x/a\u2028//t.tsv"),
+        ),
+        (
+            "envelope_location_paragraph_separator",
+            "A paragraph separator (U+2029) in a name.",
+            _set(table, "data/0/location", "x/t\u2029.tsv"),
+        ),
+        (
+            "envelope_location_space_inside",
+            "A space inside a name, and dots that are no dot segment, are one "
+            "file: valid.",
+            _set(table, "data/0/location", "x/.. a/t b.tsv"),
+        ),
         ("envelope_dims_valid", "An unknown kind with a dimension.", dims),
+        (
+            "envelope_plugin_name_with_dot",
+            "A plugin named with a dot: plugin names take a metric prefix's "
+            "grammar, so every plugin can name its metrics.",
+            _set(
+                unknown,
+                "source",
+                {"plugin": {"name": "org.nemar.quality", "version": "1.0.0"}},
+            ),
+        ),
+        (
+            "envelope_plugin_name_64",
+            "A plugin name of 64 characters, the most.",
+            _set(unknown, "source", {"plugin": {"name": "p" * 64, "version": "1.0.0"}}),
+        ),
+        (
+            "envelope_plugin_name_65",
+            "A plugin name of 65 characters.",
+            _set(unknown, "source", {"plugin": {"name": "p" * 65, "version": "1.0.0"}}),
+        ),
         (
             "envelope_kind_version_0",
             "kind_version starts at 1.",
@@ -3124,6 +3416,17 @@ def view_verdicts() -> list[tuple[str, str, dict]]:
             _set(unknown, "kind_version", 1000),
         ),
         (
+            "envelope_kind_version_true",
+            "kind_version true: a boolean is no integer, though Python reads "
+            "True == 1.",
+            _set(unknown, "kind_version", True),
+        ),
+        (
+            "table_kind_version_true",
+            "A nemar.table view whose kind_version is true: not version 1.",
+            _set(table, "kind_version", True),
+        ),
+        (
             "envelope_kind_version_text",
             "kind_version is an integer, not text.",
             _set(unknown, "kind_version", "1"),
@@ -3132,6 +3435,17 @@ def view_verdicts() -> list[tuple[str, str, dict]]:
             "envelope_size_0",
             "A file has at least one byte.",
             _set(table, "data/0/size", 0),
+        ),
+        (
+            "envelope_size_at_cap",
+            "A declared size of caps.bytes_per_role, 4,194,304 bytes.",
+            _set(table, "data/0/size", 4194304),
+        ),
+        (
+            "envelope_size_over_cap",
+            "A declared size one byte over caps.bytes_per_role: a renderer never "
+            "fetches it.",
+            _set(table, "data/0/size", 4194305),
         ),
         (
             "envelope_sha256_uppercase",
@@ -3356,10 +3670,90 @@ def view_verdicts() -> list[tuple[str, str, dict]]:
     ]
 
 
+DATA_PAPER = "definitions/dataPaper.schema.json"
+
+
+def data_paper_verdicts() -> list[tuple[str, str, dict]]:
+    """The DOI pattern, whose old \\d and \\S Python and JavaScript read apart."""
+    paper = {"doi": "10.1038/s41597-019-0027-4"}
+    return [
+        ("doi_valid", "A DOI as the producer serves it.", paper),
+        (
+            "doi_arabic_indic_digits",
+            "Arabic-Indic digits in the prefix: Python's \\d took them, "
+            "JavaScript's does not; [0-9] in both.",
+            {"doi": "10.\u0661\u0662\u0663\u0664/abc"},
+        ),
+        (
+            "doi_byte_order_mark",
+            "U+FEFF in the suffix: \\S took it in Python and not in JavaScript.",
+            {"doi": "10.1234/a\ufeffb"},
+        ),
+        (
+            "doi_information_separator",
+            "U+001C in the suffix: \\S took it in JavaScript and not in Python.",
+            {"doi": "10.1234/a\u001cb"},
+        ),
+        ("doi_space", "A space in the suffix.", {"doi": "10.1234/a b"}),
+        (
+            "doi_trailing_newline",
+            "A final newline, which Python's bare $ let pass.",
+            {"doi": "10.1234/abc\n"},
+        ),
+    ]
+
+
+def data_quality_verdicts() -> list[tuple[str, str, dict]]:
+    """A recording's dataQuality entry: the example, and the rules of the
+    namespace a renderer that validates with ajv must agree on."""
+    entry = json.loads(PRESET_EXAMPLE.read_text(encoding="utf-8"))
+    ica = "recipes/nemar-ica"
+    views = entry["recipes"]["nemar-ica"]["views"]
+    archive = _set(
+        _set(entry, f"{ica}/input_kind", "bids"), f"{ica}/profile", "archive"
+    )
+    metric = "nemar-quality:percentBrainComponents"
+    return [
+        ("dataquality_record", "The example's record entry.", entry),
+        (
+            "dataquality_root_closed",
+            "A views list beside recipes at the root, which no schema would "
+            "check: the root is closed (probe p11).",
+            entry | {"views": copy.deepcopy(views)},
+        ),
+        (
+            "dataquality_record_closed",
+            "A member beside level and recipes, refused by the record shape too.",
+            entry | {"dataset_level_counts": {"total": 3}},
+        ),
+        (
+            "dataquality_store_profile_pairing",
+            "An entry of the archive whose views name stores of the serving copy: "
+            "a store's profile is its entry's.",
+            archive,
+        ),
+        (
+            "dataquality_plugin_name_with_dot",
+            "A metric's plugin named with a dot, which no metric name can prefix.",
+            _set(entry, f"{ica}/metrics/{metric}/plugin/name", "org.nemar.quality"),
+        ),
+    ]
+
+
 def content_verdicts() -> list[tuple[str, str, object]]:
     edges = json.loads(EDGES)
     cats = json.loads(ICLABEL)
     return [
+        (
+            "content_count_2_53_minus_1",
+            "A count of 2^53 - 1, the largest every parser reads exactly.",
+            cats | {"counts": [9007199254740991, *cats["counts"][1:]]},
+        ),
+        (
+            "content_count_2_53_plus_1",
+            "A count of 2^53 + 1, read as 2^53: over the cap.",
+            cats | {"counts": [9007199254740993, *cats["counts"][1:]]},
+        ),
         ("content_edges", "Bins by edges.", edges),
         (
             "content_edges_no_unit",
@@ -3487,6 +3881,9 @@ def preset_verdicts() -> list[tuple[str, str, dict]]:
     )
     archive = _archive_activity(activity)
     signal = next(i for i, x in enumerate(activity["inputs"]) if x["role"] == "signal")
+    segments_at = next(
+        i for i, x in enumerate(activity["inputs"]) if x["role"] == "badsegments"
+    )
     without_segments = _set(
         _set(window, "inputs", window["inputs"][:2]),
         "parameters/bad_segment_table",
@@ -3511,6 +3908,17 @@ def preset_verdicts() -> list[tuple[str, str, dict]]:
             "spectrum_without_layout",
             "Without a layout the sensors are the header names.",
             bare,
+        ),
+        (
+            "spectrum_initial_maps_beyond_2_53",
+            "Two frequencies, 9007199254740993 and 9007199254740992, which an exact "
+            "reader holds distinct and JSON.parse reads as one binary64: on the "
+            "binary64 reading they repeat (uniqueItems).",
+            _set(
+                spectrum,
+                "parameters/initial_maps_hz",
+                [9007199254740993, 9007199254740992],
+            ),
         ),
         (
             "spectrum_freq_unit",
@@ -3698,6 +4106,16 @@ def preset_verdicts() -> list[tuple[str, str, dict]]:
             ),
         ),
         (
+            "ic_activity_rows_beyond_2_53",
+            "Store rows of 2^53 + 1 and 2^53: over the cap on integers, and one "
+            "binary64 twice (probe p9).",
+            _set(
+                activity,
+                "transform/parameters/rows",
+                [9007199254740993, 9007199254740992, *range(2, 7)],
+            ),
+        ),
+        (
             "ic_activity_store_row_without_rows",
             "Matching by row names the rows.",
             _set(activity, "transform/parameters/rows", None),
@@ -3809,6 +4227,87 @@ def preset_verdicts() -> list[tuple[str, str, dict]]:
             "ic_activity_segments_declared_not_named",
             "A bad-segments input when shaded.files is null.",
             _set(activity, "transform/parameters/shaded/files", None),
+        ),
+        (
+            "ic_activity_shaded_names_the_sample_mask",
+            "shaded.files names _samplemask.tsv beside _badsegments.tsv: it names "
+            "the bad-segment table alone (nemar-process#81).",
+            _set(
+                activity,
+                "transform/parameters/shaded/files",
+                [
+                    f"{PREFIX}_badsegments.tsv",
+                    f"{PREFIX}_samplemask.tsv",
+                ],
+            ),
+        ),
+        (
+            "ic_activity_shaded_names_two_tables",
+            "shaded.files names two bad-segment tables: it names one, the input's.",
+            _set(
+                activity,
+                "transform/parameters/shaded/files",
+                [
+                    f"{PREFIX}_badsegments.tsv",
+                    "sub-01/eeg/sub-01_task-rest_desc-nemarfloor_badsegments.tsv",
+                ],
+            ),
+        ),
+        (
+            "ic_activity_shaded_names_another_table",
+            "shaded.files names a table that is not a _badsegments.tsv.",
+            _set(activity, "transform/parameters/shaded/files", [f"{PREFIX}_mask.tsv"]),
+        ),
+        (
+            "ic_activity_segments_input_another_table",
+            "The badsegments input is not a _badsegments.tsv.",
+            _set(
+                activity,
+                f"inputs/{segments_at}/file/location",
+                f"{PREFIX}_segments.tsv",
+            ),
+        ),
+        (
+            "ic_activity_serving_matched_by_label",
+            "A decomposition of the serving copy whose columns are matched by "
+            "label: the serving copy is matched by its own rows, never by label.",
+            _set(
+                _set(
+                    _set(activity, "transform/parameters/match", "label"),
+                    "transform/parameters/rows",
+                    None,
+                ),
+                "transform/parameters/caption",
+                "not checked against the decomposition input",
+            ),
+        ),
+        (
+            "ic_activity_label_without_caption",
+            "Columns matched by label with a null caption: the view must say "
+            "they were not checked against the decomposition's input.",
+            _set(archive, "transform/parameters/caption", None),
+        ),
+        (
+            "ic_activity_transform_reused",
+            "A kind the registry does not list, computed by nemar.ic-activity.v1: "
+            "the envelope and the transform's schema apply.",
+            _set(activity, "kind", "acme.activity"),
+        ),
+        (
+            "ic_activity_transform_reused_without_parameters",
+            "That kind with no parameters: the transform's schema requires the "
+            "ones its computation reads (review r29).",
+            _set(_set(activity, "kind", "acme.activity"), "parameters", DROP),
+        ),
+        (
+            "ic_activity_transform_reused_drops_segments",
+            "That kind drops the bad segments the record names: the transform's "
+            "schema refuses it, whatever the kind (probe p14).",
+            _set(
+                _set(activity, "kind", "acme.activity"),
+                "inputs",
+                [i for i in activity["inputs"] if i["role"] != "badsegments"],
+            ),
         ),
         (
             "ic_activity_preprocessing_closed",
@@ -3945,6 +4444,84 @@ def ic_classes_content_verdicts() -> list[tuple[str, str, object]]:
             },
         ),
         (
+            "ic_classes_content_classifier_cyrillic",
+            "A classifier named ICLabel with a Cyrillic small ie (U+0435) for the e: "
+            "not printable ASCII.",
+            counts | {"classifier": "ICLab\u0435l", "categories": list("abcdefg")},
+        ),
+        (
+            "ic_classes_content_classifier_roman_numeral",
+            "A classifier named ICLabel with the Roman numeral fifty (U+217C) "
+            "for the l: "
+            "not printable ASCII.",
+            counts | {"classifier": "ICLabe\u217c", "categories": list("abcdefg")},
+        ),
+        (
+            "ic_classes_content_classifier_variation_selector",
+            "A classifier named ICLabel with a variation selector (U+FE0F) after it: "
+            "not printable ASCII.",
+            counts | {"classifier": "ICLabel\ufe0f", "categories": list("abcdefg")},
+        ),
+        (
+            "ic_classes_content_classifier_fullwidth",
+            "A classifier named ICLabel with fullwidth letters: not printable ASCII.",
+            counts
+            | {
+                "classifier": "\uff29\uff23\uff2c\uff41\uff42\uff45\uff4c",
+                "categories": list("abcdefg"),
+            },
+        ),
+        (
+            "ic_classes_content_classifier_combining",
+            "A classifier named ICLabel with a combining grapheme joiner "
+            "(U+034F) after it: "
+            "not printable ASCII.",
+            counts | {"classifier": "ICLabel\u034f", "categories": list("abcdefg")},
+        ),
+        (
+            "ic_classes_content_classifier_capital_i",
+            "ICLabeI, a capital I for the last l: it reads as ICLabel, so it is "
+            "held to ICLabel's spelling and refused.",
+            counts | {"classifier": "ICLabeI", "categories": list("abcdefg")},
+        ),
+        (
+            "ic_classes_content_classifier_small_l",
+            "lCLabel, a small l for the first I.",
+            counts | {"classifier": "lCLabel", "categories": list("abcdefg")},
+        ),
+        (
+            "ic_classes_content_classifier_ascii_name",
+            "Another classifier's name in printable ASCII, with a space inside.",
+            counts
+            | {
+                "classifier": "ICLabel Lite",
+                "categories": counts["categories"],
+            },
+        ),
+        (
+            "ic_classes_content_category_cyrillic",
+            "A category with a Cyrillic capital ve (U+0412) for the B of Brain: "
+            "not printable ASCII.",
+            counts
+            | {
+                "classifier": "MARA",
+                "categories": ["\u0412rain", "Brain"],
+                "counts": [4, 18],
+                "summed_variance_pct": [20.5, 79.5],
+            },
+        ),
+        (
+            "ic_classes_content_category_padded",
+            "A category with a space at its end.",
+            counts
+            | {
+                "classifier": "MARA",
+                "categories": ["Brain ", "Brain"],
+                "counts": [4, 18],
+                "summed_variance_pct": [20.5, 79.5],
+            },
+        ),
+        (
             "ic_classes_content_no_variance",
             "summed_variance_pct is required.",
             {k: v for k, v in counts.items() if k != "summed_variance_pct"},
@@ -3993,6 +4570,7 @@ def _location(view: dict, role: str) -> str:
 
 
 IC_COMPONENTS = [f"IC{i:03d}" for i in range(1, 19)]
+WIDE_COLUMNS = [f"extra{i}" for i in range(20)]
 
 
 def components_table(names: list[str], header: str = "component") -> bytes:
@@ -4056,6 +4634,28 @@ def ic_maps_check_cases() -> list[Case]:
         ),
     ]:
         out.append(Case(name, covers, *ic_maps_files(data)))
+    for name, covers, header in [
+        (
+            "ic_maps_components_too_many_cells",
+            "A components table over a cap on cells lowered to 400, every header "
+            "column counted (four declared, twenty more): cap_exceeded, drawn by "
+            "its base, whose files are under the cap.",
+            "component",
+        ),
+        (
+            "ic_maps_order_cap_before_column",
+            "Over the cap on cells and no column component: cap_exceeded.",
+            "name",
+        ),
+    ]:
+        rows = [f"{header} variance_pct brain other " + " ".join(WIDE_COLUMNS)]
+        rows += [
+            f"{name} {30 / (i + 1):.4f} 0.9 0.1 " + " ".join("0" for _ in WIDE_COLUMNS)
+            for i, name in enumerate(IC_COMPONENTS)
+        ]
+        out.append(
+            Case(name, covers, *ic_maps_files(tsv(*rows)), caps={"cells_per_role": 400})
+        )
     view, files = ic_maps_files(components_table(IC_COMPONENTS))
     tampered = components_table(IC_COMPONENTS).replace(b"0.9", b"0.8", 1)
     files[_location(view, "components")] = tampered
@@ -4080,6 +4680,52 @@ def ic_maps_check_cases() -> list[Case]:
                 ),
                 short,
             ),
+        )
+    )
+    return out
+
+
+def spectrum_check_cases() -> list[Case]:
+    """nemar.spectrum's own check, on the example's spectrum of the 19 sensors
+    of the 10-20 system (the files the base reads, as the model vectors build
+    them)."""
+    values = spectrum_text()
+    out = []
+    for name, covers, layout in [
+        (
+            "spectrum",
+            "The values' sensor columns are the layout's names, in order.",
+            chanlocs(),
+        ),
+        (
+            "spectrum_sensors_reordered",
+            "The layout's rows in another order than the values' columns: each "
+            "spectrum would be drawn under another sensor's name, so "
+            "sensors_mismatch, shown as the fallback (probe p16).",
+            chanlocs([*TEN_TWENTY[1:], TEN_TWENTY[0]]),
+        ),
+        (
+            "spectrum_sensors_renamed",
+            "FP1 in the layout where the values say Fp1: names compare as text.",
+            chanlocs([("FP1", *TEN_TWENTY[0][1:]), *TEN_TWENTY[1:]]),
+        ),
+        (
+            "spectrum_without_layout",
+            "No layout: the sensors are the header's names, and there is nothing "
+            "to compare.",
+            None,
+        ),
+    ]:
+        out.append(Case(name, covers, *spectrum_view(values, layout=layout)))
+    falling = spectrum_text(rows=[0.0, 4.0, 2.0, 6.0])
+    renamed = chanlocs([("FP1", *TEN_TWENTY[0][1:]), *TEN_TWENTY[1:]])
+    out.append(
+        Case(
+            "spectrum_base_before_sensors",
+            "Frequencies that fall (x_not_increasing) and a layout that names "
+            "other sensors: the base refuses first, so the base's word, shown as "
+            "the fallback.",
+            *spectrum_view(falling, layout=renamed),
         )
     )
     return out
@@ -4163,6 +4809,10 @@ FLOOR_CHANNELS = tsv(
     "Fp1 EEG good n/a n/a",
     "Fp2 EEG good n/a n/a",
     "F3 EEG good n/a n/a",
+    "F4 EEG good n/a n/a",
+    "C3 EEG good n/a n/a",
+    "C4 EEG good n/a n/a",
+    "P3 EEG good n/a n/a",
     "P4 EEG bad flat flatline",
     "ECG ECG n/a non-signal not_assessed",
 )
@@ -4184,6 +4834,30 @@ def _with_input(view: dict, role: str, data: bytes) -> dict:
 
 def _input_at(view: dict, role: str) -> str:
     return next(i for i in view["inputs"] if i["role"] == role)["file"]["location"]
+
+
+def _relocated(case: tuple, role: str, location: str) -> tuple:
+    """A signal window case whose table for the role sits at another location."""
+    view, files, store, caps = copy.deepcopy(case)
+    entry = next(i for i in view["inputs"] if i["role"] == role)["file"]
+    files[location] = files.pop(entry["location"])
+    entry["location"] = location
+    return view, files, store, caps
+
+
+def _recorded_as(case: tuple, recording: str) -> tuple:
+    """A signal window case whose store is that of another recording path."""
+    view, files, store, caps = copy.deepcopy(case)
+    signal = next(i for i in view["inputs"] if i["role"] == "signal")["store"]
+    signal["recording"] = recording
+    return view, files, store, caps
+
+
+def _dropped(case: tuple, role: str) -> tuple:
+    """A signal window case that does not declare its table for the role."""
+    view, files, store, caps = copy.deepcopy(case)
+    view["inputs"] = [i for i in view["inputs"] if i["role"] != role]
+    return view, files, store, caps
 
 
 def signal_window_check_cases() -> list[tuple[str, str, dict, dict, dict]]:
@@ -4260,7 +4934,8 @@ def signal_window_check_cases() -> list[tuple[str, str, dict, dict, dict]]:
                 2,
                 channels=tsv(
                     "status name type",
-                    "good Fp1 EEG",
+                    *[f"good {n} EEG" for n in ("Fp1", "Fp2", "F3", "F4", "C3")],
+                    *[f"good {n} EEG" for n in ("C4", "P3")],
                     "bad P4 EEG",
                     "n/a ECG ECG",
                 ),
@@ -4400,6 +5075,273 @@ def signal_window_check_cases() -> list[tuple[str, str, dict, dict, dict]]:
             *at(0.098, 0.364, samples=100, rate=500 / 7),
         ),
         (
+            "signal_window_tables_elsewhere",
+            "The channels table, named for the recording, in another directory: "
+            "table_location_mismatch, never a window marked by another "
+            "recording's decisions.",
+            *_relocated(
+                at(151.5, 2),
+                "channels",
+                "sub-01/meg/sub-01_task-rest_desc-nemarica_channels.tsv",
+            ),
+        ),
+        (
+            "signal_window_tables_another_recording",
+            "Both tables beside the recording but named for another recording "
+            "(task-other): table_location_mismatch.",
+            *_relocated(
+                _relocated(
+                    at(151.5, 2),
+                    "channels",
+                    "sub-01/eeg/sub-01_task-other_desc-nemarica_channels.tsv",
+                ),
+                "badsegments",
+                "sub-01/eeg/sub-01_task-other_desc-nemarica_badsegments.tsv",
+            ),
+        ),
+        (
+            "signal_window_tables_two_stems",
+            "A bad segments table under another stem than the channels' "
+            "(the floor's beside the decomposition's): table_location_mismatch.",
+            *_relocated(
+                at(151.5, 2),
+                "badsegments",
+                "sub-01/eeg/sub-01_task-rest_desc-nemarfloor_badsegments.tsv",
+            ),
+        ),
+        (
+            "signal_window_tables_run",
+            "Both tables of run 2 (sub-01_task-rest_run-2), whose name begins "
+            "with the recording's entities: "
+            "after the entities only _desc-<label> may follow, so "
+            "table_location_mismatch (review r29).",
+            *_relocated(
+                _relocated(
+                    at(151.5, 2),
+                    "channels",
+                    "sub-01/eeg/sub-01_task-rest_run-2_desc-nemarica_channels.tsv",
+                ),
+                "badsegments",
+                "sub-01/eeg/sub-01_task-rest_run-2_desc-nemarica_badsegments.tsv",
+            ),
+        ),
+        (
+            "signal_window_tables_task_prefix",
+            "Both tables of task restingstate, whose name begins with "
+            "sub-01_task-rest: "
+            "after the entities only _desc-<label> may follow, so "
+            "table_location_mismatch (review r29).",
+            *_relocated(
+                _relocated(
+                    at(151.5, 2),
+                    "channels",
+                    "sub-01/eeg/sub-01_task-restingstate_desc-nemarica_channels.tsv",
+                ),
+                "badsegments",
+                "sub-01/eeg/sub-01_task-restingstate_desc-nemarica_badsegments.tsv",
+            ),
+        ),
+        (
+            "signal_window_tables_acq",
+            "Both tables of acquisition other (sub-01_task-rest_acq-other): "
+            "after the entities only _desc-<label> may follow, so "
+            "table_location_mismatch (review r29).",
+            *_relocated(
+                _relocated(
+                    at(151.5, 2),
+                    "channels",
+                    "sub-01/eeg/sub-01_task-rest_acq-other_desc-nemarica_channels.tsv",
+                ),
+                "badsegments",
+                "sub-01/eeg/sub-01_task-rest_acq-other_desc-nemarica_badsegments.tsv",
+            ),
+        ),
+        (
+            "signal_window_tables_sibling_recording",
+            "Both tables of the sibling recording sub-01_task-rest_desc-preproc "
+            "(desc-preprocnemarica): its name begins with this recording's "
+            "entities and then _desc-, but the stem is exactly the one "
+            "nemar-process gives this recording, so table_location_mismatch "
+            "(review r29, round 2).",
+            *_relocated(
+                _relocated(
+                    at(151.5, 2),
+                    "channels",
+                    "sub-01/eeg/sub-01_task-rest_desc-preprocnemarica_channels.tsv",
+                ),
+                "badsegments",
+                "sub-01/eeg/sub-01_task-rest_desc-preprocnemarica_badsegments.tsv",
+            ),
+        ),
+        (
+            "signal_window_tables_other_recipe",
+            "Both tables under the label of another recipe (desc-nemarfloor) in a "
+            "view nemar-ica wrote: table_location_mismatch.",
+            *_relocated(
+                _relocated(
+                    at(151.5, 2),
+                    "channels",
+                    "sub-01/eeg/sub-01_task-rest_desc-nemarfloor_channels.tsv",
+                ),
+                "badsegments",
+                "sub-01/eeg/sub-01_task-rest_desc-nemarfloor_badsegments.tsv",
+            ),
+        ),
+        (
+            "signal_window_tables_desc_recording",
+            "A recording whose last entity is a desc (desc-clean): the tables "
+            "append the label to its value (desc-cleannemarica), as nemar-process "
+            "names them, and are the recording's.",
+            *_recorded_as(
+                _relocated(
+                    _relocated(
+                        at(151.5, 2),
+                        "channels",
+                        "sub-01/eeg/sub-01_task-rest_desc-cleannemarica_channels.tsv",
+                    ),
+                    "badsegments",
+                    "sub-01/eeg/sub-01_task-rest_desc-cleannemarica_badsegments.tsv",
+                ),
+                "sub-01/eeg/sub-01_task-rest_desc-clean_eeg.set",
+            ),
+        ),
+        (
+            "signal_window_channel_row_missing",
+            "The store has a row ECG that the channels table does not name: a "
+            "floor decision dropped, so channel_row_missing, never a channel "
+            "drawn with no decision (review r29).",
+            *at(
+                151.5,
+                2,
+                channels=FLOOR_CHANNELS.replace(
+                    b"ECG\tECG\tn/a\tnon-signal\tnot_assessed\n", b""
+                ),
+            ),
+        ),
+        (
+            "signal_window_order_bad_channel_before_row_missing",
+            "A bad channel p4 no store row has, and the store's P4 with no row: "
+            "bad_channel_unknown comes first.",
+            *at(151.5, 2, channels=FLOOR_CHANNELS.replace(b"P4", b"p4", 1)),
+        ),
+        (
+            "signal_window_order_row_missing_before_window",
+            "The store's ECG with no row and a window at the recording's end: the "
+            "channel rows come first.",
+            *at(
+                300,
+                2,
+                channels=FLOOR_CHANNELS.replace(
+                    b"ECG\tECG\tn/a\tnon-signal\tnot_assessed\n", b""
+                ),
+            ),
+        ),
+        (
+            "signal_window_declaration_invalid",
+            "bad_segment_table true and no bad segments declared: declaration_invalid.",
+            *_dropped(at(151.5, 2), "badsegments"),
+        ),
+        (
+            "signal_window_order_declaration_before_locations",
+            "An invalid declaration and the channels of another directory: the "
+            "declaration comes first.",
+            *_dropped(
+                _relocated(
+                    at(151.5, 2),
+                    "channels",
+                    "sub-01/meg/sub-01_task-rest_desc-nemarica_channels.tsv",
+                ),
+                "badsegments",
+            ),
+        ),
+        (
+            "signal_window_order_locations_before_files",
+            "The channels of another directory and a bad segments file that is not "
+            "the one recorded: the locations come first.",
+            *_relocated(
+                at(
+                    151.5,
+                    2,
+                    segments=tampered,
+                    recorded={"badsegments": FLOOR_SEGMENTS},
+                ),
+                "channels",
+                "sub-01/meg/sub-01_task-rest_desc-nemarica_channels.tsv",
+            ),
+        ),
+        (
+            "signal_window_status_uppercase",
+            "A channel whose status is 'BAD': not good, bad or n/a, so "
+            "channel_status_unknown, never read as good (probe p8).",
+            *at(151.5, 2, channels=FLOOR_CHANNELS.replace(b"\tbad\t", b"\tBAD\t")),
+        ),
+        (
+            "signal_window_status_capitalized",
+            "A channel whose status is 'Bad': not good, bad or n/a, so "
+            "channel_status_unknown, never read as good (probe p8).",
+            *at(151.5, 2, channels=FLOOR_CHANNELS.replace(b"\tbad\t", b"\tBad\t")),
+        ),
+        (
+            "signal_window_status_excluded",
+            "A channel whose status is 'excluded': not good, bad or n/a, so "
+            "channel_status_unknown, never read as good (probe p8).",
+            *at(151.5, 2, channels=FLOOR_CHANNELS.replace(b"\tbad\t", b"\texcluded\t")),
+        ),
+        (
+            "signal_window_status_padded",
+            "A channel whose status is 'bad ': not good, bad or n/a, so "
+            "channel_status_unknown, never read as good (probe p8).",
+            *at(151.5, 2, channels=FLOOR_CHANNELS.replace(b"\tbad\t", b"\tbad \t")),
+        ),
+        (
+            "signal_window_segment_duration_negative",
+            "A bad segment of negative duration: duration_not_positive.",
+            *at(
+                151.5, 2, segments=tsv("onset duration label", "151.7 -0.3 bad_window")
+            ),
+        ),
+        (
+            "signal_window_segment_duration_zero",
+            "A bad segment of no duration: duration_not_positive.",
+            *at(151.5, 2, segments=tsv("onset duration label", "151.7 0 bad_window")),
+        ),
+        (
+            "signal_window_rate_zero",
+            "A store whose rate is 0: rate_invalid, not a division by zero (probe p8).",
+            *at(151.5, 2, rate=0.0),
+        ),
+        (
+            "signal_window_rate_negative",
+            "A store whose rate is below 0: rate_invalid.",
+            *at(151.5, 2, rate=-250.0),
+        ),
+        (
+            "signal_window_order_digest_before_rate",
+            "A digest mismatch and a rate of 0: the digest comes first.",
+            *at(151.5, 2, published="f" * 64, rate=0.0),
+        ),
+        (
+            "signal_window_order_rate_before_tables",
+            "A rate of 0 and a channel status BAD: the rate comes first.",
+            *at(
+                151.5,
+                2,
+                rate=0.0,
+                channels=FLOOR_CHANNELS.replace(b"\tbad\t", b"\tBAD\t"),
+            ),
+        ),
+        (
+            "signal_window_order_status_before_segments",
+            "A channel status BAD and a bad segment of negative duration: the "
+            "channels are read first.",
+            *at(
+                151.5,
+                2,
+                channels=FLOOR_CHANNELS.replace(b"\tbad\t", b"\tBAD\t"),
+                segments=tsv("onset duration label", "151.7 -0.3 bad_window"),
+            ),
+        ),
+        (
             "signal_window_order_files_before_digest",
             "Both faults: the file comes first.",
             *at(
@@ -4430,8 +5372,12 @@ def signal_window_check_cases() -> list[tuple[str, str, dict, dict, dict]]:
 
 def preset_checks() -> dict:
     cases = []
-    for case in [*ic_maps_check_cases(), *ic_classes_check_cases()]:
-        expected = check_preset(case.view, case.files, REGISTRY)
+    for case in [
+        *spectrum_check_cases(),
+        *ic_maps_check_cases(),
+        *ic_classes_check_cases(),
+    ]:
+        expected = check_preset(case.view, case.files, case.registry())
         cases.append(_header(case) | {"expected": expected})
     for name, covers, view, files, store, caps in signal_window_check_cases():
         registry = REGISTRY | {"caps": REGISTRY["caps"] | caps}
@@ -4462,7 +5408,8 @@ def preset_checks() -> dict:
             "sample and count, the bad channels and the segments for a signal "
             "window), else the word and its outcome: "
             "base (drawn by its base, with the word), nothing (nothing drawn) or "
-            "fallback (the base itself refused the file first). A case's caps take "
+            "fallback (shown as the fallback's tables: the base itself refused the "
+            "file first, or the base's drawing would mislead). A case's caps take "
             "the place of the registry's caps of the same names for that case."
         ),
         "cases": cases,
@@ -4527,6 +5474,38 @@ def sensor_field_verdicts() -> list[tuple[str, str, dict]]:
             )[0],
         ),
         (
+            "sensor_field_cap_model_256_astral",
+            "A cap_model of 256 code points outside the Basic Multilingual Plane "
+            "(512 UTF-16 code units): valid, since maxLength counts code points "
+            "in every engine, as ajv's unicode option and Python do.",
+            field_view(
+                mixing(),
+                electrodes(),
+                "positions",
+                positions={"cap_model": "\U0001d400" * 256, "reference": "Cz"},
+            )[0],
+        ),
+        (
+            "sensor_field_cap_model_257",
+            "A cap_model of 257 characters: refused (maxLength 256).",
+            field_view(
+                mixing(),
+                electrodes(),
+                "positions",
+                positions={"cap_model": "H" * 257, "reference": "Cz"},
+            )[0],
+        ),
+        (
+            "sensor_field_reference_257",
+            "A reference of 257 characters: refused (maxLength 256).",
+            names_view(
+                named_values(),
+                NAMED_COLUMNS,
+                [NAME_ROWS, MAPS_HEADER],
+                values_fields={"cap_model": "HydroCel GSN", "reference": "C" * 257},
+            )[0],
+        ),
+        (
             "sensor_field_layout_label_inputs",
             "A layout carrying a cap_model and a reference: refused, since a "
             "layout is drawn as stored and never placed by name.",
@@ -4540,6 +5519,9 @@ def sensor_field_verdicts() -> list[tuple[str, str, dict]]:
 
 
 def _errors(validator, instance) -> list[list[str]]:
+    """jsonschema's errors on the binary64 reading of the instance (the
+    validators read it so): what an engine that parses the vectors file with
+    JSON.parse checks."""
     pairs = {
         (e.validator, "/".join(str(p) for p in e.absolute_path))
         for e in validator.iter_errors(instance)
@@ -4554,6 +5536,12 @@ def verdicts() -> dict:
             "view",
             view_validator(),
             [*view_verdicts(), *preset_verdicts(), *sensor_field_verdicts()],
+        ),
+        ("dataQuality", data_quality_validator(), data_quality_verdicts()),
+        (
+            DATA_PAPER,
+            schema_validator(DATA_PAPER),
+            data_paper_verdicts(),
         ),
         (HISTOGRAM_CONTENT, histogram_content_validator(), content_verdicts()),
         (
@@ -4579,9 +5567,14 @@ def verdicts() -> dict:
         "spec": SPEC,
         "description": (
             "Declarations and contents with jsonschema's verdicts, for a renderer "
-            "that checks them without a JSON Schema engine. schema view means "
-            "schema/definitions/view.schema.json#/$defs/view; any other schema is "
-            "a file in schema/views/. Only valid binds an implementation; errors "
+            "that checks them without a JSON Schema engine, or with another one. "
+            "Each verdict is on the "
+            "binary64 reading of the instance, as JSON.parse reads it, so an integer "
+            "beyond 2^53 is checked as the nearest binary64. schema view means "
+            "schema/definitions/view.schema.json#/$defs/view, dataQuality "
+            "schema/extensions/dataQuality.schema.json, a path with a slash that "
+            "path under schema/; any other schema is a file in schema/views/. "
+            "Only valid binds an implementation; errors "
             "list each failing keyword and instance path jsonschema reports."
         ),
         "cases": cases,
@@ -4685,6 +5678,7 @@ def _model_case(case: Case) -> dict:
         maps = spectrum_maps(case.view, case.files, frequencies, case.registry())
         empty = dict.fromkeys(("rows", "refused", "model"))
         out["maps"] = {"hz": frequencies} | (maps or empty)
+        out["preset"] = check_preset(case.view, case.files, case.registry())
     if "locates" in case.queries:
         edges = [inner["items"][0]["lower"], *(i["upper"] for i in inner["items"])]
         out["locates"] = [
@@ -4746,14 +5740,26 @@ def dump(value, depth: int = 0) -> str:
     pad, inner = "  " * depth, "  " * (depth + 1)
     if isinstance(value, dict) and value:
         members = [
-            f"{inner}{json.dumps(k, ensure_ascii=False)}: {dump(v, depth + 1)}"
-            for k, v in value.items()
+            f"{inner}{_scalars(k)}: {dump(v, depth + 1)}" for k, v in value.items()
         ]
         return "{\n" + ",\n".join(members) + f"\n{pad}}}"
     if isinstance(value, list) and any(isinstance(v, dict | list) for v in value):
         items = [f"{inner}{dump(v, depth + 1)}" for v in value]
         return "[\n" + ",\n".join(items) + f"\n{pad}]"
-    return json.dumps(value, ensure_ascii=False, separators=(", ", ": "))
+    return _scalars(value)
+
+
+def _scalars(value) -> str:
+    """A scalar or a flat array, as UTF-8 text; a string holding a lone
+    surrogate or a noncharacter is escaped, so the file stays I-JSON."""
+    text = json.dumps(
+        value, ensure_ascii=False, allow_nan=False, separators=(", ", ": ")
+    )
+    if FORBIDDEN.search(text):
+        return json.dumps(
+            value, ensure_ascii=True, allow_nan=False, separators=(", ", ": ")
+        )
+    return text
 
 
 def render() -> dict[Path, str]:

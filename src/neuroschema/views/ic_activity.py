@@ -23,12 +23,27 @@ import hashlib
 import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from types import MappingProxyType
 
 import numpy as np
 
 from neuroschema.views.digest import canonicalize
-from neuroschema.views.models import Refusal, Tsv, cell_value, read_tsv
-from neuroschema.views.presets import NO_BAD_SEGMENT_TABLE, read_segments
+from neuroschema.views.models import (
+    Refusal,
+    Tsv,
+    cell_value,
+    declaration_valid,
+    read_tsv,
+)
+from neuroschema.views.presets import (
+    NO_BAD_SEGMENT_TABLE,
+    NO_SHADED_ROWS,
+    read_segments,
+    recipe_label,
+    table_stem,
+)
+from neuroschema.views.presets import check_rate as _check_rate
+from neuroschema.views.registry import load_registry, version_of
 
 IC_ACTIVITY = "nemar.ic-activity.v1"
 ORDER = 2
@@ -39,7 +54,8 @@ SQRT2 = math.sqrt(2.0)
 # are spelled three ways: ASCII u, the micro sign U+00B5 and the Greek small
 # letter mu U+03BC (eegprep-lean's microvolts_per accepts the same five).
 MICROVOLTS_PER = {"V": 1e6, "mV": 1e3, "uV": 1.0, "µV": 1.0, "μV": 1.0}
-CAPS = {"bytes_per_role": 4194304, "entries_per_dim": 1024, "cells_per_role": 262144}
+# The registry's caps, read from views/registry.json: one copy, never two.
+CAPS = MappingProxyType(dict(load_registry()["caps"]))
 
 
 class IcActivityRefusal(Refusal):
@@ -77,8 +93,9 @@ class Activations:
     components by samples. ``shaded`` lists, in file order, the bad segments
     whose label is the transform's ``shaded.label``, as ``{onset, duration}``
     in seconds: the spans a renderer shades. ``notes`` holds
-    ``no_bad_segment_table`` when the view declares no bad segments, which the
-    renderer states ("no bad-segment table; nothing is shaded").
+    ``no_bad_segment_table`` when the view declares no bad segments, and
+    ``no_shaded_rows`` when its table has no row labeled ``shaded.label``, each
+    shown with its sentence (presets.md, Notes and states).
     """
 
     state: str
@@ -100,9 +117,80 @@ def _input(view: Mapping, role: str) -> Mapping:
     return next(i for i in view["inputs"] if i["role"] == role)
 
 
+KIND = ("nemar.ic-activity", 1)
+
+
+def check_declaration(view: Mapping) -> None:
+    """The view is one this reference draws, and valid.
+
+    Its kind is ``nemar.ic-activity`` version 1 (``kind_unsupported``): the
+    display filter and the window are that kind's, so a view of another kind
+    that names the transform is drawn by the renderer rule, never by this
+    function (review r29). Then the declaration is valid
+    (``declaration_invalid``): it has a digest and meets the envelope, which
+    applies the kind's schema and the transform's to it. Among the transform's
+    rules: the view declares ``badsegments`` exactly when ``shaded.files`` is
+    not null, and carries the parameters the computation reads."""
+    if (view.get("kind"), version_of(view.get("kind_version"))) != KIND:
+        raise IcActivityRefusal("kind_unsupported", repr(view.get("kind")))
+    if not declaration_valid(view):
+        raise IcActivityRefusal("declaration_invalid")
+
+
+def check_locations(view: Mapping) -> None:
+    """Each file input is at the location the record names for it
+    (``table_location_mismatch``): the ``unmixing`` input at the transform's
+    ``matrix``, and the ``badsegments`` input, when declared, at
+    ``shaded.files[0]``; then the three tables are the recording's, named for it
+    under the label of the recipe that wrote the view (``presets.table_stem``),
+    so all three share one stem. So a view cannot read one table and name
+    another, such as a decoy table with no rows in place of the floor's, or
+    another recording's or another recipe's (probes p7, r29)."""
+    transform = view["transform"]["parameters"]
+    if _input(view, "unmixing")["file"]["location"] != transform["matrix"]:
+        raise IcActivityRefusal("table_location_mismatch", "unmixing is not matrix")
+    segments = next(
+        (i["file"] for i in view["inputs"] if i["role"] == "badsegments"), None
+    )
+    if segments is not None and segments["location"] != transform["shaded"]["files"][0]:
+        raise IcActivityRefusal(
+            "table_location_mismatch", "badsegments is not shaded.files[0]"
+        )
+    recording = _input(view, "signal")["store"]["recording"]
+    label = recipe_label(view)
+    for role in ("unmixing", "components", "badsegments"):
+        given = next((i["file"] for i in view["inputs"] if i["role"] == role), None)
+        if given is None:
+            continue
+        if label is None or not table_stem(given["location"], recording, label):
+            raise IcActivityRefusal(
+                "table_location_mismatch", f"{role}: not the recording's"
+            )
+
+
+def check_store(view: Mapping) -> None:
+    """For a decomposition of the serving copy, ``decomposition_input.store``
+    names the ``signal`` store (``store_mismatch``): the same path (the store's
+    ``path``, or its ``recording`` when it has none), group and digest. So the
+    view's state, ``matches`` or ``not_checked``, is about the store the
+    decomposition read (probe p7)."""
+    given = view["parameters"]["decomposition_input"].get("store")
+    if given is None:
+        return
+    signal = _input(view, "signal")["store"]
+    read = (signal.get("path", signal["recording"]), signal["group"])
+    if (given["path"], given["group"]) != read:
+        raise IcActivityRefusal("store_mismatch", "path or group")
+    if given["content_sha256"] != signal["content_sha256"]:
+        raise IcActivityRefusal("store_mismatch", "content_sha256")
+
+
 def verified(entry: Mapping, files: Mapping[str, bytes], caps: Mapping) -> bytes:
-    """A file input's bytes, checked against its declared size and SHA-256."""
+    """A file input's bytes: its declared size within the cap on bytes, checked
+    before the file is fetched, then its presence, size and SHA-256."""
     location = entry["location"]
+    if entry["size"] > caps["bytes_per_role"]:
+        raise IcActivityRefusal("cap_exceeded", f"{location}: {entry['size']} bytes")
     if location not in files:
         raise IcActivityRefusal("file_missing", location)
     data = bytes(files[location])
@@ -110,8 +198,6 @@ def verified(entry: Mapping, files: Mapping[str, bytes], caps: Mapping) -> bytes
         raise IcActivityRefusal("file_size_mismatch", location)
     if hashlib.sha256(data).hexdigest() != entry["sha256"]:
         raise IcActivityRefusal("file_digest_mismatch", location)
-    if len(data) > caps["bytes_per_role"]:
-        raise IcActivityRefusal("cap_exceeded", f"{location}: bytes")
     return data
 
 
@@ -183,6 +269,28 @@ def read_shading(data: bytes, label: str, caps: Mapping = CAPS) -> list[dict]:
     ]
 
 
+def check_shaded(
+    shaded: Sequence[Mapping] | None, label: str, bursts_repaired: bool | None
+) -> list[str]:
+    """The notes for the spans a view shades: ``shaded`` holds the rows labeled
+    ``label``, or is None when the view declares no bad-segment table.
+
+    When the record says ASR repaired at least one span of the decomposition's
+    input (``bursts_repaired`` true), a table with no row of that label cannot
+    be the right one, or its labels are misspelled (``Burst``, ``BURST``), and
+    no table at all contradicts the record: ``label_unmatched`` refuses the
+    view, never drawn with the bursts unshaded (probe p7, review r29).
+    Otherwise, false or unknown, the view is drawn with nothing shaded, and the
+    note ``no_bad_segment_table`` or ``no_shaded_rows`` says so.
+    """
+    if shaded:
+        return []
+    if bursts_repaired:
+        found = "no bad-segment table" if shaded is None else "no row"
+        raise IcActivityRefusal("label_unmatched", f"{found} labeled {label!r}")
+    return [NO_BAD_SEGMENT_TABLE] if shaded is None else [NO_SHADED_ROWS]
+
+
 def match_rows(
     header: Sequence[str],
     labels: Sequence[str | None],
@@ -202,10 +310,14 @@ def match_rows(
     if match == "store_row":
         if rows is None or len(rows) != len(header):
             raise IcActivityRefusal("channel_set_mismatch", "rows and columns differ")
+        # A row is the integer its binary64 value is: JSON's 0.0 and 0 are one
+        # number (JavaScript reads both as 0), and the schema admits only
+        # integers, so 0.0 is row 0 in every reader.
+        rows = [int(row) for row in rows]
         for column, row in zip(header, rows, strict=True):
             if not 0 <= row < len(labels) or labels[row] != column:
                 raise IcActivityRefusal("channel_set_mismatch", f"{column} at {row}")
-        return list(rows)
+        return rows
     found = []
     for column in header:
         at = [row for row, label in enumerate(labels) if label == column]
@@ -345,6 +457,26 @@ def max_samples(max_window_s: float, rate: float) -> int:
     return math.floor(max_window_s * rate)
 
 
+def check_rate(rate: float) -> None:
+    """The store's sampling rate is a finite number above 0 (``rate_invalid``)."""
+    try:
+        _check_rate(rate)
+    except Refusal as exc:
+        raise IcActivityRefusal(exc.word, str(exc)) from exc
+
+
+def check_window(start: int, count: int, samples: int, max_window_s, rate) -> None:
+    """The window [start, start + count) holds at least one sample and lies in
+    the recording (``window_outside_store``), and holds at most
+    floor(max_window_s * rate) samples (``window_too_long``)."""
+    if not (count >= 1 and start >= 0 and start + count <= samples):
+        raise IcActivityRefusal(
+            "window_outside_store", f"[{start}, {start + count}) of {samples}"
+        )
+    if count > max_samples(max_window_s, rate):
+        raise IcActivityRefusal("window_too_long", f"{count} samples")
+
+
 def ic_activity(
     view: Mapping,
     files: Mapping[str, bytes],
@@ -352,31 +484,37 @@ def ic_activity(
     start: int,
     count: int,
     caps: Mapping = CAPS,
+    bursts_repaired: bool | None = None,
 ) -> Activations:
     """The activations of a ``nemar.ic-activity`` view over samples
     [start, start + count) of its store, filtered for display.
 
     Runs the checks in the specification's order and raises
     :class:`IcActivityRefusal` with the word of the first that fails: the
-    files (unmixing, components, then badsegments when declared), the store
-    digest, the matrix, the components table, the bad segments table, the
-    channel match, the units, then the filter. A fault in the bad segments
-    refuses the whole view: unshaded artifact spans could pass for brain
-    signal. The
-    window must lie in the recording and hold at most ``max_window_s`` of it.
+    declaration (valid under the envelope and the transform's schema, whatever
+    its kind), the inputs' locations against the record's names for them, the
+    decomposition's store against the signal store, the files (unmixing,
+    components, then badsegments when declared), the store digest, the
+    matrix, the components table, the bad segments table, the channel match,
+    the units, then the filter. A fault in the bad segments refuses the whole
+    view: unshaded artifact spans could pass for brain signal. The window must
+    lie in the recording and hold at most ``max_window_s`` of it.
+
+    ``bursts_repaired`` is whether the record says ASR repaired at least one
+    span of the decomposition's input (for nemar-ica, its recipe entry's metric
+    ``asrBurstFraction`` above 0), or None when the renderer does not know: with
+    it true, a bad-segment table with no row labeled ``shaded.label`` refuses
+    the view (``label_unmatched``); otherwise it draws with ``no_shaded_rows``.
     """
+
+    check_declaration(view)
+    check_locations(view)
+    check_store(view)
     parameters = view["parameters"]
     transform = view["transform"]["parameters"]
     unmixing_entry = _input(view, "unmixing")["file"]
     components_entry = _input(view, "components")["file"]
     signal = _input(view, "signal")["store"]
-    if not (
-        count >= 1
-        and start >= 0
-        and start + count <= store.digital.shape[-1]
-        and count <= max_samples(parameters["max_window_s"], store.rate)
-    ):
-        raise ValueError(f"window [{start}, {start + count}) is not one to compute")
     segments_entry = next(
         (i["file"] for i in view["inputs"] if i["role"] == "badsegments"), None
     )
@@ -386,13 +524,18 @@ def ic_activity(
         None if segments_entry is None else verified(segments_entry, files, caps)
     )
     state = store_check(signal.get("content_sha256"), store.published_sha256)
+    check_rate(store.rate)
+    check_window(
+        start, count, store.digital.shape[-1], parameters["max_window_s"], store.rate
+    )
     header, weights = read_unmixing(unmixing_bytes, caps)
     labels = read_components(components_bytes, weights.shape[0], caps)
+    label = transform["shaded"]["label"]
     shaded = (
-        []
-        if segments_bytes is None
-        else read_shading(segments_bytes, transform["shaded"]["label"], caps)
+        None if segments_bytes is None else read_shading(segments_bytes, label, caps)
     )
+    notes = check_shaded(shaded, label, bursts_repaired)
+    shaded = shaded or []
     rows = match_rows(
         header,
         store.labels,
@@ -414,5 +557,5 @@ def ic_activity(
         activations=raw,
         filtered=display_filter(raw, store.rate, cutoff),
         shaded=shaded,
-        notes=[NO_BAD_SEGMENT_TABLE] if segments_bytes is None else [],
+        notes=notes,
     )

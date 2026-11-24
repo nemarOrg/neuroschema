@@ -66,6 +66,7 @@ def run(case: dict) -> ia.Activations:
         window["start"],
         window["count"],
         caps=ia.CAPS | case.get("caps", {}),
+        bursts_repaired=case["bursts_repaired"],
     )
 
 
@@ -154,15 +155,22 @@ def test_vector_file():
     "case", [*CASES, *REFUSALS], ids=[c["name"] for c in [*CASES, *REFUSALS]]
 )
 def test_vector_declarations_are_valid(case):
-    """Every case and refusal declares a valid view: the words are the
-    transform's, never the schema's."""
-    assert view_validator().is_valid(case["view"])
+    """Every case and refusal declares a valid view, but a refusal whose word is
+    declaration_invalid: the other words are the transform's, never the schema's."""
+    invalid = case.get("word") == "declaration_invalid"
+    if case["name"] in ("order_kind_before_declaration", "kind_version_true"):
+        invalid = True  # both faults: the kind's word comes first
+    assert view_validator().is_valid(case["view"]) is not invalid
 
 
 def test_caps_are_only_lowered():
     """A case's caps take the place of registry caps of the same names, lowered."""
     registry = load_registry()["caps"]
     assert registry == ia.CAPS
+    assert (
+        "CAPS = {"
+        not in (ROOT / "src" / "neuroschema" / "views" / "ic_activity.py").read_text()
+    )
     overrides = [
         (k, v) for c in [*CASES, *REFUSALS] for k, v in c.get("caps", {}).items()
     ]
@@ -195,15 +203,28 @@ def test_only_the_shaded_label_is_shaded():
 
 def test_no_table_is_said_never_silent():
     """A view whose record names no bad-segment table shades nothing and says
-    so; one that declares a table carries no note."""
+    so; one whose table has no row labeled shaded.label shades nothing and says
+    so too; one that shades a row carries no note."""
     for case in CASES:
         declared = any(i["role"] == "badsegments" for i in case["view"]["inputs"])
         files = case["view"]["transform"]["parameters"]["shaded"]["files"]
         assert declared is (files is not None), case["name"]
-        assert case["expected"]["notes"] == (
-            [] if declared else ["no_bad_segment_table"]
-        )
+        if not declared:
+            expected = ["no_bad_segment_table"]
+        else:
+            expected = [] if case["expected"]["shaded"] else ["no_shaded_rows"]
+        assert case["expected"]["notes"] == expected, case["name"]
     assert any(c["name"] == "no_bad_segment_table" for c in CASES)
+    assert any(c["expected"]["notes"] == ["no_shaded_rows"] for c in CASES)
+
+
+def test_an_unmatched_label_refuses_only_where_bursts_were_repaired():
+    """No row labeled shaded.label: refused (label_unmatched) when the record
+    says ASR repaired a span, drawn with no_shaded_rows otherwise (probe p7)."""
+    refused = {r["name"]: r for r in REFUSALS if r["word"] == "label_unmatched"}
+    assert refused and all(r["bursts_repaired"] is True for r in refused.values())
+    drawn = [c for c in CASES if c["expected"]["notes"] == ["no_shaded_rows"]]
+    assert {c["bursts_repaired"] for c in drawn} == {None, False}
 
 
 def test_in_step_orders_have_two_fault_vectors():
@@ -244,10 +265,12 @@ def _doc_words() -> set[str]:
 
 def _raised_words() -> set[str]:
     source = (ROOT / "src" / "neuroschema" / "views" / "ic_activity.py").read_text()
-    own = set(re.findall(r'IcActivityRefusal\("([a-z_]+)"', source))
+    own = set(re.findall(r'IcActivityRefusal\(\s*"([a-z_]+)"', source))
     grammar = {"tsv_encoding", "tsv_line_endings", "tsv_header_repeated", "tsv_ragged"}
     cells = {"cell_not_number", "cell_not_finite"}
-    return own | grammar | cells
+    # The floor's tables and the store's rate are read as presets.md says.
+    shared = {"duration_not_positive", "rate_invalid"}
+    return own | grammar | cells | shared
 
 
 def test_words_table_matches_the_reference():
@@ -513,6 +536,18 @@ def _lenient_rows(case):
     return [labels.index(h) for h in _header(case) if h in labels]
 
 
+def _step_declaration(case):
+    ia.check_declaration(case["view"])
+
+
+def _step_locations(case):
+    ia.check_locations(case["view"])
+
+
+def _step_store(case):
+    ia.check_store(case["view"])
+
+
 def _step_files(case):
     for role in ("unmixing", "components", "badsegments"):
         entry = _input_file(case, role)
@@ -523,6 +558,18 @@ def _step_files(case):
 def _step_digest(case):
     signal = next(i for i in case["view"]["inputs"] if i["role"] == "signal")["store"]
     ia.store_check(signal["content_sha256"], case["store"]["published_sha256"])
+
+
+def _step_rate(case):
+    ia.check_rate(case["store"]["rate"])
+
+
+def _step_window(case):
+    rate = case["store"]["rate"]
+    max_window_s = case["view"]["parameters"]["max_window_s"]
+    samples = len(case["store"]["digital"][0])
+    window = case["window"]
+    ia.check_window(window["start"], window["count"], samples, max_window_s, rate)
 
 
 def _step_matrix(case):
@@ -536,9 +583,9 @@ def _step_components(case):
 
 def _step_segments(case):
     data = _raw(case, "badsegments")
-    if data is not None:
-        label = case["view"]["transform"]["parameters"]["shaded"]["label"]
-        ia.read_shading(data, label, _caps(case))
+    label = case["view"]["transform"]["parameters"]["shaded"]["label"]
+    shaded = None if data is None else ia.read_shading(data, label, _caps(case))
+    ia.check_shaded(shaded, label, case["bursts_repaired"])
 
 
 def _step_match(case):
@@ -563,8 +610,13 @@ def _step_filter(case):
 
 
 ORDER = [
+    _step_declaration,
+    _step_locations,
+    _step_store,
     _step_files,
     _step_digest,
+    _step_rate,
+    _step_window,
     _step_matrix,
     _step_components,
     _step_segments,
@@ -574,8 +626,13 @@ ORDER = [
 ]
 # The refusal that holds both faults of each neighboring pair.
 PAIRS = [
+    "order_declaration_before_locations",
+    "order_locations_before_store",
+    "order_store_before_files",
     "order_file_before_digest",
-    "order_digest_before_matrix",
+    "order_digest_before_rate",
+    "order_rate_before_window",
+    "order_window_before_matrix",
     "order_matrix_before_components",
     "order_components_before_segments",
     "order_segments_before_match",
@@ -627,12 +684,14 @@ def test_a_window_holds_a_sample():
 def test_a_window_beyond_the_cap_or_the_recording_is_not_computed():
     case = copy.deepcopy(next(c for c in CASES if c["name"] == "last_window"))
     case["window"]["count"] += 1
-    with pytest.raises(ValueError, match="not one to compute"):
+    with pytest.raises(ia.IcActivityRefusal) as raised:
         run(case)
+    assert raised.value.word == "window_outside_store"
     case["window"].update(start=0, count=1)
     case["view"]["parameters"]["max_window_s"] = 0.001  # 0.25 samples at 250 Hz
-    with pytest.raises(ValueError, match="not one to compute"):
+    with pytest.raises(ia.IcActivityRefusal) as raised:
         run(case)
+    assert raised.value.word == "window_too_long"
     assert ia.max_samples(30, 250.0) == 7500
 
 

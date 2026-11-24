@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "bidsEntities.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/definitions/bidsEntities.schema.json",
   "title": "BIDS Entities",
   "description": "Standard Brain Imaging Data Structure (BIDS) entities parsed from the file path.",
   "type": "object",

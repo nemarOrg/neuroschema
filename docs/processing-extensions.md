@@ -14,11 +14,14 @@ The NEMAR backend (`nemar-api`) is the only writer of all three.
 
 One entry per recipe: a recording processed by `nemar-floor` and `nemar-ica` has two entries.
 Each `dataQuality` entry records its `input_kind` (`bids` or `zarr`) and `profile` (`archive` or `serving`); a `zarr` input always describes the serving copy.
+In a recording's entry, every store input of a view names the copy the entry's run read (its `profile` is the entry's `profile`), so a view of the serving copy cannot ride in an entry of the archive.
+`dataQuality` is closed at every level, its root included, unlike the other namespaces, whose roots stay open: it holds the views a browser draws, so a member beside `level` and `recipes` (a second `views` list, a stray counts block) is refused rather than carried along unchecked.
 
 ## What the schema checks and what the writer must check
 
 The schema checks types, closed objects, identifier patterns, the view declarations ([views.md](views.md)), a metric's single producer (a plugin or a recipe), and the status rules (a passed checkpoint has no code; a completed link has a location, digest and signalJourney version).
 In a recording's `metrics`, it also pairs each name with its producer: a bare name is a recipe's metric, with the producer `recipe`, and `<plugin>:<name>` is a plugin's, with the producer `plugin`, one colon and then a letter followed by letters, digits, `_` or `-`.
+A plugin's name has the prefix's grammar (a letter, then letters, digits, `_` and `-`, at most 64 characters), so every plugin can name its metrics and each name stays a safe document key.
 JSON Schema cannot compare one value with another, so the writer enforces:
 
 - every checkpoint's counts satisfy passed + failed + skipped = total once reconciled (at most total while a run reports live);

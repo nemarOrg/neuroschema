@@ -127,7 +127,8 @@ A note is shown with a drawn map, in its caption, and says what the map alone ca
 | `near_flat` | this algorithm, step 8 | all sensors are within <range> of each other | The sensors' values differ by at most `1e-9` of their magnitude, so the map is one color at their mean, with no contours; `<range>` is the usable values' `max - min` (the vectors' `value_range`), printed as ECMAScript's `String(x)` prints it, with the values' unit. |
 
 A fault in the files themselves (a broken TSV grammar, a missing column, a cell that is not a number, a sensor role with the wrong number of rows or other names than the sensors it places, a cap) takes no map's place: the whole view shows as tables, with the word, as for every generic kind ([The model](#the-model)).
-The spectrum's maps are the exception: the lines have already drawn the view, so a fault that only the maps read (in the layout's place columns, or `sensors_mismatch`) shows its generic word in every map's place while the lines stay drawn ([presets.md](presets.md#nemarspectrum-version-1)).
+The spectrum's maps are the exception: the lines have already drawn the view, so a fault that only the maps read (in the layout's place columns) shows its generic word in every map's place while the lines stay drawn.
+A layout whose names are not the sensor columns is not such a fault: the spectrum's own check finds `sensors_mismatch` by this page's rule before any map, and the view shows as tables, with no lines and no maps ([presets.md](presets.md#nemarspectrum-version-1)).
 
 ## The kind `nemar.sensor-field` version 1
 

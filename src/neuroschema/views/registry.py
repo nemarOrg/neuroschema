@@ -13,9 +13,11 @@ repository at their published paths.
 from __future__ import annotations
 
 import json
+import posixpath
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Literal, NamedTuple
+from urllib.parse import quote
 
 from jsonschema import Draft202012Validator
 
@@ -53,6 +55,37 @@ def load_registry(path: Path = REGISTRY_PATH) -> dict:
             f"{path}: format is {registry.get('format')!r}, not {REGISTRY_FORMAT!r}"
         )
     return registry
+
+
+def download_headers(
+    location: str, file_format: str, registry: Mapping | None = None
+) -> dict[str, str]:
+    """The headers a renderer serves a view file's download with (docs/views.md,
+    Formats): the registry's media type for a registered format, and
+    ``application/octet-stream`` for any other, so no file runs as a page;
+    ``nosniff`` always; and an attachment named for the location's last segment
+    by RFC 6266, ``filename*`` in RFC 8187's UTF-8 encoding with an ASCII
+    ``filename`` beside it for a client that reads only that."""
+    registry = load_registry() if registry is None else registry
+    known = registry["formats"].get(file_format)
+    name = posixpath.basename(location)
+    fallback = "".join(c if " " <= c <= "~" and c not in '"\\%' else "_" for c in name)
+    encoded = quote(name.encode("utf-8"), safe="-._~")
+    return {
+        "Content-Type": known["media_type"] if known else "application/octet-stream",
+        "Content-Disposition": (
+            f"attachment; filename=\"{fallback}\"; filename*=UTF-8''{encoded}"
+        ),
+        "X-Content-Type-Options": "nosniff",
+    }
+
+
+def version_of(value: object) -> int | None:
+    """A kind or base version as a version: an int, and never a bool. In Python
+    ``True == 1`` and they hash alike, so a declaration's ``kind_version: true``
+    would find version 1 in any lookup; JSON's ``true`` is no version
+    (review r29, round 2)."""
+    return value if type(value) is int else None
 
 
 def known_kinds(registry: Mapping) -> dict[tuple[str, int], dict]:
@@ -162,7 +195,7 @@ def draw_as(view: Mapping, registry: Mapping | None = None) -> Drawing:
     falls back to the table; nothing here raises for an unknown kind.
     """
     registry = load_registry() if registry is None else registry
-    own = (view.get("kind"), view.get("kind_version"))
+    own = (view.get("kind"), version_of(view.get("kind_version")))
     if own in known_kinds(registry):
         return Drawing("kind", *own)
     return draw_by_base(view, registry)
@@ -171,13 +204,16 @@ def draw_as(view: Mapping, registry: Mapping | None = None) -> Drawing:
 def draw_by_base(view: Mapping, registry: Mapping | None = None) -> Drawing:
     """The renderer rule for a renderer that does not know the view's own kind.
 
-    The view's base when the registry lists it and the view's data meet its
-    role contract (:func:`meets_role_contract`), otherwise a table. A preset
+    The view's base when the registry lists it as a generic kind and the view's
+    data meet its role contract (:func:`meets_role_contract`), otherwise a
+    table: a preset is never a base. A preset
     with stored data meets its base's contract, so a renderer that knows only
     the base draws it; a computed preset has no data and shows as a table.
     """
     kinds = known_kinds(load_registry() if registry is None else registry)
-    base = kinds.get((view.get("base"), view.get("base_version")))
-    if base is not None and meets_role_contract(view, base):
+    base = kinds.get((view.get("base"), version_of(view.get("base_version"))))
+    # Only a generic kind is a base: a preset names its own base (and the
+    # envelope refuses a preset as a base), so none is drawn over a preset.
+    if base is not None and base["base"] is None and meets_role_contract(view, base):
         return Drawing("base", base["kind"], base["kind_version"])
     return Drawing("table", None, None)

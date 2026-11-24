@@ -80,7 +80,6 @@ STORE_PATH = "sub-01/eeg/sub-01_task-rest_eeg.zarr"
 UNMIXING_AT = f"{PREFIX}_servingunmixing.tsv"
 COMPONENTS_AT = f"{PREFIX}_components.tsv"
 SEGMENTS_AT = f"{PREFIX}_badsegments.tsv"
-SAMPLEMASK_AT = f"{PREFIX}_samplemask.tsv"
 # The sentences nemar-process writes in browser_transform (nemar_ica/steps.py,
 # nemarOrg/nemar-process#81), mirrored so the declarations are the ones P5 writes.
 APPLIES_TO = "serving_copy channels listed, physical unit"
@@ -152,6 +151,17 @@ REORDERED = tsv_text(
     "bad_window clean_windows 0.200000 0.120000",
     "burst asr_repaired 0.360000 0.200000",
 )
+# The floor's segments with the label spelled another way: no row is "burst".
+MISSPELLED = tsv_text(
+    "onset duration label nemar_reason",
+    "0.100000 0.040000 Burst asr_repaired",
+    "0.200000 0.120000 bad_window clean_windows",
+)
+# Bad windows only: ASR repaired nothing the floor recorded.
+WINDOWS_ONLY = tsv_text(
+    "onset duration label nemar_reason",
+    "0.200000 0.120000 bad_window clean_windows",
+)
 # Two faults in one table: the onset column is read before the duration.
 ONSET_AND_DURATION = tsv_text(
     "onset duration label nemar_reason",
@@ -189,10 +199,12 @@ class Case:
         store: dict,
         window: tuple[int, int],
         caps: dict | None = None,
+        bursts_repaired: bool | None = None,
     ):
         self.name, self.covers, self.view = name, covers, view
         self.files, self.store, self.window = files, store, window
         self.caps = caps or {}
+        self.bursts_repaired = bursts_repaired
 
 
 def declaration(
@@ -246,7 +258,7 @@ def declaration(
         "caption": None if match == "store_row" else CAPTION_UNCHECKED,
         "shaded": {
             "label": "burst",
-            "files": [SEGMENTS_AT, SAMPLEMASK_AT] if segments else None,
+            "files": [SEGMENTS_AT] if segments else None,
         },
     }
     typed = [[label, "EEG"] for label in header]
@@ -616,6 +628,54 @@ def transform_cases() -> list[Case]:
             (0, 60),
         )
     )
+    view, files = _small_view()
+    rows = view["transform"]["parameters"]["rows"]
+    view["transform"]["parameters"]["rows"] = [float(row) for row in rows]
+    cases.append(
+        Case(
+            "rows_written_as_floats",
+            "Store rows written 0.0, 1.0 and so on: JSON reads them as the "
+            "integers 0, 1 and so on in every reader (JavaScript cannot tell them "
+            "apart), so the activations are those of integer rows (probe p7).",
+            view,
+            files,
+            _small_store(),
+            (0, 60),
+        )
+    )
+    cases.append(
+        Case(
+            "shaded_bursts_repaired",
+            "The record says ASR repaired spans (bursts_repaired true) and the "
+            "table has burst rows: those rows are shaded, with no note.",
+            *_small_view(segments=True),
+            _small_store(),
+            (0, 60),
+            bursts_repaired=True,
+        )
+    )
+    cases.append(
+        Case(
+            "segments_label_unmatched_unknown",
+            "No row is labeled burst (the table says Burst) and the renderer does "
+            "not know whether ASR repaired a span: drawn, nothing shaded, and the "
+            "note no_shaded_rows says so (probe p7).",
+            *_small_view(segments=MISSPELLED),
+            _small_store(),
+            (0, 60),
+        )
+    )
+    cases.append(
+        Case(
+            "segments_none_repaired",
+            "The record says ASR repaired nothing (bursts_repaired false) and the "
+            "table holds bad windows only: drawn with the note no_shaded_rows.",
+            *_small_view(segments=WINDOWS_ONLY),
+            _small_store(),
+            (0, 60),
+            bursts_repaired=False,
+        )
+    )
     cases.append(
         Case(
             "highpass_40_hz",
@@ -682,12 +742,199 @@ def _short(count: int) -> Case:
 def refusals() -> list[Case]:
     out = []
 
-    def refused(name, covers, view_files=None, store_=None, window=(0, 20), caps=None):
+    def refused(
+        name,
+        covers,
+        view_files=None,
+        store_=None,
+        window=(0, 20),
+        caps=None,
+        bursts_repaired=None,
+    ):
         view, files = view_files or _small_view()
+        store_ = store_ or _small_store()
         out.append(
-            Case(name, covers, view, files, store_ or _small_store(), window, caps)
+            Case(name, covers, view, files, store_, window, caps, bursts_repaired)
         )
 
+    def without_segments(view: dict) -> dict:
+        return view | {
+            "inputs": [i for i in view["inputs"] if i["role"] != "badsegments"]
+        }
+
+    view, files = _small_view(segments=True)
+    refused(
+        "segments_named_not_declared",
+        "The record names the floor's bad-segment table (shaded.files) and the "
+        "view does not declare it: declaration_invalid, never drawn unshaded.",
+        (without_segments(view), files),
+    )
+    view, files = _small_view(segments=True)
+    view["transform"]["parameters"]["shaded"]["files"] = None
+    refused(
+        "segments_declared_not_named",
+        "A bad-segments input when shaded.files is null: declaration_invalid.",
+        (view, files),
+    )
+    view, files = _small_view(segments=True)
+    refused(
+        "kind_reusing_the_transform",
+        "A kind the registry does not list that reuses the transform: this "
+        "reference draws only nemar.ic-activity version 1, whose display filter "
+        "and window it applies, so kind_unsupported (review r29); the renderer "
+        "rule draws the view. (Dropping the bad segments would also break the "
+        "transform's schema: the verdict corpus holds that.)",
+        (view | {"kind": "acme.activity"}, files),
+    )
+    view, files = _small_view()
+    refused(
+        "kind_version_true",
+        "kind_version written true: JSON's true is no version, though Python "
+        "reads True == 1, so kind_unsupported (review r29, round 2).",
+        (view | {"kind_version": True}, files),
+    )
+    view, files = _small_view(segments=True)
+    refused(
+        "order_kind_before_declaration",
+        "Another kind and an invalid declaration (the bad segments dropped): the "
+        "kind comes first.",
+        (
+            without_segments(view) | {"kind": "nemar.ic-activity", "kind_version": 2},
+            files,
+        ),
+    )
+    view, files = _small_view(segments=True)
+    del files[UNMIXING_AT]
+    refused(
+        "order_declaration_before_files",
+        "An invalid declaration and a missing matrix: the declaration comes first.",
+        (without_segments(view), files),
+    )
+    # The record's names for the inputs, and the decomposition's store.
+    decoy = tsv_text("onset duration label nemar_reason")
+    decoy_at = "sub-01/eeg/other_badsegments.tsv"
+    view, files = _small_view(segments=True)
+    files[decoy_at] = decoy
+    for given in view["inputs"]:
+        if given["role"] == "badsegments":
+            given["file"] = file_input("badsegments", decoy_at, decoy)["file"]
+    refused(
+        "segments_location_differs",
+        "The badsegments input reads a decoy table with no rows where "
+        "shaded.files names the floor's: table_location_mismatch, never drawn "
+        "with nothing shaded (probe p7).",
+        (view, files),
+    )
+    view, files = _small_view(segments=True)
+    other = "sub-01/eeg/sub-01_task-rest_run-2_desc-nemarica"
+    for given in view["inputs"]:
+        if "file" in given:
+            role, old = given["role"], given["file"]["location"]
+            moved = other + old.removeprefix(PREFIX)
+            files[moved] = files.pop(old)
+            given["file"]["location"] = moved
+            if role == "unmixing":
+                view["transform"]["parameters"]["matrix"] = moved
+            if role == "badsegments":
+                view["transform"]["parameters"]["shaded"]["files"] = [moved]
+    refused(
+        "tables_of_another_recording",
+        "The matrix, the components and the bad segments of run 2, named for it "
+        "and consistent with matrix and shaded.files: not the recording's, so "
+        "table_location_mismatch (review r29).",
+        (view, files),
+    )
+    view, files = _small_view(segments=True)
+    sibling = "sub-01/eeg/sub-01_task-rest_desc-preprocnemarica"
+    for given in view["inputs"]:
+        if "file" in given:
+            role, old = given["role"], given["file"]["location"]
+            moved = sibling + old.removeprefix(PREFIX)
+            files[moved] = files.pop(old)
+            given["file"]["location"] = moved
+            if role == "unmixing":
+                view["transform"]["parameters"]["matrix"] = moved
+            if role == "badsegments":
+                view["transform"]["parameters"]["shaded"]["files"] = [moved]
+    refused(
+        "tables_of_a_sibling_recording",
+        "The three tables of the sibling recording sub-01_task-rest_desc-preproc "
+        "(desc-preprocnemarica), consistent with matrix and shaded.files: the "
+        "stem must be exactly the one nemar-process gives this recording under "
+        "the view's recipe, so table_location_mismatch (review r29, round 2).",
+        (view, files),
+    )
+    view, files = _small_view()
+    moved = "sub-01/eeg/sub-01_task-rest_desc-nemarfloor_components.tsv"
+    files[moved] = files.pop(COMPONENTS_AT)
+    for given in view["inputs"]:
+        if given["role"] == "components":
+            given["file"]["location"] = moved
+    refused(
+        "tables_two_stems",
+        "The components table under another stem (desc-nemarfloor) than the "
+        "matrix's (desc-nemarica): table_location_mismatch.",
+        (view, files),
+    )
+    view, files = _small_view()
+    view["transform"]["parameters"]["matrix"] = f"{PREFIX}_unmixing.tsv"
+    refused(
+        "matrix_location_differs",
+        "The unmixing input is not the file the record's matrix names: "
+        "table_location_mismatch.",
+        (view, files),
+    )
+    for name, member, value, covers in [
+        (
+            "decomposition_store_digest_differs",
+            "content_sha256",
+            "f" * 64,
+            "The decomposition's store names another digest than the signal "
+            "store: store_mismatch, so a state of matches would be about another "
+            "store (probe p7).",
+        ),
+        (
+            "decomposition_store_path_differs",
+            "path",
+            "sub-01/eeg/sub-01_task-other_eeg.zarr",
+            "The decomposition's store is another path than the signal store's.",
+        ),
+        (
+            "decomposition_store_group_differs",
+            "group",
+            "meg",
+            "The decomposition read another channel group than the signal's.",
+        ),
+    ]:
+        view, files = _small_view()
+        view["parameters"]["decomposition_input"]["store"][member] = value
+        refused(name, covers, (view, files))
+    view, files = _small_view(segments=True)
+    view["transform"]["parameters"]["matrix"] = f"{PREFIX}_unmixing.tsv"
+    refused(
+        "order_declaration_before_locations",
+        "An invalid declaration (the bad segments named and not declared) and a "
+        "matrix at another location: the declaration comes first.",
+        (without_segments(view), files),
+    )
+    view, files = _small_view()
+    view["transform"]["parameters"]["matrix"] = f"{PREFIX}_unmixing.tsv"
+    view["parameters"]["decomposition_input"]["store"]["content_sha256"] = "f" * 64
+    refused(
+        "order_locations_before_store",
+        "A matrix at another location and a decomposition store of another "
+        "digest: the locations come first.",
+        (view, files),
+    )
+    view, files = _small_view()
+    view["parameters"]["decomposition_input"]["store"]["content_sha256"] = "f" * 64
+    del files[UNMIXING_AT]
+    refused(
+        "order_store_before_files",
+        "A decomposition store of another digest and a missing matrix: the "
+        "store comes first.",
+        (view, files),
+    )
     view, files = _small_view()
     del files[UNMIXING_AT]
     refused("unmixing_missing", "The matrix's file is absent.", (view, files))
@@ -839,14 +1086,18 @@ def refusals() -> list[Case]:
     )
 
     def rows_view(rows, header=SMALL, match="store_row"):
+        """By row, a decomposition of the serving copy; by label, one of the
+        archive, which read no store (the serving copy is never matched by label)."""
+        by_row = match == "store_row"
         return declaration(
             header,
             weights,
             4,
             match=match,
             unit="uV",
-            rows=rows if match == "store_row" else None,
-            declared=digest("small"),
+            rows=rows if by_row else None,
+            profile="serving" if by_row else "archive",
+            declared=digest("small") if by_row else None,
         )
 
     refused(
@@ -875,7 +1126,7 @@ def refusals() -> list[Case]:
         ),
     )
     refused(
-        "label_unmatched",
+        "channel_label_unmatched",
         "A column whose label no store row has.",
         rows_view(None, header=[*SMALL[:5], "Oz"], match="label"),
     )
@@ -915,6 +1166,118 @@ def refusals() -> list[Case]:
         "filter_out_of_range",
         "A display cutoff at half the rate.",
         _small_view(highpass_hz=125.0),
+    )
+    refused(
+        "store_rate_zero",
+        "A store whose rate is 0: rate_invalid, not a division by zero.",
+        store_=_small_store(rate=0.0),
+    )
+    refused(
+        "store_rate_negative",
+        "A store whose rate is below 0: rate_invalid.",
+        store_=_small_store(rate=-250.0),
+    )
+    refused(
+        "window_outside_store",
+        "A window that runs past the store's last sample: window_outside_store, "
+        "not an error of the renderer's own (probe p12).",
+        window=(50, 20),
+    )
+    refused(
+        "window_before_store",
+        "A window that starts before the store's first sample.",
+        window=(-1, 10),
+    )
+    refused("window_empty", "A window of no sample.", window=(10, 0))
+    refused(
+        "window_too_long",
+        "A window longer than max_window_s (30 s at 1 Hz: 30 samples).",
+        store_=_small_store(rate=1.0),
+        window=(0, 31),
+    )
+    refused(
+        "segments_label_unmatched",
+        "The record says ASR repaired spans and no row of the table is labeled "
+        "burst (it says Burst): label_unmatched, never drawn with the bursts "
+        "unshaded (probe p7).",
+        _small_view(segments=MISSPELLED),
+        bursts_repaired=True,
+    )
+    refused(
+        "no_table_where_bursts_were_repaired",
+        "The record says ASR repaired spans and the view declares no bad-segment "
+        "table (shaded.files null): the two contradict, so label_unmatched, "
+        "never drawn with a note that there is nothing to shade (review r29).",
+        _small_view(),
+        bursts_repaired=True,
+    )
+    refused(
+        "segments_label_uppercase",
+        "The same with BURST.",
+        _small_view(segments=MISSPELLED.replace(b"Burst", b"BURST")),
+        bursts_repaired=True,
+    )
+    refused(
+        "order_label_before_match",
+        "No burst row where ASR repaired spans, and a column no store row has: "
+        "the bad segments come first.",
+        declaration(
+            [*SMALL[:5], "Oz"],
+            weights,
+            4,
+            match="label",
+            unit="uV",
+            profile="archive",
+            declared=None,
+            segments=MISSPELLED,
+        ),
+        bursts_repaired=True,
+    )
+    refused(
+        "badsegments_duration_negative",
+        "A bad segment of negative duration: duration_not_positive.",
+        _small_view(
+            segments=tsv_text(
+                "onset duration label nemar_reason",
+                "0.100000 -0.040000 burst asr_repaired",
+            )
+        ),
+    )
+    refused(
+        "badsegments_duration_zero",
+        "A bad segment of no duration: duration_not_positive.",
+        _small_view(
+            segments=tsv_text(
+                "onset duration label nemar_reason", "0.100000 0 burst asr_repaired"
+            )
+        ),
+    )
+    refused(
+        "order_digest_before_rate",
+        "A store digest mismatch and a rate of 0: the digest comes first.",
+        store_=_small_store(published=digest("another store"), rate=0.0),
+    )
+    refused(
+        "order_rate_before_window",
+        "A rate of 0 and a window past the store's end: the rate comes first.",
+        store_=_small_store(rate=0.0),
+        window=(50, 20),
+    )
+    refused(
+        "order_window_before_matrix",
+        "A window past the store's end and a matrix cell that is not a number: "
+        "the window comes first.",
+        declaration(
+            SMALL,
+            weights,
+            4,
+            match="store_row",
+            unit="uV",
+            rows=list(range(6)),
+            declared=digest("small"),
+            unmixing=corrupt_cell(matrix_text(SMALL, weights)),
+        ),
+        window=(50, 20),
     )
 
     # Two faults each: the first check in the specification's order gives the word.
@@ -1045,7 +1408,8 @@ def refusals() -> list[Case]:
             4,
             match="label",
             unit="uV",
-            declared=digest("small"),
+            profile="archive",
+            declared=None,
             segments=NO_LABEL,
         ),
     )
@@ -1263,6 +1627,7 @@ def _header(case: Case) -> dict:
         "files": _files(case.files),
         "store": case.store,
         "window": {"start": case.window[0], "count": case.window[1]},
+        "bursts_repaired": case.bursts_repaired,
     }
     return out | ({"caps": case.caps} if case.caps else {})
 
@@ -1270,7 +1635,12 @@ def _header(case: Case) -> dict:
 def _run(case: Case) -> ia.Activations:
     caps = ia.CAPS | case.caps
     return ia.ic_activity(
-        case.view, case.files, _store_object(case.store), *case.window, caps=caps
+        case.view,
+        case.files,
+        _store_object(case.store),
+        *case.window,
+        caps=caps,
+        bursts_repaired=case.bursts_repaired,
     )
 
 

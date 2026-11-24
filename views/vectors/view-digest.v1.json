@@ -1,7 +1,7 @@
 {
   "format": "nemar.view-digest.v1",
   "spec": "docs/views/view-digest.md",
-  "description": "Cases every implementation of nemar.view-digest.v1 reproduces. Parse each case's declaration with a standard JSON parser, canonicalize it (RFC 8785), and compare the UTF-8 bytes with canonical and their SHA-256 with sha256. Parse each refusal's json text the same way, refusing a duplicate member name: it has no digest.",
+  "description": "Cases every implementation of nemar.view-digest.v1 reproduces. Parse each case's declaration with a standard JSON parser, canonicalize it (RFC 8785), and compare the UTF-8 bytes with canonical and their SHA-256 with sha256. Parse each refusal's json text the same way, refusing a duplicate member name however it is escaped, a lone surrogate or a noncharacter in a string, and nesting deeper than 64: it has no digest.",
   "cases": [
     {
       "name": "table_view",
@@ -218,6 +218,151 @@
       },
       "canonical": "{\"a\":[true,false,null,[],{},[1,[2,{\"c\":\"d\",\"d\":\"c\"}]]],\"e\":{}}",
       "sha256": "6321dd46247ec04b5cea4b18e455393aa63d57c3deee800ea036072d83ac6f0b"
+    },
+    {
+      "name": "nested_64",
+      "covers": "A declaration nested exactly 64 deep, the most a reader accepts.",
+      "declaration": {
+        "key": "nested",
+        "kind": "example.nested",
+        "kind_version": 1,
+        "caption": "Nested parameters.",
+        "source": {
+          "plugin": {
+            "name": "example-plugin",
+            "version": "1.0.0"
+          }
+        },
+        "parameters": {
+          "x": [
+            [
+              [
+                [
+                  [
+                    [
+                      [
+                        [
+                          [
+                            [
+                              [
+                                [
+                                  [
+                                    [
+                                      [
+                                        [
+                                          [
+                                            [
+                                              [
+                                                [
+                                                  [
+                                                    [
+                                                      [
+                                                        [
+                                                          [
+                                                            [
+                                                              [
+                                                                [
+                                                                  [
+                                                                    [
+                                                                      [
+                                                                        [
+                                                                          [
+                                                                            [
+                                                                              [
+                                                                                [
+                                                                                  [
+                                                                                    [
+                                                                                      [
+                                                                                        [
+                                                                                          [
+                                                                                            [
+                                                                                              [
+                                                                                                [
+                                                                                                  [
+                                                                                                    [
+                                                                                                      [
+                                                                                                        [
+                                                                                                          [
+                                                                                                            [
+                                                                                                              [
+                                                                                                                [
+                                                                                                                  [
+                                                                                                                    [
+                                                                                                                      [
+                                                                                                                        [
+                                                                                                                          [
+                                                                                                                            [
+                                                                                                                              [
+                                                                                                                                [
+                                                                                                                                  [
+                                                                                                                                    [
+                                                                                                                                      7
+                                                                                                                                    ]
+                                                                                                                                  ]
+                                                                                                                                ]
+                                                                                                                              ]
+                                                                                                                            ]
+                                                                                                                          ]
+                                                                                                                        ]
+                                                                                                                      ]
+                                                                                                                    ]
+                                                                                                                  ]
+                                                                                                                ]
+                                                                                                              ]
+                                                                                                            ]
+                                                                                                          ]
+                                                                                                        ]
+                                                                                                      ]
+                                                                                                    ]
+                                                                                                  ]
+                                                                                                ]
+                                                                                              ]
+                                                                                            ]
+                                                                                          ]
+                                                                                        ]
+                                                                                      ]
+                                                                                    ]
+                                                                                  ]
+                                                                                ]
+                                                                              ]
+                                                                            ]
+                                                                          ]
+                                                                        ]
+                                                                      ]
+                                                                    ]
+                                                                  ]
+                                                                ]
+                                                              ]
+                                                            ]
+                                                          ]
+                                                        ]
+                                                      ]
+                                                    ]
+                                                  ]
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      "canonical": "{\"caption\":\"Nested parameters.\",\"key\":\"nested\",\"kind\":\"example.nested\",\"kind_version\":1,\"parameters\":{\"x\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[7]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]},\"source\":{\"plugin\":{\"name\":\"example-plugin\",\"version\":\"1.0.0\"}}}",
+      "sha256": "f382c27707957eb2f8f650766e3f349edbbf15ad1e3a03ed38df4fe24ca6d259"
     }
   ],
   "refusals": [
@@ -255,6 +400,41 @@
       "name": "nan_literal",
       "covers": "NaN is not JSON, though Python's json.loads accepts it.",
       "json": "{\"parameters\":{\"x\":NaN}}"
+    },
+    {
+      "name": "noncharacter",
+      "covers": "A string holding the noncharacter U+FDD0, which I-JSON forbids.",
+      "json": "{\"caption\":\"\\ufdd0\"}"
+    },
+    {
+      "name": "noncharacter_in_key",
+      "covers": "A member name holding the noncharacter U+FFFF.",
+      "json": "{\"\\uffff\":1}"
+    },
+    {
+      "name": "noncharacter_astral",
+      "covers": "A string holding U+10FFFE, a noncharacter written as a surrogate pair.",
+      "json": "{\"caption\":\"x\\udbff\\udffe\"}"
+    },
+    {
+      "name": "noncharacter_raw",
+      "covers": "A string holding the noncharacter U+FFFE as itself, not escaped.",
+      "json": "{\"caption\":\"x\ufffe\"}"
+    },
+    {
+      "name": "escaped_duplicate_member_name",
+      "covers": "Two members with one name, the second written with an escape (key and \\u006bey are one name).",
+      "json": "{\"key\":\"a\",\"\\u006bey\":\"b\"}"
+    },
+    {
+      "name": "escaped_duplicate_nested",
+      "covers": "An escaped duplicate inside a nested object (version and \\u0076ersion).",
+      "json": "{\"source\":{\"recipe\":{\"name\":\"nemar-ica\",\"version\":\"1.0.0\",\"\\u0076ersion\":\"2.0.0\"}}}"
+    },
+    {
+      "name": "nested_65",
+      "covers": "Arrays and objects nested 65 deep, one more than a reader accepts.",
+      "json": "{\"key\":\"nested\",\"parameters\":{\"x\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[7]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}}"
     }
   ]
 }

@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "dataQuality.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/extensions/dataQuality.schema.json",
   "title": "Data Quality Extension",
-  "description": "Quality results the NEMAR backend projects from the signalJourney records of its recipe runs. `level` selects the shape: `record` (one recording's metrics and views per recipe) or `dataset` (the dataset quality control summary per recipe; replaces nemar-process qc-summary.v1). Each entry carries the SHA-256 of the signalJourney record it came from; the record stays the source.",
+  "description": "Quality results the NEMAR backend projects from the signalJourney records of its recipe runs. `level` selects the shape: `record` (one recording's metrics and views per recipe) or `dataset` (the dataset quality control summary per recipe; replaces nemar-process qc-summary.v1). Each entry carries the SHA-256 of the signalJourney record it came from; the record stays the source. Closed at every level, its root and its $defs included: it holds the views a browser draws, so a member no schema checks (a second views list, a stray counts block) is refused rather than carried along.",
   "type": "object",
   "required": [
     "level"
@@ -15,6 +15,10 @@
         "dataset"
       ],
       "description": "Which document this entry belongs to: record (one recording) or dataset (the whole dataset)."
+    },
+    "recipes": {
+      "type": "object",
+      "description": "Results per recipe, keyed by recipe id; the level's shape ($defs/record or $defs/dataset) constrains each entry."
     }
   },
   "allOf": [
@@ -51,7 +55,7 @@
       }
     }
   ],
-  "additionalProperties": true,
+  "additionalProperties": false,
   "$defs": {
     "record": {
       "type": "object",
@@ -60,6 +64,9 @@
         "recipes"
       ],
       "properties": {
+        "level": {
+          "const": "record"
+        },
         "recipes": {
           "type": "object",
           "description": "Results per recipe, keyed by recipe id.",
@@ -70,7 +77,8 @@
             "$ref": "../extensions/dataQuality.schema.json#/$defs/recordRecipeResults"
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     "dataset": {
       "type": "object",
@@ -79,6 +87,9 @@
         "recipes"
       ],
       "properties": {
+        "level": {
+          "const": "dataset"
+        },
         "recipes": {
           "type": "object",
           "description": "Quality control summary per recipe, keyed by recipe id.",
@@ -89,7 +100,8 @@
             "$ref": "../extensions/dataQuality.schema.json#/$defs/datasetRecipeSummary"
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     "recordRecipeResults": {
       "type": "object",
@@ -168,6 +180,92 @@
       "allOf": [
         {
           "$ref": "../definitions/processingTypes.schema.json#/$defs/inputProfilePairing"
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "profile": {
+                "const": "archive"
+              }
+            },
+            "required": [
+              "profile"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "views": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "store": {
+                            "type": "object",
+                            "properties": {
+                              "profile": {
+                                "const": "archive"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "description": "Every store input of the entry's views names the copy the entry's run read: the store's profile is the entry's."
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "profile": {
+                "const": "serving"
+              }
+            },
+            "required": [
+              "profile"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "views": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "store": {
+                            "type": "object",
+                            "properties": {
+                              "profile": {
+                                "const": "serving"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "description": "Every store input of the entry's views names the copy the entry's run read: the store's profile is the entry's."
+          }
         }
       ],
       "additionalProperties": false
@@ -250,6 +348,7 @@
         "not_processed_truncated": {
           "type": "integer",
           "minimum": 0,
+          "maximum": 9007199254740991,
           "description": "Number of not-processed recordings left out of not_processed by its cap."
         }
       },
@@ -275,6 +374,7 @@
         "n": {
           "type": "integer",
           "minimum": 0,
+          "maximum": 9007199254740991,
           "description": "Number of values summarized."
         },
         "unit": {
@@ -333,18 +433,21 @@
               "minItems": 1,
               "items": {
                 "type": "integer",
-                "minimum": 0
+                "minimum": 0,
+                "maximum": 9007199254740991
               },
               "description": "Count per bin; one fewer than the edges."
             },
             "underflow": {
               "type": "integer",
               "minimum": 0,
+              "maximum": 9007199254740991,
               "description": "Values below the first edge."
             },
             "overflow": {
               "type": "integer",
               "minimum": 0,
+              "maximum": 9007199254740991,
               "description": "Values above the last edge."
             }
           },

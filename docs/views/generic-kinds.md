@@ -21,11 +21,13 @@ A renderer builds a view's model in four steps.
 4. When the kind's rules refuse the files, it builds the [fallback](#the-fallback) instead and keeps the kind and the word, so the page can say why the view shows as a table.
 
 A renderer reads only the files its model needs, and it checks each one before it parses it.
-The file must be present (`file_missing`), its length must be the declared `size` (`file_size_mismatch`), and its Secure Hash Algorithm 256 (SHA-256) digest must be the declared `sha256` (`file_digest_mismatch`).
+First, before it fetches the file, the declared `size` is at most `caps.bytes_per_role` in the registry (4,194,304 bytes): a larger one is refused with `cap_exceeded`, and the view falls back, so no renderer fetches a file it would not read.
+The schema caps `size` at 4,194,304, the registered cap, so this matters only under a lower cap (a vector's `caps`).
+Then the file must be present (`file_missing`), its length must be the declared `size` (`file_size_mismatch`), and its Secure Hash Algorithm 256 (SHA-256) digest must be the declared `sha256` (`file_digest_mismatch`).
 A failed check refuses the whole view and nothing is drawn, because the bytes are not the bytes NEMAR recorded.
+Each data entry it reads is checked against its own `size` and `sha256`, even when two entries share a location (one file can serve two roles), so one entry never vouches for another's bytes.
 Because no view hides data, the renderer still offers every other file of the view for download, and it checks a file it has not read when that file is downloaded.
 An invalid declaration offers no file, because the declaration that names the files is itself invalid.
-A file longer than `caps.bytes_per_role` in the registry (4,194,304 bytes) is refused with `cap_exceeded`, and the view falls back.
 
 Every model lists the view's files under `downloads`: each `data` entry, then each `file` input, in declaration order, with its role, location, size and SHA-256.
 A renderer offers each of them for download, so no view hides data, whether a file is drawn, shown as a table or neither.
@@ -37,7 +39,7 @@ A renderer offers each of them for download, so no view hides data, whether a fi
 A tab-separated values (TSV) file is read under the grammar of [docs/views.md](../views.md#tsv).
 
 - The bytes do not begin with a byte order mark, and they decode as UTF-8 (Unicode Transformation Format, 8-bit) (`tsv_encoding`).
-  JavaScript's `TextDecoder` replaces bytes that are not UTF-8 with U+FFFD unless it is built with `fatal: true`, and it drops a byte order mark unless it is built with `ignoreBOM: true`; a renderer builds it with `{fatal: true}` and checks the first three bytes itself.
+  JavaScript's `TextDecoder` replaces bytes that are not UTF-8 with U+FFFD unless it is built with `fatal: true`, and it drops a byte order mark unless it is built with `ignoreBOM: true`; a renderer builds it as `new TextDecoder("utf-8", {fatal: true, ignoreBOM: true})` and refuses text that begins with U+FEFF, as for JSON.
 - The text holds no carriage return (CR) and ends with a line feed (LF) (`tsv_line_endings`).
 - Without its final LF, the text splits at each LF into lines: the first is the header, and each later line is a data row.
 - A line splits at each TAB into cells.
@@ -61,10 +63,10 @@ The text is kept as well: a readout prints the stored text and never prints a nu
 
 ### JSON
 
-A JSON file is read as Internet JSON (I-JSON): UTF-8 with no byte order mark, no object with two members of one name, no `NaN` or `Infinity` literal, and every number finite as a binary64 (`json_invalid`).
-These are the rules for the [view digest's input](view-digest.md#input), plus the finite rule.
+A JSON file is read as Internet JSON (I-JSON), under [the JSON grammar of docs/views.md](../views.md#json), which gives the JavaScript decoder (`TextDecoder("utf-8", {fatal: true, ignoreBOM: true})`) (`json_invalid`): UTF-8 with no byte order mark, no object with two members of one name however they are escaped, no `NaN` or `Infinity` literal, every number finite as a binary64, no lone surrogate or noncharacter in a string or member name, and at most 64 levels of nesting.
+These are the rules for the [view digest's input](view-digest.md#input).
 `1e400` is not finite, and neither is an integer literal beyond binary64 range, such as 1 followed by 400 zeros: JavaScript's `JSON.parse` reads it as `Infinity`, and Python reads it exactly but cannot make it a binary64.
-The rule covers every number in the file, members the kind does not read included.
+The rules cover the whole file, members the kind does not read included.
 
 ## Coordinates
 
@@ -76,7 +78,8 @@ A dimension's coordinates label the rows or the columns of a role ([docs/views.m
   Its type is `string`.
 - `{"role": r, "column": c}`, on either: by position, the cells of column `c` of role `r` of the same view, top to bottom.
   Role `r` appears exactly once in the view's `data`, as a `tsv` file that declares `c` (`coords_unresolved`).
-  Its file is checked and read as above, `c` is in its header (`column_missing`), and it has one cell per position (`coords_length`): one per data row for a dimension along the rows, and one per value column for a dimension along the columns.
+  Its file is checked and read as above, and it is held to the caps as every role is: the cap on bytes before it is fetched, and at most `caps.cells_per_role` cells counting every header column (`cap_exceeded`), though only one column is read.
+  Then `c` is in its header (`column_missing`), and it has one cell per position (`coords_length`): one per data row for a dimension along the rows, and one per value column for a dimension along the columns.
 
 A coordinate column's declared `type` is its dimension's `type`, and its `unit`, when it declares one, is its dimension's `unit` (`coords_mismatch`).
 Each coordinate cell is read by the dimension's type, and its text is its label.
@@ -91,14 +94,14 @@ The value columns of a `nemar.lines` or `nemar.heatmap` role are its declared co
 Each has the type `number` or `integer` (`value_type`), and all of them have the same `unit` or all have none (`value_units_differ`); that unit is the unit of the values.
 A role with no data row or no value column is refused with `empty`.
 
-A role holds at most `caps.entries_per_dim` (1,024) data rows and 1,024 value columns, and at most `caps.cells_per_role` (262,144) cells, counting every declared column of every data row (`cap_exceeded`).
+A role holds at most `caps.entries_per_dim` (1,024) data rows and `caps.entries_per_dim` value columns, and at most `caps.cells_per_role` (262,144) cells, counting every declared column of every data row (`cap_exceeded`).
 
 ## Order of checks
 
 When the files break more than one rule, the first rule broken gives the word.
 For `nemar.table`, `nemar.lines` and `nemar.heatmap`, the checks run in this order.
 
-1. The role's file: present, size, SHA-256, then the cap on bytes.
+1. The role's file: its declared size against the cap on bytes, before it is fetched, then present, size and SHA-256.
 2. The TSV grammar, in the order of its list.
 3. The declared columns: first whether any name is declared twice (`column_repeated`), then each name in declared order (`column_missing`).
 4. The coordinate column, if the role has one (`coords_unresolved`, then `coords_mismatch`).
@@ -106,9 +109,9 @@ For `nemar.table`, `nemar.lines` and `nemar.heatmap`, the checks run in this ord
    A table has only the cap on cells here.
 6. The cells, column by column and never row by row: the coordinate column first, then the value columns in declared order (for a table, the declared columns in declared order), each column from top to bottom.
 7. The kind's own rule (`x_not_increasing` for `nemar.lines`).
-8. Coordinates from another role, the rows' dimension before the columns'; for each, `coords_unresolved`, then that role's file and grammar, `column_missing`, `coords_mismatch`, `coords_length`, and its cells.
+8. Coordinates from another role, the rows' dimension before the columns'; for each, `coords_unresolved`, then that role's file (the cap on bytes, present, size, SHA-256) and grammar, the cap on its cells counting every header column, `column_missing`, `coords_mismatch`, `coords_length`, and its cells.
 
-For `nemar.histogram`, they run in this order: the file and the cap on bytes, `json_invalid`, `content_invalid`, `edges_not_increasing`, `counts_length`, then the cap on the total (`cap_exceeded`).
+For `nemar.histogram`, they run in this order: the cap on bytes and the file, `json_invalid`, `content_invalid`, `edges_not_increasing`, `counts_length`, then the cap on the total (`cap_exceeded`).
 The vectors hold one case for each pair of neighboring checks, with two faults, so a renderer that runs two checks in the other order gives the other word.
 
 ## `nemar.table` version 1
@@ -240,6 +243,7 @@ Bin i holds the values v with e_i <= v < e_(i+1), and the last bin also holds a 
 `underflow` counts the values below the first edge, and `overflow` the values above the last edge.
 This is the rule of nemar-process's binning and of the `dataQuality` distributions.
 A renderer draws the counts it is given and never bins values itself; when it marks a value on a histogram, such as one recording's value on its dataset's distribution, it finds the bin by this rule.
+A value that is not a number (NaN) is in no bin, since every comparison with it is false, and nothing is marked for it.
 
 ```json
 {
@@ -316,7 +320,7 @@ When a kind refused the files, `refused` is `{"kind", "kind_version", "word"}`, 
 | `coords_unresolved` | fallback | A coordinate column is not declared, or a coordinate role is absent, repeated or not TSV. |
 | `coords_mismatch` | fallback | A coordinate column's type or unit differs from its dimension's. |
 | `coords_length` | fallback | Coordinates from another role do not have one cell per position. |
-| `sensors_mismatch` | fallback | A scalp map's sensors run along the columns and are placed by a layout or positions role, and the value columns' names, in declared order, are not that role's name cells ([sensor-field.md](sensor-field.md#the-order-of-checks)). |
+| `sensors_mismatch` | fallback | A scalp map's sensors run along the columns and are placed by a layout or positions role, and the value columns' names, in declared order, are not that role's name cells ([sensor-field.md](sensor-field.md#the-order-of-checks)); `nemar.spectrum`'s own check reads the same rule before any map ([presets.md](presets.md#nemarspectrum-version-1)). |
 | `value_type` | fallback | A value column is not numeric. |
 | `value_units_differ` | fallback | The value columns' units differ. |
 | `empty` | fallback | No data row, or no value column. |
@@ -329,6 +333,9 @@ When a kind refused the files, `refused` is `{"kind", "kind_version", "word"}`, 
 | `edges_not_increasing` | fallback | The edges are not strictly increasing. |
 | `counts_length` | fallback | The counts are not one per bin. |
 
+These are the words of the files, which decide the view's outcome.
+A scalp map's placement and algorithm have words of their own that take a map's place while the view is drawn, among them `montage_unknown`, `template_name_unknown` and, from `nemar.sensor-layout.v1`, `positions_flat` and `positions_partial`; they are in [sensor-field.md](sensor-field.md#refusals)'s tables.
+
 ## The model vectors
 
 `kinds-models.v1.json` has `format`, `spec`, `description`, `cases` and `refusals`.
@@ -336,18 +343,23 @@ Each case has a `name`, what it `covers`, a `view` declaration, its `files` and 
 `files` maps each location to `{"text": …}`, the file's UTF-8 text, or to `{"base64": …}` for bytes that are not UTF-8; the declaration's `size` and `sha256` are those of the bytes.
 A case of `nemar.lines` also lists `snaps`, each a pointer `x` and the `row` it reads, and a case of bins by edges lists `locates`, each a `value` and the `bin` that holds it (-1 for underflow, the number of bins for overflow).
 A case of `nemar.spectrum` lists `maps`: the frequencies `hz`, the `rows` they snap to, and the model of the spectrum's scalp maps at those rows, or the word that `refused` them ([presets.md](presets.md#nemarspectrum-version-1)); all three are `null` when the lines are not drawn.
+It also lists `preset`, the outcome of the preset's own check (`neuroschema.views.presets.check_preset`): with `sensors_mismatch`, the outcome `fallback`, the lines are not drawn either.
 A model of `nemar.sensor-field` runs the scalp-map algorithm on each map and so needs its reference, which needs numpy (the `views` extra).
 A case or a refusal may carry `caps`, which take the place of the registry's caps of the same names for that case alone, so that small files can reach a cap.
 Each refusal has a `name`, what it `covers`, a `view`, its `files`, the `word` and the `downloads` still offered: the view is refused and nothing is drawn.
 
 An implementation parses the file with its JSON parser, builds each case's model and compares it with `model`, texts exactly and numbers by binary64 equality that tells -0 from 0, as JavaScript's `Object.is` does.
-A model holds no negative zero: a cell or an edge of -0 reads as 0, and a label prints it as `0`.
+A model holds no negative zero, in any number it holds: a cell, an edge, a count, an underflow or overflow, a total, a limit or a value derived from them is 0 where its text or its arithmetic gives -0, and a label prints it as `0`.
+JavaScript's `JSON.parse` reads a count written `-0` or `-0.0` as -0, and a sum of -0 counts is -0, so a JavaScript renderer adds 0 to each such number (`x + 0` is 0 for -0); the vectors hold a histogram whose counts and an edge are written that way.
 
 ## The verdict corpus
 
 `kinds-verdicts.v1.json` has `format`, `spec`, `description` and `cases`.
-Each case has a `name`, what it `covers`, the `schema` it is checked against (`view` for `view.schema.json#/$defs/view`, or a content schema's file name), the `instance`, the verdict `valid`, and `errors`: for each error jsonschema reports, the failing keyword and the instance path.
+Each case has a `name`, what it `covers`, the `schema` it is checked against (`view` for `view.schema.json#/$defs/view`, `dataQuality` for a recording's `dataQuality` entry, or a content schema's file name), the `instance`, the verdict `valid`, and `errors`: for each error jsonschema reports, the failing keyword and the instance path.
 Only `valid` binds an implementation; `errors` say why, for a reader.
 The corpus covers the envelope, each generic kind of this page and the histogram content; presets add their own cases.
 
 `scripts/generate_kind_vectors.py` writes both files from the cases it defines, with the Python reference and jsonschema, and `--check` fails when a committed file differs from what it would write.
+`scripts/ajv/check.ts`, which CI runs as the job `ajv`, compiles every schema with ajv 8 and replays the corpus against it, so the two engines are held to one verdict.
+It adds each file as it is, under its own absolute `$id` (the relative `$ref`s then resolve by RFC 3986), and compiles in strict mode: `strict: true` with `strictRequired: false` (a `required` in an `if`, `not` or `oneOf` branch names a property its parent defines), the annotation keyword `x-extension-managers` declared, and formats not validated, as in the Python reference.
+A TypeScript renderer that validates with ajv loads the schemas the same way.

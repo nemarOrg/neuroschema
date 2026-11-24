@@ -40,8 +40,10 @@ from neuroschema.views import (
 )
 from neuroschema.views.models import (
     content_validator,
+    data_quality_validator,
     histogram_content_validator,
     number_text,
+    schema_validator,
     view_validator,
 )
 
@@ -200,6 +202,15 @@ def test_locate_vectors_replay(case):
     ]
 
 
+def test_nan_has_no_bin():
+    """Every comparison with NaN is false, so a bin search would put it in a bin
+    silently; it is refused, and a renderer marks nothing (L6)."""
+    with pytest.raises(ValueError, match="NaN"):
+        locate_bin([0.0, 1.0, 2.0], float("nan"))
+    assert locate_bin([0.0, 1.0, 2.0], float("-inf")) == -1
+    assert locate_bin([0.0, 1.0, 2.0], float("inf")) == 2
+
+
 def test_model_vectors_header():
     assert MODELS["format"] == MODELS_FORMAT == "nemar.kinds-models.v1"
     assert (ROOT / MODELS["spec"]).resolve() == SPEC
@@ -208,12 +219,17 @@ def test_model_vectors_header():
 
 
 def test_files_hold_the_declared_digests():
-    """Every file of a drawn case is the declared bytes; the refusals hold the rest."""
+    """Every file of a drawn case is the declared bytes; the refusals hold the rest.
+    A file whose declared size is over the case's cap on bytes is never fetched,
+    so its bytes may differ (order_bytes_cap_before_digest)."""
     for case in CASES:
         files = decode(case["files"])
+        cap = case.get("caps", {}).get(
+            "bytes_per_role", REGISTRY["caps"]["bytes_per_role"]
+        )
         for entry in case["view"].get("data", []):
             data = files.get(entry["location"])
-            if data is not None:
+            if data is not None and entry["size"] <= cap:
                 assert len(data) == entry["size"], case["name"]
                 assert hashlib.sha256(data).hexdigest() == entry["sha256"], case["name"]
 
@@ -290,6 +306,10 @@ def test_every_word_has_a_vector():
 VERDICT_CASES = VERDICTS["cases"]
 VALIDATORS = {
     "view": view_validator(),
+    "dataQuality": data_quality_validator(),
+    "definitions/dataPaper.schema.json": schema_validator(
+        "definitions/dataPaper.schema.json"
+    ),
     "content.nemar.histogram.v1.schema.json": histogram_content_validator(),
     IC_CLASSES: content_validator(IC_CLASSES),
 }
@@ -327,8 +347,9 @@ def test_verdict_corpus_covers_each_kind_both_ways():
             group = case["schema"]
         groups.setdefault(group, set()).add(case["valid"])
     contents = sorted(p.name for p in SCHEMAS.glob("content.*.schema.json"))
-    assert set(VALIDATORS) == {"view", *contents}
-    for group in [*known, "env", *contents]:
+    others = {"dataQuality", "definitions/dataPaper.schema.json"}
+    assert set(VALIDATORS) == {"view", *others, *contents}
+    for group in [*known, "env", *others, *contents]:
         assert groups.get(group) == {True, False}, group
 
 

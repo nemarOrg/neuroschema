@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "view.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/definitions/view.schema.json",
   "title": "View Declaration",
   "description": "A quality view: data that a browser draws, declared by the recipe or plugin that wrote it. A library of $defs; the root constrains nothing, and $defs/view is the declaration. Every view is checked against this envelope. A kind and version that views/registry.json lists is also checked against its schema in schema/views/, and so is a transform it lists; any other kind or transform passes on the envelope alone, and a renderer draws it by its base or as a table (docs/views.md).",
   "$defs": {
@@ -31,7 +31,16 @@
         },
         "base": {
           "$ref": "../definitions/processingTypes.schema.json#/$defs/kindName",
-          "description": "The generic kind a preset draws over. Required for a preset, absent for a generic kind (each kind's schema says which); always given with base_version."
+          "not": {
+            "enum": [
+              "nemar.spectrum",
+              "nemar.ic-maps",
+              "nemar.ic-classes",
+              "nemar.ic-activity",
+              "nemar.signal-window"
+            ]
+          },
+          "description": "The generic kind a preset draws over. Required for a preset, absent for a generic kind (each kind's schema says which); always given with base_version. Never one of the presets views/registry.json lists: a preset is drawn over a generic kind and is no base itself."
         },
         "base_version": {
           "type": "integer",
@@ -106,6 +115,7 @@
           ],
           "properties": {
             "data": {
+              "type": "array",
               "minItems": 1
             }
           }
@@ -116,6 +126,7 @@
           ],
           "properties": {
             "inputs": {
+              "type": "array",
               "minItems": 1
             }
           }
@@ -465,12 +476,13 @@
         },
         "format": {
           "$ref": "../definitions/processingTypes.schema.json#/$defs/formatName",
-          "description": "The file's format; views/registry.json gives its grammar. A tsv or json file's location ends in .tsv or .json."
+          "description": "The file's format; views/registry.json gives its grammar. A tsv or json file's location ends in .tsv or .json, and a location that ends in .tsv or .json, in any case, is a file of that format. A renderer offers a file of a format the registry does not list for download only, as an attachment of type application/octet-stream (docs/views.md, Formats)."
         },
         "size": {
           "type": "integer",
           "minimum": 1,
-          "description": "Size of the file in bytes."
+          "maximum": 4194304,
+          "description": "Size of the file in bytes; at most views/registry.json caps.bytes_per_role (4,194,304), which a renderer checks before it fetches the file."
         },
         "sha256": {
           "$ref": "../definitions/processingTypes.schema.json#/$defs/sha256",
@@ -597,6 +609,52 @@
               "location": {
                 "type": "string",
                 "pattern": "\\.json$(?!\n)"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "location": {
+                "type": "string",
+                "pattern": "\\.[Tt][Ss][Vv]$(?!\n)"
+              }
+            },
+            "required": [
+              "location"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "format": {
+                "const": "tsv",
+                "description": "A file named .tsv, in any case, is a tsv file: the extension names the format in both directions."
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "location": {
+                "type": "string",
+                "pattern": "\\.[Jj][Ss][Oo][Nn]$(?!\n)"
+              }
+            },
+            "required": [
+              "location"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "format": {
+                "const": "json",
+                "description": "A file named .json, in any case, is a json file."
               }
             }
           }
@@ -807,7 +865,8 @@
         "size": {
           "type": "integer",
           "minimum": 1,
-          "description": "Size of the file in bytes."
+          "maximum": 4194304,
+          "description": "Size of the file in bytes; at most views/registry.json caps.bytes_per_role (4,194,304), which a renderer checks before it fetches the file."
         }
       },
       "additionalProperties": false
