@@ -12,9 +12,8 @@
 
 ## Environment Setup
 ```bash
-uv venv && source .venv/bin/activate
-uv pip install -e ".[dev]"
-pytest  # Real tests only, NO MOCKS
+uv sync --extra dev --extra views  # views: numpy, for the reference renderers
+uv run pytest  # Real tests only, NO MOCKS
 ```
 
 ## Schema Design Principles
@@ -42,8 +41,11 @@ pytest tests/ --cov
 # Format/lint Python
 ruff check --fix . && ruff format .
 
-# Validate a JSON file against schema
-python -m neuroschema.validate examples/schema1.json
+# Validate a JSON file against schema (read as I-JSON)
+uv run python -m neuroschema.validate examples/schema1.json
+
+# Compile the schemas with ajv in strict mode (CI job ajv)
+bun install --frozen-lockfile --cwd scripts/ajv && bun scripts/ajv/check.ts
 ```
 
 ## Key Files

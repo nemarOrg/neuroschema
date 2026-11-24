@@ -55,28 +55,43 @@ schema/
     processing.schema.json         # Checkpoint outcomes, per recipe
     rawDetail.schema.json          # Per-channel arrays, BIDS sidecars
   views/
-    kind.nemar.table.v1.schema.json  # One schema per registered view kind and version
-    content.nemar.histogram.v1.schema.json  # Content of a JSON role, per content kind and version
+    kind.<kind>.v<N>.schema.json   # One schema per registered view kind and version (generic kinds and presets)
+    content.<kind>.v<N>.schema.json  # Content of a JSON role, per content kind and version
+    transform.<name>.schema.json   # One schema per registered transform (sensor-layout, ic-activity)
 views/
-  registry.json                    # View kinds, transforms, formats, reserved dimensions, caps
-  vectors/                         # Test vectors for the view algorithms, models and verdicts
+  registry.json                    # View kinds, transforms, algorithms, formats, reserved dimensions, caps
+  montages/                        # Standard montages for nemar.sensor-labels.v1, with PROVENANCE.json
+  vectors/                         # Test vectors for the view algorithms, models, preset checks and verdicts
+src/neuroschema/
+  validate.py                      # The validator and CLI (schemas resolved from schema/, nothing fetched)
+  ijson.py                         # The I-JSON reader every JSON text goes through
+  views/                           # Python references: registry, digest, models, presets, sensor maps, activations
 scripts/
-  generate_kind_vectors.py         # Writes the generic-kind model and verdict vectors
+  generate_kind_vectors.py         # Writes the generic-kind model, preset-check and verdict vectors
+  generate_view_vectors.py         # Writes the sensor-field and sensor-layout vectors from eegprep
   generate_ic_activity_vectors.py  # Writes the nemar.ic-activity.v1 vectors from frozen inputs
+  generate_montages.py             # Writes views/montages from MNE-Python
+  ajv/check.ts                     # Compiles every schema with ajv in strict mode (CI job ajv)
 ```
 
 ## Quick Start
 
 ```bash
-# Install
-uv venv && source .venv/bin/activate
-uv pip install -e ".[dev]"
+# Install, with the reference renderers' numpy (the extra views)
+uv sync --extra dev --extra views
 
-# Validate a document
-python -m neuroschema.validate examples/schema1.json
+# Validate a document (read as I-JSON; exit code 1 when invalid, 2 when unreadable)
+uv run python -m neuroschema.validate examples/schema1.json
 
 # Run tests
-pytest tests/
+uv run pytest tests/
+
+# Regenerate or check the vectors (the group vectors holds eegprep, MNE-Python and scipy)
+uv run python scripts/generate_kind_vectors.py --check
+uv run --python 3.12 --extra views --group vectors python scripts/generate_ic_activity_vectors.py --check
+
+# Compile the schemas with ajv, as the CI job ajv does
+bun install --frozen-lockfile --cwd scripts/ajv && bun scripts/ajv/check.ts
 ```
 
 ## Documentation
@@ -88,6 +103,10 @@ pytest tests/
 - [Generic Kinds](docs/views/generic-kinds.md) -- the models a renderer builds for tables, line charts, heatmaps and histograms
 - [Presets](docs/views/presets.md) -- spectrum, component maps, component classes, activations and the signal window, each over a generic kind
 - [Component Activations](docs/views/ic-activity.md) -- the transform `nemar.ic-activity.v1` and its display filter
+- [Scalp Maps](docs/views/sensor-field.md) -- the algorithm `nemar.sensor-field.v1` and the kind that draws it
+- [Sensor Labels](docs/views/sensor-labels.md) -- `nemar.sensor-labels.v1`: positions from channel names and standard montages
+- [Sensor Layout](docs/views/sensor-layout.md) -- the transform `nemar.sensor-layout.v1`: three-dimensional positions to a layout
+- [View Digest](docs/views/view-digest.md) -- `nemar.view-digest.v1`, the SHA-256 of a declaration's canonical JSON
 - [EEGDash Adapter](docs/adapter-eegdash.md) -- field mapping for EEGDash migration
 - [DataCite Adapter](docs/adapter-datacite.md) -- field mapping for DOI registration
 

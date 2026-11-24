@@ -1,8 +1,13 @@
-"""The view vocabulary: the registry of kinds, the view digest and the models.
+"""The view vocabulary: the registry of kinds, the view digest and the references.
 
 See ``docs/views.md``. The schemas live in ``schema/definitions/view.schema.json``
-and ``schema/views/``; this package reads the registry, computes digests and
-builds the models of the generic kinds (``docs/views/generic-kinds.md``).
+and ``schema/views/``. This package reads the registry and applies the renderer
+rule (``registry``), computes digests (``digest``), and holds the Python
+reference of each algorithm the vectors pin: the generic kinds' models
+(``models``, ``docs/views/generic-kinds.md``), the presets' checks
+(``presets``), and, with numpy (the extra ``views``), the scalp map
+(``sensor_field``), the layout from positions (``sensor_layout``), positions from
+labels (``sensor_labels``) and the component activations (``ic_activity``).
 """
 
 from neuroschema.views.digest import (

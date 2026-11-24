@@ -21,8 +21,8 @@ dev = [
     "ruff>=0.8",
     "coverage>=7.0",
 ]
-# The Python reference renderer for the view algorithms (neuroschema.views.sensor_field,
-# neuroschema.views.sensor_layout): numpy only.
+# The Python reference renderers that need numpy (neuroschema.views.sensor_field,
+# sensor_layout and ic_activity); the rest of neuroschema.views is pure Python.
 views = [
     "numpy>=1.26",
 ]

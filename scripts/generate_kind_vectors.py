@@ -1,14 +1,17 @@
-"""Write the generic-kind vectors from the cases defined here.
+"""Write the generic-kind, preset-check and verdict vectors from the cases here.
 
 Writes ``views/vectors/kinds-models.v1.json`` (each case's model, from the
-Python reference ``neuroschema.views.build_model``) and
+Python reference ``neuroschema.views.build_model``),
+``views/vectors/preset-checks.v1.json`` (each preset case's outcome, from
+``neuroschema.views.presets.check_preset``) and
 ``views/vectors/kinds-verdicts.v1.json`` (each instance's verdict, from
-jsonschema). ``docs/views/generic-kinds.md`` says how a renderer replays them.
+jsonschema, on the binary64 reading). ``docs/views/generic-kinds.md`` and
+``docs/views/presets.md`` say how a renderer replays them.
 
 Usage::
 
-    uv run python scripts/generate_kind_vectors.py           # write both files
-    uv run python scripts/generate_kind_vectors.py --check   # fail if either differs
+    uv run python scripts/generate_kind_vectors.py           # write the three files
+    uv run python scripts/generate_kind_vectors.py --check   # fail if any differs
 """
 
 from __future__ import annotations
