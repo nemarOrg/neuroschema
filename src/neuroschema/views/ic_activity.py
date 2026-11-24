@@ -20,13 +20,13 @@ optional extra ``views``.
 from __future__ import annotations
 
 import hashlib
-import json
 import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 import numpy as np
 
+from neuroschema.views.digest import canonicalize
 from neuroschema.views.models import Refusal, Tsv, cell_value, read_tsv
 
 IC_ACTIVITY = "nemar.ic-activity.v1"
@@ -208,17 +208,12 @@ def unit_factors(
 
 
 def channel_types_sha256(channel_types: Sequence[Sequence[str | None]]) -> str:
-    """The digest ``decomposition_input.channel_types_sha256`` states, as
-    nemar-process computes it: SHA-256 of ``{"channel_types": [...]}`` as JSON
-    with sorted keys, no spaces, non-ASCII escaped, and one final line feed."""
-    text = json.dumps(
-        {"channel_types": [list(row) for row in channel_types]},
-        sort_keys=True,
-        separators=(",", ":"),
-        allow_nan=False,
-        ensure_ascii=True,
-    )
-    return hashlib.sha256((text + "\n").encode("utf-8")).hexdigest()
+    """The digest ``decomposition_input.channel_types_sha256`` states: SHA-256 of
+    the RFC 8785 canonical JSON of ``{"channel_types": [...]}``, as UTF-8, the
+    canonicalization of ``nemar.view-digest.v1`` (no ASCII escaping, no final
+    line feed), so a renderer in any language can verify it."""
+    document = {"channel_types": [list(row) for row in channel_types]}
+    return hashlib.sha256(canonicalize(document)).hexdigest()
 
 
 # ── The multiply ──────────────────────────────────────────────────────────

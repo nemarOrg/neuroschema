@@ -39,6 +39,7 @@ from pathlib import Path
 import numpy as np
 
 from neuroschema.views import ic_activity as ia
+from neuroschema.views.digest import canonicalize
 
 ROOT = Path(__file__).resolve().parent.parent
 VECTORS_PATH = ROOT / "views" / "vectors" / "ic-activity.v1.json"
@@ -1032,6 +1033,46 @@ def filter_cases() -> list[dict]:
     return out
 
 
+# Each row of a loaded recording as [label, type]; the labels outside ASCII are
+# written as themselves in RFC 8785, where Python's json.dumps would escape them.
+CHANNEL_TYPES = [
+    (
+        "ascii",
+        "Labels and types in ASCII, and an untyped row.",
+        [["Fp1", "EEG"], ["Fp2", "EEG"], ["ECG", "ECG"], ["Status", None]],
+    ),
+    (
+        "outside_ascii",
+        "Labels outside ASCII: a micro sign, a diaeresis, a CJK label "
+        "and a character beyond the Basic Multilingual Plane, each written as itself.",
+        [
+            ["\u00b5-ref", "EEG"],
+            ["\u00d6z", "EEG"],
+            ["\u96fb\u6975", None],
+            ["\U0001d6fc", "EEG"],
+        ],
+    ),
+    (
+        "escapes",
+        "A quote, a backslash and a tab in labels: the only escapes RFC 8785 writes.",
+        [['Fp1 "a"', "EEG"], ["C\\z", "EEG"], ["P\tz", None]],
+    ),
+]
+
+
+def channel_types_digests() -> list[dict]:
+    return [
+        {
+            "name": name,
+            "covers": covers,
+            "channel_types": typed,
+            "canonical": canonicalize({"channel_types": typed}).decode("utf-8"),
+            "sha256": ia.channel_types_sha256(typed),
+        }
+        for name, covers, typed in CHANNEL_TYPES
+    ]
+
+
 COEFFICIENTS = [(250.0, 1.0), (250.0, 40.0), (500.0, 0.1), (1000.0, 1.0), (128.0, 0.5)]
 
 
@@ -1158,14 +1199,17 @@ def document() -> dict:
             "and factors exactly, time_s exactly, and activations and filtered "
             "within tolerance.parity times the component's largest magnitude in "
             "expected.activations. Each refusal is refused with word. store_checks "
-            "give the digest states; coefficients and filter_cases hold the display "
-            "filter alone, compared within tolerance.parity times the largest "
+            "give the digest states; channel_types_digests give the RFC 8785 text "
+            'and SHA-256 of {"channel_types": ...}; coefficients and filter_cases '
+            "hold the display filter alone, compared within tolerance.parity times "
+            "the largest "
             "magnitude of the input row."
         ),
         "tolerance": {"parity": PARITY},
         "cases": [_case(case) for case in cases],
         "refusals": [_refusal(case) for case in refused],
         "store_checks": _store_checks(),
+        "channel_types_digests": channel_types_digests(),
         "coefficients": coefficients(),
         "filter_cases": filter_cases(),
     }

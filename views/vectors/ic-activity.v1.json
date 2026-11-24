@@ -1,7 +1,7 @@
 {
   "format": "nemar.ic-activity.v1",
   "spec": "docs/views/ic-activity.md",
-  "description": "Cases every renderer of nemar.ic-activity reproduces. For each case, decode files (UTF-8 text), take the store (labels, units, scale and offset per row, digital values rows by samples, rate, and the digest the serving copy publishes or null), compute the window's activations (window.start, window.count samples) with the caps of the registry, or the case's caps in their place, and compare: state, components, rows and factors exactly, time_s exactly, and activations and filtered within tolerance.parity times the component's largest magnitude in expected.activations. Each refusal is refused with word. store_checks give the digest states; coefficients and filter_cases hold the display filter alone, compared within tolerance.parity times the largest magnitude of the input row.",
+  "description": "Cases every renderer of nemar.ic-activity reproduces. For each case, decode files (UTF-8 text), take the store (labels, units, scale and offset per row, digital values rows by samples, rate, and the digest the serving copy publishes or null), compute the window's activations (window.start, window.count samples) with the caps of the registry, or the case's caps in their place, and compare: state, components, rows and factors exactly, time_s exactly, and activations and filtered within tolerance.parity times the component's largest magnitude in expected.activations. Each refusal is refused with word. store_checks give the digest states; channel_types_digests give the RFC 8785 text and SHA-256 of {\"channel_types\": ...}; coefficients and filter_cases hold the display filter alone, compared within tolerance.parity times the largest magnitude of the input row.",
   "tolerance": {
     "parity": 1e-06
   },
@@ -144,7 +144,7 @@
               ["E29", "EEG"],
               ["E30", "EEG"]
             ],
-            "channel_types_sha256": "359c537b9222fb03c6f5388c8b3775b16b55ee034c4d2a6a32ba4af16c94363b",
+            "channel_types_sha256": "8d29e6ee4e19fa7834ddac54652e684d63e74458d72670c53567f2799adaf416",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -385,7 +385,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "ad5fb18bab44c678aefb5ffdaaaa2641bfea06c18b18eb3dcc97db63a8cd15b8",
+            "channel_types_sha256": "cb3f6d87071b6b9b2fa857f6e5c9f992a810a1c927b5436f3e86b3c28b605751",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -551,7 +551,7 @@
               ["Pz", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "137f6918352e29100a13b78fad159bbb8fa5ef39d669cf16490487c00456ac9d",
+            "channel_types_sha256": "d49e332781ae04473bcad2dfda97f6b29b458ebba0154d54655a69d248e10300",
             "reference": "average",
             "unit": "uV"
           }
@@ -713,7 +713,7 @@
               ["Pz", "EEG"],
               ["O1", "EEG"]
             ],
-            "channel_types_sha256": "dfc53d31cb847e5cae7b8a6ae8d99c315f3acae8544f1743691ee20943e2f885",
+            "channel_types_sha256": "63a30e51cfb2c859395d721652a00f76dcdc78b9a9c6b3788b2d79fdafd46171",
             "reference": "average",
             "unit": "uV"
           }
@@ -870,7 +870,7 @@
               ["Cz", "EEG"],
               ["Pz", "EEG"]
             ],
-            "channel_types_sha256": "9ee24fbd3bf6384d57ee038ccd0a08dc3fd36a24cfbfd83f4f2ef67b2dac556c",
+            "channel_types_sha256": "c0b180e476c1ddec917ff0e95c59ecf3538829799d9d982d6ed5be474ba5f193",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -1030,7 +1030,7 @@
               ["Cz", "EEG"],
               ["Oz", "EEG"]
             ],
-            "channel_types_sha256": "0c3d7e78b339cf6fe64d85c48622945f9a02b6c7fcde1e7985406de0b10e9a50",
+            "channel_types_sha256": "6f709ca957038fea60e86224075595e81ddca286402542b61e0673d381e9427c",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -1191,7 +1191,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -1358,7 +1358,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -1525,7 +1525,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -1692,7 +1692,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -1859,7 +1859,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -2026,7 +2026,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -2195,7 +2195,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -2341,7 +2341,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -2490,7 +2490,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -2639,7 +2639,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -2788,7 +2788,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -2937,7 +2937,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -3086,7 +3086,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -3235,7 +3235,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -3384,7 +3384,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -3533,7 +3533,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -3682,7 +3682,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -3831,7 +3831,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -3980,7 +3980,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -4132,7 +4132,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -4284,7 +4284,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -4436,7 +4436,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -4585,7 +4585,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -4734,7 +4734,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -4883,7 +4883,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -5032,7 +5032,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -5181,7 +5181,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -5330,7 +5330,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -5479,7 +5479,7 @@
               ["O1", "EEG"],
               ["Oz", "EEG"]
             ],
-            "channel_types_sha256": "6dc54c7414fceb022b9c51a05656522cdacf96d084f82783c3bc92d7d7fe289c",
+            "channel_types_sha256": "2b55c3d4577aa6b426b7386812bb9a41efce69a489f5a15be2f798dd7d2801a3",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -5628,7 +5628,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "0399fb135f1c7934d5f249c5d088a01e7037c216e6ac19d610d41d12325f9132",
+            "channel_types_sha256": "47e4bf12c291f7d7c25483a9252f2f760d25c40c12ed0c7b62e2531e4ad600d0",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -5777,7 +5777,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -5927,7 +5927,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -6076,7 +6076,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -6225,7 +6225,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -6374,7 +6374,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -6523,7 +6523,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -6672,7 +6672,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -6821,7 +6821,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -6970,7 +6970,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -7119,7 +7119,7 @@
               ["O1", "EEG"],
               ["Oz", "EEG"]
             ],
-            "channel_types_sha256": "6dc54c7414fceb022b9c51a05656522cdacf96d084f82783c3bc92d7d7fe289c",
+            "channel_types_sha256": "2b55c3d4577aa6b426b7386812bb9a41efce69a489f5a15be2f798dd7d2801a3",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -7268,7 +7268,7 @@
               ["O1", "EEG"],
               ["O2", "EEG"]
             ],
-            "channel_types_sha256": "8be1766dc463b3fc23600f3fc152daa1bca4f0364ed14de37eb5dec9f83f483b",
+            "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -7335,6 +7335,43 @@
       "declared": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "published": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
       "outcome": "store_digest_mismatch"
+    }
+  ],
+  "channel_types_digests": [
+    {
+      "name": "ascii",
+      "covers": "Labels and types in ASCII, and an untyped row.",
+      "channel_types": [
+        ["Fp1", "EEG"],
+        ["Fp2", "EEG"],
+        ["ECG", "ECG"],
+        ["Status", null]
+      ],
+      "canonical": "{\"channel_types\":[[\"Fp1\",\"EEG\"],[\"Fp2\",\"EEG\"],[\"ECG\",\"ECG\"],[\"Status\",null]]}",
+      "sha256": "d03ec3526a2e43b035afe1b9a6a3340faec1c177b697a856c7991fe70c1a4af4"
+    },
+    {
+      "name": "outside_ascii",
+      "covers": "Labels outside ASCII: a micro sign, a diaeresis, a CJK label and a character beyond the Basic Multilingual Plane, each written as itself.",
+      "channel_types": [
+        ["µ-ref", "EEG"],
+        ["Öz", "EEG"],
+        ["電極", null],
+        ["𝛼", "EEG"]
+      ],
+      "canonical": "{\"channel_types\":[[\"µ-ref\",\"EEG\"],[\"Öz\",\"EEG\"],[\"電極\",null],[\"𝛼\",\"EEG\"]]}",
+      "sha256": "21a803cf4b8eda9dc1f460de28d0ba1c4be283b077472b89123ff899c69d27f2"
+    },
+    {
+      "name": "escapes",
+      "covers": "A quote, a backslash and a tab in labels: the only escapes RFC 8785 writes.",
+      "channel_types": [
+        ["Fp1 \"a\"", "EEG"],
+        ["C\\z", "EEG"],
+        ["P\tz", null]
+      ],
+      "canonical": "{\"channel_types\":[[\"Fp1 \\\"a\\\"\",\"EEG\"],[\"C\\\\z\",\"EEG\"],[\"P\\tz\",null]]}",
+      "sha256": "cbaf3dfb825ba358f349e37000bedd9c3a1773e2bca9bf5cd5de2fe033a8cfe0"
     }
   ],
   "coefficients": [

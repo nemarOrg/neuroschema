@@ -391,7 +391,7 @@
         },
         "channel_types_sha256": {
           "$ref": "../definitions/processingTypes.schema.json#/$defs/sha256",
-          "description": "The SHA-256, as 64 lowercase hexadecimal digits, of the UTF-8 bytes of the JSON text of {\"channel_types\": channel_types} with sorted keys, no spaces (separators , and :), every character outside ASCII escaped as \\uXXXX in lowercase hexadecimal, and one final line feed: Python's json.dumps(document, sort_keys=True, separators=(\",\", \":\"), ensure_ascii=True) plus \"\\n\", as nemar-process computes it."
+          "description": "The SHA-256, as 64 lowercase hexadecimal digits, of the RFC 8785 canonical JSON of {\"channel_types\": channel_types}, as UTF-8: the canonicalization of nemar.view-digest.v1 (keys sorted by UTF-16 code units, no whitespace, strings with only the escapes RFC 8785 requires, so a character outside ASCII is written as itself, and no final line feed)."
         }
       },
       "allOf": [

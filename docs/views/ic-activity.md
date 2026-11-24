@@ -95,8 +95,8 @@ The kind's parameters:
 | `max_window_s` | The longest window, in seconds, a renderer computes at once; at most 30. |
 | `decomposition_input` | What the decomposition was given, the record's block of that name exactly as nemar-process writes it, closed: `source` (`archive` or `serving_copy`), `preprocessing` (the steps that changed its input, in the order they ran, each `{step, function}`), `channels` (its channels, the matrix's columns, in the recording's order), `channel_types` (every row of the loaded recording as `[label, type]`, the type null for an untyped row), `channel_types_sha256`, `reference`, `unit`, and, for `serving_copy` only, `store` (`{path, group, content_sha256}`). |
 
-`channel_types_sha256` is the SHA-256, in lowercase hexadecimal, of the UTF-8 bytes of `{"channel_types": channel_types}` as JSON with sorted keys, no spaces, every character outside ASCII escaped as `\uXXXX` (lowercase), and one final line feed: Python's `json.dumps(document, sort_keys=True, separators=(",", ":"), ensure_ascii=True) + "\n"`, nemar-process's `canonical_text`.
-`neuroschema.views.ic_activity.channel_types_sha256` computes it; a renderer does not need it to draw.
+`channel_types_sha256` is the SHA-256, in lowercase hexadecimal, of the RFC 8785 canonical JSON of `{"channel_types": channel_types}` as UTF-8: the canonicalization of [`nemar.view-digest.v1`](view-digest.md#canonical-form), so a character outside ASCII is written as itself, not escaped, and there is no final line feed.
+`neuroschema.views.ic_activity.channel_types_sha256` computes it, and the vectors' `channel_types_digests` hold cases with labels outside ASCII; a renderer does not need it to draw, but can verify it.
 
 The schema checks that a decomposition of the archive declares a store of profile `archive` and matches by `label`, and that one of the serving copy declares a store of profile `serving`, whose `content_sha256` is then a digest.
 The writer also makes sure that `matrix` is the `unmixing` input's location, that `rows` has one entry per column, that the matrix's header is `columns` and `decomposition_input.channels`, that the components table has one row per matrix row, that the first of `shaded.files` is the `badsegments` input's location when there is one, and, for the serving copy, that `decomposition_input.store` names the `signal` store and its digest.
@@ -260,6 +260,7 @@ A filter case matches when every value is within 1e-6 times the largest magnitud
 - Each refusal has the same fields as a case, with the `word` in place of `expected`.
   The refusals cover each word, and each pair of neighboring checks with two faults, so a renderer that runs two checks in the other order gives the other word.
 - `store_checks` lists the digest states: a `declared` and a `published` digest (each a digest or null) and the `outcome`.
+- `channel_types_digests` lists `channel_types` lists with their RFC 8785 `canonical` text and `sha256`, among them labels outside ASCII and untyped rows.
 - `coefficients` lists `b`, `a` and `zi` for several rates and cutoffs; `filter_cases` lists a `rate`, a `highpass_hz`, the `padding` p, the `input` rows and the `expected` rows, among them windows of 1 to 11 samples around the padding.
 
 The expected values are the Python reference's, which follows this page's order of operations; only the tangent in the coefficients may differ between platforms in its last bit.

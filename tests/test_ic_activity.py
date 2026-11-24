@@ -28,6 +28,7 @@ np = pytest.importorskip("numpy")
 
 from neuroschema.views import ic_activity as ia  # noqa: E402
 from neuroschema.views import load_registry  # noqa: E402
+from neuroschema.views.digest import canonicalize  # noqa: E402
 from neuroschema.views.models import view_validator  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -552,12 +553,39 @@ def test_the_matrix_reads_numbers_only():
     assert raised.value.word == "cell_not_number"
 
 
-def test_the_channel_types_digest_is_nemar_process_canonical_text():
-    """SHA-256 of json.dumps({"channel_types": ...}, sort_keys, compact,
-    ensure_ascii) plus a line feed, as nemarOrg/nemar-process#81 computes it."""
-    typed = [["Fp1", "EEG"], ["\u00b5", None], ["ECG", "ECG"]]
-    text = '{"channel_types":[["Fp1","EEG"],["\\u00b5",null],["ECG","ECG"]]}\n'
-    assert ia.channel_types_sha256(typed) == hashlib.sha256(text.encode()).hexdigest()
+DIGESTS = VECTORS["channel_types_digests"]
+
+
+@pytest.mark.parametrize("case", DIGESTS, ids=[c["name"] for c in DIGESTS])
+def test_channel_types_digests_replay(case):
+    """RFC 8785, as nemar.view-digest.v1 canonicalizes: the text, then its hash."""
+    assert canonicalize({"channel_types": case["channel_types"]}) == (
+        case["canonical"].encode("utf-8")
+    )
+    assert (
+        hashlib.sha256(case["canonical"].encode("utf-8")).hexdigest()
+        == (case["sha256"])
+    )
+    assert ia.channel_types_sha256(case["channel_types"]) == case["sha256"]
+
+
+def test_the_digest_writes_labels_outside_ascii_as_themselves():
+    """Fails for Python's ensure_ascii escaping or a final line feed, which a
+    TypeScript port of RFC 8785 would not reproduce."""
+    case = next(c for c in DIGESTS if c["name"] == "outside_ascii")
+    assert "\u00b5" in case["canonical"] and "\\u" not in case["canonical"]
+    assert not case["canonical"].endswith("\n")
+    escaped = json.dumps(
+        {"channel_types": case["channel_types"]},
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+    )
+    for text in (escaped, escaped + "\n", case["canonical"] + "\n"):
+        assert hashlib.sha256(text.encode()).hexdigest() != case["sha256"]
+
+
+def test_every_declared_channel_types_digest_is_rfc_8785():
     for case in [*CASES, *REFUSALS]:
         given = case["view"]["parameters"]["decomposition_input"]
         assert (
