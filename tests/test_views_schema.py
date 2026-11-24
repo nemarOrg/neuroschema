@@ -478,9 +478,36 @@ class TestViewData:
         ("fmt", "location"), [("tsv", "views/a.json"), ("json", "views/a.tsv")]
     )
     def test_known_format_matches_extension(self, fmt, location):
+        """Both directions fail: the format's extension, and the extension's format."""
         view = unknown_kind()
         view["data"][0].update(format=fmt, location=location)
-        assert view_errors(view) == {("pattern", "data/0/location")}
+        assert view_errors(view) == {
+            ("pattern", "data/0/location"),
+            ("const", "data/0/format"),
+        }
+
+    @pytest.mark.parametrize(
+        ("fmt", "location", "names"),
+        [
+            ("html", "views/a.tsv", "tsv"),
+            ("csv", "views/a.json", "json"),
+            ("html", "views/a.TsV", "tsv"),
+            ("svg", "views/a.JSON", "json"),
+        ],
+    )
+    def test_extension_names_the_format(self, fmt, location, names):
+        """A .tsv or .json file, in any case, is of that format (L4, probe p18)."""
+        view = unknown_kind()
+        view["data"][0].update(format=fmt, location=location)
+        assert view_errors(view) == {("const", "data/0/format")}
+
+    @pytest.mark.parametrize(
+        ("fmt", "location"), [("html", "views/index.html"), ("npy", "views/a.npy")]
+    )
+    def test_unregistered_format_under_its_own_extension(self, fmt, location):
+        view = unknown_kind()
+        view["data"][0].update(format=fmt, location=location)
+        assert view_errors(view) == set()
 
     @pytest.mark.parametrize("fmt", ["TSV", "t-sv", "x" * 17])
     def test_bad_format_name(self, fmt):
@@ -747,9 +774,23 @@ class TestRegistry:
                 "location"
             ]["pattern"]
             for r in rules
+            if "format" in r["if"]["properties"]
         }
+        by_extension = {
+            r["then"]["properties"]["format"]["const"]: r["if"]["properties"][
+                "location"
+            ]["pattern"]
+            for r in rules
+            if "location" in r["if"]["properties"]
+        }
+        assert set(by_format) == set(by_extension) == set(REGISTRY["formats"])
         for name, spec in REGISTRY["formats"].items():
             assert by_format[name] == re.escape(spec["extension"]) + "$(?!\n)"
+            any_case = "".join(
+                f"[{c.upper()}{c}]" if c.isalpha() else re.escape(c)
+                for c in spec["extension"]
+            )
+            assert by_extension[name] == any_case + "$(?!\n)"
 
     def test_registry_roles_match_each_kind_schema(self):
         """The registry's roles, formats and dims are what the kind schema admits."""

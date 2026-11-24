@@ -467,7 +467,7 @@
         },
         "format": {
           "$ref": "../definitions/processingTypes.schema.json#/$defs/formatName",
-          "description": "The file's format; views/registry.json gives its grammar. A tsv or json file's location ends in .tsv or .json."
+          "description": "The file's format; views/registry.json gives its grammar. A tsv or json file's location ends in .tsv or .json, and a location that ends in .tsv or .json, in any case, is a file of that format. A renderer offers a file of a format the registry does not list for download only, as an attachment of type application/octet-stream (docs/views.md, Formats)."
         },
         "size": {
           "type": "integer",
@@ -590,6 +590,52 @@
               "location": {
                 "type": "string",
                 "pattern": "\\.json$(?!\n)"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "location": {
+                "type": "string",
+                "pattern": "\\.[Tt][Ss][Vv]$(?!\n)"
+              }
+            },
+            "required": [
+              "location"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "format": {
+                "const": "tsv",
+                "description": "A file named .tsv, in any case, is a tsv file: the extension names the format in both directions."
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "location": {
+                "type": "string",
+                "pattern": "\\.[Jj][Ss][Oo][Nn]$(?!\n)"
+              }
+            },
+            "required": [
+              "location"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "format": {
+                "const": "json",
+                "description": "A file named .json, in any case, is a json file."
               }
             }
           }

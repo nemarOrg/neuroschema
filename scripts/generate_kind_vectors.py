@@ -1623,6 +1623,28 @@ def view_verdicts() -> list[tuple[str, str, dict]]:
             _set(table, "data/0/location", "x/channels.json"),
         ),
         (
+            "envelope_tsv_location_uppercase",
+            "A tsv file whose location ends .TSV.",
+            _set(table, "data/0/location", "x/channels.TSV"),
+        ),
+        (
+            "envelope_tsv_extension_other_format",
+            "A file named .tsv declared in another format (html): the extension "
+            "names the format, in both directions.",
+            _set(_set(unknown, "data/0/format", "html"), "data/0/location", "x/a.tsv"),
+        ),
+        (
+            "envelope_json_extension_other_format",
+            "A file named .JSON declared as csv.",
+            _set(_set(unknown, "data/0/format", "csv"), "data/0/location", "x/a.JSON"),
+        ),
+        (
+            "envelope_unregistered_format",
+            "A format the registry does not list, under its own extension, is "
+            "valid: a renderer offers it for download only.",
+            _set(_set(unknown, "data/0/format", "html"), "data/0/location", "x/a.html"),
+        ),
+        (
             "envelope_time_in_ms",
             "A time dimension in ms.",
             _set(lines, x_dim, FREQ | {"name": "time", "unit": "ms"}),

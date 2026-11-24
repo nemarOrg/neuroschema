@@ -358,7 +358,10 @@ class TestDataQualityRecord:
     def test_format_must_match_extension(self):
         doc = dq_record()
         self._data(doc)["location"] = "views/channels.json"
-        assert errors_for(DATA_QUALITY, doc) == {("pattern", f"{V0D}/location")}
+        assert errors_for(DATA_QUALITY, doc) == {
+            ("pattern", f"{V0D}/location"),
+            ("const", f"{V0D}/format"),
+        }
 
     @pytest.mark.parametrize(
         "location",
@@ -1214,7 +1217,7 @@ def _set(builder, path, value):
 CASES = [
     # (schema, builder, path set, value, expected failures)
     (PROCESSING, proc_record, f"{ICA}/checkpoints/import/step", "load", "type"),
-    (DATA_QUALITY, dq_record, f"{V0D}/location", "views/channels.json", "pattern"),
+    (DATA_QUALITY, dq_record, f"{V0D}/location", "views/channels.txt", "pattern"),
     # A nullable shared type is anyOf[pattern, null], so a bad value reports anyOf.
     (PROCESSING, proc_record, f"{ICA}/checkpoints/ica/step", "-ica", "anyOf"),
     (PROCESSING, proc_record, f"{ICA}/checkpoints/ica/code", "Bad", "anyOf"),

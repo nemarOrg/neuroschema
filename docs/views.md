@@ -108,7 +108,7 @@ Each entry of `data` is one file read as one role.
 |---|---|---|
 | `role` | yes | The role the file plays in the kind (`values`, `layout`, `table`). |
 | `location` | yes | Path inside the run's product; the same string as its signalJourney `outputTargets` location. See [Locations](#locations). |
-| `format` | yes | A registered format (`tsv` or `json`); a `tsv` file ends in `.tsv` and a `json` file in `.json`. |
+| `format` | yes | The file's format (`tsv` or `json`, or one the registry does not list); a `tsv` file ends in `.tsv` and a `json` file in `.json`, and a file whose name ends in `.tsv` or `.json`, in any case, is of that format. |
 | `size`, `sha256` | yes | The file's size in bytes and the Secure Hash Algorithm 256 (SHA-256) digest of its bytes. |
 | `columns` | no | `[{name, type, unit?}]`: the columns this role reads; `type` is `number`, `integer` or `string`. |
 | `dims` | no | `[{name, axis, type, unit?, coords}]`: the dimensions; see [Dimensions](#dimensions). |
@@ -175,6 +175,11 @@ Nothing writes or reads a reserved scope yet.
 ## Formats
 
 The formats are an open registry; `tsv` and `json` are defined.
+The extension and the format name each other in both directions: a `tsv` file's location ends in `.tsv` and a `json` file's in `.json`, and a location that ends in `.tsv` or `.json` in any case is of that format, so a `.TSV` file or an `.html` file named `.tsv` is invalid.
+
+A file of a format the registry does not list is offered for download only.
+A renderer never draws it, embeds it, previews it or navigates to it, and it serves the download with `Content-Disposition: attachment`, the content type `application/octet-stream` and `X-Content-Type-Options: nosniff`, whatever the file's extension or bytes: an `html` or `svg` file a plugin declares would otherwise run as a page under the renderer's origin.
+A download of a registered format is an attachment too, with the registry's `media_type`.
 
 ### TSV
 
