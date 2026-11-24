@@ -52,6 +52,7 @@ Quality views replace figures: a view is data a browser draws, declared with a n
 - A view's `base` never names one of the registered presets.
 - `transform.nemar.ic-activity.v1` holds the rule that `badsegments` is declared exactly when `shaded.files` is not null, whatever the view's kind; `shaded.files` names one `_badsegments.tsv` (never `_samplemask.tsv`); a serving-copy store is matched by `store_row`, never by `label`; and `match` `label` requires a caption string.
 - `nemar.signal-window`: the `channels` input ends in `_channels.tsv` and `badsegments` in `_badsegments.tsv`.
+- `dataPaper.doi` is `^10\.[0-9]{4,9}/[!-~]+$(?!\n)`: explicit ASCII classes in place of `\d` and `\S`, which Python and JavaScript read apart, and no trailing newline (from nemarOrg/neuroschema#20).
 - `transform.nemar.ic-activity.v1` requires the view parameters its computation reads (`display_filter`, `max_window_s`, `decomposition_input`), whatever the kind.
 
 - `dataQuality` record level: `figures` is replaced by the required `views` (at most 32 view declarations), and `$defs/figure` is removed.
@@ -67,6 +68,7 @@ Quality views replace figures: a view is data a browser draws, declared with a n
 - `neuroschema.ijson` scans nesting in one linear pass; `view_validator()` and the content validators check the binary64 reading themselves; `neuroschema.views.ic_activity` draws only `nemar.ic-activity` version 1 (`kind_unsupported`) and refuses a missing bad-segment table where the record says ASR repaired spans (`label_unmatched`); every table either preset reads is the recording's, by the exact stem nemar-process gives its products under the label of the view's recipe (`table_location_mismatch`); a store row the channels table does not name is refused (`channel_row_missing`); `neuroschema.views.download_headers` gives every download's headers (RFC 6266 `filename*`, nosniff, octet-stream for a format the registry does not list).
 - `nemar.spectrum` gains a check of its own: with a layout, the values' sensor columns are the layout's names (`sensors_mismatch`, shown as the fallback).
 - Each data entry is verified against its own size and digest, even when two share a location; a coordinate role and the `nemar.ic-maps` components table are held to the cap on cells; `locate_bin` refuses NaN; `neuroschema.views.ic_activity.CAPS` is the registry's.
+- A `kind_version` or `base_version` of `true` is no version in the references (Python reads `True == 1`), and a test flags a bare `.` and the shorthand classes `\s`, `\S`, `\d`, `\w`, `\b` in every schema pattern.
 - One table words every note and digest state (`docs/views/presets.md`, Notes and states).
 - A model holds no negative zero in any number (counts, totals, limits), and the vectors hold counts written `-0`.
 - CI: a job `ajv` compiles every schema with ajv 8 in strict mode and replays the verdict corpus (`scripts/ajv/check.ts`).
