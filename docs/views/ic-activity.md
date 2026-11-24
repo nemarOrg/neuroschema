@@ -162,7 +162,7 @@ A renderer runs these checks in this order, and the first that fails gives the w
        f_j = m(unit of row r_j) / m(unit)
 
    with `m` from the table, one binary64 division.
-   For a decomposition of the serving copy the matrix takes the store's own unit, so every factor is 1.
+   For a decomposition of the serving copy the matrix takes the store's own unit, so a matched row in that unit has the factor 1; a row whose own unit is another (a store may state one per row) has the factor between the two, as the table gives it.
 13. **The display filter.**
    `display_filter.highpass_hz` is below half the store's rate (`filter_out_of_range`).
 
@@ -249,7 +249,9 @@ The same window always gives the same numbers: its context is fixed by the recor
 ### Drawing
 
 A renderer draws the filtered activations as `nemar.lines` draws a `values` role: one series per component, against time in seconds, with the readout snapping to a stored sample ([generic-kinds.md](generic-kinds.md#nemarlines-version-1)).
-It shades each row of the `badsegments` input whose `label` cell is `shaded.label`, and no other row; when there is none, it says so with the note `no_shaded_rows` ([presets.md](presets.md#notes-and-states)), over `[onset, onset + duration)` seconds, where that meets the window: the spans ASR repaired in the decomposition's input; the vectors' `shaded` lists exactly those rows, in file order.
+It shades each row of the `badsegments` input whose `label` cell is `shaded.label`, and no other row, over `[onset, onset + duration)` seconds: the spans ASR repaired in the decomposition's input, drawn where they meet the window.
+The vectors' `shaded` lists every such row, in file order, whether or not it meets the window, and a renderer clips each to the window itself.
+When there is none, it says so with the note `no_shaded_rows` ([presets.md](presets.md#notes-and-states)).
 A view with no bad-segment table (`shaded.files` null) shades nothing and says so: its result carries the note `no_bad_segment_table`, shown with its sentence ([presets.md](presets.md#notes-and-states); the vectors' `notes`).
 It may mark the table's other rows (the floor's bad windows) apart from them.
 With the view's caption it states:

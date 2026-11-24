@@ -10,7 +10,7 @@ This page is normative for version 1 of NEMAR's five presets: what each declares
 | `nemar.ic-maps` | `nemar.sensor-field` | `values`, `layout`, `components` | none | the recipe `nemar-ica` |
 | `nemar.ic-classes` | `nemar.histogram` | `histogram` | none | the plugin `nemar-quality` |
 | `nemar.ic-activity` | `nemar.lines` | none | `unmixing`, `signal`, `components`, `badsegments` (optional) | the recipe `nemar-ica` |
-| `nemar.signal-window` | `nemar.lines` | none | `signal`, `channels` (optional), `badsegments` (optional) | a recipe |
+| `nemar.signal-window` | `nemar.lines` | none | `signal`, `channels`, `badsegments` (exactly when `bad_segment_table` is true) | a recipe |
 
 ## Presets and their bases
 
