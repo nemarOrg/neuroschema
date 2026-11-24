@@ -234,13 +234,13 @@ The filter's transient at each end of a window is part of the display: the same 
 
 A renderer draws the filtered activations as `nemar.lines` draws a `values` role: one series per component, against time in seconds, with the readout snapping to a stored sample ([generic-kinds.md](generic-kinds.md#nemarlines-version-1)).
 It shades each row of the `badsegments` input whose `label` cell is `shaded.label`, and no other row, over `[onset, onset + duration)` seconds, where that meets the window: the spans ASR repaired in the decomposition's input; the vectors' `shaded` lists exactly those rows, in file order.
-A view with no bad-segment table (`shaded.files` null) shades nothing and says so: its result carries the note `no_bad_segment_table`, shown as "no bad-segment table; nothing is shaded" (the vectors' `notes`).
+A view with no bad-segment table (`shaded.files` null) shades nothing and says so: its result carries the note `no_bad_segment_table`, shown with its sentence ([presets.md](presets.md#notes-and-states); the vectors' `notes`).
 It may mark the table's other rows (the floor's bad windows) apart from them.
 With the view's caption it states:
 
 - that the activations were computed in the browser from the serving copy with no preprocessing, so they approximate the decomposition's input, which `decomposition_input` describes;
 - the display filter, a high-pass at `highpass_hz` hertz;
-- the store digest's state: the serving copy "matches the digest NEMAR recorded" (`matches`), or "not checked" (`not_checked`);
+- the store digest's state, `matches` or `not_checked`, with its sentence ([presets.md](presets.md#notes-and-states));
 - the transform's `caption` when it is not null (with `match` `label`, that the channels were matched by label and not checked against the decomposition's input).
 
 A refused view draws no activations: it shows the word and offers every file input for download.

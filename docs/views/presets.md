@@ -53,7 +53,7 @@ Every `status` cell of the channels is one of BIDS's `good`, `bad` and `n/a`, co
 The other columns are text.
 The channels are read before the bad segments.
 
-**Said.** A view with no bad-segment table, because the record names none, is drawn and carries the note `no_bad_segment_table`, which a renderer shows as "no bad-segment table; nothing is shaded": nothing is left unshaded silently.
+**Said.** A view with no bad-segment table, because the record names none, is drawn and carries the note `no_bad_segment_table`, which a renderer shows with [its sentence](#notes-and-states): nothing is left unshaded or unmarked silently.
 The vectors give the note in `notes`.
 
 ## `nemar.spectrum` version 1
@@ -187,6 +187,19 @@ The vectors give, for a window drawn, its state, its `first` sample and `count`,
 | `window_outside` | `nemar.signal-window` | nothing drawn | The window holds no sample of the recording. |
 
 The words of a preset's base, of `nemar.sensor-field.v1` and of `nemar.ic-activity.v1` keep their meanings and outcomes; a file that is not the one recorded (`file_missing`, `file_size_mismatch`, `file_digest_mismatch`) draws nothing, as for every kind.
+
+## Notes and states
+
+A drawn `nemar.ic-activity` or `nemar.signal-window` carries one store digest state and any notes, and a renderer shows each with its sentence, worded as here and nowhere else.
+The vectors give the state in `state` and the notes in `notes`.
+
+| Name | Is a | Preset | Sentence |
+|---|---|---|---|
+| `matches` | state | both | The serving copy matches the digest NEMAR recorded. |
+| `not_checked` | state | both | The serving copy was not checked against a digest NEMAR recorded. |
+| `no_bad_segment_table` | note | both | No bad-segment table was written, so nothing is shaded or marked as a bad segment. |
+
+`matches` claims no more than the digests' agreement ([docs/views.md](../views.md#digests-and-what-they-prove)), and `not_checked` is the state whenever the view declares no digest or the serving copy publishes none.
 
 ## The preset-check vectors
 

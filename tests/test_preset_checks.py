@@ -99,6 +99,29 @@ def _raised_words() -> set[str]:
     return own | GRAMMAR | {"cell_not_number", "cell_not_finite", "cap_exceeded"}
 
 
+def _notes_and_states() -> dict[str, str]:
+    """The Notes and states table of presets.md: name -> state or note."""
+    section = (
+        SPEC.read_text().split("\n## Notes and states\n", 1)[1].split("\n## ", 1)[0]
+    )
+    return dict(re.findall(r"^\| `([a-z_]+)` \| (state|note) \|", section, re.M))
+
+
+def test_one_table_words_every_note_and_state():
+    """Every state and note a vector gives, for either computed preset, has one
+    row, and one sentence, in the table (F7)."""
+    activity = json.loads(
+        (ROOT / "views" / "vectors" / "ic-activity.v1.json").read_text(encoding="utf-8")
+    )
+    given = {c["expected"]["state"]: "state" for c in activity["cases"]}
+    given |= {n: "note" for c in activity["cases"] for n in c["expected"]["notes"]}
+    for case in WINDOWS:
+        if case["expected"]["word"] is None:
+            given[case["expected"]["state"]] = "state"
+            given |= {n: "note" for n in case["expected"]["notes"]}
+    assert given == _notes_and_states()
+
+
 def test_words_table_matches_the_reference():
     assert {word for word, _preset in _doc_words()} == _raised_words()
 

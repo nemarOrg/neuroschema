@@ -85,7 +85,7 @@ class Activations:
     whose label is the transform's ``shaded.label``, as ``{onset, duration}``
     in seconds: the spans a renderer shades. ``notes`` holds
     ``no_bad_segment_table`` when the view declares no bad segments, which the
-    renderer states ("no bad-segment table; nothing is shaded").
+    renderer shows with its sentence (presets.md, Notes and states).
     """
 
     state: str
