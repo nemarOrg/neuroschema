@@ -313,6 +313,46 @@ def dq_dataset():
     }
 
 
+def _objects(node, path=""):
+    """Every subschema that names properties: an object shape."""
+    if isinstance(node, dict):
+        if "properties" in node and node.get("type") == "object":
+            yield path, node
+        for key, value in node.items():
+            yield from _objects(value, f"{path}/{key}")
+    elif isinstance(node, list):
+        for index, value in enumerate(node):
+            yield from _objects(value, f"{path}/{index}")
+
+
+def test_data_quality_is_closed_everywhere():
+    """dataQuality holds the views a browser draws, so it is closed at its root
+    and in every $defs entry (L1): no member rides along unchecked."""
+    schema = json.loads(DATA_QUALITY.read_text(encoding="utf-8"))
+    assert schema["additionalProperties"] is False
+    shapes = [
+        (where, node)
+        for where, node in _objects(schema)
+        if where == "" or where.startswith("/$defs/")
+    ]
+    assert len(shapes) >= 7
+    for where, node in shapes:
+        closed = node.get("additionalProperties") is False
+        keyed = "additionalProperties" in node and "propertyNames" in node
+        assert closed or keyed, where
+
+
+@pytest.mark.parametrize(
+    ("member", "builder"),
+    [("views", dq_record), ("dataset_level_counts", dq_record), ("x", dq_dataset)],
+)
+def test_data_quality_root_refuses_a_stray_member(member, builder):
+    """A views list or a counts block beside recipes, which no schema would
+    check (probe p11), is refused at the root."""
+    doc = builder() | {member: [{"kind": "anything", "data": [{"location": "/x"}]}]}
+    assert errors_for(DATA_QUALITY, doc) == {("additionalProperties", "")}
+
+
 class TestDataQualityRecord:
     def test_valid(self):
         assert errors_for(DATA_QUALITY, dq_record()) == set()

@@ -16,11 +16,11 @@
 
 ## Extension Guidelines
 
-- Extensions MUST define `"additionalProperties": true` to allow forward compatibility.
+- Extensions MUST define `"additionalProperties": true` to allow forward compatibility, except `dataQuality`, which is closed at its root and in every `$defs` entry: it carries the views a browser draws, so a member no schema checks is refused rather than carried along (`test_data_quality_is_closed_everywhere`).
 - Extension schemas live in `schema/extensions/`.
 - Every schema file's `$id` is the absolute URI `https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/` plus its path under `schema/` (`neuroschema.validate.SCHEMA_BASE`), so a relative `$ref` resolves by RFC 3986 in every engine, ajv included. The `$id` is an identifier: the validator loads every file from `schema/` and never fetches one.
 - Extensions can reference definitions from `schema/definitions/`.
-- Objects nested inside an extension may be closed (`additionalProperties: false`); only the namespace root must stay open.
+- Objects nested inside an extension may be closed (`additionalProperties: false`); only the namespace root must stay open (`dataQuality` aside).
 - Never declare `$id` below a file's root: vendoring rewrites only root `$id`s, and the validator's store maps only root `$id`s.
 - Write every `$ref` below the root schema with its folder (`../definitions/x.schema.json`, `../extensions/x.schema.json`, `../core/x.schema.json`), including a ref into the same file (`../extensions/processing.schema.json#/$defs/x`, not `#/$defs/x`). jsonschema's legacy `RefResolver` pushes a resolution scope for every schema with an `$id` it enters and never pops it, so a bare or fragment-only ref can resolve against the wrong file; a folder-qualified ref resolves the same from any subfolder. `tests/test_processing_extensions.py` enforces this.
 - In extension and definition files, end every anchored pattern with `$(?!\n)`, not a bare `$`: Python's `re` lets `$` match before a final newline, so `"x\n"` would pass here and fail in ajv. The lookahead closes that gap in both engines. Four older patterns are known exceptions, tracked in nemarOrg/neuroschema#20 and allowlisted in `test_anchored_patterns_close_the_newline_gap`: `schema/core/dataset.schema.json:20`, `schema/core/record.schema.json:20`, `schema/neuroschema.schema.json:12` and `schema/definitions/dataPaper.schema.json:12`.
