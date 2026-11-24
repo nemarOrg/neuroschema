@@ -588,14 +588,100 @@ def test_the_vectors_catch_a_projection_never_used(monkeypatch):
 
     projected = models._projected
 
-    def refuse(xyz, coordinate_system, montage, rows, count):
+    def refuse(xyz, coordinate_system, montage, *rows_count_names_types):
         """Measured positions are never projected; templates still are."""
         if montage is None:
             raise SensorLayoutRefusal("positions_flat", "always")
-        return projected(xyz, coordinate_system, montage, rows, count)
+        return projected(xyz, coordinate_system, montage, *rows_count_names_types)
 
     monkeypatch.setattr(models, "_projected", refuse)
     assert failing()
+
+
+def test_a_placement_by_name_reads_the_cap_model_and_reference():
+    """The role that names the sensors carries the recording's cap model and
+    reference; a placement by name reads them, and leaves the reference
+    channel out only when all its values, in every map, are exactly zero."""
+    expected = {
+        "sensor_field_names_egi_cap_model": ("GSN-HydroCel-129", None, None, 129),
+        "sensor_field_names_egi_no_cap_model": (None, "cap_model_unknown", None, 0),
+        "sensor_field_names_reference_zero": ("GSN-HydroCel-129", None, "Cz", 128),
+        "sensor_field_names_reference_with_data": (
+            "GSN-HydroCel-129",
+            None,
+            "Cz",
+            129,
+        ),
+        "sensor_field_positions_egi_reference": ("GSN-HydroCel-129", None, "Cz", 128),
+    }
+    for name, (montage, word, reference, drawn) in expected.items():
+        model = BY_NAME[name]["model"]["model"]
+        placement = model["placement"]
+        assert (placement["montage"], placement["word"]) == (montage, word), name
+        assert placement["reference"] == reference, name
+        assert sum(model["sensors"]["drawn"]) == drawn, name
+    sensors = models._Sensors(["Cz"])
+    assert models.label_inputs(sensors, {"cap_model": 7, "reference": "Cz"}) == {
+        "cap_model": None,
+        "reference": "Cz",
+    }
+    role = models._Sensors(["Cz"], "positions", {"reference": "FCz"})
+    assert models.label_inputs(role, {"reference": "Cz"})["reference"] == "FCz"
+
+
+def test_the_projection_reads_the_rows_names():
+    """Fiducial rows typed EEG get no layout and are not drawn."""
+    drawn = BY_NAME["sensor_field_positions_fiducial_rows"]["model"]["model"]
+    assert drawn["sensors"]["drawn"] == [True] * 19 + [False] * 3
+
+
+def test_the_vectors_catch_label_inputs_never_read(monkeypatch):
+    monkeypatch.setattr(models, "label_inputs", lambda *_a: {})
+    assert set(failing()) >= {
+        "sensor_field_names_egi_cap_model",
+        "sensor_field_names_reference_zero",
+        "sensor_field_positions_egi_reference",
+    }
+
+
+def test_the_vectors_catch_a_projection_without_names(monkeypatch):
+    projected = models._projected
+
+    def unnamed(xyz, coordinate_system, montage, rows, count, _names, _types):
+        """Every row is a scalp row: no names, no types."""
+        blank = [""] * count
+        return projected(xyz, coordinate_system, montage, rows, count, blank, None)
+
+    monkeypatch.setattr(models, "_projected", unnamed)
+    assert "sensor_field_positions_fiducial_rows" in failing()
+
+
+@pytest.mark.parametrize(
+    ("old", "new", "caught"),
+    [
+        (
+            "if all(values[reference] == 0 for _m, values, _t in maps):",
+            "if any(values[reference] == 0 for _m, values, _t in maps):",
+            "sensor_field_names_reference_with_data",
+        ),
+        (
+            "if all(values[reference] == 0 for _m, values, _t in maps):",
+            "if False:",
+            "sensor_field_names_reference_zero",
+        ),
+        (
+            'placement["reference"] = sensors.labels[reference]',
+            "pass",
+            "sensor_field_names_reference_with_data",
+        ),
+    ],
+)
+def test_the_vectors_catch_a_wrong_reference_or_montage_rule(
+    monkeypatch, old, new, caught
+):
+    variant = _variant(models.sensor_field_model, old, new)
+    monkeypatch.setattr(models, "sensor_field_model", variant)
+    assert caught in failing()
 
 
 def test_the_vectors_catch_names_never_placed(monkeypatch):
