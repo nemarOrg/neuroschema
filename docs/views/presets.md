@@ -128,7 +128,7 @@ The independent components of one decomposition counted by the class each is mos
 There are no parameters.
 `variance_pct` is the percent of the data's variance a component accounts for on its own (EEGLAB's `pvaf`), which is not bounded to 0 to 100 and does not sum to 100 across components, so neither does `summed_variance_pct`.
 
-A renderer that knows this kind draws the `nemar.histogram` model of the content, and prints with each bar its count and its class's summed variance, as the stored numbers; the text alternative names `n_components`.
+A renderer that knows this kind draws the `nemar.histogram` model of the content, and prints with each bar its count and its class's summed variance, as the stored numbers, labeled "summed variance of components classed X" (with the class for X), never "variance explained by X": each `variance_pct` is one component's own share, the components are not orthogonal, and their sum is not the share the class accounts for together; the text alternative names `n_components`.
 After the histogram's own checks, the renderer checks, in this order, that the content meets `content.nemar.ic-classes.v1` (`content_invalid`: content that meets the histogram's content schema but not this one, such as ICLabel's classes out of order), that `summed_variance_pct` has one entry per category (`variance_length`), and that the counts sum to `n_components` (`components_total`); JSON Schema cannot state the last two.
 When one fails, the view is drawn by the base with the word.
 A renderer that knows only `nemar.histogram` draws the categories and counts.

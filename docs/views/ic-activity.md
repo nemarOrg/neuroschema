@@ -249,6 +249,7 @@ The same window always gives the same numbers: its context is fixed by the recor
 ### Drawing
 
 A renderer draws the filtered activations as `nemar.lines` draws a `values` role: one series per component, against time in seconds, with the readout snapping to a stored sample ([generic-kinds.md](generic-kinds.md#nemarlines-version-1)).
+The value axis is labeled `a.u.` (arbitrary units): an activation is a component's time course, the unmixing (which includes the sphering) times microvolts, so it has no physical unit, and its scale and sign are the decomposition's choice.
 It shades each row of the `badsegments` input whose `label` cell is `shaded.label`, and no other row, over `[onset, onset + duration)` seconds: the spans ASR repaired in the decomposition's input, drawn where they meet the window.
 The vectors' `shaded` lists every such row, in file order, whether or not it meets the window, and a renderer clips each to the window itself.
 When there is none, it says so with the note `no_shaded_rows` ([presets.md](presets.md#notes-and-states)).
