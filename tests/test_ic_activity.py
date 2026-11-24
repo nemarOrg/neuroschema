@@ -94,6 +94,7 @@ def test_cases_replay(case):
     assert result.components == expected["components"]
     assert result.rows == expected["rows"]
     assert result.factors == expected["factors"]
+    assert result.shaded == expected["shaded"]
     assert [float(t) for t in result.time_s] == expected["time_s"]
     scale = scales(expected["activations"])
     assert within(result.activations, expected["activations"], scale, 1e-12)
@@ -176,6 +177,25 @@ def test_the_cases_cover_both_states_both_matches_and_every_factor():
     assert states == {"matches", "not_checked"}
     assert matches == {"store_row", "label"}
     assert factors >= {1.0, 1e3, 1e6}
+
+
+def test_only_the_shaded_label_is_shaded():
+    """The bad segments hold a bad_window row between two bursts; only the
+    bursts are shaded, in file order."""
+    case = next(c for c in CASES if c["name"] == "shaded_burst_rows")
+    location = ia_location(case, "badsegments")
+    table = files_of(case)[location].decode()
+    assert "bad_window" in table and table.count("burst") == 2
+    assert case["expected"]["shaded"] == [
+        {"onset": 0.1, "duration": 0.04},
+        {"onset": 0.36, "duration": 0.2},
+    ]
+
+
+def ia_location(case: dict, role: str) -> str:
+    return next(i for i in case["view"]["inputs"] if i["role"] == role)["file"][
+        "location"
+    ]
 
 
 def test_windows_shorter_than_the_padding_are_pinned():
@@ -438,33 +458,71 @@ def test_a_wrong_store_check_is_caught():
         )
 
 
-# The specification's order of checks, as the reference's own steps.
-def _step_files(case, state):
-    view = case["view"]
-    for role in ("unmixing", "components"):
-        entry = next(i for i in view["inputs"] if i["role"] == role)["file"]
-        state[role] = ia.verified(entry, files_of(case), state["caps"])
+# The specification's order of checks, as the reference's own steps. Each step
+# finds what it needs from the case itself (a port that runs it earlier would
+# have the same inputs), so a swapped order always yields a word of its own.
 
 
-def _step_digest(case, state):
+def _input_file(case, role):
+    entry = next((i for i in case["view"]["inputs"] if i["role"] == role), None)
+    return None if entry is None else entry["file"]
+
+
+def _raw(case, role):
+    entry = _input_file(case, role)
+    return None if entry is None else files_of(case).get(entry["location"], b"")
+
+
+def _caps(case):
+    return ia.CAPS | case.get("caps", {})
+
+
+def _header(case):
+    first = _raw(case, "unmixing").split(b"\n", 1)[0]
+    return first.decode("utf-8", "replace").split("\t")
+
+
+def _lenient_rows(case):
+    """Each column's store row, by the transform's rule, skipping misses."""
+    transform = case["view"]["transform"]["parameters"]
+    labels = case["store"]["labels"]
+    if transform["match"] == "store_row":
+        return [r for r in transform["rows"] if 0 <= r < len(labels)]
+    return [labels.index(h) for h in _header(case) if h in labels]
+
+
+def _step_files(case):
+    for role in ("unmixing", "components", "badsegments"):
+        entry = _input_file(case, role)
+        if entry is not None:
+            ia.verified(entry, files_of(case), _caps(case))
+
+
+def _step_digest(case):
     signal = next(i for i in case["view"]["inputs"] if i["role"] == "signal")["store"]
     ia.store_check(signal["content_sha256"], case["store"]["published_sha256"])
 
 
-def _step_matrix(case, state):
-    state["header"], state["weights"] = ia.read_unmixing(
-        state["unmixing"], state["caps"]
-    )
+def _step_matrix(case):
+    ia.read_unmixing(_raw(case, "unmixing"), _caps(case))
 
 
-def _step_components(case, state):
-    ia.read_components(state["components"], state["weights"].shape[0], state["caps"])
+def _step_components(case):
+    rows = max(_raw(case, "unmixing").count(b"\n") - 1, 0)
+    ia.read_components(_raw(case, "components"), rows, _caps(case))
 
 
-def _step_match(case, state):
+def _step_segments(case):
+    data = _raw(case, "badsegments")
+    if data is not None:
+        label = case["view"]["transform"]["parameters"]["shaded"]["label"]
+        ia.read_shading(data, label, _caps(case))
+
+
+def _step_match(case):
     transform = case["view"]["transform"]["parameters"]
-    state["rows"] = ia.match_rows(
-        state["header"],
+    ia.match_rows(
+        _header(case),
         case["store"]["labels"],
         transform["match"],
         transform.get("rows"),
@@ -472,12 +530,12 @@ def _step_match(case, state):
     )
 
 
-def _step_units(case, state):
+def _step_units(case):
     unit = case["view"]["transform"]["parameters"]["unit"]
-    ia.unit_factors(case["store"]["units"], state["rows"], unit)
+    ia.unit_factors(case["store"]["units"], _lenient_rows(case), unit)
 
 
-def _step_filter(case, state):
+def _step_filter(case):
     cutoff = case["view"]["parameters"]["display_filter"]["highpass_hz"]
     ia.highpass_coefficients(cutoff, case["store"]["rate"])
 
@@ -487,21 +545,29 @@ ORDER = [
     _step_digest,
     _step_matrix,
     _step_components,
+    _step_segments,
     _step_match,
     _step_units,
     _step_filter,
 ]
+# The refusal that holds both faults of each neighboring pair.
+PAIRS = [
+    "order_file_before_digest",
+    "order_digest_before_matrix",
+    "order_matrix_before_components",
+    "order_components_before_segments",
+    "order_segments_before_match",
+    "order_match_before_unit",
+    "order_unit_before_filter",
+]
 
 
 def _word(case, order) -> str | None:
-    state = {"caps": ia.CAPS | case.get("caps", {})}
     try:
         for step in order:
-            step(case, state)
+            step(case)
     except ia.IcActivityRefusal as exc:
         return exc.word
-    except KeyError:
-        return "skipped"  # a step that needs a later one's result
     return None
 
 
@@ -511,9 +577,15 @@ def test_the_order_of_checks_gives_every_word():
 
 @pytest.mark.parametrize("i", range(len(ORDER) - 1), ids=lambda i: ORDER[i].__name__)
 def test_swapping_two_neighboring_checks_is_caught(i):
-    """The vectors hold a case with both faults for each neighboring pair."""
+    """Each neighboring pair has a refusal with both faults, whose word the
+    swapped order changes; every step runs on its own inputs, so the swap gives
+    a real word, never a missing prerequisite."""
     swapped = [*ORDER[:i], ORDER[i + 1], ORDER[i], *ORDER[i + 2 :]]
-    assert any(_word(r, swapped) != r["word"] for r in REFUSALS)
+    case = next(r for r in REFUSALS if r["name"] == PAIRS[i])
+    assert _word(case, [ORDER[i]]) is not None
+    assert _word(case, [ORDER[i + 1]]) is not None
+    assert _word(case, ORDER) == case["word"]
+    assert _word(case, swapped) not in (None, case["word"])
 
 
 # ── The reference beyond the vectors ──────────────────────────────────────

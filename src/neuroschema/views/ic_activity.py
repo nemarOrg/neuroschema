@@ -28,6 +28,7 @@ import numpy as np
 
 from neuroschema.views.digest import canonicalize
 from neuroschema.views.models import Refusal, Tsv, cell_value, read_tsv
+from neuroschema.views.presets import read_segments
 
 IC_ACTIVITY = "nemar.ic-activity.v1"
 ORDER = 2
@@ -73,7 +74,9 @@ class Activations:
     declares) or ``not_checked`` (either digest is absent). ``rows`` is the
     store row of each column of the matrix and ``factors`` the factor each
     column's values were multiplied by. ``activations`` and ``filtered`` are
-    components by samples.
+    components by samples. ``shaded`` lists, in file order, the bad segments
+    whose label is the transform's ``shaded.label``, as ``{onset, duration}``
+    in seconds: the spans a renderer shades.
     """
 
     state: str
@@ -84,6 +87,7 @@ class Activations:
     time_s: np.ndarray
     activations: np.ndarray
     filtered: np.ndarray
+    shaded: list[dict]
 
 
 # ── The checks, in the specification's order ──────────────────────────────
@@ -159,6 +163,21 @@ def read_components(data: bytes, count: int, caps: Mapping = CAPS) -> list[str]:
     if len(labels) != count:
         raise IcActivityRefusal("coords_length", f"{len(labels)} != {count}")
     return labels
+
+
+def read_shading(data: bytes, label: str, caps: Mapping = CAPS) -> list[dict]:
+    """The bad segments a view shades: the rows of the floor's table whose label
+    is ``label``, as {onset, duration}, after the table is read as a data file
+    (the TSV grammar, the columns onset, duration and label, numbers)."""
+    try:
+        rows = read_segments(data, caps)
+    except Refusal as exc:
+        raise IcActivityRefusal(exc.word, str(exc)) from exc
+    return [
+        {"onset": row["onset"], "duration": row["duration"]}
+        for row in rows
+        if row["label"] == label
+    ]
 
 
 def match_rows(
@@ -335,9 +354,12 @@ def ic_activity(
     [start, start + count) of its store, filtered for display.
 
     Runs the checks in the specification's order and raises
-    :class:`IcActivityRefusal` with the word of the first that fails: the two
-    files (unmixing, then components), the store digest, the matrix, the
-    components table, the channel match, the units, then the filter. The
+    :class:`IcActivityRefusal` with the word of the first that fails: the
+    files (unmixing, components, then badsegments when declared), the store
+    digest, the matrix, the components table, the bad segments table, the
+    channel match, the units, then the filter. A fault in the bad segments
+    refuses the whole view: unshaded artifact spans could pass for brain
+    signal. The
     window must lie in the recording and hold at most ``max_window_s`` of it.
     """
     parameters = view["parameters"]
@@ -352,11 +374,22 @@ def ic_activity(
         and count <= max_samples(parameters["max_window_s"], store.rate)
     ):
         raise ValueError(f"window [{start}, {start + count}) is not one to compute")
+    segments_entry = next(
+        (i["file"] for i in view["inputs"] if i["role"] == "badsegments"), None
+    )
     unmixing_bytes = verified(unmixing_entry, files, caps)
     components_bytes = verified(components_entry, files, caps)
+    segments_bytes = (
+        None if segments_entry is None else verified(segments_entry, files, caps)
+    )
     state = store_check(signal.get("content_sha256"), store.published_sha256)
     header, weights = read_unmixing(unmixing_bytes, caps)
     labels = read_components(components_bytes, weights.shape[0], caps)
+    shaded = (
+        []
+        if segments_bytes is None
+        else read_shading(segments_bytes, transform["shaded"]["label"], caps)
+    )
     rows = match_rows(
         header,
         store.labels,
@@ -377,4 +410,5 @@ def ic_activity(
         time_s=(start + np.arange(count, dtype=np.float64)) / store.rate,
         activations=raw,
         filtered=display_filter(raw, store.rate, cutoff),
+        shaded=shaded,
     )

@@ -24,6 +24,16 @@ A computed preset (`nemar.ic-activity`, `nemar.signal-window`) has inputs and no
 A renderer that does not know a computed preset offers its file inputs for download, and the renderer rule shows the view as a table with nothing in it.
 
 However a preset is drawn, every file it names, in `data` or as a `file` input, is drawn or offered for download.
+
+### The floor's tables
+
+`nemar.ic-activity` shades, and `nemar.signal-window` marks, the floor's decisions: its bad segments (`badsegments`, the floor's `_badsegments.tsv`) and its channels (`channels`, its `_channels.tsv`).
+No view may mislead, so a declared table is verified like any data file, and a fault refuses the whole view: a renderer never draws activations unshaded or a signal window unmarked, because an artifact span left unmarked could pass for brain signal.
+A declared table is present, its length is its `size` and its SHA-256 its `sha256` (`file_missing`, `file_size_mismatch`, `file_digest_mismatch`), and it holds at most `caps.bytes_per_role` bytes (`cap_exceeded`).
+It meets the TSV grammar, with its words ([generic-kinds.md](generic-kinds.md#tsv)), and holds at most `caps.cells_per_role` cells counting every header column (`cap_exceeded`).
+It has its columns, in this order (`column_missing`): `onset`, `duration` and `label` for the bad segments, and `name` and `status` for the channels.
+Every `onset` and every `duration` cell is a number, the `onset` column first (`cell_not_number`, `cell_not_finite`); the other columns are text.
+A table the view does not declare is not read, and nothing is marked from it.
 A renderer that knows a preset first builds its base's model; when the base refuses the files, the view falls back as the base's rules say.
 When the base draws, the preset's own checks run in the order this page gives, and the first that fails gives the word: the renderer draws the view by its base and keeps the word, so the page can say why the preset's extras are missing, or, for `nemar.signal-window`, draws nothing.
 `neuroschema.views.presets.check_preset` is the Python reference of these checks, and [`views/vectors/preset-checks.v1.json`](../../views/vectors/preset-checks.v1.json) (`nemar.preset-checks.v1`) holds the cases every renderer reproduces.
@@ -110,6 +120,8 @@ A window of the recording as the serving copy holds it, opened in the signal vie
 - **`channels`**, optional, is the floor's `_channels.tsv`: a channel whose `status` is `bad` is marked as bad.
 - **`badsegments`**, optional, is the floor's `_badsegments.tsv`: each row is marked over `[onset, onset + duration)` seconds, labeled by its `label` cell.
 
+Both are [the floor's tables](#the-floors-tables), verified before anything is drawn.
+
 | Parameter | Required | Meaning |
 |---|---|---|
 | `start_s` | yes | The window's start, in seconds from the recording's first sample. |
@@ -119,8 +131,12 @@ The view computes nothing and has no transform: the renderer opens the signal vi
 The window holds the samples k of the recording (0 <= k < S, for S samples at rate r) whose time `k / r`, one binary64 division, satisfies `start_s <= k / r < end`, where `end = start_s + duration_s`, one binary64 sum: the first is the least such k, and a window past the recording's end is clipped to its last sample.
 A renderer finds them from these times, not from `ceil(start_s * r)`, which can start a sample late at a rate such as 500/7 Hz.
 NEMAR's recipes declare the 2-second window inside the floor's good samples nearest the recording's middle (`midsegment`).
-The renderer checks the store digest first, as [ic-activity.md](ic-activity.md#the-checks-in-order) does: when the view declares one and the serving copy publishes another, nothing is drawn (`store_digest_mismatch`), because the decisions marked over the window were made on other data; when either is absent, the window is drawn and the state is `not_checked`.
-Then a window that holds no sample (one that starts at or after the recording's end, or lies between two samples) draws nothing (`window_outside`).
+The renderer runs four checks in this order, and the first that fails gives the word; each draws nothing.
+First the tables' files (channels, then badsegments) are the ones recorded.
+Then the store digest, as [ic-activity.md](ic-activity.md#the-checks-in-order) checks it: when the view declares one and the serving copy publishes another, nothing is drawn (`store_digest_mismatch`), because the decisions marked over the window were made on other data; when either is absent, the window is drawn and the state is `not_checked`.
+Then the tables, channels first, are read as [the floor's tables](#the-floors-tables) says.
+Last, a window that holds no sample (one that starts at or after the recording's end, or lies between two samples) draws nothing (`window_outside`).
+The vectors give, for a window drawn, its state, its `first` sample and `count`, the names of its `bad_channels` (status `bad`, in file order) and its `segments` (every row of the bad segments, `{onset, duration, label}`, in file order).
 
 ## Words
 
@@ -132,6 +148,10 @@ Then a window that holds no sample (one that starts at or after the recording's 
 | `content_invalid` | `nemar.ic-classes` | base | The content fails `content.nemar.ic-classes.v1` (it meets the histogram's). |
 | `variance_length` | `nemar.ic-classes` | base | `summed_variance_pct` does not have one entry per category. |
 | `components_total` | `nemar.ic-classes` | base | The counts do not sum to `n_components`. |
+| `tsv_encoding`, `tsv_line_endings`, `tsv_header_repeated`, `tsv_ragged` | `nemar.signal-window` | nothing drawn | A floor table breaks the TSV grammar. |
+| `column_missing` | `nemar.signal-window` | nothing drawn | The bad segments lack `onset`, `duration` or `label`, or the channels lack `name` or `status`. |
+| `cell_not_number`, `cell_not_finite` | `nemar.signal-window` | nothing drawn | A bad segment's `onset` or `duration` is not a finite JSON number. |
+| `cap_exceeded` | `nemar.signal-window` | nothing drawn | A floor table exceeds the registry's caps on bytes or cells. |
 | `store_digest_mismatch` | `nemar.signal-window` | nothing drawn | The serving copy publishes a digest other than the one the view declares. |
 | `window_outside` | `nemar.signal-window` | nothing drawn | The window holds no sample of the recording. |
 

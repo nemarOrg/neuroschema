@@ -101,6 +101,11 @@ PREPROCESSING = [
 ]
 
 
+def tsv_text(*rows: str) -> bytes:
+    """A TSV file from rows whose cells are separated by single spaces."""
+    return "".join(row.replace(" ", "\t") + "\n" for row in rows).encode()
+
+
 def digest(text: str) -> str:
     return hashlib.sha256(text.encode()).hexdigest()
 
@@ -124,8 +129,21 @@ def components_text(count: int) -> bytes:
     return ("\n".join(lines) + "\n").encode()
 
 
-SEGMENTS = (
-    b"onset\tduration\tlabel\tnemar_reason\n0.36\t0.2\tburst\tasr_burst_rejection\n"
+# The floor's bad segments: ASR's repaired spans (burst, flagged, never removed)
+# and the floor's bad windows; a view shades the burst rows only.
+SEGMENTS = tsv_text(
+    "onset duration label nemar_reason",
+    "0.100000 0.040000 burst asr_repaired",
+    "0.200000 0.120000 bad_window clean_windows",
+    "0.360000 0.200000 burst asr_repaired",
+)
+NO_LABEL = tsv_text(
+    "onset duration nemar_reason",
+    "0.100000 0.040000 asr_repaired",
+)
+ONSET_TEXT = tsv_text(
+    "onset duration label nemar_reason",
+    "n/a 0.040000 burst asr_repaired",
 )
 
 
@@ -176,7 +194,7 @@ def declaration(
     profile: str = "serving",
     declared: str | None,
     highpass_hz: float = 1.0,
-    segments: bool = False,
+    segments: bool | bytes = False,
     unmixing: bytes | None = None,
     components: bytes | None = None,
     columns: list[str] | None = None,
@@ -201,8 +219,9 @@ def declaration(
         file_input("components", COMPONENTS_AT, components),
     ]
     if segments:
-        files[SEGMENTS_AT] = SEGMENTS
-        inputs.append(file_input("badsegments", SEGMENTS_AT, SEGMENTS))
+        table = SEGMENTS if segments is True else segments
+        files[SEGMENTS_AT] = table
+        inputs.append(file_input("badsegments", SEGMENTS_AT, table))
     serving = profile == "serving"
     transform = {
         "matrix": UNMIXING_AT,
@@ -550,6 +569,16 @@ def transform_cases() -> list[Case]:
             *_small_view(),
             _small_store(),
             (45, 15),
+        )
+    )
+    cases.append(
+        Case(
+            "shaded_burst_rows",
+            "Bad segments of two labels: the view shades exactly the rows whose "
+            "label is shaded.label (burst), in file order.",
+            *_small_view(segments=True),
+            _small_store(),
+            (0, 60),
         )
     )
     cases.append(
@@ -910,6 +939,66 @@ def refusals() -> list[Case]:
             components=components_text(3),
         ),
     )
+    view, files = _small_view(segments=True)
+    files[SEGMENTS_AT] = SEGMENTS.replace(b"0.120000", b"0.130000", 1)
+    refused(
+        "badsegments_digest",
+        "The bad segments file is not the one recorded: the whole view is refused, "
+        "never drawn unshaded.",
+        (view, files),
+    )
+    refused(
+        "badsegments_too_many_cells",
+        "A bad segments table of 44 cells under a cap of 40 (lowered), which the "
+        "matrix's 24 and the components' 36 meet.",
+        _small_view(
+            segments=tsv_text(
+                "onset duration label nemar_reason",
+                *[f"{k}.000000 0.010000 burst asr_repaired" for k in range(11)],
+            )
+        ),
+        caps={"cells_per_role": 40},
+    )
+    refused(
+        "badsegments_no_label",
+        "The bad segments table has no column label.",
+        _small_view(segments=NO_LABEL),
+    )
+    refused(
+        "badsegments_onset_not_a_number",
+        "A bad segment's onset that is not a number.",
+        _small_view(segments=ONSET_TEXT),
+    )
+    refused(
+        "order_components_before_segments",
+        "Too few component rows and a bad segments table with no label: the "
+        "components come first.",
+        declaration(
+            SMALL,
+            weights,
+            4,
+            match="store_row",
+            unit="uV",
+            rows=list(range(6)),
+            declared=digest("small"),
+            components=components_text(3),
+            segments=NO_LABEL,
+        ),
+    )
+    refused(
+        "order_segments_before_match",
+        "A bad segments table with no label and a column no store row has: the "
+        "bad segments come first.",
+        declaration(
+            [*SMALL[:5], "Oz"],
+            weights,
+            4,
+            match="label",
+            unit="uV",
+            declared=digest("small"),
+            segments=NO_LABEL,
+        ),
+    )
     refused(
         "order_match_before_unit",
         "A column no store row has and a row in nanovolts: the match comes first.",
@@ -1146,6 +1235,7 @@ def _case(case: Case) -> dict:
             "time_s": [float(v) for v in result.time_s],
             "activations": _floats(result.activations),
             "filtered": _floats(result.filtered),
+            "shaded": result.shaded,
         }
     }
 

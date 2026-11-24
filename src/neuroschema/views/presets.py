@@ -10,8 +10,10 @@ checks run, in the stated order, and the first that fails gives the word:
   (``content_invalid``), has one ``summed_variance_pct`` per category
   (``variance_length``), and counts that sum to ``n_components``
   (``components_total``);
-- ``nemar.signal-window``: the store digest (``store_digest_mismatch``) and the
-  window, which must hold a sample of the recording (``window_outside``).
+- ``nemar.signal-window``: the floor's tables it marks (the files recorded, the
+  TSV grammar and their columns), the store digest (``store_digest_mismatch``)
+  and the window, which must hold a sample of the recording
+  (``window_outside``).
 
 A word of ``nemar.ic-maps`` or ``nemar.ic-classes`` draws the view by its base
 and keeps the word; a word of ``nemar.signal-window`` draws nothing.
@@ -31,8 +33,10 @@ from neuroschema.views.models import (
     ViewRefused,
     _Reader,
     build_model,
+    cell_value,
     content_validator,
     read_json,
+    read_tsv,
 )
 from neuroschema.views.registry import load_registry
 
@@ -47,6 +51,45 @@ class PresetRefused(Refusal):
     def __init__(self, word: str, outcome: str, detail: str = "") -> None:
         super().__init__(word, detail)
         self.outcome = outcome
+
+
+SEGMENT_COLUMNS = ("onset", "duration", "label")
+CHANNEL_COLUMNS = ("name", "status")
+
+
+def read_table(data: bytes, columns: tuple[str, ...], numbers: tuple[str, ...], caps):
+    """One of the floor's tables, read as a view's data file is.
+
+    The TSV grammar (its words), at most ``caps.cells_per_role`` cells counting
+    every header column (``cap_exceeded``), each named column present, in that
+    order (``column_missing``), and the cells of each ``numbers`` column, column
+    by column, finite JSON numbers (``cell_not_number``, ``cell_not_finite``).
+    Returns the rows as {column: text or number}. Raises ``KindRefused``.
+    """
+    table = read_tsv(data)
+    if len(table.rows) * len(table.header) > caps["cells_per_role"]:
+        raise KindRefused("cap_exceeded", f"{len(table.rows)} rows")
+    for name in columns:
+        if name not in table.header:
+            raise KindRefused("column_missing", name)
+    values = {name: table.cells(name) for name in columns}
+    for name in numbers:
+        values[name] = [cell_value(text, "number") for text in values[name]]
+    return [
+        dict(zip(columns, row, strict=True))
+        for row in zip(*values.values(), strict=True)
+    ]
+
+
+def read_segments(data: bytes, caps) -> list[dict]:
+    """The floor's ``_badsegments.tsv``: onset and duration (numbers, seconds)
+    and label, one row per segment."""
+    return read_table(data, SEGMENT_COLUMNS, ("onset", "duration"), caps)
+
+
+def read_channels(data: bytes, caps) -> list[dict]:
+    """The floor's ``_channels.tsv``: each channel's name and status."""
+    return read_table(data, CHANNEL_COLUMNS, (), caps)
 
 
 def _base_only(registry: Mapping) -> Mapping:
@@ -112,16 +155,39 @@ class _Times:
         return k / self.rate
 
 
-def check_signal_window(
-    view: Mapping, samples: int, rate: float, published_sha256: str | None
-) -> dict:
-    """The store digest's state and the window's samples, or the refusal.
+def _file_input(view: Mapping, role: str) -> Mapping | None:
+    entry = next((i for i in view["inputs"] if i["role"] == role), None)
+    return None if entry is None else entry["file"]
 
-    A digest the serving copy publishes that differs from the declared one
-    draws nothing (``store_digest_mismatch``); when either is absent the state
-    is ``not_checked``. A window that holds no sample of the recording draws
-    nothing (``window_outside``).
+
+def check_signal_window(
+    view: Mapping,
+    files: Mapping[str, bytes],
+    samples: int,
+    rate: float,
+    published_sha256: str | None,
+    caps: Mapping,
+) -> dict:
+    """The store digest's state, the floor's marks and the window's samples.
+
+    In order: the declared tables (channels, then badsegments) are the files
+    recorded (the generic file words); the digest the serving copy publishes,
+    when it differs from the declared one (``store_digest_mismatch``; when
+    either is absent the state is ``not_checked``); the tables' grammar and
+    columns (channels: name and status; badsegments: onset, duration and label,
+    the first two numbers); and a window that holds a sample of the recording
+    (``window_outside``). Every refusal draws nothing: a window with its marks
+    missing could pass for clean data.
     """
+    reader = _Reader(view, files, caps)
+    tables = {}
+    for role in ("channels", "badsegments"):
+        entry = _file_input(view, role)
+        if entry is not None:
+            try:
+                tables[role] = reader.verified(entry)
+            except KindRefused as exc:
+                raise PresetRefused(exc.word, "nothing", str(exc)) from exc
     signal = next(i for i in view["inputs"] if i["role"] == "signal")["store"]
     declared = signal.get("content_sha256")
     if declared is None or published_sha256 is None:
@@ -130,13 +196,30 @@ def check_signal_window(
         raise PresetRefused("store_digest_mismatch", "nothing")
     else:
         state = "matches"
+    try:
+        channels = (
+            read_channels(tables["channels"], caps) if "channels" in tables else []
+        )
+        segments = (
+            read_segments(tables["badsegments"], caps)
+            if "badsegments" in tables
+            else []
+        )
+    except KindRefused as exc:
+        raise PresetRefused(exc.word, "nothing", str(exc)) from exc
     parameters = view["parameters"]
     first, count = window_samples(
         parameters["start_s"], parameters["duration_s"], samples, rate
     )
     if count == 0:
         raise PresetRefused("window_outside", "nothing")
-    return {"state": state, "first": first, "count": count}
+    return {
+        "state": state,
+        "first": first,
+        "count": count,
+        "bad_channels": [row["name"] for row in channels if row["status"] == "bad"],
+        "segments": segments,
+    }
 
 
 def check_preset(
@@ -160,7 +243,12 @@ def check_preset(
     try:
         if kind == "nemar.signal-window":
             return {"word": None} | check_signal_window(
-                view, store["samples"], store["rate"], store["published_sha256"]
+                view,
+                files,
+                store["samples"],
+                store["rate"],
+                store["published_sha256"],
+                registry["caps"],
             )
         if kind == "nemar.ic-classes":
             base = build_model(view, files, _base_only(registry))

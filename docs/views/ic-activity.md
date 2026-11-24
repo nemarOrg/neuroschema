@@ -72,7 +72,7 @@ That filter is not part of the decomposition and not part of the transform.
 | `unmixing` | a TSV file | `W_serving`: one column per channel, headed by the channel's label, and one row per component, every cell a number (no row-label column). |
 | `signal` | a store | The recording's channel group in the serving copy, with the digest the run recorded (`content_sha256`, null for a run that read the archive) and the copy that run read (`profile`). |
 | `components` | a TSV file | One row per component, in the matrix's row order; its column `component` labels the components (the recipe's `_components.tsv`). |
-| `badsegments` | a TSV file, optional | The floor's bad segments (`onset` and `duration` in seconds, `label`), which a renderer shades. |
+| `badsegments` | a TSV file, optional | The floor's bad segments (`onset` and `duration` in seconds, `label`), which a renderer shades. Verified like a data file, and a fault refuses the whole view ([the floor's tables](presets.md#the-floors-tables)). |
 
 The transform's parameters are the record's `browser_transform` block (`extensions.nemar.ica.browser_transform`), exactly as nemar-process writes it (nemarOrg/nemar-process#81), every member required:
 
@@ -118,7 +118,7 @@ two binary64 operations, each rounded, as the store content digest `nemar.store-
 A renderer runs these checks in this order, and the first that fails gives the word.
 
 1. **The files.**
-   The `unmixing` file, then the `components` file: each is present (`file_missing`), its length is the declared `size` (`file_size_mismatch`), its SHA-256 is the declared `sha256` (`file_digest_mismatch`), and it holds at most `caps.bytes_per_role` bytes (`cap_exceeded`).
+   The `unmixing` file, then the `components` file, then the `badsegments` file when the view declares one: each is present (`file_missing`), its length is the declared `size` (`file_size_mismatch`), its SHA-256 is the declared `sha256` (`file_digest_mismatch`), and it holds at most `caps.bytes_per_role` bytes (`cap_exceeded`).
 2. **The store digest.**
    When the view declares a digest (`content_sha256` is not null) and the serving copy publishes one for that group, the two are equal (`store_digest_mismatch`).
    Where the serving copy publishes each group's digest is nemarOrg/nemar-cli#2343's (the converter writes it at commit); until it does, no store publishes one and every view is `not_checked`.
@@ -130,20 +130,23 @@ A renderer runs these checks in this order, and the first that fails gives the w
 4. **The components.**
    The `components` file meets the TSV grammar, holds at most `caps.cells_per_role` cells counting every header column (`cap_exceeded`), has the column `component` (`column_missing`), and has one data row per matrix row (`coords_length`).
    Its `component` cells, in order, label the matrix's rows.
-5. **The channel match.**
+5. **The bad segments.**
+   When the view declares `badsegments`, its file is read as [presets.md](presets.md#the-floors-tables) says for the floor's tables: the TSV grammar, at most `caps.cells_per_role` cells counting every header column (`cap_exceeded`), the columns `onset`, `duration` and `label`, in that order (`column_missing`), then every `onset` and every `duration` cell a number (`cell_not_number`, `cell_not_finite`).
+   A fault refuses the whole view, as every other check does: activations drawn without their shading could pass the spans ASR repaired for brain signal.
+6. **The channel match.**
    The matrix's header is the transform's `columns`, in order (`channel_set_mismatch`).
    With `store_row`, `rows` has one entry per column, each a row of the store, and the label of row `rows[j]` is column j's label (`channel_set_mismatch`).
    With `label`, each column's label is the label of exactly one store row (`channel_set_mismatch` when none is, or two are).
    Labels are compared as exact strings: `FP1` is not `Fp1`.
    A store whose rows have no labels matches nothing.
-6. **The units.**
+7. **The units.**
    Each matched row's unit is one of the table below (`unit_unknown`, also for a row with no unit), and column j's factor is
 
        f_j = m(unit of row r_j) / m(unit)
 
    with `m` from the table, one binary64 division.
    For a decomposition of the serving copy the matrix takes the store's own unit, so every factor is 1.
-7. **The display filter.**
+8. **The display filter.**
    `display_filter.highpass_hz` is below half the store's rate (`filter_out_of_range`).
 
 | Unit | m, to microvolts |
@@ -214,7 +217,7 @@ The filter's transient at each end of a window is part of the display: the same 
 ### Drawing
 
 A renderer draws the filtered activations as `nemar.lines` draws a `values` role: one series per component, against time in seconds, with the readout snapping to a stored sample ([generic-kinds.md](generic-kinds.md#nemarlines-version-1)).
-It shades each row of the `badsegments` input whose `label` cell is `shaded.label` over `[onset, onset + duration)` seconds, where that meets the window: the spans ASR repaired in the decomposition's input.
+It shades each row of the `badsegments` input whose `label` cell is `shaded.label`, and no other row, over `[onset, onset + duration)` seconds, where that meets the window: the spans ASR repaired in the decomposition's input; the vectors' `shaded` lists exactly those rows, in file order.
 It may mark the table's other rows (the floor's bad windows) apart from them.
 With the view's caption it states:
 
@@ -240,12 +243,12 @@ A filter case matches when every value is within 1e-6 times the largest magnitud
 | `file_size_mismatch` | An input file's length is not its declared `size`. |
 | `file_digest_mismatch` | An input file's SHA-256 is not its declared `sha256`. |
 | `store_digest_mismatch` | The serving copy publishes a digest of the group other than the one the view declares. |
-| `cap_exceeded` | A file, the matrix's rows, columns or cells, or the components' cells exceed the registry's caps. |
-| `tsv_encoding`, `tsv_line_endings`, `tsv_header_repeated`, `tsv_ragged` | The matrix or the components table breaks the TSV grammar ([generic-kinds.md](generic-kinds.md#words)). |
-| `cell_not_number` | A matrix cell does not match the JSON number grammar. |
-| `cell_not_finite` | A matrix cell is not finite. |
+| `cap_exceeded` | A file, the matrix's rows, columns or cells, or the cells of the components or the bad segments exceed the registry's caps. |
+| `tsv_encoding`, `tsv_line_endings`, `tsv_header_repeated`, `tsv_ragged` | The matrix, the components table or the bad segments break the TSV grammar ([generic-kinds.md](generic-kinds.md#words)). |
+| `cell_not_number` | A matrix cell, or a bad segment's `onset` or `duration`, does not match the JSON number grammar. |
+| `cell_not_finite` | A matrix cell, or a bad segment's `onset` or `duration`, is not finite. |
 | `empty` | The matrix has no data row. |
-| `column_missing` | The components table has no column `component`. |
+| `column_missing` | The components table has no column `component`, or the bad segments lack `onset`, `duration` or `label`. |
 | `coords_length` | The components table does not have one row per matrix row. |
 | `channel_set_mismatch` | The matrix's header is not `columns`, or a column does not find exactly one store row with its label (by `rows` or by label). |
 | `unit_unknown` | A matched store row's unit is not in the table, or is absent. |
@@ -255,7 +258,7 @@ A filter case matches when every value is within 1e-6 times the largest magnitud
 
 `ic-activity.v1.json` has `format` (`nemar.ic-activity.v1`), `spec`, `description`, `tolerance`, `cases`, `refusals`, `store_checks`, `coefficients` and `filter_cases`.
 
-- Each case has a `name`, what it `covers`, the `view` declaration, its `files` (each location's UTF-8 text), the `store` (`labels`, `units`, `scale`, `offset`, `rate`, `published_sha256`, the digest the serving copy publishes or null, and `digital`, rows by samples), the `window` (`start`, `count`), and what it gives under `expected`: `state`, `components`, `rows`, `factors`, `time_s`, `activations` and `filtered` (components by samples).
+- Each case has a `name`, what it `covers`, the `view` declaration, its `files` (each location's UTF-8 text), the `store` (`labels`, `units`, `scale`, `offset`, `rate`, `published_sha256`, the digest the serving copy publishes or null, and `digital`, rows by samples), the `window` (`start`, `count`), and what it gives under `expected`: `state`, `components`, `rows`, `factors`, `time_s`, `activations` and `filtered` (components by samples), and `shaded`, the bad segments whose label is `shaded.label`, as `{onset, duration}` in file order.
   A case may carry `caps`, which take the place of the registry's caps of the same names for that case alone.
 - Each refusal has the same fields as a case, with the `word` in place of `expected`.
   The refusals cover each word, and each pair of neighboring checks with two faults, so a renderer that runs two checks in the other order gives the other word.

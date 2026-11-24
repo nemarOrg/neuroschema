@@ -2470,6 +2470,16 @@ def ic_classes_check_cases() -> list[Case]:
             good | {"summed_variance_pct": [1.0], "n_components": 21},
         ),
         (
+            "ic_classes_order_content_before_variance",
+            "Both faults, ICLabel's classes out of order and six summed variances: "
+            "the content schema comes first.",
+            good
+            | {
+                "categories": [*good["categories"][1:], "Brain"],
+                "summed_variance_pct": good["summed_variance_pct"][:6],
+            },
+        ),
+        (
             "ic_classes_order_content_before_total",
             "Both faults: the content schema comes first.",
             good | {"classifier": "", "n_components": 21},
@@ -2487,24 +2497,76 @@ def ic_classes_check_cases() -> list[Case]:
     return out
 
 
-def signal_window_check_cases() -> list[tuple[str, str, dict, dict]]:
+FLOOR_CHANNELS = tsv(
+    "name type status status_description nemar_reason",
+    "Fp1 EEG good n/a n/a",
+    "Fp2 EEG good n/a n/a",
+    "F3 EEG good n/a n/a",
+    "P4 EEG bad flat flatline",
+    "ECG ECG n/a non-signal not_assessed",
+)
+FLOOR_SEGMENTS = tsv(
+    "onset duration label nemar_reason",
+    "151.700000 0.300000 bad_window clean_windows",
+    "152.100000 0.050000 burst asr_repaired",
+)
+
+
+def _with_input(view: dict, role: str, data: bytes) -> dict:
+    """A copy of the view whose file input for the role names these bytes."""
+    out = copy.deepcopy(view)
+    entry = next(i for i in out["inputs"] if i["role"] == role)["file"]
+    entry.update(size=len(data), sha256=hashlib.sha256(data).hexdigest())
+    return out
+
+
+def _input_at(view: dict, role: str) -> str:
+    return next(i for i in view["inputs"] if i["role"] == role)["file"]["location"]
+
+
+def signal_window_check_cases() -> list[tuple[str, str, dict, dict, dict]]:
     window = preset_views()["midsegment"]
     declared = next(i for i in window["inputs"] if i["role"] == "signal")["store"][
         "content_sha256"
     ]
 
-    def at(start_s, duration_s, samples=75000, rate=250.0, published=declared):
+    def at(
+        start_s,
+        duration_s,
+        samples=75000,
+        rate=250.0,
+        published=declared,
+        channels=FLOOR_CHANNELS,
+        segments=FLOOR_SEGMENTS,
+        recorded=None,
+        caps=None,
+    ):
+        """A window with the floor's tables; recorded, when given, maps a role
+        to the bytes the view declares in place of the bytes served."""
         view = _set(
             _set(window, "parameters/start_s", start_s),
             "parameters/duration_s",
             duration_s,
         )
-        return view, {"samples": samples, "rate": rate, "published_sha256": published}
+        files = {}
+        for role, data in (("channels", channels), ("badsegments", segments)):
+            if data is None:
+                view["inputs"] = [i for i in view["inputs"] if i["role"] != role]
+                continue
+            view = _with_input(view, role, (recorded or {}).get(role, data))
+            files[_input_at(view, role)] = data
+        store = {"samples": samples, "rate": rate, "published_sha256": published}
+        return view, files, store, caps or {}
 
+    tampered = FLOOR_SEGMENTS.replace(b"0.300000", b"0.310000", 1)
+    no_label = tsv("onset duration nemar_reason", "151.700000 0.300000 clean_windows")
+    no_status = tsv("name type", "Fp1 EEG")
+    ragged = FLOOR_SEGMENTS + b"153\n"
     return [
         (
             "signal_window",
-            "Two seconds at 151.5 s, the digest published and matching.",
+            "Two seconds at 151.5 s, the digest published and "
+            "matching, with the floor's bad channel and both its segments.",
             *at(151.5, 2),
         ),
         (
@@ -2513,9 +2575,64 @@ def signal_window_check_cases() -> list[tuple[str, str, dict, dict]]:
             *at(151.5, 2, published=None),
         ),
         (
+            "signal_window_without_tables",
+            "No floor tables: nothing to mark.",
+            *at(151.5, 2, channels=None, segments=None),
+        ),
+        (
             "signal_window_digest_mismatch",
             "The serving copy publishes another digest.",
             *at(151.5, 2, published="f" * 64),
+        ),
+        (
+            "signal_window_badsegments_digest",
+            "The bad segments are not the file "
+            "recorded: nothing is drawn, never a window unmarked.",
+            *at(151.5, 2, segments=tampered, recorded={"badsegments": FLOOR_SEGMENTS}),
+        ),
+        (
+            "signal_window_channels_digest",
+            "The channels table is not the file recorded.",
+            *at(
+                151.5,
+                2,
+                channels=FLOOR_CHANNELS.replace(b"bad", b"bed", 1),
+                recorded={"channels": FLOOR_CHANNELS},
+            ),
+        ),
+        (
+            "signal_window_badsegments_no_label",
+            "The bad segments have no column label.",
+            *at(151.5, 2, segments=no_label),
+        ),
+        (
+            "signal_window_channels_no_status",
+            "The channels table has no column status.",
+            *at(151.5, 2, channels=no_status),
+        ),
+        (
+            "signal_window_badsegments_onset_text",
+            "A bad segment whose onset is not a number.",
+            *at(
+                151.5,
+                2,
+                segments=tsv("onset duration label", "n/a 0.300000 bad_window"),
+            ),
+        ),
+        (
+            "signal_window_tables_too_many_bytes",
+            "A floor table longer than a cap on bytes lowered to 100.",
+            *at(151.5, 2, caps={"bytes_per_role": 100}),
+        ),
+        (
+            "signal_window_tables_too_many_cells",
+            "Floor tables over a cap on cells lowered to 12.",
+            *at(151.5, 2, caps={"cells_per_role": 12}),
+        ),
+        (
+            "signal_window_badsegments_ragged",
+            "A bad segments row with one cell.",
+            *at(151.5, 2, segments=ragged),
         ),
         (
             "signal_window_clipped",
@@ -2534,13 +2651,34 @@ def signal_window_check_cases() -> list[tuple[str, str, dict, dict]]:
         ),
         (
             "signal_window_odd_rate",
-            "Times k / rate at 500/7 Hz, where ceil(start * rate) "
-            "would start a sample late and end a sample early.",
+            "Times k / rate at 500/7 Hz, where ceil(start * "
+            "rate) would start a sample late and end a sample early.",
             *at(0.098, 0.364, samples=100, rate=500 / 7),
         ),
         (
-            "signal_window_order",
+            "signal_window_order_files_before_digest",
+            "Both faults: the file comes first.",
+            *at(
+                151.5,
+                2,
+                published="f" * 64,
+                segments=tampered,
+                recorded={"badsegments": FLOOR_SEGMENTS},
+            ),
+        ),
+        (
+            "signal_window_order_digest_before_tables",
             "Both faults: the digest comes first.",
+            *at(151.5, 2, published="f" * 64, segments=no_label),
+        ),
+        (
+            "signal_window_order_tables_before_window",
+            "Both faults: the tables come first.",
+            *at(300, 2, segments=no_label),
+        ),
+        (
+            "signal_window_order",
+            "Both faults: the digest before the window.",
             *at(300, 2, published="f" * 64),
         ),
     ]
@@ -2551,17 +2689,19 @@ def preset_checks() -> dict:
     for case in [*ic_maps_check_cases(), *ic_classes_check_cases()]:
         expected = check_preset(case.view, case.files, REGISTRY)
         cases.append(_header(case) | {"expected": expected})
-    for name, covers, view, store in signal_window_check_cases():
-        expected = check_preset(view, {}, REGISTRY, store)
+    for name, covers, view, files, store, caps in signal_window_check_cases():
+        registry = REGISTRY | {"caps": REGISTRY["caps"] | caps}
+        expected = check_preset(view, files, registry, store)
         cases.append(
             {
                 "name": name,
                 "covers": covers,
                 "view": view,
-                "files": {},
+                "files": _encoded(files),
                 "store": store,
-                "expected": expected,
             }
+            | ({"caps": caps} if caps else {})
+            | {"expected": expected}
         )
     names = [c["name"] for c in cases]
     if len(names) != len(set(names)):
@@ -2574,10 +2714,12 @@ def preset_checks() -> dict:
             "decode files (UTF-8 text), run the preset's checks on view (for a "
             "signal window, with store: the recording's samples, its rate and the "
             "digest the serving copy publishes, or null) and compare with expected: "
-            "word null when they pass (with the state and the window's first "
-            "sample and count for a signal window), else the word and its outcome: "
+            "word null when they pass (with the state, the window's first "
+            "sample and count, the bad channels and the segments for a signal "
+            "window), else the word and its outcome: "
             "base (drawn by its base, with the word), nothing (nothing drawn) or "
-            "fallback (the base itself refused the file first)."
+            "fallback (the base itself refused the file first). A case's caps take "
+            "the place of the registry's caps of the same names for that case."
         ),
         "cases": cases,
     }
