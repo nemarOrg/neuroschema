@@ -344,8 +344,8 @@
       "refused": "positions_flat"
     },
     {
-      "name": "squashed_sphere_inside",
-      "description": "Sixty-four positions spread over a whole 9 cm sphere, squashed to 0.055 of its height: singular ratio 0.055, against the bound 0.05, with a sphere radius under 1 times their scale; it passes, and the dilution (13) then refuses it (positions_partial).",
+      "name": "squashed_sphere_not_flat",
+      "description": "Sixty-four positions spread over a whole 9 cm sphere, squashed to 0.055 of its height: singular ratio 0.055, against the bound 0.05, with a sphere radius under 1 times their scale; the flatness bounds pass it, and the dilution (13) then refuses it (positions_partial): to its fitted center a squashed sphere is a ring, so no set this flat is drawn.",
       "coordinate_system": "EEGLAB",
       "positions": {
         "name": ["S0", "S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21", "S22", "S23", "S24", "S25", "S26", "S27", "S28", "S29", "S30", "S31", "S32", "S33", "S34", "S35", "S36", "S37", "S38", "S39", "S40", "S41", "S42", "S43", "S44", "S45", "S46", "S47", "S48", "S49", "S50", "S51", "S52", "S53", "S54", "S55", "S56", "S57", "S58", "S59", "S60", "S61", "S62", "S63"],
@@ -380,8 +380,8 @@
       "refused": "positions_flat"
     },
     {
-      "name": "cap_inside",
-      "description": "Positions on a 9 cm sphere within 21.0 degrees of its top: a shallow cap whose sphere radius is 2.8 times their scale, against the bound 3, with a singular ratio near 0.1; it passes, and the dilution (52) then refuses it (positions_partial).",
+      "name": "cap_not_flat",
+      "description": "Positions on a 9 cm sphere within 21.0 degrees of its top: a shallow cap whose sphere radius is 2.8 times their scale, against the bound 3, with a singular ratio near 0.1; the flatness bounds pass it, and the dilution (52) then refuses it (positions_partial): a cap this shallow covers too little of a head to be drawn.",
       "coordinate_system": "EEGLAB",
       "positions": {
         "name": ["P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P11", "P12", "P13", "P14", "P15", "P16", "P17", "P18", "P19", "P20", "P21", "P22", "P23", "P24", "P25", "P26"],
@@ -416,7 +416,7 @@
       "refused": "positions_flat"
     },
     {
-      "name": "measured_six",
+      "name": "measured_band_six",
       "description": "Six measured positions, F3 F4 C3 C4 P3 P4 of eegprep's 10-5 template (EEGLAB, meters), and no others: they pass both flatness bounds (singular ratio 0.15, sphere radius 1.1 times their scale), but they cover a band across the top of the head, and their dilution (10.9) refuses them (positions_partial).",
       "coordinate_system": "EEGLAB",
       "positions": {
@@ -432,6 +432,29 @@
         "stability": null
       },
       "refused": "positions_partial"
+    },
+    {
+      "name": "measured_eight_no_midline",
+      "description": "Eight measured positions with no midline, the OpenBCI 8 set (Fp1 Fp2 C3 C4 P7 P8 O1 O2) of eegprep's 10-5 template: they span the whole head, low on every side, and are drawn about the sphere fitted to them.",
+      "coordinate_system": "EEGLAB",
+      "positions": {
+        "name": ["Fp1", "Fp2", "C3", "C4", "P7", "P8", "O1", "O2"],
+        "x": [0.09489999999999998, 0.09489999999999998, 4.5434396248366805e-18, 4.549562858832418e-18, -0.05859999999999998, -0.058699999999999995, -0.09489999999999998, -0.09489999999999998],
+        "y": [0.030699999999999998, -0.030699999999999998, 0.0742, -0.0743, 0.08040000000000001, -0.08039999999999999, 0.030699999999999995, -0.030699999999999995],
+        "z": [-0.0047, -0.0047, 0.06679999999999998, 0.0669, -0.008800000000000002, -0.008799999999999999, -0.0047, -0.0047]
+      },
+      "bounds": {
+        "singular_ratio": 0.43469923160677376,
+        "radius_ratio": 0.8682434712327405,
+        "dilution": 3.8751604693193413,
+        "stability": 0.0007745445352167923
+      },
+      "expected": {
+        "center": [-1.0666694457258513e-05, -5.478040121996874e-05, 5.2832371647364845e-05],
+        "center_method": "sphere",
+        "theta_deg": [-17.954359031806575, 17.894483848803986, -89.99176946499267, 89.9917684051195, -126.06311340125666, 126.14680332358779, -162.04186358907134, 162.1017496826354],
+        "radius": [0.5151522795137055, 0.5151573944739553, 0.2669323413677621, 0.2666750226509631, 0.5282389620333366, 0.5282473166233824, 0.5151553576454553, 0.5151604757246511]
+      }
     },
     {
       "name": "measured_midline_9",

@@ -1843,9 +1843,11 @@ def layout_cases():
     )
     for name, factor, verdict in [
         (
-            "squashed_sphere_inside",
+            "squashed_sphere_not_flat",
             0.055,
-            "it passes, and the dilution (13) then refuses it (positions_partial)",
+            "the flatness bounds pass it, and the dilution (13) then refuses it "
+            "(positions_partial): to its fitted center a squashed sphere is a "
+            "ring, so no set this flat is drawn",
         ),
         ("squashed_sphere_outside", 0.045, "refused (positions_flat)"),
     ]:
@@ -1863,9 +1865,11 @@ def layout_cases():
         )
     for name, angle, verdict in [
         (
-            "cap_inside",
+            "cap_not_flat",
             21.0,
-            "it passes, and the dilution (52) then refuses it (positions_partial)",
+            "the flatness bounds pass it, and the dilution (52) then refuses it "
+            "(positions_partial): a cap this shallow covers too little of a "
+            "head to be drawn",
         ),
         ("cap_outside", 19.0, "refused (positions_flat)"),
     ]:
@@ -1885,7 +1889,7 @@ def layout_cases():
     six = ["F3", "F4", "C3", "C4", "P3", "P4"]
     cases.append(
         layout_case(
-            "measured_six",
+            "measured_band_six",
             "Six measured positions, F3 F4 C3 C4 P3 P4 of eegprep's 10-5 "
             "template (EEGLAB, meters), and no others: they pass both flatness "
             "bounds (singular ratio 0.15, sphere radius 1.1 times their scale), "
@@ -1893,6 +1897,19 @@ def layout_cases():
             "(10.9) refuses them (positions_partial).",
             six,
             [ten_five[k] for k in six],
+            frame,
+        )
+    )
+    eight = ["Fp1", "Fp2", "C3", "C4", "P7", "P8", "O1", "O2"]
+    cases.append(
+        layout_case(
+            "measured_eight_no_midline",
+            "Eight measured positions with no midline, the OpenBCI 8 set (Fp1 "
+            "Fp2 C3 C4 P7 P8 O1 O2) of eegprep's 10-5 template: they span the "
+            "whole head, low on every side, and are drawn about the sphere "
+            "fitted to them.",
+            eight,
+            [ten_five[k] for k in eight],
             frame,
         )
     )

@@ -1120,6 +1120,22 @@ def test_stability_is_the_largest_move_of_a_refit_without_one_position():
         assert abs(case["bounds"]["stability"] - max(moves)) < 1e-9
 
 
+def test_the_flatness_cases_test_what_their_names_say():
+    """The cases inside the flatness bounds pass them and are refused only as
+    partial; a set with no midline that spans the head is drawn."""
+    for name, measure, inside in (
+        ("squashed_sphere_not_flat", "singular_ratio", lambda v: v > sl.FLAT_RATIO),
+        ("cap_not_flat", "radius_ratio", lambda v: v < sl.RADIUS_RATIO),
+    ):
+        case = LAYOUT_CASES[name]
+        assert case["refused"] == "positions_partial", name
+        assert inside(case["bounds"][measure]), name
+        assert case["bounds"]["dilution"] > sl.PARTIAL_DILUTION, name
+    eight = LAYOUT_CASES["measured_eight_no_midline"]
+    assert "expected" in eight and eight["expected"]["center_method"] == "sphere"
+    assert not any(n.lower().endswith("z") for n in eight["positions"]["name"])
+
+
 def test_the_stability_bound_is_pinned_from_both_sides():
     inside, outside = (
         LAYOUT_CASES["stability_inside"],
