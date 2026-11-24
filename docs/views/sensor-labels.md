@@ -96,7 +96,9 @@ Each channel is decided in this order:
 
 1. A channel's type is trimmed of the step-2 whitespace at both ends and its ASCII letters A to Z are folded to a to z; it is not folded by step 1 (a type written with full-width letters, or with U+FEFF before it, is another type).
    A channel whose type is then `eeg` is in play.
-   A channel with no type, an empty type or `n/a` is untyped, and is in play unless its name after steps 1 to 3, folded to lowercase, starts with one of `eog`, `heog`, `veog`, `ecg`, `ekg`, `emg`, `trig`, `status`, `stim`, `event`, `marker`, `resp`, `gsr`, `photic`, `exg`, `spo2`, `pleth`, `pulse`, `position` and `light` (status `excluded_name`).
+   A channel with no type, an empty type or `n/a` is untyped, and is in play unless its name after steps 1 to 3, folded to lowercase, starts with one of `eog`, `heog`, `veog`, `ecg`, `ekg`, `emg`, `trig`, `status`, `stim`, `event`, `marker`, `resp`, `gsr`, `photic`, `exg`, `spo2`, `pleth`, `pulse`, `position`, `light`, `heo`, `veo`, `cb1`, `cb2`, `roc`, `loc`, `luc`, `rlc`, `ibi`, `bursts` and `suppr` (status `excluded_name`).
+   The last eleven are Neuroscan's eye channels (`HEO`, `VEO`) and cerebellar electrodes (`CB1`, `CB2`), which no montage places, and a clinical EDF export's eye channels at the canthi (`ROC`, `LOC`, `LUC`, `RLC`) and burst suppression trends (`IBI`, `BURSTS`, `SUPPR`).
+   No prefix starts the key of an electrode of any montage, or an alias.
    A channel of any other type is excluded (status `excluded_type`).
 2. A channel in play gets its key (with the split below).
 3. A channel whose key is `nz`, `lpa`, `rpa`, `nas` or `inion` is a fiducial (status `fiducial`).
@@ -224,5 +226,5 @@ A change to any step, list, threshold or alias, or to a montage's positions (inc
 
 Each case of the vectors file gives a recording's `channels` as `[name, type]` pairs (type null when absent) and the `result` above.
 The vectors file lists the SHA-256 of each montage file it was computed with; an implementation checks its copies against them, then reproduces every result exactly.
-The cases cover the normalization steps (the fold table, and characters outside it whose normalization depends on the runtime's Unicode version: outlined letters and digits, a modifier capital, subscripts, a Roman numeral, mathematical letters, a superscript), the exclusions, each reference name and the common reference, bipolar names, each count, share and coverage threshold at and beside its boundary, each refusal, the family and montage aliases, every montage but `GSN-HydroCel-32` (its names are also the BioSemi 160 cap's E bank), the nested nets and the coincident Cz variants.
+The cases cover the normalization steps (the fold table, and characters outside it whose normalization depends on the runtime's Unicode version: outlined letters and digits, a modifier capital, subscripts, a Roman numeral, mathematical letters, a superscript), the exclusions (the auxiliary names of a Neuroscan cap and of a clinical EDF export among them), each reference name and the common reference, bipolar names, each count, share and coverage threshold at and beside its boundary, each refusal, the family and montage aliases, every montage but `GSN-HydroCel-32` (its names are also the BioSemi 160 cap's E bank), the nested nets and the coincident Cz variants.
 No two real montages place an electrode within 1e-9 m of each other without placing it at the same point, so `tests/test_sensor_labels.py` tests that tolerance on a montage derived from a real one.

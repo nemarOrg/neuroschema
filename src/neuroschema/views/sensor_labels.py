@@ -68,6 +68,21 @@ NON_EEG_PREFIXES = (
     "pulse",
     "position",
     "light",
+    # Neuroscan's eye channels and cerebellar electrodes, which no montage
+    # places.
+    "heo",
+    "veo",
+    "cb1",
+    "cb2",
+    # Eye channels at the outer and upper or lower canthi, and the burst
+    # suppression trends, of clinical EDF exports (the TUH EEG corpus).
+    "roc",
+    "loc",
+    "luc",
+    "rlc",
+    "ibi",
+    "bursts",
+    "suppr",
 )
 FIDUCIALS = frozenset({"nz", "lpa", "rpa", "nas", "inion"})
 # A right part (after the last hyphen) naming a reference, not an electrode.

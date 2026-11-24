@@ -39,6 +39,7 @@ from neuroschema.views.sensor_labels import (
     NON_EEG_PREFIXES,
     REASONS,
     REFERENCES,
+    aliases,
     classify,
     clean,
     finish,
@@ -84,6 +85,17 @@ SPEC_PREFIXES = [
     "pulse",
     "position",
     "light",
+    "heo",
+    "veo",
+    "cb1",
+    "cb2",
+    "roc",
+    "loc",
+    "luc",
+    "rlc",
+    "ibi",
+    "bursts",
+    "suppr",
 ]
 SPEC_REFERENCES = [
     "ref",
@@ -606,6 +618,28 @@ def test_a_montage_label_must_be_ascii(tmp_path):
         montage_from_json(doc)
 
 
+def test_no_non_eeg_prefix_starts_an_electrode_name():
+    """An untyped channel is excluded by its prefix only when no montage could
+    place it: no prefix starts an electrode's key or an alias."""
+    for montage in MONTAGES:
+        for key in [*montage.positions, *aliases(montage)]:
+            assert not key.startswith(NON_EEG_PREFIXES), (montage.name, key)
+
+
+@pytest.mark.parametrize(
+    "name", ["HEO", "VEO", "CB1", "CB2", "ROC", "LOC", "LUC", "RLC"]
+)
+def test_each_auxiliary_name_is_excluded_untyped(name):
+    names = [(name, None), (f"EEG {name}-REF", None), (name.lower(), "n/a")]
+    assert statuses(names) == [EXCLUDED_NAME] * 3
+    assert statuses([(name, "EEG")]) == [CANDIDATE]
+
+
+@pytest.mark.parametrize("name", ["IBI", "BURSTS", "SUPPR"])
+def test_each_trend_channel_is_excluded_untyped(name):
+    assert statuses([(name, None), (name, "")]) == [EXCLUDED_NAME] * 2
+
+
 def test_clean_keeps_case_and_inner_hyphens():
     assert clean("  EEG  Fp1-REF ") == "Fp1-REF"
     assert finish(" 'Cz.' ") == "cz"
@@ -870,11 +904,11 @@ def test_spec_names_every_list_member_and_threshold():
         *FAMILY_ALIASES,
     ]:
         assert f"`{word}`" in SPEC, word
-    for family, aliases in FAMILY_ALIASES.items():
-        for source, target in aliases.items():
+    for family, family_aliases in FAMILY_ALIASES.items():
+        for source, target in family_aliases.items():
             assert f"`{source}` is `{target}`" in SPEC, (family, source)
-    for montage, aliases in MONTAGE_ALIASES.items():
-        for source, target in aliases.items():
+    for montage, montage_aliases in MONTAGE_ALIASES.items():
+        for source, target in montage_aliases.items():
             row = f"| `{montage}` | `{source}` is `{target}` |"
             assert row in SPEC, row
     for phrase in [
