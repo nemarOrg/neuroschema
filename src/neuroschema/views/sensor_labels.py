@@ -1,7 +1,7 @@
 """``nemar.sensor-labels.v1``: sensor positions inferred from channel names.
 
 Given a recording's channels (name and BIDS type, in recording order) and,
-optionally, its cap model, the algorithm
+optionally, its sidecar's cap model and reference, the algorithm
 normalizes each name, matches the names against a fixed set of standard
 montages, and either places the channels on the one montage the names identify
 or refuses with a reason. It never falls back to a default: when no montage is
@@ -265,6 +265,8 @@ class Inference:
     (bipolar channels included); ``matched`` is the most candidates any one
     montage matched. ``contenders`` lists the montages still competing when the
     choice was made, and ``duplicates`` the electrodes two channels mapped to.
+    ``reference`` is the name of the placed channel the recording's reference
+    names, whose values are all zero: a map leaves it out of the interpolation.
     """
 
     outcome: str
@@ -275,6 +277,7 @@ class Inference:
     contenders: tuple[str, ...]
     duplicates: tuple[str, ...]
     channels: tuple[Channel, ...]
+    reference: str | None = None
 
     def to_json(self) -> dict:
         """The result as the vectors file records it (positions omitted)."""
@@ -286,6 +289,7 @@ class Inference:
             "matched": self.matched,
             "contenders": list(self.contenders),
             "duplicates": list(self.duplicates),
+            "reference": self.reference,
             "channels": [
                 {"status": c.status, "key": c.key, "electrode": c.electrode}
                 for c in self.channels
@@ -363,9 +367,10 @@ def fold_cap_model(model: str) -> str:
     return ascii_lower(_WHITESPACE_RUN.sub(" ", model.strip(_WHITESPACE)))
 
 
-def sidecar_models(sidecar: Mapping) -> dict[str, str | None]:
-    """The keyword argument :func:`infer_positions` takes from a recording's
-    sidecar: its ``CapManufacturersModelName``, None unless a string.
+def sidecar_inputs(sidecar: Mapping) -> dict[str, str | None]:
+    """The keyword arguments :func:`infer_positions` takes from a recording's
+    sidecar: its ``CapManufacturersModelName`` and ``EEGReference``, each None
+    unless a string.
 
     ``sidecar`` is the ``eeg.json`` that applies to the recording after BIDS
     inheritance: the files from the dataset level down to the recording's own,
@@ -381,6 +386,7 @@ def sidecar_models(sidecar: Mapping) -> dict[str, str | None]:
 
     return {
         "cap_model": text("CapManufacturersModelName"),
+        "reference": text("EEGReference"),
     }
 
 
@@ -505,14 +511,18 @@ def infer_positions(
     montages: Sequence[Montage] | None = None,
     *,
     cap_model: str | None = None,
+    reference: str | None = None,
 ) -> Inference:
     """Apply ``nemar.sensor-labels.v1`` to a recording's channels.
 
     ``channels`` is (name, BIDS type or None) per channel, in recording order;
-    ``montages`` defaults to :func:`load_montages`. ``cap_model`` is the
-    recording's ``CapManufacturersModelName`` (:func:`sidecar_models` reads it
-    from its sidecar): a placement on a HydroCel net needs it to name that net
-    (:data:`CAP_MODELS`). See ``docs/views/sensor-labels.md`` for each rule.
+    ``montages`` defaults to :func:`load_montages`. ``cap_model`` and
+    ``reference`` are the recording's ``CapManufacturersModelName`` and
+    ``EEGReference`` (:func:`sidecar_inputs` reads both from its sidecar): a
+    placement on a HydroCel net needs the cap model to name that net
+    (:data:`CAP_MODELS`), and the placed channel the reference names is
+    reported (:attr:`Inference.reference`). See ``docs/views/sensor-labels.md``
+    for each rule.
     """
     montages = load_montages() if montages is None else tuple(montages)
     channels = [(name, channel_type) for name, channel_type in channels]
@@ -595,8 +605,40 @@ def infer_positions(
             )
         placed.append(channel)
     return Inference(
-        "placed", None, winner.name, candidates, best, tuple(names), (), tuple(placed)
+        "placed",
+        None,
+        winner.name,
+        candidates,
+        best,
+        tuple(names),
+        (),
+        tuple(placed),
+        reference_channel(reference, winner, classified, chosen),
     )
+
+
+def reference_channel(
+    reference: str | None,
+    montage: Montage,
+    channels: Sequence[Channel],
+    chosen: Mapping[int, str],
+) -> str | None:
+    """The name of the placed channel the recording's reference names, or None.
+
+    The reference (BIDS ``EEGReference``) is normalized as a montage label is
+    (:func:`label_key`), with the montage's aliases; the channel placed on that
+    electrode is the reference channel. A reference that names no placed
+    channel (``average``, ``linked mastoids``, an electrode not recorded)
+    gives None.
+    """
+    if reference is None:
+        return None
+    key = label_key(reference)
+    key = aliases(montage).get(key, key)
+    for i, electrode in chosen.items():
+        if electrode == key:
+            return channels[i].name
+    return None
 
 
 # ── Montages ──────────────────────────────────────────────────────────────

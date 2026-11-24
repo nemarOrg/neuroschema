@@ -54,7 +54,7 @@ from neuroschema.views.sensor_labels import (
     label_key,
     load_montages,
     montage_from_json,
-    sidecar_models,
+    sidecar_inputs,
 )
 from tests.helpers import failures
 
@@ -212,7 +212,12 @@ def keys(names, kind="EEG"):
 @pytest.mark.parametrize("case", CASES, ids=[c["name"] for c in CASES])
 def test_vectors_replay(case):
     channels = [(name, kind) for name, kind in case["channels"]]
-    result = infer_positions(channels, MONTAGES, cap_model=case["cap_model"])
+    result = infer_positions(
+        channels,
+        MONTAGES,
+        cap_model=case["cap_model"],
+        reference=case["eeg_reference"],
+    )
     assert result.to_json() == case["result"]
 
 
@@ -817,23 +822,44 @@ def test_a_cap_model_is_trimmed_collapsed_and_folded_only(model, folded):
     assert fold_cap_model(model) == folded
 
 
-def test_sidecar_models_reads_the_cap_model_only():
+def test_sidecar_inputs_reads_the_cap_model_and_the_reference_only():
     """ManufacturersModelName names the recording system and is not read: the
     HBN releases' names an older net for a HydroCel net."""
     hbn = {
         "ManufacturersModelName": "128-channel GSN 200 v.2.1",
+        "EEGReference": "Cz",
         "CapManufacturer": "Magstim EGI",
     }
-    assert sidecar_models(hbn) == {"cap_model": None}
-    assert sidecar_models({"CapManufacturersModelName": 5}) == {"cap_model": None}
+    assert sidecar_inputs(hbn) == {"cap_model": None, "reference": "Cz"}
+    assert sidecar_inputs({"CapManufacturersModelName": 5, "EEGReference": []}) == {
+        "cap_model": None,
+        "reference": None,
+    }
     names = [(f"E{i}", "EEG") for i in range(1, 129)] + [("Cz", "EEG")]
-    released = infer_positions(names, MONTAGES, **sidecar_models(hbn))
-    assert released.reason == "cap_model_unknown"
+    released = infer_positions(names, MONTAGES, **sidecar_inputs(hbn))
+    assert (released.reason, released.reference) == ("cap_model_unknown", None)
     corrected = hbn | {"CapManufacturersModelName": "HydroCel GSN 128 1.0"}
-    placed = infer_positions(names, MONTAGES, **sidecar_models(corrected))
-    assert placed.montage == "GSN-HydroCel-129"
+    placed = infer_positions(names, MONTAGES, **sidecar_inputs(corrected))
+    assert (placed.montage, placed.reference) == ("GSN-HydroCel-129", "Cz")
     with pytest.raises(TypeError):
         infer_positions(names, MONTAGES, manufacturers_model="GSN 200 v2.1")
+
+
+def test_the_reference_channel_is_reported_not_dropped():
+    """The reference channel is placed, since its position is known, and named
+    in the result; one the reference does not name, or a refusal, gives None."""
+    names = [(n, "EEG") for n in TEN_TWENTY]
+    result = infer_positions(names, MONTAGES, reference="cz")
+    assert result.reference == "Cz"
+    assert result.channels[TEN_TWENTY.index("Cz")].electrode == "Cz"
+    for reference in (None, "average", "Cz-Fz", "FCz", "T7 T8"):
+        assert infer_positions(names, MONTAGES, reference=reference).reference is None
+    vref = [(f"E{i}", "EEG") for i in range(1, 129)] + [("VREF", "EEG")]
+    model = "HydroCel GSN 128 1.0"
+    on_net = infer_positions(vref, MONTAGES, cap_model=model, reference="Cz")
+    assert on_net.reference == "VREF"
+    assert infer_positions(vref, MONTAGES, reference="Cz").reference is None
+    assert infer_positions(names, MONTAGES, reference="T3").reference == "T7"
 
 
 def test_the_cap_model_gates_egi_placements_only():

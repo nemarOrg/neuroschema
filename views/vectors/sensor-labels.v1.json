@@ -1,7 +1,7 @@
 {
   "format": "nemar.sensor-labels.v1",
   "spec": "docs/views/sensor-labels.md",
-  "description": "Cases every implementation of nemar.sensor-labels.v1 reproduces. Each case lists a recording's channels as [name, BIDS type or null] in recording order and its cap_model (BIDS CapManufacturersModelName, or null), and the result: the outcome, the refusal reason, the montage, the counts, the contending montages, the duplicated electrodes, and per channel its status, its normalized key and the montage electrode it is placed on. The montages are views/montages with the SHA-256 digests listed here.",
+  "description": "Cases every implementation of nemar.sensor-labels.v1 reproduces. Each case lists a recording's channels as [name, BIDS type or null] in recording order, its sidecar's cap_model and eeg_reference (BIDS CapManufacturersModelName and EEGReference, each null when absent), and the result: the outcome, the refusal reason, the montage, the counts, the contending montages, the duplicated electrodes, the reference channel, and per channel its status, its normalized key and the montage electrode it is placed on. The montages are views/montages with the SHA-256 digests listed here.",
   "montages": {
     "standard_1005": "2232d1a904f80e5f0825449bd15693d0b5b640db716dc462ccb1e3c5f10bb52b",
     "GSN-HydroCel-32": "24eb05a1af2b4d07f9200c7c6cdf3c490e07bdaab526fcab71dc3e72f07afb20",
@@ -44,6 +44,7 @@
         ["O2", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -52,6 +53,7 @@
         "matched": 19,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
           {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
@@ -100,6 +102,7 @@
         ["O2", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -108,6 +111,7 @@
         "matched": 19,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
           {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
@@ -157,6 +161,7 @@
         ["T3", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "duplicate_label",
@@ -165,6 +170,7 @@
         "matched": 20,
         "contenders": ["standard_1005"],
         "duplicates": ["T7"],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": null},
           {"status": "candidate", "key": "fp2", "electrode": null},
@@ -216,6 +222,7 @@
         ["Photic", null]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -224,6 +231,7 @@
         "matched": 19,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
           {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
@@ -266,6 +274,7 @@
         ["EEG1", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -274,6 +283,7 @@
         "matched": 9,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
           {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
@@ -307,6 +317,7 @@
         ["POLCz", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -315,6 +326,7 @@
         "matched": 11,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
           {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
@@ -353,6 +365,7 @@
         ["Iz", "\uff25\uff25\uff27"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -361,6 +374,7 @@
         "matched": 13,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
           {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
@@ -403,6 +417,7 @@
         ["\ufeffCz", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -411,6 +426,7 @@
         "matched": 13,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
           {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
@@ -447,6 +463,7 @@
         ["Fp1\u2010REF", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -455,6 +472,7 @@
         "matched": 9,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
           {"status": "candidate", "key": "f7", "electrode": "F7"},
@@ -499,6 +517,7 @@
         ["Fp2.", null]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -507,6 +526,7 @@
         "matched": 24,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fc5", "electrode": "FC5"},
           {"status": "candidate", "key": "fc3", "electrode": "FC3"},
@@ -551,6 +571,7 @@
         ["O2", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -559,6 +580,7 @@
         "matched": 9,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
           {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
@@ -645,6 +667,7 @@
         ["VEO", null]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -653,6 +676,7 @@
         "matched": 62,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
           {"status": "candidate", "key": "fpz", "electrode": "Fpz"},
@@ -759,6 +783,7 @@
         ["SUPPR", null]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -767,6 +792,7 @@
         "matched": 21,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
           {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
@@ -830,6 +856,7 @@
         ["\ua7f2P1", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -838,6 +865,7 @@
         "matched": 19,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
           {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
@@ -894,6 +922,7 @@
         ["AF\u2074", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -902,6 +931,7 @@
         "matched": 19,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
           {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
@@ -954,6 +984,7 @@
         ["Cz", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -962,6 +993,7 @@
         "matched": 19,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
           {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
@@ -1002,6 +1034,7 @@
         ["Cz", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -1010,6 +1043,7 @@
         "matched": 10,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
           {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
@@ -1042,6 +1076,7 @@
         ["Cz", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "bipolar_labels",
@@ -1050,6 +1085,7 @@
         "matched": 1,
         "contenders": [],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "bipolar", "key": "fp1-cz", "electrode": null},
           {"status": "bipolar", "key": "fp2-cz", "electrode": null},
@@ -1090,6 +1126,7 @@
         ["Cz", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -1098,6 +1135,7 @@
         "matched": 19,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
           {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
@@ -1145,6 +1183,7 @@
         ["O2", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "bipolar_labels",
@@ -1153,6 +1192,7 @@
         "matched": 9,
         "contenders": [],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "bipolar", "key": "fp1-cz", "electrode": null},
           {"status": "bipolar", "key": "fp2-cz", "electrode": null},
@@ -1198,6 +1238,7 @@
         ["Fpz-Fz-Ref", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -1206,6 +1247,7 @@
         "matched": 16,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
           {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
@@ -1252,6 +1294,7 @@
         ["Fp1-F7", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -1260,6 +1303,7 @@
         "matched": 18,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
           {"status": "candidate", "key": "f7", "electrode": "F7"},
@@ -1307,6 +1351,7 @@
         ["P8-O2", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "bipolar_labels",
@@ -1315,6 +1360,7 @@
         "matched": 0,
         "contenders": [],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "bipolar", "key": "fp1-f7", "electrode": null},
           {"status": "bipolar", "key": "f7-t7", "electrode": null},
@@ -1375,6 +1421,7 @@
         ["32", null]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "labels_unrecognized",
@@ -1383,6 +1430,7 @@
         "matched": 0,
         "contenders": [],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "1", "electrode": null},
           {"status": "candidate", "key": "2", "electrode": null},
@@ -1441,6 +1489,7 @@
         ["X4", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "share_too_low",
@@ -1449,6 +1498,7 @@
         "matched": 12,
         "contenders": [],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": null},
           {"status": "candidate", "key": "fp2", "electrode": null},
@@ -1490,6 +1540,7 @@
         ["X3", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -1498,6 +1549,7 @@
         "matched": 12,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
           {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
@@ -1530,6 +1582,7 @@
         ["F8", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "too_few_channels",
@@ -1538,6 +1591,7 @@
         "matched": 7,
         "contenders": [],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": null},
           {"status": "candidate", "key": "fp2", "electrode": null},
@@ -1563,6 +1617,7 @@
         ["X1", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "too_few_matched",
@@ -1571,6 +1626,7 @@
         "matched": 7,
         "contenders": [],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": null},
           {"status": "candidate", "key": "fp2", "electrode": null},
@@ -1597,6 +1653,7 @@
         ["T7", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -1605,6 +1662,7 @@
         "matched": 8,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
           {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
@@ -1645,6 +1703,7 @@
         ["EOG2", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -1653,6 +1712,7 @@
         "matched": 9,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
           {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
@@ -1698,6 +1758,7 @@
         ["Inion", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -1706,6 +1767,7 @@
         "matched": 8,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
           {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
@@ -1748,6 +1810,7 @@
         ["VREF", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -1756,6 +1819,7 @@
         "matched": 18,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
           {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
@@ -1914,6 +1978,7 @@
         ["Cz", "EEG"]
       ],
       "cap_model": "HydroCel GSN 128 1.0",
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -1922,6 +1987,7 @@
         "matched": 129,
         "contenders": ["GSN-HydroCel-128", "GSN-HydroCel-129"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": "E1"},
           {"status": "candidate", "key": "e2", "electrode": "E2"},
@@ -2190,6 +2256,7 @@
         ["VREF", "EEG"]
       ],
       "cap_model": "GSN-HydroCel-129",
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -2198,6 +2265,7 @@
         "matched": 129,
         "contenders": ["GSN-HydroCel-128", "GSN-HydroCel-129"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": "E1"},
           {"status": "candidate", "key": "e2", "electrode": "E2"},
@@ -2465,6 +2533,7 @@
         ["E128", "EEG"]
       ],
       "cap_model": "HydroCel GSN 128 1.0",
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -2473,6 +2542,7 @@
         "matched": 128,
         "contenders": ["GSN-HydroCel-128"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": "E1"},
           {"status": "candidate", "key": "e2", "electrode": "E2"},
@@ -2740,6 +2810,7 @@
         ["E129", "EEG"]
       ],
       "cap_model": "Hydrocel Geodesic Sensor Net",
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -2748,6 +2819,7 @@
         "matched": 129,
         "contenders": ["GSN-HydroCel-128", "GSN-HydroCel-129"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": "E1"},
           {"status": "candidate", "key": "e2", "electrode": "E2"},
@@ -3017,6 +3089,7 @@
         ["E129", "EEG"]
       ],
       "cap_model": "HydroCel GSN 128 1.0",
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "duplicate_label",
@@ -3025,6 +3098,7 @@
         "matched": 130,
         "contenders": ["GSN-HydroCel-128", "GSN-HydroCel-129"],
         "duplicates": ["Cz"],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": null},
           {"status": "candidate", "key": "e2", "electrode": null},
@@ -3295,6 +3369,7 @@
         ["E001", "EEG"]
       ],
       "cap_model": "HydroCel GSN 128 1.0",
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "duplicate_label",
@@ -3303,6 +3378,7 @@
         "matched": 130,
         "contenders": ["GSN-HydroCel-128", "GSN-HydroCel-129"],
         "duplicates": ["E1"],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": null},
           {"status": "candidate", "key": "e2", "electrode": null},
@@ -3700,6 +3776,7 @@
         ["Cz", "EEG"]
       ],
       "cap_model": "HydroCel GSN 256 1.0",
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -3708,6 +3785,7 @@
         "matched": 257,
         "contenders": ["GSN-HydroCel-256", "GSN-HydroCel-257"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": "E1"},
           {"status": "candidate", "key": "e2", "electrode": "E2"},
@@ -4231,6 +4309,7 @@
         ["E256", "EEG"]
       ],
       "cap_model": "HydroCel GSN 256 1.0",
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -4239,6 +4318,7 @@
         "matched": 256,
         "contenders": ["GSN-HydroCel-256"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": "E1"},
           {"status": "candidate", "key": "e2", "electrode": "E2"},
@@ -4570,6 +4650,7 @@
         ["Cz", "EEG"]
       ],
       "cap_model": "HydroCel GSN 64 1.0",
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -4578,6 +4659,7 @@
         "matched": 65,
         "contenders": ["GSN-HydroCel-64_1.0", "GSN-HydroCel-65_1.0"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": "E1"},
           {"status": "candidate", "key": "e2", "electrode": "E2"},
@@ -4717,6 +4799,7 @@
         ["E64", "EEG"]
       ],
       "cap_model": "HydroCel GSN 64 1.0",
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -4725,6 +4808,7 @@
         "matched": 64,
         "contenders": ["GSN-HydroCel-64_1.0"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": "E1"},
           {"status": "candidate", "key": "e2", "electrode": "E2"},
@@ -5056,6 +5140,7 @@
         ["E257", "EEG"]
       ],
       "cap_model": "HydroCel GSN 256 1.0",
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -5064,6 +5149,7 @@
         "matched": 257,
         "contenders": ["GSN-HydroCel-256", "GSN-HydroCel-257"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": "E1"},
           {"status": "candidate", "key": "e2", "electrode": "E2"},
@@ -5396,6 +5482,7 @@
         ["E65", "EEG"]
       ],
       "cap_model": "HydroCel GSN 64 1.0",
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -5404,6 +5491,7 @@
         "matched": 65,
         "contenders": ["GSN-HydroCel-64_1.0", "GSN-HydroCel-65_1.0"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": "E1"},
           {"status": "candidate", "key": "e2", "electrode": "E2"},
@@ -5475,7 +5563,7 @@
     },
     {
       "name": "hbn_without_cap_model",
-      "description": "The Healthy Brain Network (HBN) releases as published: E1 to E128 and Cz on a HydroCel 128-channel net whose vertex reference is Cz, with no CapManufacturersModelName (their ManufacturersModelName names the recording system, says 128-channel GSN 200 v.2.1, and is not read). The names are numbered alike on the HydroCel nets and on older nets, on other positions, so they do not place the recording.",
+      "description": "The Healthy Brain Network (HBN) releases as published: E1 to E128 and Cz on a HydroCel 128-channel net whose vertex reference is Cz, with no CapManufacturersModelName (their ManufacturersModelName names the recording system, says 128-channel GSN 200 v.2.1, and is not read). The names are numbered alike on the HydroCel nets and on older nets, on other positions, so they do not place the recording; nor is a reference reported for a refusal.",
       "channels": [
         ["E1", "EEG"],
         ["E2", "EEG"],
@@ -5608,6 +5696,7 @@
         ["Cz", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": "Cz",
       "result": {
         "outcome": "refused",
         "reason": "cap_model_unknown",
@@ -5616,6 +5705,7 @@
         "matched": 129,
         "contenders": ["GSN-HydroCel-128", "GSN-HydroCel-129", "GSN-HydroCel-256", "GSN-HydroCel-257"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": null},
           {"status": "candidate", "key": "e2", "electrode": null},
@@ -5751,7 +5841,7 @@
     },
     {
       "name": "hbn_with_cap_model",
-      "description": "The same channels with a corrected CapManufacturersModelName, HydroCel GSN 128 1.0: placed on the HydroCel 129 net.",
+      "description": "The same channels with a corrected CapManufacturersModelName, HydroCel GSN 128 1.0, and EEGReference Cz: placed on the HydroCel 129 net, and Cz, the reference, is reported, since its values are all zero.",
       "channels": [
         ["E1", "EEG"],
         ["E2", "EEG"],
@@ -5884,6 +5974,7 @@
         ["Cz", "EEG"]
       ],
       "cap_model": "HydroCel GSN 128 1.0",
+      "eeg_reference": "Cz",
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -5892,6 +5983,7 @@
         "matched": 129,
         "contenders": ["GSN-HydroCel-128", "GSN-HydroCel-129"],
         "duplicates": [],
+        "reference": "Cz",
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": "E1"},
           {"status": "candidate", "key": "e2", "electrode": "E2"},
@@ -6022,6 +6114,456 @@
           {"status": "candidate", "key": "e127", "electrode": "E127"},
           {"status": "candidate", "key": "e128", "electrode": "E128"},
           {"status": "candidate", "key": "cz", "electrode": "Cz"}
+        ]
+      }
+    },
+    {
+      "name": "reference_by_alias",
+      "description": "E1 to E128 and Cz on a HydroCel GSN 128 1.0 with EEGReference VREF, EGI's name for the vertex reference: VREF is Cz on an EGI net, so Cz is the reference channel.",
+      "channels": [
+        ["E1", "EEG"],
+        ["E2", "EEG"],
+        ["E3", "EEG"],
+        ["E4", "EEG"],
+        ["E5", "EEG"],
+        ["E6", "EEG"],
+        ["E7", "EEG"],
+        ["E8", "EEG"],
+        ["E9", "EEG"],
+        ["E10", "EEG"],
+        ["E11", "EEG"],
+        ["E12", "EEG"],
+        ["E13", "EEG"],
+        ["E14", "EEG"],
+        ["E15", "EEG"],
+        ["E16", "EEG"],
+        ["E17", "EEG"],
+        ["E18", "EEG"],
+        ["E19", "EEG"],
+        ["E20", "EEG"],
+        ["E21", "EEG"],
+        ["E22", "EEG"],
+        ["E23", "EEG"],
+        ["E24", "EEG"],
+        ["E25", "EEG"],
+        ["E26", "EEG"],
+        ["E27", "EEG"],
+        ["E28", "EEG"],
+        ["E29", "EEG"],
+        ["E30", "EEG"],
+        ["E31", "EEG"],
+        ["E32", "EEG"],
+        ["E33", "EEG"],
+        ["E34", "EEG"],
+        ["E35", "EEG"],
+        ["E36", "EEG"],
+        ["E37", "EEG"],
+        ["E38", "EEG"],
+        ["E39", "EEG"],
+        ["E40", "EEG"],
+        ["E41", "EEG"],
+        ["E42", "EEG"],
+        ["E43", "EEG"],
+        ["E44", "EEG"],
+        ["E45", "EEG"],
+        ["E46", "EEG"],
+        ["E47", "EEG"],
+        ["E48", "EEG"],
+        ["E49", "EEG"],
+        ["E50", "EEG"],
+        ["E51", "EEG"],
+        ["E52", "EEG"],
+        ["E53", "EEG"],
+        ["E54", "EEG"],
+        ["E55", "EEG"],
+        ["E56", "EEG"],
+        ["E57", "EEG"],
+        ["E58", "EEG"],
+        ["E59", "EEG"],
+        ["E60", "EEG"],
+        ["E61", "EEG"],
+        ["E62", "EEG"],
+        ["E63", "EEG"],
+        ["E64", "EEG"],
+        ["E65", "EEG"],
+        ["E66", "EEG"],
+        ["E67", "EEG"],
+        ["E68", "EEG"],
+        ["E69", "EEG"],
+        ["E70", "EEG"],
+        ["E71", "EEG"],
+        ["E72", "EEG"],
+        ["E73", "EEG"],
+        ["E74", "EEG"],
+        ["E75", "EEG"],
+        ["E76", "EEG"],
+        ["E77", "EEG"],
+        ["E78", "EEG"],
+        ["E79", "EEG"],
+        ["E80", "EEG"],
+        ["E81", "EEG"],
+        ["E82", "EEG"],
+        ["E83", "EEG"],
+        ["E84", "EEG"],
+        ["E85", "EEG"],
+        ["E86", "EEG"],
+        ["E87", "EEG"],
+        ["E88", "EEG"],
+        ["E89", "EEG"],
+        ["E90", "EEG"],
+        ["E91", "EEG"],
+        ["E92", "EEG"],
+        ["E93", "EEG"],
+        ["E94", "EEG"],
+        ["E95", "EEG"],
+        ["E96", "EEG"],
+        ["E97", "EEG"],
+        ["E98", "EEG"],
+        ["E99", "EEG"],
+        ["E100", "EEG"],
+        ["E101", "EEG"],
+        ["E102", "EEG"],
+        ["E103", "EEG"],
+        ["E104", "EEG"],
+        ["E105", "EEG"],
+        ["E106", "EEG"],
+        ["E107", "EEG"],
+        ["E108", "EEG"],
+        ["E109", "EEG"],
+        ["E110", "EEG"],
+        ["E111", "EEG"],
+        ["E112", "EEG"],
+        ["E113", "EEG"],
+        ["E114", "EEG"],
+        ["E115", "EEG"],
+        ["E116", "EEG"],
+        ["E117", "EEG"],
+        ["E118", "EEG"],
+        ["E119", "EEG"],
+        ["E120", "EEG"],
+        ["E121", "EEG"],
+        ["E122", "EEG"],
+        ["E123", "EEG"],
+        ["E124", "EEG"],
+        ["E125", "EEG"],
+        ["E126", "EEG"],
+        ["E127", "EEG"],
+        ["E128", "EEG"],
+        ["Cz", "EEG"]
+      ],
+      "cap_model": "HydroCel GSN 128 1.0",
+      "eeg_reference": "VREF",
+      "result": {
+        "outcome": "placed",
+        "reason": null,
+        "montage": "GSN-HydroCel-129",
+        "candidates": 129,
+        "matched": 129,
+        "contenders": ["GSN-HydroCel-128", "GSN-HydroCel-129"],
+        "duplicates": [],
+        "reference": "Cz",
+        "channels": [
+          {"status": "candidate", "key": "e1", "electrode": "E1"},
+          {"status": "candidate", "key": "e2", "electrode": "E2"},
+          {"status": "candidate", "key": "e3", "electrode": "E3"},
+          {"status": "candidate", "key": "e4", "electrode": "E4"},
+          {"status": "candidate", "key": "e5", "electrode": "E5"},
+          {"status": "candidate", "key": "e6", "electrode": "E6"},
+          {"status": "candidate", "key": "e7", "electrode": "E7"},
+          {"status": "candidate", "key": "e8", "electrode": "E8"},
+          {"status": "candidate", "key": "e9", "electrode": "E9"},
+          {"status": "candidate", "key": "e10", "electrode": "E10"},
+          {"status": "candidate", "key": "e11", "electrode": "E11"},
+          {"status": "candidate", "key": "e12", "electrode": "E12"},
+          {"status": "candidate", "key": "e13", "electrode": "E13"},
+          {"status": "candidate", "key": "e14", "electrode": "E14"},
+          {"status": "candidate", "key": "e15", "electrode": "E15"},
+          {"status": "candidate", "key": "e16", "electrode": "E16"},
+          {"status": "candidate", "key": "e17", "electrode": "E17"},
+          {"status": "candidate", "key": "e18", "electrode": "E18"},
+          {"status": "candidate", "key": "e19", "electrode": "E19"},
+          {"status": "candidate", "key": "e20", "electrode": "E20"},
+          {"status": "candidate", "key": "e21", "electrode": "E21"},
+          {"status": "candidate", "key": "e22", "electrode": "E22"},
+          {"status": "candidate", "key": "e23", "electrode": "E23"},
+          {"status": "candidate", "key": "e24", "electrode": "E24"},
+          {"status": "candidate", "key": "e25", "electrode": "E25"},
+          {"status": "candidate", "key": "e26", "electrode": "E26"},
+          {"status": "candidate", "key": "e27", "electrode": "E27"},
+          {"status": "candidate", "key": "e28", "electrode": "E28"},
+          {"status": "candidate", "key": "e29", "electrode": "E29"},
+          {"status": "candidate", "key": "e30", "electrode": "E30"},
+          {"status": "candidate", "key": "e31", "electrode": "E31"},
+          {"status": "candidate", "key": "e32", "electrode": "E32"},
+          {"status": "candidate", "key": "e33", "electrode": "E33"},
+          {"status": "candidate", "key": "e34", "electrode": "E34"},
+          {"status": "candidate", "key": "e35", "electrode": "E35"},
+          {"status": "candidate", "key": "e36", "electrode": "E36"},
+          {"status": "candidate", "key": "e37", "electrode": "E37"},
+          {"status": "candidate", "key": "e38", "electrode": "E38"},
+          {"status": "candidate", "key": "e39", "electrode": "E39"},
+          {"status": "candidate", "key": "e40", "electrode": "E40"},
+          {"status": "candidate", "key": "e41", "electrode": "E41"},
+          {"status": "candidate", "key": "e42", "electrode": "E42"},
+          {"status": "candidate", "key": "e43", "electrode": "E43"},
+          {"status": "candidate", "key": "e44", "electrode": "E44"},
+          {"status": "candidate", "key": "e45", "electrode": "E45"},
+          {"status": "candidate", "key": "e46", "electrode": "E46"},
+          {"status": "candidate", "key": "e47", "electrode": "E47"},
+          {"status": "candidate", "key": "e48", "electrode": "E48"},
+          {"status": "candidate", "key": "e49", "electrode": "E49"},
+          {"status": "candidate", "key": "e50", "electrode": "E50"},
+          {"status": "candidate", "key": "e51", "electrode": "E51"},
+          {"status": "candidate", "key": "e52", "electrode": "E52"},
+          {"status": "candidate", "key": "e53", "electrode": "E53"},
+          {"status": "candidate", "key": "e54", "electrode": "E54"},
+          {"status": "candidate", "key": "e55", "electrode": "E55"},
+          {"status": "candidate", "key": "e56", "electrode": "E56"},
+          {"status": "candidate", "key": "e57", "electrode": "E57"},
+          {"status": "candidate", "key": "e58", "electrode": "E58"},
+          {"status": "candidate", "key": "e59", "electrode": "E59"},
+          {"status": "candidate", "key": "e60", "electrode": "E60"},
+          {"status": "candidate", "key": "e61", "electrode": "E61"},
+          {"status": "candidate", "key": "e62", "electrode": "E62"},
+          {"status": "candidate", "key": "e63", "electrode": "E63"},
+          {"status": "candidate", "key": "e64", "electrode": "E64"},
+          {"status": "candidate", "key": "e65", "electrode": "E65"},
+          {"status": "candidate", "key": "e66", "electrode": "E66"},
+          {"status": "candidate", "key": "e67", "electrode": "E67"},
+          {"status": "candidate", "key": "e68", "electrode": "E68"},
+          {"status": "candidate", "key": "e69", "electrode": "E69"},
+          {"status": "candidate", "key": "e70", "electrode": "E70"},
+          {"status": "candidate", "key": "e71", "electrode": "E71"},
+          {"status": "candidate", "key": "e72", "electrode": "E72"},
+          {"status": "candidate", "key": "e73", "electrode": "E73"},
+          {"status": "candidate", "key": "e74", "electrode": "E74"},
+          {"status": "candidate", "key": "e75", "electrode": "E75"},
+          {"status": "candidate", "key": "e76", "electrode": "E76"},
+          {"status": "candidate", "key": "e77", "electrode": "E77"},
+          {"status": "candidate", "key": "e78", "electrode": "E78"},
+          {"status": "candidate", "key": "e79", "electrode": "E79"},
+          {"status": "candidate", "key": "e80", "electrode": "E80"},
+          {"status": "candidate", "key": "e81", "electrode": "E81"},
+          {"status": "candidate", "key": "e82", "electrode": "E82"},
+          {"status": "candidate", "key": "e83", "electrode": "E83"},
+          {"status": "candidate", "key": "e84", "electrode": "E84"},
+          {"status": "candidate", "key": "e85", "electrode": "E85"},
+          {"status": "candidate", "key": "e86", "electrode": "E86"},
+          {"status": "candidate", "key": "e87", "electrode": "E87"},
+          {"status": "candidate", "key": "e88", "electrode": "E88"},
+          {"status": "candidate", "key": "e89", "electrode": "E89"},
+          {"status": "candidate", "key": "e90", "electrode": "E90"},
+          {"status": "candidate", "key": "e91", "electrode": "E91"},
+          {"status": "candidate", "key": "e92", "electrode": "E92"},
+          {"status": "candidate", "key": "e93", "electrode": "E93"},
+          {"status": "candidate", "key": "e94", "electrode": "E94"},
+          {"status": "candidate", "key": "e95", "electrode": "E95"},
+          {"status": "candidate", "key": "e96", "electrode": "E96"},
+          {"status": "candidate", "key": "e97", "electrode": "E97"},
+          {"status": "candidate", "key": "e98", "electrode": "E98"},
+          {"status": "candidate", "key": "e99", "electrode": "E99"},
+          {"status": "candidate", "key": "e100", "electrode": "E100"},
+          {"status": "candidate", "key": "e101", "electrode": "E101"},
+          {"status": "candidate", "key": "e102", "electrode": "E102"},
+          {"status": "candidate", "key": "e103", "electrode": "E103"},
+          {"status": "candidate", "key": "e104", "electrode": "E104"},
+          {"status": "candidate", "key": "e105", "electrode": "E105"},
+          {"status": "candidate", "key": "e106", "electrode": "E106"},
+          {"status": "candidate", "key": "e107", "electrode": "E107"},
+          {"status": "candidate", "key": "e108", "electrode": "E108"},
+          {"status": "candidate", "key": "e109", "electrode": "E109"},
+          {"status": "candidate", "key": "e110", "electrode": "E110"},
+          {"status": "candidate", "key": "e111", "electrode": "E111"},
+          {"status": "candidate", "key": "e112", "electrode": "E112"},
+          {"status": "candidate", "key": "e113", "electrode": "E113"},
+          {"status": "candidate", "key": "e114", "electrode": "E114"},
+          {"status": "candidate", "key": "e115", "electrode": "E115"},
+          {"status": "candidate", "key": "e116", "electrode": "E116"},
+          {"status": "candidate", "key": "e117", "electrode": "E117"},
+          {"status": "candidate", "key": "e118", "electrode": "E118"},
+          {"status": "candidate", "key": "e119", "electrode": "E119"},
+          {"status": "candidate", "key": "e120", "electrode": "E120"},
+          {"status": "candidate", "key": "e121", "electrode": "E121"},
+          {"status": "candidate", "key": "e122", "electrode": "E122"},
+          {"status": "candidate", "key": "e123", "electrode": "E123"},
+          {"status": "candidate", "key": "e124", "electrode": "E124"},
+          {"status": "candidate", "key": "e125", "electrode": "E125"},
+          {"status": "candidate", "key": "e126", "electrode": "E126"},
+          {"status": "candidate", "key": "e127", "electrode": "E127"},
+          {"status": "candidate", "key": "e128", "electrode": "E128"},
+          {"status": "candidate", "key": "cz", "electrode": "Cz"}
+        ]
+      }
+    },
+    {
+      "name": "reference_on_ten_twenty",
+      "description": "The 10-20 names referenced to Cz, which is recorded: Cz is placed and reported as the reference (EEGReference written CZ, normalized as a name).",
+      "channels": [
+        ["Fp1", "EEG"],
+        ["Fp2", "EEG"],
+        ["F7", "EEG"],
+        ["F3", "EEG"],
+        ["Fz", "EEG"],
+        ["F4", "EEG"],
+        ["F8", "EEG"],
+        ["T7", "EEG"],
+        ["C3", "EEG"],
+        ["Cz", "EEG"],
+        ["C4", "EEG"],
+        ["T8", "EEG"],
+        ["P7", "EEG"],
+        ["P3", "EEG"],
+        ["Pz", "EEG"],
+        ["P4", "EEG"],
+        ["P8", "EEG"],
+        ["O1", "EEG"],
+        ["O2", "EEG"]
+      ],
+      "cap_model": null,
+      "eeg_reference": " CZ ",
+      "result": {
+        "outcome": "placed",
+        "reason": null,
+        "montage": "standard_1005",
+        "candidates": 19,
+        "matched": 19,
+        "contenders": ["standard_1005"],
+        "duplicates": [],
+        "reference": "Cz",
+        "channels": [
+          {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
+          {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
+          {"status": "candidate", "key": "f7", "electrode": "F7"},
+          {"status": "candidate", "key": "f3", "electrode": "F3"},
+          {"status": "candidate", "key": "fz", "electrode": "Fz"},
+          {"status": "candidate", "key": "f4", "electrode": "F4"},
+          {"status": "candidate", "key": "f8", "electrode": "F8"},
+          {"status": "candidate", "key": "t7", "electrode": "T7"},
+          {"status": "candidate", "key": "c3", "electrode": "C3"},
+          {"status": "candidate", "key": "cz", "electrode": "Cz"},
+          {"status": "candidate", "key": "c4", "electrode": "C4"},
+          {"status": "candidate", "key": "t8", "electrode": "T8"},
+          {"status": "candidate", "key": "p7", "electrode": "P7"},
+          {"status": "candidate", "key": "p3", "electrode": "P3"},
+          {"status": "candidate", "key": "pz", "electrode": "Pz"},
+          {"status": "candidate", "key": "p4", "electrode": "P4"},
+          {"status": "candidate", "key": "p8", "electrode": "P8"},
+          {"status": "candidate", "key": "o1", "electrode": "O1"},
+          {"status": "candidate", "key": "o2", "electrode": "O2"}
+        ]
+      }
+    },
+    {
+      "name": "reference_names_no_channel",
+      "description": "The 10-20 names with EEGReference linked mastoids: no channel is the reference.",
+      "channels": [
+        ["Fp1", "EEG"],
+        ["Fp2", "EEG"],
+        ["F7", "EEG"],
+        ["F3", "EEG"],
+        ["Fz", "EEG"],
+        ["F4", "EEG"],
+        ["F8", "EEG"],
+        ["T7", "EEG"],
+        ["C3", "EEG"],
+        ["Cz", "EEG"],
+        ["C4", "EEG"],
+        ["T8", "EEG"],
+        ["P7", "EEG"],
+        ["P3", "EEG"],
+        ["Pz", "EEG"],
+        ["P4", "EEG"],
+        ["P8", "EEG"],
+        ["O1", "EEG"],
+        ["O2", "EEG"]
+      ],
+      "cap_model": null,
+      "eeg_reference": "linked mastoids",
+      "result": {
+        "outcome": "placed",
+        "reason": null,
+        "montage": "standard_1005",
+        "candidates": 19,
+        "matched": 19,
+        "contenders": ["standard_1005"],
+        "duplicates": [],
+        "reference": null,
+        "channels": [
+          {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
+          {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
+          {"status": "candidate", "key": "f7", "electrode": "F7"},
+          {"status": "candidate", "key": "f3", "electrode": "F3"},
+          {"status": "candidate", "key": "fz", "electrode": "Fz"},
+          {"status": "candidate", "key": "f4", "electrode": "F4"},
+          {"status": "candidate", "key": "f8", "electrode": "F8"},
+          {"status": "candidate", "key": "t7", "electrode": "T7"},
+          {"status": "candidate", "key": "c3", "electrode": "C3"},
+          {"status": "candidate", "key": "cz", "electrode": "Cz"},
+          {"status": "candidate", "key": "c4", "electrode": "C4"},
+          {"status": "candidate", "key": "t8", "electrode": "T8"},
+          {"status": "candidate", "key": "p7", "electrode": "P7"},
+          {"status": "candidate", "key": "p3", "electrode": "P3"},
+          {"status": "candidate", "key": "pz", "electrode": "Pz"},
+          {"status": "candidate", "key": "p4", "electrode": "P4"},
+          {"status": "candidate", "key": "p8", "electrode": "P8"},
+          {"status": "candidate", "key": "o1", "electrode": "O1"},
+          {"status": "candidate", "key": "o2", "electrode": "O2"}
+        ]
+      }
+    },
+    {
+      "name": "reference_not_recorded",
+      "description": "The 10-20 names without Cz, with EEGReference Cz: the reference is not among the channels.",
+      "channels": [
+        ["Fp1", "EEG"],
+        ["Fp2", "EEG"],
+        ["F7", "EEG"],
+        ["F3", "EEG"],
+        ["Fz", "EEG"],
+        ["F4", "EEG"],
+        ["F8", "EEG"],
+        ["T7", "EEG"],
+        ["C3", "EEG"],
+        ["C4", "EEG"],
+        ["T8", "EEG"],
+        ["P7", "EEG"],
+        ["P3", "EEG"],
+        ["Pz", "EEG"],
+        ["P4", "EEG"],
+        ["P8", "EEG"],
+        ["O1", "EEG"],
+        ["O2", "EEG"]
+      ],
+      "cap_model": null,
+      "eeg_reference": "Cz",
+      "result": {
+        "outcome": "placed",
+        "reason": null,
+        "montage": "standard_1005",
+        "candidates": 18,
+        "matched": 18,
+        "contenders": ["standard_1005"],
+        "duplicates": [],
+        "reference": null,
+        "channels": [
+          {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
+          {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
+          {"status": "candidate", "key": "f7", "electrode": "F7"},
+          {"status": "candidate", "key": "f3", "electrode": "F3"},
+          {"status": "candidate", "key": "fz", "electrode": "Fz"},
+          {"status": "candidate", "key": "f4", "electrode": "F4"},
+          {"status": "candidate", "key": "f8", "electrode": "F8"},
+          {"status": "candidate", "key": "t7", "electrode": "T7"},
+          {"status": "candidate", "key": "c3", "electrode": "C3"},
+          {"status": "candidate", "key": "c4", "electrode": "C4"},
+          {"status": "candidate", "key": "t8", "electrode": "T8"},
+          {"status": "candidate", "key": "p7", "electrode": "P7"},
+          {"status": "candidate", "key": "p3", "electrode": "P3"},
+          {"status": "candidate", "key": "pz", "electrode": "Pz"},
+          {"status": "candidate", "key": "p4", "electrode": "P4"},
+          {"status": "candidate", "key": "p8", "electrode": "P8"},
+          {"status": "candidate", "key": "o1", "electrode": "O1"},
+          {"status": "candidate", "key": "o2", "electrode": "O2"}
         ]
       }
     },
@@ -6160,6 +6702,7 @@
         ["Cz", "EEG"]
       ],
       "cap_model": "128-channel GSN 200 v.2.1",
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "cap_model_unknown",
@@ -6168,6 +6711,7 @@
         "matched": 129,
         "contenders": ["GSN-HydroCel-128", "GSN-HydroCel-129", "GSN-HydroCel-256", "GSN-HydroCel-257"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": null},
           {"status": "candidate", "key": "e2", "electrode": null},
@@ -6563,6 +7107,7 @@
         ["E256", "EEG"]
       ],
       "cap_model": "GSN256",
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "cap_model_unknown",
@@ -6571,6 +7116,7 @@
         "matched": 256,
         "contenders": ["GSN-HydroCel-256", "GSN-HydroCel-257"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": null},
           {"status": "candidate", "key": "e2", "electrode": null},
@@ -6901,6 +7447,7 @@
         ["E64", "EEG"]
       ],
       "cap_model": "Geodesic Sensor Net 64 2.0",
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "cap_model_unknown",
@@ -6916,6 +7463,7 @@
           "GSN-HydroCel-257"
         ],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": null},
           {"status": "candidate", "key": "e2", "electrode": null},
@@ -7246,6 +7794,7 @@
         ["E256", "EEG"]
       ],
       "cap_model": "  hydroCEL   gsn 256 1.0 ",
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -7254,6 +7803,7 @@
         "matched": 256,
         "contenders": ["GSN-HydroCel-256"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": "E1"},
           {"status": "candidate", "key": "e2", "electrode": "E2"},
@@ -7776,6 +8326,7 @@
         ["E256", "EEG"]
       ],
       "cap_model": "HydroCel GSN 128 1.0",
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "cap_model_unknown",
@@ -7784,6 +8335,7 @@
         "matched": 256,
         "contenders": ["GSN-HydroCel-256", "GSN-HydroCel-257"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": null},
           {"status": "candidate", "key": "e2", "electrode": null},
@@ -8179,6 +8731,7 @@
         ["Cz", "EEG"]
       ],
       "cap_model": "EGI HydroCel 128",
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "cap_model_unknown",
@@ -8187,6 +8740,7 @@
         "matched": 129,
         "contenders": ["GSN-HydroCel-128", "GSN-HydroCel-129", "GSN-HydroCel-256", "GSN-HydroCel-257"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": null},
           {"status": "candidate", "key": "e2", "electrode": null},
@@ -8345,6 +8899,7 @@
         ["O2", "EEG"]
       ],
       "cap_model": "HydroCel GSN 128 1.0",
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -8353,6 +8908,7 @@
         "matched": 19,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
           {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
@@ -8482,6 +9038,7 @@
         ["E100", "EEG"]
       ],
       "cap_model": "HydroCel GSN 128 1.0",
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "net_coverage_low",
@@ -8490,6 +9047,7 @@
         "matched": 100,
         "contenders": ["GSN-HydroCel-128"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": null},
           {"status": "candidate", "key": "e2", "electrode": null},
@@ -8640,6 +9198,7 @@
         ["E40", "EEG"]
       ],
       "cap_model": "HydroCel GSN 64 1.0",
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "net_coverage_low",
@@ -8648,6 +9207,7 @@
         "matched": 40,
         "contenders": ["GSN-HydroCel-64_1.0"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": null},
           {"status": "candidate", "key": "e2", "electrode": null},
@@ -8799,6 +9359,7 @@
         ["E001", "EEG"]
       ],
       "cap_model": "HydroCel GSN 128 1.0",
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "duplicate_label",
@@ -8807,6 +9368,7 @@
         "matched": 101,
         "contenders": ["GSN-HydroCel-128"],
         "duplicates": ["E1"],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": null},
           {"status": "candidate", "key": "e2", "electrode": null},
@@ -8946,6 +9508,7 @@
         ["E28", "EEG"]
       ],
       "cap_model": "HydroCel GSN 32",
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "montage_ambiguous",
@@ -8954,6 +9517,7 @@
         "matched": 28,
         "contenders": ["GSN-HydroCel-32", "biosemi160"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": null},
           {"status": "candidate", "key": "e2", "electrode": null},
@@ -9109,6 +9673,7 @@
         ["Cz", "EEG"]
       ],
       "cap_model": "HydroCel GSN 128",
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -9117,6 +9682,7 @@
         "matched": 117,
         "contenders": ["GSN-HydroCel-128", "GSN-HydroCel-129"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": "E1"},
           {"status": "candidate", "key": "e2", "electrode": "E2"},
@@ -9360,6 +9926,7 @@
         ["Cz", "EEG"]
       ],
       "cap_model": "HydroCel GSN 128 1.0",
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "net_coverage_low",
@@ -9368,6 +9935,7 @@
         "matched": 116,
         "contenders": ["GSN-HydroCel-128", "GSN-HydroCel-129"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": null},
           {"status": "candidate", "key": "e2", "electrode": null},
@@ -9638,6 +10206,7 @@
         ["E16", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -9646,6 +10215,7 @@
         "matched": 144,
         "contenders": ["biosemi160"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "a1", "electrode": "A1"},
           {"status": "candidate", "key": "a2", "electrode": "A2"},
@@ -9943,6 +10513,7 @@
         ["E15", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "net_coverage_low",
@@ -9951,6 +10522,7 @@
         "matched": 143,
         "contenders": ["biosemi160"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "a1", "electrode": null},
           {"status": "candidate", "key": "a2", "electrode": null},
@@ -10137,6 +10709,7 @@
         ["E33", "EEG"]
       ],
       "cap_model": "GSN-HydroCel-32",
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "montage_ambiguous",
@@ -10145,6 +10718,7 @@
         "matched": 33,
         "contenders": ["GSN-HydroCel-32", "biosemi160"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": null},
           {"status": "candidate", "key": "e2", "electrode": null},
@@ -10221,6 +10795,7 @@
         ["Cz", "EEG"]
       ],
       "cap_model": "GSN-HydroCel-32",
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "montage_ambiguous",
@@ -10229,6 +10804,7 @@
         "matched": 33,
         "contenders": ["GSN-HydroCel-32", "biosemi160"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "e1", "electrode": null},
           {"status": "candidate", "key": "e2", "electrode": null},
@@ -10288,6 +10864,7 @@
         ["A16", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -10296,6 +10873,7 @@
         "matched": 16,
         "contenders": ["biosemi16"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "a1", "electrode": "A1"},
           {"status": "candidate", "key": "a2", "electrode": "A2"},
@@ -10354,6 +10932,7 @@
         ["A32", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -10362,6 +10941,7 @@
         "matched": 32,
         "contenders": ["biosemi32"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "a1", "electrode": "A1"},
           {"status": "candidate", "key": "a2", "electrode": "A2"},
@@ -10468,6 +11048,7 @@
         ["B32", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -10476,6 +11057,7 @@
         "matched": 64,
         "contenders": ["biosemi64"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "a1", "electrode": "A1"},
           {"status": "candidate", "key": "a2", "electrode": "A2"},
@@ -10614,6 +11196,7 @@
         ["B32", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -10622,6 +11205,7 @@
         "matched": 64,
         "contenders": ["biosemi64"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "a1", "electrode": "A1"},
           {"status": "candidate", "key": "a2", "electrode": "A2"},
@@ -10768,6 +11352,7 @@
         ["EXG8", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -10776,6 +11361,7 @@
         "matched": 64,
         "contenders": ["biosemi64"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "a1", "electrode": "A1"},
           {"status": "candidate", "key": "a2", "electrode": "A2"},
@@ -10922,6 +11508,7 @@
         ["B32-CMS", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -10930,6 +11517,7 @@
         "matched": 64,
         "contenders": ["biosemi64"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "a1", "electrode": "A1"},
           {"status": "candidate", "key": "a2", "electrode": "A2"},
@@ -11062,6 +11650,7 @@
         ["B26", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -11070,6 +11659,7 @@
         "matched": 58,
         "contenders": ["biosemi64"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "a1", "electrode": "A1"},
           {"status": "candidate", "key": "a2", "electrode": "A2"},
@@ -11195,6 +11785,7 @@
         ["B25", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "net_coverage_low",
@@ -11203,6 +11794,7 @@
         "matched": 57,
         "contenders": ["biosemi64"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "a1", "electrode": null},
           {"status": "candidate", "key": "a2", "electrode": null},
@@ -11285,6 +11877,7 @@
         ["A15", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -11293,6 +11886,7 @@
         "matched": 15,
         "contenders": ["biosemi16"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "a1", "electrode": "A1"},
           {"status": "candidate", "key": "a2", "electrode": "A2"},
@@ -11332,6 +11926,7 @@
         ["A14", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "net_coverage_low",
@@ -11340,6 +11935,7 @@
         "matched": 14,
         "contenders": ["biosemi16"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "a1", "electrode": null},
           {"status": "candidate", "key": "a2", "electrode": null},
@@ -11501,6 +12097,7 @@
         ["Status", null]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -11509,6 +12106,7 @@
         "matched": 128,
         "contenders": ["biosemi128"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "a1", "electrode": "A1"},
           {"status": "candidate", "key": "a2", "electrode": "A2"},
@@ -11816,6 +12414,7 @@
         ["E32", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -11824,6 +12423,7 @@
         "matched": 160,
         "contenders": ["biosemi160"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "a1", "electrode": "A1"},
           {"status": "candidate", "key": "a2", "electrode": "A2"},
@@ -12250,6 +12850,7 @@
         ["H32", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -12258,6 +12859,7 @@
         "matched": 256,
         "contenders": ["biosemi256"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "a1", "electrode": "A1"},
           {"status": "candidate", "key": "a2", "electrode": "A2"},
@@ -12532,6 +13134,7 @@
         ["C6", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "montage_ambiguous",
@@ -12540,6 +13143,7 @@
         "matched": 8,
         "contenders": ["standard_1005", "biosemi128"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "a1", "electrode": null},
           {"status": "candidate", "key": "a2", "electrode": null},
@@ -12578,6 +13182,7 @@
         ["Cz", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "refused",
         "reason": "montage_ambiguous",
@@ -12586,6 +13191,7 @@
         "matched": 20,
         "contenders": ["standard_1005", "biosemi256"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "a1", "electrode": null},
           {"status": "candidate", "key": "a2", "electrode": null},
@@ -12637,6 +13243,7 @@
         ["Pz", "EEG"]
       ],
       "cap_model": null,
+      "eeg_reference": null,
       "result": {
         "outcome": "placed",
         "reason": null,
@@ -12645,6 +13252,7 @@
         "matched": 21,
         "contenders": ["standard_1005"],
         "duplicates": [],
+        "reference": null,
         "channels": [
           {"status": "candidate", "key": "a1", "electrode": "A1"},
           {"status": "candidate", "key": "a2", "electrode": "A2"},

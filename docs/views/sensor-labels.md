@@ -23,7 +23,7 @@ The pipeline does not use this algorithm: a recipe that needs positions (ICLabel
 ## Input
 
 - The recording's channels in recording order, each a name (a string) and a Brain Imaging Data Structure (BIDS) channel type (a string, or absent), as in `channels.tsv`.
-- Optionally, the recording's cap model: the `CapManufacturersModelName` of its sidecar (a string, or absent; any other value is absent), which only a placement on an EGI net reads ([The cap model](#the-cap-model)).
+- Optionally, two fields of the recording's sidecar: `CapManufacturersModelName`, the cap model ([The cap model](#the-cap-model)), which only a placement on an EGI net reads, and `EEGReference`, the reference ([The reference channel](#the-reference-channel)); each a string, or absent (any other value is absent).
   The sidecar is the `eeg.json` that applies to the recording after BIDS inheritance: the files from the dataset level down to the recording's own, a key at a lower level replacing the same key above it.
   `ManufacturersModelName` names the recording system, not the cap, and is not read: the Healthy Brain Network (HBN) releases record HydroCel 128-channel nets and give `128-channel GSN 200 v.2.1` there.
 
@@ -183,7 +183,7 @@ These steps run in order, and the first that refuses decides the reason.
 8. **`duplicate_label`**: two or more candidates match one electrode of the montage (`T3` and `T7`, or `E1` and `E001`).
 9. **`montage_ambiguous`**: another remaining contender puts a channel that both match more than 1e-9 m (Euclidean distance) from where the montage puts it.
 10. **`net_coverage_low`**: the montage is a numbered net (family `GSN-HydroCel` or `BioSemi`) and best is below 90% of its electrodes (10 × best < 9 × electrodes).
-11. Otherwise every candidate the montage matches is placed on its electrode, and the other candidates stay unplaced.
+11. Otherwise every candidate the montage matches is placed on its electrode, and the other candidates stay unplaced; the reference channel is reported ([The reference channel](#the-reference-channel)).
 
 Every comparison of a share is between integers, so every implementation decides a boundary case the same way.
 
@@ -219,6 +219,13 @@ Every other string names no net: an older net's name (`128-channel GSN 200 v.2.1
 A wrong guess is never made: an EGI recording whose `CapManufacturersModelName` names no HydroCel net draws no map from its names.
 The HBN releases as published (no `CapManufacturersModelName`) are refused; with `CapManufacturersModelName` `HydroCel GSN 128 1.0` they are placed on `GSN-HydroCel-129`.
 
+### The reference channel
+
+A channel named as the recording's reference holds no data: its values are all zero by construction (the HBN nets record against Cz, and their Cz channel is flat).
+The reference is the sidecar's `EEGReference`, normalized as a montage label is (steps 1 to 7) and redirected by the chosen montage's aliases; the reference channel is the placed channel whose electrode it names.
+It is placed like any channel, since its position is known, and reported in the output (`reference`), so a map leaves its value out of the interpolation and does not draw zeros as data.
+A reference that names no placed channel (`average`, `linked mastoids`, an electrode the recording does not carry) reports none, and a refusal reports none.
+
 ### Why nested nets are dismissed, and why a net needs coverage
 
 The nets of one family number their electrodes in one sequence, so a larger net holds every name of a smaller one: E1 to E128 and Cz are names on the 257-channel net as well as the 129-channel net, on other positions.
@@ -243,6 +250,7 @@ These wrong placements remain possible in version 1, and are accepted:
 - A recording that leaves banks of its cap unused is placed on the smallest net it fills, as above: A1 to A32 from a 64-channel cap lands on the 32-channel cap's positions.
 - A recording whose cap model names a HydroCel net it was not recorded on is placed on that net's positions: the model is the writer's statement, and is not checked against anything else.
   A model with no size names every HydroCel net, so with it a recording that left most of a larger net unused can land on a smaller net, as above.
+- A reference written in words this step does not normalize to a channel (`Cz (vertex)`) reports no reference channel, and its zeros are drawn as data.
 - The `POL ` prefix is dropped from untyped names too, so an untyped Nihon Kohden recording's intracranial strip or depth contacts named like scalp electrodes or bank labels (`POL C3`, `POL A1`) are read as EEG electrodes.
   A contact typed `SEEG` or `ECOG` is excluded by its type; an untyped set is refused only when the share, coverage or ambiguity rules refuse it.
 
@@ -257,6 +265,7 @@ These wrong placements remain possible in version 1, and are accepted:
 | `matched` | best. |
 | `contenders` | The contenders left after step 6, in montage order; for `cap_model_unknown`, every contender of step 4; empty when step 1, 2 or 3 refused. |
 | `duplicates` | For `duplicate_label`, the electrodes two candidates matched, in the order of their first channel. |
+| `reference` | The name of the placed channel the reference names, as the input gives it, or null. |
 | `channels` | Per channel, in input order: `status`, `key` (null for an excluded channel) and `electrode` (the montage's label, for a placed channel; otherwise null). |
 
 A consumer takes each placed channel's position from the montage file.
@@ -269,7 +278,7 @@ A change to any step, list, threshold or alias, or to a montage's positions (inc
 
 ## Vectors
 
-Each case of the vectors file gives a recording's `channels` as `[name, type]` pairs (type null when absent), its sidecar's `cap_model` (`CapManufacturersModelName`, null when absent) and the `result` above.
+Each case of the vectors file gives a recording's `channels` as `[name, type]` pairs (type null when absent), its sidecar's `cap_model` (`CapManufacturersModelName`) and `eeg_reference` (`EEGReference`), each null when absent, and the `result` above.
 The vectors file lists the SHA-256 of each montage file it was computed with; an implementation checks its copies against them, then reproduces every result exactly.
-The cases cover the normalization steps (the fold table, and characters outside it whose normalization depends on the runtime's Unicode version: outlined letters and digits, a modifier capital, subscripts, a Roman numeral, mathematical letters, a superscript), the exclusions (the auxiliary names of a Neuroscan cap and of a clinical EDF export among them), each reference name and the common reference, bipolar names, each count, share and coverage threshold at and beside its boundary, each refusal, the family and montage aliases, every montage but `GSN-HydroCel-32` (its names are also the BioSemi 160 cap's E bank), the nested nets, the coincident Cz variants, and the cap model: the HBN channels as published (refused) and with a corrected HydroCel model, older nets' names and EEGLAB's file names (refused), case and whitespace, a model of another size, one the list does not hold, and a model beside names that are not an EGI net's.
+The cases cover the normalization steps (the fold table, and characters outside it whose normalization depends on the runtime's Unicode version: outlined letters and digits, a modifier capital, subscripts, a Roman numeral, mathematical letters, a superscript), the exclusions (the auxiliary names of a Neuroscan cap and of a clinical EDF export among them), each reference name and the common reference, bipolar names, each count, share and coverage threshold at and beside its boundary, each refusal, the family and montage aliases, every montage but `GSN-HydroCel-32` (its names are also the BioSemi 160 cap's E bank), the nested nets, the coincident Cz variants, and the cap model: the HBN channels as published (refused) and with a corrected HydroCel model, older nets' names and EEGLAB's file names (refused), case and whitespace, a model of another size, one the list does not hold, and a model beside names that are not an EGI net's; and the reference: Cz on the HBN net, by the VREF alias, on the 10-20 names, a reference that names no channel and one not recorded.
 No two real montages place an electrode within 1e-9 m of each other without placing it at the same point, so `tests/test_sensor_labels.py` tests that tolerance on a montage derived from a real one.

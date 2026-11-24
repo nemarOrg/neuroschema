@@ -1312,17 +1312,60 @@ CASES = [
         "CapManufacturersModelName (their ManufacturersModelName names the "
         "recording system, says 128-channel GSN 200 v.2.1, and is not read). "
         "The names are numbered alike on the HydroCel nets and on older nets, "
-        "on other positions, so they do not place the recording.",
+        "on other positions, so they do not place the recording; nor is a "
+        "reference reported for a refusal.",
         egi(128, ["Cz"]),
         ("refused", "cap_model_unknown", None),
+        None,
+        "Cz",
     ),
     (
         "hbn_with_cap_model",
         "The same channels with a corrected CapManufacturersModelName, HydroCel "
-        "GSN 128 1.0: placed on the HydroCel 129 net.",
+        "GSN 128 1.0, and EEGReference Cz: placed on the HydroCel 129 net, and "
+        "Cz, the reference, is reported, since its values are all zero.",
         egi(128, ["Cz"]),
         ("placed", None, "GSN-HydroCel-129"),
         "HydroCel GSN 128 1.0",
+        "Cz",
+    ),
+    (
+        "reference_by_alias",
+        "E1 to E128 and Cz on a HydroCel GSN 128 1.0 with EEGReference VREF, "
+        "EGI's name for the vertex reference: VREF is Cz on an EGI net, so Cz "
+        "is the reference channel.",
+        egi(128, ["Cz"]),
+        ("placed", None, "GSN-HydroCel-129"),
+        "HydroCel GSN 128 1.0",
+        "VREF",
+    ),
+    (
+        "reference_on_ten_twenty",
+        "The 10-20 names referenced to Cz, which is recorded: Cz is placed and "
+        "reported as the reference (EEGReference written CZ, normalized as a "
+        "name).",
+        eeg(TEN_TWENTY),
+        ("placed", None, "standard_1005"),
+        None,
+        " CZ ",
+    ),
+    (
+        "reference_names_no_channel",
+        "The 10-20 names with EEGReference linked mastoids: no channel is the "
+        "reference.",
+        eeg(TEN_TWENTY),
+        ("placed", None, "standard_1005"),
+        None,
+        "linked mastoids",
+    ),
+    (
+        "reference_not_recorded",
+        "The 10-20 names without Cz, with EEGReference Cz: the reference is not "
+        "among the channels.",
+        eeg(NO_CZ),
+        ("placed", None, "standard_1005"),
+        None,
+        "Cz",
     ),
     (
         "older_egi_net_gsn_200",
@@ -1591,10 +1634,13 @@ CASES = [
 
 def build_vectors(montages: tuple, sha: dict[str, str]) -> str:
     cases = []
-    for name, description, channels, expected, *model in CASES:
-        cap_model = model[0] if model else None
+    for name, description, channels, expected, *inputs in CASES:
+        cap_model, reference = (*inputs, None, None)[:2]
         result = infer_positions(
-            [tuple(c) for c in channels], montages, cap_model=cap_model
+            [tuple(c) for c in channels],
+            montages,
+            cap_model=cap_model,
+            reference=reference,
         ).to_json()
         got = (result["outcome"], result["reason"], result["montage"])
         if got != expected:
@@ -1605,6 +1651,7 @@ def build_vectors(montages: tuple, sha: dict[str, str]) -> str:
                 "description": description,
                 "channels": channels,
                 "cap_model": cap_model,
+                "eeg_reference": reference,
                 "result": result,
             }
         )
@@ -1614,10 +1661,12 @@ def build_vectors(montages: tuple, sha: dict[str, str]) -> str:
         "description": (
             "Cases every implementation of nemar.sensor-labels.v1 reproduces. Each "
             "case lists a recording's channels as [name, BIDS type or null] in "
-            "recording order and its cap_model (BIDS CapManufacturersModelName, or "
-            "null), and the result: the outcome, the refusal reason, the "
+            "recording order, its sidecar's cap_model and eeg_reference (BIDS "
+            "CapManufacturersModelName and EEGReference, each null when absent), "
+            "and the result: the outcome, the refusal reason, the "
             "montage, the counts, the contending montages, the duplicated "
-            "electrodes, and per channel its status, its normalized key and the "
+            "electrodes, the reference channel, and per channel its status, its "
+            "normalized key and the "
             "montage electrode it is placed on. The montages are views/montages "
             "with the SHA-256 digests listed here."
         ),
