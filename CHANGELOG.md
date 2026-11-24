@@ -5,7 +5,11 @@ While the schema is pre-1.0, a MINOR bump marks a breaking change or a new exten
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-24
+
 Quality views replace figures: a view is data a browser draws, declared with a namespaced, versioned kind (nemarOrg/neuroschema#21, part of nemarOrg/nemar-cli#2324).
+
+**Breaking.** A document valid under 0.5.0 can fail under 0.6.0: record-level `dataQuality` `figures` is replaced by the required `views`, each dataset-level distribution requires `unit`, and a record-level metric's name is paired with its producer (a bare name with `recipe`, `<plugin>:<name>` with `plugin`). See Changed (breaking).
 
 ### Added
 
@@ -44,6 +48,9 @@ Quality views replace figures: a view is data a browser draws, declared with a n
 
 ### Changed (breaking)
 
+- `dataQuality` record level: `figures` is replaced by the required `views` (at most 32 view declarations), and `$defs/figure` is removed.
+- `dataQuality` dataset level: each distribution requires `unit` and may carry `description`.
+- `processingTypes.metricName`, the key of every `dataQuality` metric, distribution and observed range, is a bare name or `<plugin>:<name>`: one colon at most, and a name after it that starts with a letter. At record level a metric's name is paired with its producer: a bare name requires the producer `recipe`, `<plugin>:<name>` the producer `plugin`.
 - From the adversarial release review (S6c, security and grammar): every schema's `$id` is an absolute URI (`https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/` plus its path), so the relative `$ref`s resolve by RFC 3986 in every engine; `neuroschema.validate` resolves them from `schema/` and fetches nothing.
 - `processingTypes.relativeLocation` refuses `%`, `?`, `#`, a `.` or empty segment, a trailing `/`, a leading or trailing space, DEL, C1 controls, the line and paragraph separators U+2028 and U+2029 (its lookaheads match `[\s\S]`, since a JavaScript `.` stops at them) and bidirectional controls, so a location means one file under every URL resolution; `docs/views.md` states how a renderer builds a URL from one.
 - Every `integer` in every schema is capped at 2^53 - 1 in magnitude, and verdicts are on the binary64 reading of a document (an integer past 2^53 is checked as `JSON.parse` reads it).
@@ -57,10 +64,6 @@ Quality views replace figures: a view is data a browser draws, declared with a n
 - `nemar.signal-window`: the `channels` input ends in `_channels.tsv` and `badsegments` in `_badsegments.tsv`.
 - `dataPaper.doi` is `^10\.[0-9]{4,9}/[!-~]+$(?!\n)`: explicit ASCII classes in place of `\d` and `\S`, which Python and JavaScript read apart, and no trailing newline (from nemarOrg/neuroschema#20).
 - `transform.nemar.ic-activity.v1` requires the view parameters its computation reads (`display_filter`, `max_window_s`, `decomposition_input`), whatever the kind.
-
-- `dataQuality` record level: `figures` is replaced by the required `views` (at most 32 view declarations), and `$defs/figure` is removed.
-- `dataQuality` dataset level: each distribution requires `unit` and may carry `description`.
-- `processingTypes.metricName`, the key of every `dataQuality` metric, distribution and observed range, is a bare name or `<plugin>:<name>`: one colon at most, and a name after it that starts with a letter. At record level a metric's name is paired with its producer: a bare name requires the producer `recipe`, `<plugin>:<name>` the producer `plugin`.
 
 ### Changed
 
