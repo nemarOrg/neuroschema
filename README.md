@@ -62,6 +62,7 @@ views/
   vectors/                         # Test vectors for the view algorithms, models and verdicts
 scripts/
   generate_kind_vectors.py         # Writes the generic-kind model and verdict vectors
+  generate_ic_activity_vectors.py  # Writes the nemar.ic-activity.v1 vectors from frozen inputs
 ```
 
 ## Quick Start
@@ -85,6 +86,8 @@ pytest tests/
 - [Processing Extensions](docs/processing-extensions.md) -- dataQuality, processing and signalJourney: levels, invariants, checkpoints
 - [Quality Views](docs/views.md) -- view declarations, kinds, the renderer rule, data roles, formats and digests
 - [Generic Kinds](docs/views/generic-kinds.md) -- the models a renderer builds for tables, line charts, heatmaps and histograms
+- [Presets](docs/views/presets.md) -- spectrum, component maps, component classes, activations and the signal window, each over a generic kind
+- [Component Activations](docs/views/ic-activity.md) -- the transform `nemar.ic-activity.v1` and its display filter
 - [EEGDash Adapter](docs/adapter-eegdash.md) -- field mapping for EEGDash migration
 - [DataCite Adapter](docs/adapter-datacite.md) -- field mapping for DOI registration
 
