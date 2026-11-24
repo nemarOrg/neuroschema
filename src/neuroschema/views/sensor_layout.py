@@ -3,10 +3,11 @@
 The Python reference for the transform ``docs/views/sensor-layout.md``
 specifies: rotate the positions into the ALS frame (x anterior, y left, z
 superior) from the frame their Brain Imaging Data Structure (BIDS) coordinate
-system names, center them on an algebraic least-squares sphere (on their
-circle when they are coplanar and lie on one; flat positions are refused), and
-convert each to EEGLAB's ``topoplot`` theta and radius as eegprep's
-``convertlocs(..., 'cart2topo')`` does.
+system names, center them (template positions on their montage's own center;
+measured positions on an algebraic least-squares sphere through all of them,
+refusing positions too flat to fix one), and convert each to EEGLAB's
+``topoplot`` theta and radius as eegprep's ``convertlocs(..., 'cart2topo')``
+does.
 ``views/vectors/sensor-layout.v1.json`` holds the cases every implementation
 reproduces.
 
@@ -16,11 +17,15 @@ numpy only: install the ``views`` extra, and import this module itself;
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 
-from neuroschema.views.linalg import SingularMatrix, lu_solve
+from neuroschema.views.linalg import lu_solve
+
+MONTAGES = Path(__file__).resolve().parents[3] / "views" / "montages"
 
 SENSOR_LAYOUT = "nemar.sensor-layout.v1"
 
@@ -71,24 +76,36 @@ RAS_FRAMES = frozenset(
 )
 """BIDS coordinate systems with RAS orientation (x right, y anterior, z superior)."""
 
-FIT_PIVOT = 1e-10
-"""A fit pivot at most this share of the largest normal-equation entry is
-degenerate: for the sphere, the positions are coplanar."""
+FLAT_RATIO = 0.05
+"""Measured positions are flat when the smallest singular value of their
+centered, scaled coordinates is below this share of the largest."""
 
-CONCYCLIC = 1e-9
-"""Coplanar positions lie on one circle when each is within this share of their
-scale of the fitted circle."""
+RADIUS_RATIO = 3.0
+"""Measured positions are flat when their fitted sphere's radius is above this
+many times their scale."""
 
 RAD = 180 / np.pi
 """Radians to degrees: 180 divided by the binary64 nearest pi."""
 
 
 class SensorLayoutRefusal(ValueError):
-    """Positions the transform refuses, with the word a renderer shows."""
+    """Positions the transform refuses, with the word a renderer shows.
 
-    def __init__(self, word: str, detail: str) -> None:
+    A ``positions_flat`` refusal also carries the flatness measures it reached
+    (``singular_ratio``, ``radius_ratio``, None where not reached).
+    """
+
+    def __init__(
+        self,
+        word: str,
+        detail: str,
+        singular_ratio: float | None = None,
+        radius_ratio: float | None = None,
+    ) -> None:
         super().__init__(f"{word}: {detail}")
         self.word = word
+        self.singular_ratio = singular_ratio
+        self.radius_ratio = radius_ratio
 
 
 @dataclass(frozen=True)
@@ -97,14 +114,19 @@ class SensorLayout:
 
     Rows without a finite position have NaN theta and radius. ``center`` is
     the ALS point the positions were centered on, and ``center_method`` says
-    how it was found: ``sphere``, or ``circle`` for coplanar positions that lie
-    on one circle.
+    how it was found: ``montage`` (template positions: the montage's own
+    center) or ``sphere`` (measured positions: the sphere fitted to them).
+    For measured positions, ``singular_ratio`` and ``radius_ratio`` are the
+    two flatness measures :func:`sphere_center` bounds; both are None for
+    template positions.
     """
 
     theta_deg: np.ndarray
     radius: np.ndarray
     center: tuple[float, float, float]
     center_method: str
+    singular_ratio: float | None
+    radius_ratio: float | None
 
 
 def orientation(coordinate_system: str, montage: str | None = None) -> str:
@@ -152,82 +174,95 @@ def to_als(
     return np.stack([xyz[:, 1], -xyz[:, 0], xyz[:, 2]], axis=1)
 
 
-def _flat(detail: str) -> SensorLayoutRefusal:
-    return SensorLayoutRefusal("positions_flat", detail)
+def _flat(
+    detail: str, singular_ratio: float | None = None, radius_ratio: float | None = None
+) -> SensorLayoutRefusal:
+    return SensorLayoutRefusal("positions_flat", detail, singular_ratio, radius_ratio)
 
 
-def sphere_center(points: np.ndarray) -> tuple[np.ndarray, str]:
-    """Center of the least-squares sphere through ``points`` (n by 3, finite).
+@dataclass(frozen=True)
+class Fit:
+    """A sphere fitted to measured positions, with its two flatness measures."""
 
-    The points are translated to their centroid and scaled by the largest
-    distance from it, and the algebraic fit
+    center: np.ndarray
+    singular_ratio: float
+    radius_ratio: float
+
+
+def sphere_center(points: np.ndarray) -> Fit:
+    """The center of measured positions ``points`` (n by 3, finite, ALS).
+
+    The points are translated to their centroid ``c0`` and scaled by ``s``, the
+    largest distance from it, giving ``u``. They are flat, and raise
+    :class:`SensorLayoutRefusal` (``positions_flat``), when ``s`` is 0, when the
+    smallest singular value of ``u`` is below :data:`FLAT_RATIO` times the
+    largest (the square roots of the eigenvalues of the 3-by-3 ``u.T @ u``),
+    or when the least-squares sphere through them has a radius above
+    :data:`RADIUS_RATIO` times ``s``. The sphere
     ``x**2 + y**2 + z**2 = 2*a*x + 2*b*y + 2*c*z + d`` is solved from its 4-by-4
-    normal equations by LU decomposition with partial pivoting. A pivot at most
-    :data:`FIT_PIVOT` times the largest normal-equation entry means the points
-    are coplanar: their center is then that of the circle they lie on
-    (:func:`circle_center`). Raises :class:`SensorLayoutRefusal`
-    (``positions_flat``) for three or fewer points, for points that coincide,
-    and for coplanar points not on one circle: no center is guessed.
+    normal equations by LU decomposition with partial pivoting; its center is
+    ``c0 + s * (a, b, c)`` and its radius, in units of ``s``,
+    ``sqrt(a*a + b*b + c*c + d)``. Both bounds are scale-invariant: real caps
+    and their usual subsets measure a singular ratio of 0.12 or more and a
+    radius ratio of 1.6 or less, while a midline or a row of sensors measures
+    about 1e-5 and 16 to 1500, so the bounds refuse what fixes no head.
     """
     n = len(points)
-    if n <= 3:
-        raise _flat(f"{n} finite position(s); a sphere needs at least 4")
-    centroid = points.sum(axis=0) / n
+    centroid = points.sum(axis=0) / max(n, 1)
     centered = points - centroid
-    scale = float(np.sqrt((centered * centered).sum(axis=1)).max())
+    scale = float(np.sqrt((centered * centered).sum(axis=1)).max()) if n else 0.0
     if scale == 0:
-        raise _flat("the positions coincide")
+        raise _flat("the positions coincide, or there are none")
     u = centered / scale
+    eigen = np.clip(np.linalg.eigvalsh(u.T @ u), 0, None)
+    singular_ratio = float(np.sqrt(eigen[0] / eigen[-1]))
+    if not singular_ratio >= FLAT_RATIO:
+        raise _flat(
+            f"the positions are flat: their singular ratio {singular_ratio:.3g} is "
+            f"below {FLAT_RATIO}",
+            singular_ratio,
+        )
     design = np.column_stack([2 * u, np.ones(n)])
-    normal = design.T @ design
-    rhs = design.T @ (u * u).sum(axis=1)
-    try:
-        a, b, c, _d = lu_solve(
-            normal, rhs, tiny=FIT_PIVOT * float(np.abs(normal).max())
+    a, b, c, d = lu_solve(design.T @ design, design.T @ (u * u).sum(axis=1))
+    radius_ratio = float(np.sqrt(a * a + b * b + c * c + d))
+    if not radius_ratio <= RADIUS_RATIO:
+        raise _flat(
+            f"the positions are too flat: their sphere's radius is "
+            f"{radius_ratio:.3g} times their scale, above {RADIUS_RATIO}",
+            singular_ratio,
+            radius_ratio,
         )
-    except SingularMatrix:
-        return centroid + scale * circle_center(u), "circle"
-    return centroid + scale * np.array([a, b, c]), "sphere"
+    return Fit(centroid + scale * np.array([a, b, c]), singular_ratio, radius_ratio)
 
 
-def circle_center(u: np.ndarray) -> np.ndarray:
-    """Center of the circle through coplanar, centered, scaled points ``u``.
+def montage_center(montage: str, directory: Path = MONTAGES) -> np.ndarray:
+    """A montage's own center, RAS meters, as ``views/montages/<name>.json``
+    stores it: the sphere fitted to all its electrodes (``nemar.sensor-labels.v1``
+    generates the files). An unknown montage raises ``frame_unknown``."""
+    path = directory / f"{montage}.json"
+    if not path.is_file():
+        raise SensorLayoutRefusal(
+            "frame_unknown", f"{montage!r} is not a montage of views/montages"
+        )
+    document = json.loads(path.read_text(encoding="utf-8"))
+    return np.array(document["center"], dtype=np.float64)
 
-    The plane's basis comes from cross products, not an eigenvector: ``e1``
-    points to the farthest point ``p`` (the first, on a tie), the normal is the
-    largest ``p x q`` over the points ``q`` (the first, on a tie), and
-    ``e2 = normal x e1``. In that basis, the algebraic fit
-    ``s**2 + t**2 = 2*a*s + 2*b*t + c`` is solved from its 3-by-3 normal
-    equations by LU decomposition with partial pivoting, as for the sphere.
-    Raises ``positions_flat`` when the points are collinear or when one lies
-    farther than :data:`CONCYCLIC` from the fitted circle.
+
+def center_of(
+    points: np.ndarray, coordinate_system: str, montage: str | None
+) -> tuple[np.ndarray, str, float | None, float | None]:
+    """The center of ALS ``points``: (center, method, singular_ratio, radius_ratio).
+
+    Template positions (a ``montage``) take the montage's own center, rotated
+    into ALS, and are never fitted: a subset of a montage, such as its
+    midline, fixes no sphere of its own. Measured positions take the sphere
+    fitted to all of them (:func:`sphere_center`).
     """
-    lengths = np.sqrt((u * u).sum(axis=1))
-    far = u[int(np.argmax(lengths))]
-    e1 = far / np.sqrt(far @ far)
-    crosses = np.cross(far, u)
-    sizes = np.sqrt((crosses * crosses).sum(axis=1))
-    widest = int(np.argmax(sizes))
-    if sizes[widest] == 0:
-        raise _flat("the positions are collinear")
-    normal = crosses[widest] / sizes[widest]
-    e2 = np.cross(normal, e1)
-    s, t = u @ e1, u @ e2
-    design = np.column_stack([2 * s, 2 * t, np.ones(len(u))])
-    system = design.T @ design
-    try:
-        a, b, c = lu_solve(
-            system,
-            design.T @ (s * s + t * t),
-            tiny=FIT_PIVOT * float(np.abs(system).max()),
-        )
-    except SingularMatrix as exc:
-        raise _flat("the positions are collinear") from exc
-    rho = np.sqrt(c + a * a + b * b)
-    miss = float(np.abs(np.hypot(s - a, t - b) - rho).max())
-    if not miss <= CONCYCLIC:
-        raise _flat(f"the positions are coplanar and {miss:.3g} off one circle")
-    return a * e1 + b * e2
+    if montage is not None:
+        center = montage_center(montage)[None, :]
+        return to_als(center, coordinate_system, montage)[0], "montage", None, None
+    fit = sphere_center(points)
+    return fit.center, "sphere", fit.singular_ratio, fit.radius_ratio
 
 
 def cart2topo(xyz: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -252,9 +287,13 @@ def sensor_layout(
 
     The positions are in the BIDS frame ``coordinate_system`` names, or, for
     template positions, in the frame of the ``montage`` they came from (with
-    ``coordinate_system`` ``n/a``); see :func:`orientation`. Raises
-    :class:`SensorLayoutRefusal` with ``frame_unknown`` or ``positions_flat``
-    (:func:`sphere_center`), after which a renderer places the sensors by name.
+    ``coordinate_system`` ``n/a``); see :func:`orientation`. Template positions
+    are centered on the montage's own center (:func:`montage_center`), never
+    on a sphere fitted to the subset given; measured positions are centered on
+    the sphere fitted to every row with a finite position (:func:`sphere_center`),
+    so the rows should be all of the recording's measured positions. Raises
+    :class:`SensorLayoutRefusal` with ``frame_unknown`` or ``positions_flat``,
+    after which a renderer places the sensors by name.
     """
     xyz = np.asarray(xyz, dtype=np.float64)
     if xyz.ndim != 2 or xyz.shape[1] != 3:
@@ -263,6 +302,15 @@ def sensor_layout(
     finite = np.isfinite(als).all(axis=1)
     theta = np.full(len(als), np.nan)
     radius = np.full(len(als), np.nan)
-    center, method = sphere_center(als[finite])
+    center, method, singular_ratio, radius_ratio = center_of(
+        als[finite], coordinate_system, montage
+    )
     theta[finite], radius[finite] = cart2topo(als[finite] - center)
-    return SensorLayout(theta, radius, tuple(float(v) for v in center), method)
+    return SensorLayout(
+        theta,
+        radius,
+        tuple(float(v) for v in center),
+        method,
+        singular_ratio,
+        radius_ratio,
+    )
