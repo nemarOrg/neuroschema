@@ -416,11 +416,64 @@ class TestIcClasses:
         }
         assert content_validator(IC_CLASSES).is_valid(content)
 
-    @pytest.mark.parametrize("name", [" ICLabel", "ICLabel ", "MARA\t", ""])
-    def test_the_classifier_has_no_edge_white_space(self, name):
+    @pytest.mark.parametrize(
+        "name",
+        [
+            " ICLabel",
+            "ICLabel ",
+            "MARA\t",
+            "",
+            "IC\u200bLabel",
+            "ICLabel\u200d",
+            "\ufeffICLabel",
+            "IC\u00adLabel",
+            "IC\u00a0Label",
+            "ICLabel\U000e0041",
+            "\u3000MARA",
+        ],
+        ids=[
+            "leading-space",
+            "trailing-space",
+            "tab",
+            "empty",
+            "zero-width-space",
+            "zero-width-joiner",
+            "byte-order-mark",
+            "soft-hyphen",
+            "inner-no-break-space",
+            "tag-character",
+            "ideographic-space",
+        ],
+    )
+    def test_the_classifier_has_no_format_or_edge_white_space(self, name):
         content = CONTENT | {"classifier": name}
         errors = failures(content_validator(IC_CLASSES).iter_errors(content))
         assert ("pattern", "classifier") in errors
+
+    def test_the_classifier_class_holds_every_format_and_space_character(self):
+        """The explicit class refuses every Cf character and every character
+        Python or JavaScript counts as white space, at the edges; inside, all
+        but the space."""
+        import re
+        import unicodedata
+
+        pattern = json.loads((VIEWS / IC_CLASSES).read_text())["properties"][
+            "classifier"
+        ]["pattern"]
+        regex = re.compile(pattern)
+        js_space = {0xFEFF}
+        for code in range(0x110000):
+            char = chr(code)
+            if 0xD800 <= code <= 0xDFFF:
+                continue
+            fmt = unicodedata.category(char) == "Cf"
+            space = char.isspace() or code in js_space
+            if fmt or space:
+                assert not regex.search(char + "x"), hex(code)
+                assert not regex.search("x" + char), hex(code)
+            if fmt or (space and code != 0x20):
+                assert not regex.search("a" + char + "b"), hex(code)
+        assert regex.search("MARA v2")
 
     @pytest.mark.parametrize("name", ["iclabel", "ICLABEL", "IcLabel"])
     def test_iclabel_is_spelled_iclabel(self, name):
