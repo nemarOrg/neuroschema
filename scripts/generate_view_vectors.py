@@ -223,57 +223,87 @@ def to_als(xyz, frame, montage=None):
     return None
 
 
+FLAT_RATIO = 0.05
+RADIUS_RATIO = 3.0
+BOUND_MARGIN = (0.002, 0.05)  # every vector keeps its measures this far from a bound
+
+
 def fit_center(points):
-    """The center by SVD least squares (the spec solves normal equations by
-    LU; the two agree far inside the tolerance), or None for flat positions:
-    three or fewer, coincident, collinear, or coplanar and off one circle."""
+    """Measured positions: (center, bounds), or (None, bounds) when the spec
+    refuses them as flat. Computed by SVD and least squares (the spec uses the
+    eigenvalues of u.T u and LU on the normal equations); the vectors keep every
+    measure at least BOUND_MARGIN from its bound, so the two cannot disagree."""
     n = len(points)
-    if n <= 3:
-        return None
+    if n == 0:
+        return None, {"singular_ratio": None, "radius_ratio": None}
     centroid = points.sum(axis=0) / n
     centered = points - centroid
     scale = float(np.sqrt((centered**2).sum(axis=1)).max())
     if scale == 0:
-        return None
+        return None, {"singular_ratio": None, "radius_ratio": None}
     u = centered / scale
+    singular = np.linalg.svd(u, compute_uv=False)
+    ratio = float(singular[-1] / singular[0]) if len(singular) == 3 else 0.0
+    bounds = {"singular_ratio": ratio, "radius_ratio": None}
+    if ratio < FLAT_RATIO:
+        return None, bounds
     design = np.column_stack([2 * u, np.ones(n)])
     target = (u**2).sum(axis=1)
-    solution, _res, rank, singular = np.linalg.lstsq(design, target, rcond=None)
-    # The normal equations square the condition number, so their pivot
-    # threshold of 1e-10 is a singular-value ratio near 1e-5.
-    if rank == 4 and singular[-1] > 1e-5 * singular[0]:
-        a, b, c, _d = solution
-        return centroid + scale * np.array([a, b, c]), "sphere", scale
-    # Coplanar: the plane from the SVD of the points, then a circle in it.
-    _u, _s, vt = np.linalg.svd(u, full_matrices=False)
-    e1, e2 = vt[0], vt[1]
-    s_, t_ = u @ e1, u @ e2
-    design = np.column_stack([2 * s_, 2 * t_, np.ones(n)])
-    solution, _res, rank, singular = np.linalg.lstsq(design, s_**2 + t_**2, rcond=None)
-    if rank < 3 or singular[-1] <= 1e-5 * singular[0]:
-        return None
-    a, b, c = solution
-    rho = math.sqrt(c + a * a + b * b)
-    if np.abs(np.hypot(s_ - a, t_ - b) - rho).max() > 1e-9:
-        return None
-    return centroid + scale * (a * e1 + b * e2), "circle", scale
+    (a, b, c, d), *_ = np.linalg.lstsq(design, target, rcond=None)
+    bounds["radius_ratio"] = float(math.sqrt(a * a + b * b + c * c + d))
+    if bounds["radius_ratio"] > RADIUS_RATIO:
+        return None, bounds
+    return centroid + scale * np.array([a, b, c]), bounds
+
+
+def check_bounds(name, bounds):
+    ratio, radius = bounds["singular_ratio"], bounds["radius_ratio"]
+    if ratio is not None and 0 < abs(ratio - FLAT_RATIO) < BOUND_MARGIN[0]:
+        raise SystemExit(f"{name}: singular ratio {ratio} too near {FLAT_RATIO}")
+    if radius is not None and abs(radius - RADIUS_RATIO) < BOUND_MARGIN[1]:
+        raise SystemExit(f"{name}: radius ratio {radius} too near {RADIUS_RATIO}")
+
+
+MONTAGES = ROOT / "views" / "montages"
+
+
+def montage_document(name):
+    return json.loads((MONTAGES / f"{name}.json").read_text(encoding="utf-8"))
+
+
+def montage_center(name):
+    """The montage's stored center (RAS meters), checked against an independent
+    SVD fit of all its electrodes (the stored one is rounded to 1e-9 m)."""
+    document = montage_document(name)
+    stored = np.array(document["center"], dtype=float)
+    electrodes = np.array([e[1:4] for e in document["electrodes"]], dtype=float)
+    center, _bounds = fit_center(electrodes)
+    if center is None or np.abs(center - stored).max() > 2e-9:
+        sys.exit(f"{name}: the stored center {stored} is not the fit {center}")
+    return stored
 
 
 def layout_of(xyz, frame, montage=None):
-    """Theta, radius, center and method for positions in a BIDS frame, or
-    None for positions the spec refuses as flat."""
+    """(theta, radius, center, method, bounds) for positions in a BIDS frame,
+    or (None, bounds) for measured positions the spec refuses as flat.
+    Template positions use their montage's own center; measured positions a
+    sphere fitted to every row with a finite position."""
     als = to_als(xyz, frame, montage)
     finite = np.isfinite(als).all(axis=1)
     theta = [None] * len(als)
     radius = [None] * len(als)
-    fit = fit_center(als[finite])
-    if fit is None:
-        return None
-    center, method, scale = fit
+    if montage is not None:
+        center = to_als(montage_center(montage)[None, :], frame, montage)[0]
+        method, bounds = "montage", None
+    else:
+        center, bounds = fit_center(als[finite])
+        if center is None:
+            return None, bounds
+        method = "sphere"
     t, r = eegprep_cart2topo(als[finite] - center)
     for k, row in enumerate(np.flatnonzero(finite)):
         theta[row], radius[row] = t[k], r[k]
-    return theta, radius, [float(v) for v in center], method, scale
+    return theta, radius, [float(v) for v in center], method, bounds
 
 
 def planar(theta, radius):
@@ -457,6 +487,7 @@ def field_values(xyz, frame, seed):
 def layout_from(name, count):
     labels, xyz, frame = montage(name, count)
     theta, radius, *_ = layout_of(xyz, frame)
+    assert theta is not None, name
     return (
         labels,
         np.array(theta, dtype=float),
@@ -791,10 +822,13 @@ def positions_case(name, description, labels, xyz, frame, values, montage=None):
         case["refused"] = "frame_unknown"
         return case
     projected = layout_of(xyz, frame, montage)
-    if projected is None:
+    if projected[-1] is not None:
+        check_bounds(name, projected[-1])
+        case["bounds"] = projected[-1]
+    if projected[0] is None:
         case["refused"] = "positions_flat"
         return case
-    theta, radius, center, method, _scale = projected
+    theta, radius, center, method, _bounds = projected
     drawn = field_case_from(
         name,
         description,
@@ -836,19 +870,36 @@ def positions_cases():
             values,
         )
     ]
-    labels, xyz, _frame = montage("egi-gsn-hydrocell-32.sfp", 33)
-    meters = np.round(xyz / 100, 9)
-    values = field_values(xyz, "CapTrak", 12)
+    hydrocel = montage_document("GSN-HydroCel-32")
+    labels = [e[0] for e in hydrocel["electrodes"]]
+    meters = np.array([e[1:4] for e in hydrocel["electrodes"]], dtype=float)
+    values = field_values(meters, "CapTrak", 12)
     cases.append(
         positions_case(
             "positions_template",
-            "Template positions: HydroCel 32 in meters, RAS, as the montage "
-            "GSN-HydroCel-32 gives them, with the coordinate system n/a.",
+            "Template positions: every electrode of the montage GSN-HydroCel-32 "
+            "(RAS meters) with the coordinate system n/a, projected about the "
+            "montage's own center.",
             labels,
             meters,
             "n/a",
             values,
             montage="GSN-HydroCel-32",
+        )
+    )
+    ten_05 = {e[0]: e[1:4] for e in montage_document("standard_1005")["electrodes"]}
+    cases.append(
+        positions_case(
+            "positions_template_midline",
+            "Template positions: the nine midline electrodes of standard_1005, "
+            "Fpz to Oz, with n/a. Projected about the montage's own center, they "
+            "lie along the line from the nose to the back of the head, as on the "
+            "full cap, and the map is drawn.",
+            MIDLINE_9,
+            [ten_05[k] for k in MIDLINE_9],
+            "n/a",
+            [2.0, 1.5, 1.0, 0.25, -0.5, -1.0, -1.75, -2.5, -3.0],
+            montage="standard_1005",
         )
     )
     cases.append(
@@ -889,9 +940,9 @@ def positions_cases():
     cases.append(
         positions_case(
             "positions_ring",
-            "Nine positions on one tilted circle (EEGLAB): coplanar but "
-            "concyclic, so they are centered on the circle, every radius is 0.5, "
-            "and the map is drawn.",
+            "Nine measured positions on one tilted circle (EEGLAB): in one plane, "
+            "so they fix no head; the projection is refused (positions_flat), and "
+            "a renderer places the sensors by name instead.",
             [f"R{i}" for i in range(9)],
             ring,
             "EEGLAB",
@@ -969,10 +1020,13 @@ def layout_case(name, description, labels, xyz, frame, montage=None):
         case["refused"] = "frame_unknown"
         return case
     projected = layout_of(xyz, frame, montage)
-    if projected is None:
+    if projected[-1] is not None:
+        check_bounds(name, projected[-1])
+        case["bounds"] = projected[-1]
+    if projected[0] is None:
         case["refused"] = "positions_flat"
         return case
-    theta, radius, center, method, _scale = projected
+    theta, radius, center, method, _bounds = projected
     case["expected"] = {
         "center": center,
         "center_method": method,
@@ -992,6 +1046,48 @@ def uneven_ring():
     tilt = np.deg2rad(25.0)
     return flat @ np.array(
         [[1, 0, 0], [0, np.cos(tilt), np.sin(tilt)], [0, -np.sin(tilt), np.cos(tilt)]]
+    )
+
+
+MIDLINE_9 = ["Fpz", "AFz", "Fz", "FCz", "Cz", "CPz", "Pz", "POz", "Oz"]
+CORONAL_9 = ["T7", "C5", "C3", "C1", "Cz", "C2", "C4", "C6", "T8"]
+
+
+def fibonacci_sphere(count):
+    """``count`` points spread evenly over a unit sphere (ALS: z up)."""
+    i = np.arange(count) + 0.5
+    polar = np.arccos(1 - 2 * i / count)
+    azimuth = np.pi * (1 + 5**0.5) * i
+    return np.column_stack(
+        [
+            np.cos(azimuth) * np.sin(polar),
+            np.sin(azimuth) * np.sin(polar),
+            np.cos(polar),
+        ]
+    )
+
+
+def squashed_sphere(factor):
+    """Sixty-four points over a 9 cm sphere, with z scaled by ``factor``."""
+    points = fibonacci_sphere(64) * 0.09
+    points[:, 2] *= factor
+    return points
+
+
+def spherical_cap(angle):
+    """The points of an 800-point 9 cm sphere within ``angle`` degrees of its top."""
+    points = fibonacci_sphere(800)
+    cap = points[np.arccos(np.clip(points[:, 2], -1, 1)) <= np.deg2rad(angle)]
+    return [f"P{i}" for i in range(len(cap))], cap * 0.09
+
+
+def noisy_disk():
+    """Forty-eight points on a 9 cm disk, with 0.09 mm of noise out of its plane."""
+    rng = np.random.default_rng(7)
+    r = 0.09 * np.sqrt(rng.uniform(0, 1, 48))
+    a = rng.uniform(0, 2 * np.pi, 48)
+    return np.column_stack(
+        [np.cos(a) * r, np.sin(a) * r, rng.normal(0, 1e-3 * 0.09, 48)]
     )
 
 
@@ -1065,8 +1161,8 @@ def layout_cases():
         layout_case(
             "ring_coplanar",
             "Nine positions on one circle, unevenly spaced and tilted 25 degrees: "
-            "coplanar, so the sphere fit is degenerate, but concyclic, so the "
-            "center is the circle's (not their centroid), and every radius is 0.5.",
+            "in one plane, so their singular ratio is 0 and they fix no head; "
+            "refused (positions_flat).",
             [f"R{i}" for i in range(9)],
             uneven_ring(),
             "EEGLAB",
@@ -1076,9 +1172,21 @@ def layout_cases():
         layout_case(
             "disk_flat",
             "Thirty-two positions scattered over a disk in the plane z = 0: "
-            "coplanar and not on one circle, so refused (positions_flat).",
+            "refused (positions_flat).",
             [f"D{i}" for i in range(32)],
             flat_disk(),
+            "EEGLAB",
+        )
+    )
+    cases.append(
+        layout_case(
+            "noisy_disk",
+            "Forty-eight positions on a 9 cm disk with 0.09 mm of noise out of "
+            "its plane, as a flat layout measured with noise: a sphere fitted to "
+            "them would fit the noise; their singular ratio is 0.002, so refused "
+            "(positions_flat).",
+            [f"N{i}" for i in range(48)],
+            noisy_disk(),
             "EEGLAB",
         )
     )
@@ -1097,8 +1205,7 @@ def layout_cases():
         layout_case(
             "nearly_collinear",
             "Five positions on one line but for 2.2e-12 off it at the middle one: "
-            "not exactly collinear, so the circle fit's matrix is singular rather "
-            "than its cross product zero; refused (positions_flat).",
+            "refused (positions_flat).",
             [f"B{i}" for i in range(5)],
             bent,
             "EEGLAB",
@@ -1107,7 +1214,7 @@ def layout_cases():
     cases.append(
         layout_case(
             "three_positions",
-            "Three positions: too few to fit a sphere, so refused (positions_flat).",
+            "Three positions, which always lie in one plane: refused (positions_flat).",
             ["A", "B", "C"],
             [[7.0, 1.0, 3.0], [-2.0, 6.0, 4.0], [0.5, -5.0, 6.5]],
             "EEGLAB",
@@ -1120,6 +1227,63 @@ def layout_cases():
             ["A", "B", "C", "D"],
             [[2.5, -1.0, 7.0]] * 4,
             "EEGLAB",
+        )
+    )
+    for name, factor, verdict in [
+        ("squashed_sphere_inside", 0.055, "drawn"),
+        ("squashed_sphere_outside", 0.045, "refused (positions_flat)"),
+    ]:
+        cases.append(
+            layout_case(
+                name,
+                f"Sixty-four positions spread over a whole 9 cm sphere, squashed "
+                f"to {factor} of its height: singular ratio {factor}, against the "
+                f"bound 0.05, with a sphere radius under 1 times their scale; "
+                f"{verdict}.",
+                [f"S{i}" for i in range(64)],
+                squashed_sphere(factor),
+                "EEGLAB",
+            )
+        )
+    for name, angle, verdict in [
+        ("cap_inside", 21.0, "drawn"),
+        ("cap_outside", 19.0, "refused (positions_flat)"),
+    ]:
+        cases.append(
+            layout_case(
+                name,
+                f"Positions on a 9 cm sphere within {angle} degrees of its top: a "
+                f"shallow cap whose sphere radius is "
+                f"{'2.8' if angle == 21.0 else '3.1'} times their scale, against "
+                f"the bound 3, with a singular ratio near 0.1; {verdict}.",
+                *spherical_cap(angle),
+                "EEGLAB",
+            )
+        )
+    labels, xyz, frame = montage("standard-10-5-342ch.locs", 400)
+    ten_five = dict(zip(labels, xyz, strict=True))
+    six = ["F3", "F4", "C3", "C4", "P3", "P4"]
+    cases.append(
+        layout_case(
+            "measured_six",
+            "Six measured positions, F3 F4 C3 C4 P3 P4 of eegprep's 10-5 "
+            "template (EEGLAB, meters), and no others: no midline, but they span "
+            "the head (singular ratio 0.15, sphere radius 1.1 times their scale); "
+            "drawn about the sphere fitted to them.",
+            six,
+            [ten_five[k] for k in six],
+            frame,
+        )
+    )
+    cases.append(
+        layout_case(
+            "measured_midline_9",
+            "Nine measured positions on the midline, Fpz to Oz, of eegprep's 10-5 "
+            "template: they lie in one plane and fix no left or right, so refused "
+            "(positions_flat); a renderer places them by name instead.",
+            MIDLINE_9,
+            [ten_five[k] for k in MIDLINE_9],
+            frame,
         )
     )
     labels, xyz, frame = montage("egi-gsn-hydrocell-32.sfp", 33)
@@ -1136,17 +1300,17 @@ def layout_cases():
             frame,
         )
     )
-    labels, xyz, frame = montage("egi-gsn-hydrocell-32.sfp", 33)
-    meters = np.round(xyz / 100, 9)
+    hydrocel = montage_document("GSN-HydroCel-32")
+    names = [e[0] for e in hydrocel["electrodes"]]
+    positions = [e[1:4] for e in hydrocel["electrodes"]]
     cases.append(
         layout_case(
             "template_montage",
-            "Template positions: HydroCel 32 in meters, RAS, as the montage "
-            "GSN-HydroCel-32 of views/montages gives them, with the coordinate "
-            "system n/a. A template role names its montage, and every montage is "
-            "RAS, so the layout is not refused.",
-            labels,
-            meters,
+            "Template positions: every electrode of the montage GSN-HydroCel-32 "
+            "(views/montages, RAS meters), with the coordinate system n/a. They "
+            "are projected about the montage's own center, stored in its file.",
+            names,
+            positions,
             "n/a",
             montage="GSN-HydroCel-32",
         )
@@ -1156,12 +1320,32 @@ def layout_cases():
             "template_with_a_frame",
             "Template positions from a montage that also name a coordinate system "
             "(CapTrak) other than n/a: the frame is ambiguous, so refused.",
-            labels,
-            meters,
+            names,
+            positions,
             "CapTrak",
             montage="GSN-HydroCel-32",
         )
     )
+    ten_05 = montage_document("standard_1005")
+    by_name = {e[0]: e[1:4] for e in ten_05["electrodes"]}
+    for name, keys, what in [
+        ("template_full_1005", list(by_name), "every electrode of"),
+        ("template_midline_9", MIDLINE_9, "the nine midline electrodes, Fpz to Oz, of"),
+        ("template_coronal_9", CORONAL_9, "the nine coronal electrodes, T7 to T8, of"),
+    ]:
+        cases.append(
+            layout_case(
+                name,
+                f"Template positions: {what} the montage standard_1005, with the "
+                "coordinate system n/a. A subset is projected about the montage's "
+                "own center, never a sphere fitted to the subset, so each "
+                "electrode lands where template_full_1005 puts it.",
+                keys,
+                [by_name[k] for k in keys],
+                "n/a",
+                montage="standard_1005",
+            )
+        )
     for number, frame in enumerate(UNKNOWN_FRAMES, start=1):
         cases.append(
             layout_case(
@@ -1212,9 +1396,13 @@ def sensor_layout_vectors(ref):
             "case gives positions (name, x, y, z in the frame coordinate_system "
             "names, or, for template positions that name a montage, in that "
             "montage's frame, RAS, with coordinate_system n/a; null is not finite) "
-            "and either the expected layout (center and "
-            "center_method in the ALS frame, theta_deg and radius per row, null for "
-            "a row without a finite position) or the word it is refused with. The "
+            "and either the expected layout (center and center_method, montage or "
+            "sphere, in the ALS frame, theta_deg and radius per row, null for a row "
+            "without a finite position) or the word it is refused with. Template "
+            "positions are centered on the montage's own center, its file's "
+            "center; measured positions carry bounds, their singular_ratio and "
+            "radius_ratio (null when not reached), which decide positions_flat "
+            "against 0.05 and 3, within tolerance.bounds_absolute. The "
             "expected theta and radius are eegprep's convertlocs(..., 'cart2topo') "
             "of the positions minus the center, with -180 written 180. frames lists "
             "the BIDS coordinate systems of each orientation: an implementation "
@@ -1235,6 +1423,7 @@ def sensor_layout_vectors(ref):
             "radius": 1e-12,
             "center_relative_to_scale": 1e-9,
             "cart2topo_theta_deg": 1e-9,
+            "bounds_absolute": 1e-6,
         },
         "frames": {
             "ALS": sorted(ALS),
@@ -1346,7 +1535,10 @@ def differences(new, old, path="", scale=None, extent=None):
             finite = [v for row in grid for v in row if v is not None]
             local = max(finite) - min(finite) or 1.0
         for key in new:
-            tol = local if key in SCALED_KEYS or scale is not None else None
+            if key in SCALED_KEYS or scale is not None:
+                tol = local
+            else:
+                tol = 1.0 if key == "bounds" else None
             out += differences(new[key], old[key], f"{path}/{key}", tol, extent)
         return out
     if isinstance(new, list) and isinstance(old, list):
@@ -1409,6 +1601,15 @@ def main() -> int:
                 print(f"  {line}")
         else:
             print(f"{path.relative_to(ROOT)}: matches")
+    if args.check:
+        drift = differences(FRESH, {family: FROZEN[family] for family in FRESH})
+        print(
+            f"inputs: {len(drift)} difference(s) beyond the tolerance between the "
+            f"frozen inputs and inputs recomputed here (reported; the vectors use "
+            f"the frozen ones)"
+        )
+        for line in drift[:20]:
+            print(f"  {line}")
     if args.refresh_inputs:
         stored = {
             "description": (
