@@ -3776,6 +3776,48 @@ def data_paper_verdicts() -> list[tuple[str, str, dict]]:
     ]
 
 
+ROOT_SCHEMA = "neuroschema.schema.json"
+
+
+def core_verdicts() -> list[tuple[str, str, dict]]:
+    """The root and core patterns of nemarOrg/neuroschema#20, which ended in a
+    bare $ that Python's re lets match before a final newline."""
+    dataset = {
+        "schema_version": "0.6.0",
+        "doc_type": "dataset",
+        "dataset_id": "ds002718",
+        "name": "Face processing EEG dataset",
+        "source": "openneuro",
+        "recording_modality": ["EEG"],
+    }
+    record = {
+        "schema_version": "0.6.0",
+        "doc_type": "record",
+        "dataset": "ds002718",
+        "bids_relpath": "sub-002/eeg/sub-002_task-FaceRecognition_eeg.set",
+        "modality": "EEG",
+    }
+    return [
+        ("core_dataset_valid", "A dataset document through the root.", dataset),
+        (
+            "core_dataset_id_trailing_newline",
+            "A final newline after dataset_id, which Python's bare $ let pass.",
+            {**dataset, "dataset_id": "ds002718\n"},
+        ),
+        (
+            "core_schema_version_trailing_newline",
+            "A final newline after schema_version, which Python's bare $ let pass.",
+            {**dataset, "schema_version": "0.6.0\n"},
+        ),
+        ("core_record_valid", "A record document through the root.", record),
+        (
+            "core_record_dataset_trailing_newline",
+            "A final newline after a record's dataset, which Python's bare $ let pass.",
+            {**record, "dataset": "ds002718\n"},
+        ),
+    ]
+
+
 def data_quality_verdicts() -> list[tuple[str, str, dict]]:
     """A recording's dataQuality entry: the example, and the rules of the
     namespace a renderer that validates with ajv must agree on."""
@@ -5653,6 +5695,7 @@ def verdicts() -> dict:
             schema_validator(DATA_PAPER),
             data_paper_verdicts(),
         ),
+        (ROOT_SCHEMA, schema_validator(ROOT_SCHEMA), core_verdicts()),
         (HISTOGRAM_CONTENT, histogram_content_validator(), content_verdicts()),
         (
             IC_CLASSES_CONTENT,
@@ -5682,8 +5725,9 @@ def verdicts() -> dict:
             "binary64 reading of the instance, as JSON.parse reads it, so an integer "
             "beyond 2^53 is checked as the nearest binary64. schema view means "
             "schema/definitions/view.schema.json#/$defs/view, dataQuality "
-            "schema/extensions/dataQuality.schema.json, a path with a slash that "
-            "path under schema/; any other schema is a file in schema/views/. "
+            "schema/extensions/dataQuality.schema.json, neuroschema.schema.json "
+            "the root schema schema/neuroschema.schema.json, a path with a slash "
+            "that path under schema/; any other schema is a file in schema/views/. "
             "Only valid binds an implementation; errors "
             "list each failing keyword and instance path jsonschema reports."
         ),
