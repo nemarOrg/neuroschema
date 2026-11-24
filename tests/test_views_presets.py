@@ -20,6 +20,7 @@ from jsonschema import Draft202012Validator
 from neuroschema.validate import load_schema
 from neuroschema.views import (
     Drawing,
+    ViewRefused,
     build_model,
     draw_as,
     draw_by_base,
@@ -764,6 +765,10 @@ class TestTransform:
             "badsegments",
         ]
 
-    def test_build_model_names_a_base_it_has_no_model_for(self):
-        with pytest.raises(LookupError, match=r"nemar\.sensor-field"):
+    def test_build_model_draws_ic_maps_by_its_base(self):
+        """nemar.ic-maps draws by nemar.sensor-field, which reads the mixing
+        matrix first: without it, nothing is drawn and the rest is offered."""
+        with pytest.raises(ViewRefused) as raised:
             build_model(view("icmaps"), {})
+        assert raised.value.word == "file_missing"
+        assert [d["role"] for d in raised.value.downloads] == ["layout", "components"]

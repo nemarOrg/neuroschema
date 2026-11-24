@@ -239,6 +239,8 @@ def test_every_drawing_and_model_type_is_covered():
         ("base", "heatmap"),
         ("base", "histogram"),
         ("table", "fallback"),
+        ("kind", "sensor-field"),
+        ("base", "sensor-field"),
     }
 
 
