@@ -22,6 +22,7 @@ import copy
 import hashlib
 import json
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 from neuroschema.ijson import FORBIDDEN
@@ -39,7 +40,11 @@ from neuroschema.views.models import (
     snap_row,
     view_validator,
 )
-from neuroschema.views.presets import PRESET_CHECKS_FORMAT, check_preset
+from neuroschema.views.presets import (
+    PRESET_CHECKS_FORMAT,
+    check_preset,
+    spectrum_maps,
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 MODELS_PATH = ROOT / "views" / "vectors" / "kinds-models.v1.json"
@@ -1667,7 +1672,1451 @@ def refusals() -> list[Case]:
             {},
         ),
     ]
+    maps, files = field_view(mixing(), chanlocs())
+    changed = _replace(chanlocs(), "\t-54\t", "\t-55\t")
+    positioned, positions = field_view(mixing(), electrodes(), "positions")
+    icmaps = ic_maps_by_base_cases()[0]
+    ieeg = json.loads(IEEG_INPUTS.read_text(encoding="utf-8"))
+    untyped_implant = text_tsv(
+        ["name", "x", "y", "z"], [[n, x, y, z] for n, x, y, z, _t in ieeg["rows"]]
+    )
+    implant_view, implant_files = field_view(
+        mixing(len(ieeg["rows"])),
+        untyped_implant,
+        "positions",
+        sensor_columns=[col("name", "string")] + [col(a, unit="mm") for a in "xyz"],
+        positions={"coordinate_system": "Talairach"},
+    )
+    cases += [
+        (
+            "refusal_sensor_field_size_mismatch",
+            "A scalp map's layout one byte longer than declared: file_size_mismatch.",
+            maps,
+            {FIELD_AT: files[FIELD_AT], CHANLOCS_AT: files[CHANLOCS_AT] + b"\n"},
+        ),
+        (
+            "refusal_ieeg_talairach_without_types",
+            "The real ECoG implant in Talairach as measured positions with no "
+            "sensor_type column: the schema refuses measured positions that do not "
+            "carry their types (declaration_invalid), and nothing is offered.",
+            implant_view,
+            implant_files,
+        ),
+        (
+            "refusal_sensor_field_layout_digest",
+            "A scalp map's layout is not the recorded file: file_digest_mismatch, "
+            "and the values are still offered.",
+            maps,
+            {FIELD_AT: files[FIELD_AT], CHANLOCS_AT: changed},
+        ),
+        (
+            "refusal_sensor_field_positions_missing",
+            "A scalp map's positions are not there: file_missing.",
+            positioned,
+            {FIELD_AT: positions[FIELD_AT]},
+        ),
+        (
+            "refusal_ic_maps_values_missing",
+            "nemar.ic-maps by its base without its mixing matrix: file_missing; "
+            "the layout and the components table are still offered.",
+            icmaps.view,
+            {
+                k: v
+                for k, v in icmaps.files.items()
+                if k != _location(icmaps.view, "values")
+            },
+        ),
+    ]
     return [Case(*fields) for fields in cases]
+
+
+# ── nemar.sensor-field ────────────────────────────────────────────────────
+
+# The 19 electrodes of the 10-20 system, with a layout's theta (degrees) and
+# radius as stored text.
+TEN_TWENTY = [
+    ("Fp1", "-18", "0.511"),
+    ("Fp2", "18", "0.511"),
+    ("F7", "-54", "0.511"),
+    ("F3", "-39.9", "0.333"),
+    ("Fz", "0", "0.256"),
+    ("F4", "39.9", "0.333"),
+    ("F8", "54", "0.511"),
+    ("T7", "-90", "0.511"),
+    ("C3", "-90", "0.256"),
+    ("Cz", "0", "0"),
+    ("C4", "90", "0.256"),
+    ("T8", "90", "0.511"),
+    ("P7", "-126", "0.511"),
+    ("P3", "-140.1", "0.333"),
+    ("Pz", "180", "0.256"),
+    ("P4", "140.1", "0.333"),
+    ("P8", "126", "0.511"),
+    ("O1", "-162", "0.511"),
+    ("O2", "162", "0.511"),
+]
+NAMES_1020 = [name for name, _theta, _radius in TEN_TWENTY]
+# Their positions in standard_1005, right-anterior-superior meters.
+POSITIONS_1005 = {
+    e[0]: e[1:4]
+    for e in json.loads(
+        (ROOT / "views" / "montages" / "standard_1005.json").read_text("utf-8")
+    )["electrodes"]
+}
+# An intracranial implant in millimeters (ACPC): two depth shafts (SEEG), a
+# strip on the left temporal lobe (ECOG) and a deep brain stimulation lead
+# (DBS), named as clinicians name them, some like scalp electrodes.
+IMPLANT = [
+    *((f"LA{i}", -18 - 4 * i, -4, -18, "SEEG") for i in range(1, 9)),
+    *((f"LH{i}", -22 - 4 * i, -20, -12, "SEEG") for i in range(1, 9)),
+    *((f"C{i}", -62, -40 + 8 * i, -6 + 3 * i, "ECOG") for i in range(1, 7)),
+    *((f"DBS{i}", 12, -13, -5 + 2 * i, "DBS") for i in range(1, 5)),
+]
+# Real intracranial positions (bids-examples, PDDL), frozen with their source.
+IEEG_INPUTS = ROOT / "scripts" / "ieeg_vector_inputs.json"
+FIELD_AT = f"{PREFIX}_field.tsv"
+CHANLOCS_AT = f"{PREFIX}_chanlocs.tsv"
+ELECTRODES_AT = f"{PREFIX}_electrodes.tsv"
+COMPONENTS_AT = f"{PREFIX}_components.tsv"
+SENSOR_ROWS = dim("sensor", "rows", "string", {"role": "layout", "column": "name"})
+MAPS_HEADER = dim("component", "columns", "string", {"header": True})
+LAYOUT_COLUMNS = [col("name", "string"), col("theta_deg", unit="deg"), col("radius")]
+TYPED_LAYOUT_COLUMNS = [*LAYOUT_COLUMNS, col("sensor_type", "string")]
+POSITION_COLUMNS = [col("name", "string")] + [col(a, unit="m") for a in "xyz"]
+TYPED_POSITION_COLUMNS = [*POSITION_COLUMNS, col("sensor_type", "string")]
+NAME_ROWS = dim("sensor", "rows", "string", {"column": "name"})
+
+
+def text_tsv(header: list[str], rows: list[list[str]]) -> bytes:
+    """A TSV file from a header and rows of cell texts (no spaces in cells)."""
+    return tsv(" ".join(header), *(" ".join(row) for row in rows))
+
+
+def pattern(k: int, m: int) -> str:
+    """A value for sensor k of map m, from -2 to 2 in steps of 0.25: exact."""
+    return repr(((7 * k + 11 * m) % 17 - 8) / 4)
+
+
+def mixing(count: int = 19, maps: int = 3, at: Callable | None = None) -> bytes:
+    """Sensors along the rows, one value column per map (IC001, IC002, ...)."""
+    at = at or pattern
+    header = [f"IC{m + 1:03d}" for m in range(maps)]
+    return text_tsv(header, [[at(k, m) for m in range(maps)] for k in range(count)])
+
+
+def map_columns(maps: int = 3, kind: str = "number", unit: str | None = "uV"):
+    return [col(f"IC{m + 1:03d}", kind, unit) for m in range(maps)]
+
+
+def chanlocs(rows=TEN_TWENTY, types="EEG") -> bytes:
+    """A layout file: name, theta_deg, radius and, with types, sensor_type
+    (each row EEG by default; None for no sensor_type column)."""
+    if types == "EEG":
+        types = ["EEG"] * len(rows)
+    typed = types is not None
+    header = ["name", "theta_deg", "radius"] + (["sensor_type"] if typed else [])
+    body = [
+        [name, theta, radius] + ([types[i]] if typed else [])
+        for i, (name, theta, radius) in enumerate(rows)
+    ]
+    return text_tsv(header, body)
+
+
+def electrodes(names=NAMES_1020, types="EEG", flat=False, at=None) -> bytes:
+    """A positions file of standard_1005 positions for the names (z = 0 when
+    flat), or of the given (name, x, y, z) rows, with sensor_type (each row EEG
+    by default; None for no sensor_type column)."""
+    rows = at or [(n, *POSITIONS_1005[n]) for n in names]
+    if types == "EEG":
+        types = ["EEG"] * len(rows)
+    typed = types is not None
+    header = ["name", "x", "y", "z"] + (["sensor_type"] if typed else [])
+    body = [
+        [name, repr(x), repr(y), "0" if flat else repr(z)]
+        + ([types[i]] if typed else [])
+        for i, (name, x, y, z) in enumerate(rows)
+    ]
+    return text_tsv(header, body)
+
+
+def field_view(
+    values: bytes,
+    sensors: bytes | None = None,
+    role: str = "layout",
+    *,
+    columns=None,
+    dims=None,
+    sensor_columns=None,
+    kind: str = "nemar.sensor-field",
+    extra: list | None = None,
+    **fields,
+) -> tuple[dict, dict]:
+    """A scalp map view and its files: values, and a layout or positions role."""
+    entry = data_entry(
+        "values",
+        FIELD_AT,
+        values,
+        columns=map_columns() if columns is None else columns,
+        dims=dims
+        or [
+            dim("sensor", "rows", "string", {"role": role, "column": "name"}),
+            MAPS_HEADER,
+        ],
+    )
+    data, files = [entry], {FIELD_AT: values}
+    if sensors is not None:
+        at = CHANLOCS_AT if role == "layout" else ELECTRODES_AT
+        if sensor_columns is None:
+            typed = b"sensor_type" in sensors.split(b"\n", 1)[0]
+            if role == "layout":
+                sensor_columns = TYPED_LAYOUT_COLUMNS if typed else LAYOUT_COLUMNS
+            else:
+                sensor_columns = TYPED_POSITION_COLUMNS if typed else POSITION_COLUMNS
+        sensor_fields = {
+            "coordinate_system": "CapTrak",
+            "position_source": "measured",
+        } | fields.pop(role, {})
+        data.append(
+            data_entry(
+                role,
+                at,
+                sensors,
+                columns=sensor_columns,
+                dims=[NAME_ROWS],
+                **sensor_fields,
+            )
+        )
+        files[at] = sensors
+        if role == "positions":
+            fields["transform"] = {"name": "nemar.sensor-layout.v1", "parameters": {}}
+    for extra_entry, extra_data in extra or []:
+        data.append(extra_entry)
+        files[extra_entry["location"]] = extra_data
+    built = view(
+        "maps",
+        kind,
+        "Scalp maps.",
+        data,
+        source=copy.deepcopy(RECIPE),
+        **fields,
+    )
+    return built, files
+
+
+def names_view(values: bytes, columns, dims, **fields) -> tuple[dict, dict]:
+    """A scalp map whose sensors are named in the values file (no sensor role)."""
+    return field_view(values, None, columns=columns, dims=dims, **fields)
+
+
+def named_values(names=NAMES_1020, maps: int = 3) -> bytes:
+    """A name column, then one value column per map."""
+    header = ["name"] + [f"IC{m + 1:03d}" for m in range(maps)]
+    rows = [[n] + [pattern(k, m) for m in range(maps)] for k, n in enumerate(names)]
+    return text_tsv(header, rows)
+
+
+NAMED_COLUMNS = [col("name", "string"), *map_columns()]
+
+
+def sensor_field_cases() -> list[Case]:
+    """Each source, the fallback from positions to names, types and frames,
+    integer maps, map labels, every fault word, and per-map words."""
+    cases = []
+
+    def case(name, covers, built, caps=None):
+        cases.append(Case(name, covers, built[0], built[1], caps))
+
+    values = mixing()
+    case(
+        "sensor_field_layout",
+        "Three maps over a stored layout of the 19 10-20 electrodes (measured, "
+        "CapTrak): the sensors are the layout's rows, each map a value column, "
+        "labeled by its header name; absmax by default.",
+        field_view(values, chanlocs()),
+    )
+    case(
+        "sensor_field_layout_minmax",
+        "parameters.limits minmax: the model names the rule.",
+        field_view(values, chanlocs(), parameters={"limits": "minmax"}),
+    )
+    case(
+        "sensor_field_layout_template",
+        "A layout of template positions names its montage and n/a; it may be "
+        "untyped, and every row is drawn.",
+        field_view(
+            values,
+            chanlocs(types=None),
+            layout={
+                "coordinate_system": "n/a",
+                "position_source": "template",
+                "montage": "standard_1005",
+            },
+        ),
+    )
+    holes = chanlocs(
+        [
+            *TEN_TWENTY[:4],
+            ("Fz", "n/a", "0.256"),
+            *TEN_TWENTY[5:9],
+            ("Cz", "0", "n/a"),
+            *TEN_TWENTY[10:],
+        ]
+    )
+    case(
+        "sensor_field_layout_no_place",
+        "n/a in a layout's theta or radius: that sensor has no place (null), is "
+        "dropped from the maps, and the others are drawn.",
+        field_view(values, holes),
+    )
+    integers = text_tsv(
+        ["IC001", "IC002"], [[str(k - 9), str((5 * k) % 7)] for k in range(19)]
+    )
+    case(
+        "sensor_field_integer_maps",
+        "Integer value columns are maps too, read under the integer grammar.",
+        field_view(integers, chanlocs(), columns=map_columns(2, "integer", None)),
+    )
+    eeg_types = ["EEG"] * 19
+    mixed = [*eeg_types[:16], "EOG", "ECG", "n/a"]
+    case(
+        "sensor_field_types_eeg_only",
+        "Rows typed EEG, EOG and ECG and one untyped: with any row typed, only "
+        "the EEG rows are drawn (16 of 19).",
+        field_view(values, chanlocs(types=mixed), sensor_columns=TYPED_LAYOUT_COLUMNS),
+    )
+    case(
+        "sensor_field_types_folded",
+        "A type's letters are folded as sensor-labels folds them: eeg, Eeg and "
+        "EEG are all EEG, and every row is drawn.",
+        field_view(
+            values,
+            chanlocs(types=["eeg"] * 9 + ["Eeg"] * 9 + ["EEG"]),
+            sensor_columns=TYPED_LAYOUT_COLUMNS,
+        ),
+    )
+    case(
+        "sensor_field_untyped",
+        "Measured positions whose sensor_type cells are n/a or empty: no row "
+        "says it is EEG, so no row is drawn (no_eeg_sensors).",
+        field_view(
+            values,
+            chanlocs(types=["n/a"] * 10 + [""] * 9),
+            sensor_columns=TYPED_LAYOUT_COLUMNS,
+        ),
+    )
+    case(
+        "sensor_field_no_eeg_sensors",
+        "Every row typed, none EEG (EMG): no_eeg_sensors in every map's place.",
+        field_view(
+            values, chanlocs(types=["EMG"] * 19), sensor_columns=TYPED_LAYOUT_COLUMNS
+        ),
+    )
+    # Positions.
+    case(
+        "sensor_field_positions",
+        "Measured positions (CapTrak, meters) projected by "
+        "nemar.sensor-layout.v1: the model holds the stored x, y and z.",
+        field_view(values, electrodes(), "positions"),
+    )
+    hole_rows = [
+        (n, *(("n/a" if n == "T8" and i == 0 else v) for i, v in enumerate(p)))
+        for n, p in ((n, POSITIONS_1005[n]) for n in NAMES_1020)
+    ]
+    case(
+        "sensor_field_positions_no_place",
+        "n/a in a position's x: that row has no place, and the rest are fitted "
+        "and drawn.",
+        field_view(
+            values,
+            text_tsv(
+                ["name", "x", "y", "z", "sensor_type"],
+                [
+                    [n, *(v if v == "n/a" else repr(v) for v in p), "EEG"]
+                    for n, *p in hole_rows
+                ],
+            ),
+            "positions",
+        ),
+    )
+    case(
+        "sensor_field_positions_template",
+        "Template positions from standard_1005 (n/a, montage), untyped: "
+        "projected about the montage's own center, every row drawn.",
+        field_view(
+            values,
+            electrodes(types=None),
+            "positions",
+            positions={
+                "coordinate_system": "n/a",
+                "position_source": "template",
+                "montage": "standard_1005",
+            },
+        ),
+    )
+    scalp_and_depth = [(n, *POSITIONS_1005[n]) for n in NAMES_1020] + [
+        (n, x / 1000, y / 1000, z / 1000) for n, x, y, z, _t in IMPLANT[:8]
+    ]
+    case(
+        "sensor_field_positions_eeg_and_seeg",
+        "Scalp EEG beside a depth shaft (SEEG) in one positions file: the SEEG "
+        "rows are never drawn, and the projection fits the EEG rows alone.",
+        field_view(
+            mixing(27),
+            electrodes(types=["EEG"] * 19 + ["SEEG"] * 8, at=scalp_and_depth),
+            "positions",
+            sensor_columns=TYPED_POSITION_COLUMNS,
+        ),
+    )
+    flat_scalp = [(n, *POSITIONS_1005[n][:2], 0.0) for n in NAMES_1020]
+    depth = [(n, x / 1000, y / 1000, z / 1000) for n, x, y, z, _t in IMPLANT]
+    case(
+        "sensor_field_positions_fit_eeg_rows",
+        "Flat scalp positions (z = 0) beside depth contacts typed SEEG that lie "
+        "off their plane: the projection fits the EEG rows alone, which are "
+        "flat, so the sensors are placed by name (a fit through every row would "
+        "have found a sphere).",
+        field_view(
+            mixing(45),
+            electrodes(types=["EEG"] * 19 + ["SEEG"] * 26, at=flat_scalp + depth),
+            "positions",
+            sensor_columns=TYPED_POSITION_COLUMNS,
+        ),
+    )
+    case(
+        "sensor_field_positions_flat_names",
+        "Measured positions on one plane (z = 0): positions_flat, so the "
+        "sensors are placed by name on standard_1005 instead, and the model "
+        "says why the positions were not used.",
+        field_view(values, electrodes(flat=True), "positions"),
+    )
+    case(
+        "sensor_field_positions_frame_unknown_names",
+        "Positions in the coordinate system Other: frame_unknown, placed by name.",
+        field_view(
+            values,
+            electrodes(),
+            "positions",
+            positions={"coordinate_system": "Other"},
+        ),
+    )
+    channels = [f"Ch{k + 1}" for k in range(19)]
+    case(
+        "sensor_field_positions_flat_names_refused",
+        "Flat positions whose names match no montage: the names are refused "
+        "(labels_unrecognized), and that is every map's word.",
+        field_view(
+            values,
+            electrodes(
+                at=[
+                    (
+                        c,
+                        *POSITIONS_1005[n],
+                    )
+                    for c, n in zip(channels, NAMES_1020, strict=True)
+                ],
+                flat=True,
+            ),
+            "positions",
+        ),
+    )
+    implant = text_tsv(
+        ["name", "x", "y", "z", "sensor_type"],
+        [[n, str(x), str(y), str(z), t] for n, x, y, z, t in IMPLANT],
+    )
+    implant_columns = [col("name", "string")] + [col(a, unit="mm") for a in "xyz"]
+    implant_columns.append(col("sensor_type", "string"))
+    for frame in ("ACPC", "ScanRAS"):
+        case(
+            f"sensor_field_implant_{frame.lower()}",
+            f"An intracranial implant (SEEG shafts, an ECOG strip named C1 to "
+            f"C6, a DBS lead) in {frame}: frame_not_scalp, never drawn as a "
+            "scalp map and never placed by its names.",
+            field_view(
+                mixing(26),
+                implant,
+                "positions",
+                sensor_columns=implant_columns,
+                positions={"coordinate_system": frame},
+            ),
+        )
+    case(
+        "sensor_field_implant_untyped_acpc",
+        "The implant in ACPC with every sensor_type n/a: the frame alone "
+        "refuses it (frame_not_scalp), though C1 to C6 are scalp names.",
+        field_view(
+            mixing(26),
+            text_tsv(
+                ["name", "x", "y", "z", "sensor_type"],
+                [[n, str(x), str(y), str(z), "n/a"] for n, x, y, z, _t in IMPLANT],
+            ),
+            "positions",
+            sensor_columns=implant_columns,
+            positions={"coordinate_system": "ACPC"},
+        ),
+    )
+    case(
+        "sensor_field_implant_typed_in_a_scalp_frame",
+        "The implant's types in a frame a scalp map may use (CapTrak): every "
+        "row typed SEEG, ECOG or DBS, so no_eeg_sensors.",
+        field_view(
+            mixing(26),
+            implant,
+            "positions",
+            sensor_columns=implant_columns,
+        ),
+    )
+    pixels = text_tsv(
+        ["name", "x", "y", "z", "sensor_type"],
+        [
+            [n, str(100 + 9 * k), str(40 + 5 * k), "n/a", "n/a"]
+            for k, n in enumerate(NAMES_1020)
+        ],
+    )
+    case(
+        "sensor_field_pixels",
+        "Positions in Pixels (a photograph of a grid, z n/a): frame_not_scalp.",
+        field_view(
+            values,
+            pixels,
+            "positions",
+            sensor_columns=[col("name", "string")]
+            + [col(a) for a in "xyz"]
+            + [col("sensor_type", "string")],
+            positions={"coordinate_system": "Pixels"},
+        ),
+    )
+    # Real intracranial positions, and a strip named like scalp electrodes.
+    ieeg = json.loads(IEEG_INPUTS.read_text(encoding="utf-8"))
+    contacts = ieeg["rows"]
+
+    def implant_file(types):
+        header = ["name", "x", "y", "z"] + (["sensor_type"] if types else [])
+        return text_tsv(
+            header,
+            [
+                [n, x, y, z] + ([types[i]] if types else [])
+                for i, (n, x, y, z, _t) in enumerate(contacts)
+            ],
+        )
+
+    mm_columns = [col("name", "string")] + [col(a, unit="mm") for a in "xyz"]
+    mm_typed = [*mm_columns, col("sensor_type", "string")]
+    for name, covers, frame, types in [
+        (
+            "ieeg_talairach_untyped",
+            "A real ECoG implant (bids-examples ieeg_motorMiller2007, sub-bp, "
+            "Talairach, 47 contacts) with every sensor_type n/a: measured "
+            "positions that do not say they are EEG are never drawn "
+            "(no_eeg_sensors), though Talairach is a frame a scalp map may use.",
+            "Talairach",
+            ["n/a"] * len(contacts),
+        ),
+        (
+            "ieeg_talairach_electrode_type",
+            "The same implant typed by its electrodes.tsv type (surface): not "
+            "EEG, so no_eeg_sensors.",
+            "Talairach",
+            [t for *_rest, t in contacts],
+        ),
+        (
+            "ieeg_ixi549space_untyped",
+            "The same contacts in IXI549Space, the template space of the BIDS "
+            "examples' other implants: untyped, so no_eeg_sensors.",
+            "IXI549Space",
+            ["n/a"] * len(contacts),
+        ),
+    ]:
+        case(
+            name,
+            covers,
+            field_view(
+                mixing(len(contacts)),
+                implant_file(types),
+                "positions",
+                sensor_columns=mm_typed,
+                positions={"coordinate_system": frame},
+            ),
+        )
+    strip_names = [f"F{i}" for i in range(1, 9)] + [f"C{i}" for i in range(1, 7)]
+    strip_names += ["Fz", "Cz"]
+    strip = [(n, -40 + 3 * i, 30, 40 - i) for i, n in enumerate(strip_names)]
+
+    def strip_file(types):
+        return text_tsv(
+            ["name", "x", "y", "z", "sensor_type"],
+            [
+                [n, str(x), str(y), str(z), t]
+                for (n, x, y, z), t in zip(strip, types, strict=True)
+            ],
+        )
+
+    for name, covers, types in [
+        (
+            "strip_other_untyped",
+            "An ECoG strip named F1 to F8, C1 to C6, Fz and Cz in the frame Other, "
+            "every sensor_type n/a: no row says it is EEG, so no_eeg_sensors, and "
+            "the names are never tried on a scalp.",
+            ["n/a"] * 16,
+        ),
+        (
+            "strip_other_ecog",
+            "The strip typed ECOG: no_eeg_sensors.",
+            ["ECOG"] * 16,
+        ),
+        (
+            "strip_other_typed_eeg",
+            "The strip typed EEG: a writer's claim the renderer believes, so after "
+            "frame_unknown the rows are placed by name on standard_1005.",
+            ["EEG"] * 16,
+        ),
+    ]:
+        case(
+            name,
+            covers,
+            field_view(
+                mixing(16),
+                strip_file(types),
+                "positions",
+                sensor_columns=mm_typed,
+                positions={"coordinate_system": "Other"},
+            ),
+        )
+    in_1005 = {
+        "coordinate_system": "n/a",
+        "position_source": "template",
+        "montage": "standard_1005",
+    }
+    case(
+        "template_names_not_in_montage",
+        "The real ECoG implant's contacts (named 1 to 47) declared template "
+        "positions of standard_1005: their names are none of its electrodes, so "
+        "template_name_unknown.",
+        field_view(
+            mixing(len(contacts)),
+            implant_file(None),
+            "positions",
+            sensor_columns=mm_columns,
+            positions=in_1005,
+        ),
+    )
+    case(
+        "template_layout_name_unknown",
+        "A template layout of standard_1005 whose last row is named X1, no "
+        "electrode of it: template_name_unknown.",
+        field_view(
+            values,
+            chanlocs([*TEN_TWENTY[:18], ("X1", "162", "0.511")], types=None),
+            layout=in_1005,
+        ),
+    )
+    case(
+        "template_strip_named_like_the_montage",
+        "The ECoG strip named F1 to F8, C1 to C6, Fz and Cz, declared template "
+        "positions of standard_1005: every name is an electrode of it, so the "
+        "check passes and the positions are projected and drawn. Template "
+        "positions are checked by their names, never by their places: the "
+        "writer's declaration is believed.",
+        field_view(
+            mixing(16),
+            text_tsv(
+                ["name", "x", "y", "z"],
+                [
+                    [n, str(x / 1000), str(y / 1000), str(z / 1000)]
+                    for n, x, y, z in strip
+                ],
+            ),
+            "positions",
+            positions=in_1005,
+        ),
+    )
+    unknown_cap = {
+        "coordinate_system": "n/a",
+        "position_source": "template",
+        "montage": "acme-cap-19",
+    }
+    case(
+        "template_unknown_montage_untyped",
+        "Untyped template positions from a montage views/montages does not "
+        "hold: frame_unknown, and since no row says it is EEG, it takes every "
+        "map's place rather than a placement by name.",
+        field_view(values, electrodes(types=None), "positions", positions=unknown_cap),
+    )
+    case(
+        "template_unknown_montage_typed_eeg",
+        "The same positions typed EEG: frame_unknown, then placed by name.",
+        field_view(values, electrodes(), "positions", positions=unknown_cap),
+    )
+    # Names.
+    case(
+        "sensor_field_names",
+        "No sensor role: the names in the values file are placed by "
+        "nemar.sensor-labels.v1 on standard_1005 (template positions).",
+        names_view(named_values(), NAMED_COLUMNS, [NAME_ROWS, MAPS_HEADER]),
+    )
+    bands = text_tsv(
+        ["band", *NAMES_1020],
+        [
+            [band] + [pattern(k, m) for k in range(19)]
+            for m, band in enumerate(("delta", "theta", "alpha"))
+        ],
+    )
+    case(
+        "sensor_field_names_on_columns",
+        "Sensors along the columns, named by the header; one map per row, "
+        "labeled by the column band.",
+        names_view(
+            bands,
+            [col("band", "string")] + [col(n) for n in NAMES_1020],
+            [
+                dim("band", "rows", "string", {"column": "band"}),
+                dim("sensor", "columns", "string", {"header": True}),
+            ],
+        ),
+    )
+    case(
+        "sensor_field_maps_by_row_number",
+        "Sensors along the columns and no second dimension: each map is "
+        "labeled by its row number, from 1.",
+        names_view(
+            text_tsv(
+                NAMES_1020, [[pattern(k, m) for k in range(19)] for m in range(2)]
+            ),
+            [col(n) for n in NAMES_1020],
+            [dim("sensor", "columns", "string", {"header": True})],
+        ),
+    )
+    case(
+        "sensor_field_names_some_unplaced",
+        "Names with an EOG and a trigger channel among them: sensor-labels "
+        "places the 19 scalp names, and the two it leaves unplaced are not "
+        "drawn.",
+        names_view(
+            named_values([*NAMES_1020[:10], "EOG1", *NAMES_1020[10:], "Status"]),
+            NAMED_COLUMNS,
+            [NAME_ROWS, MAPS_HEADER],
+        ),
+    )
+    case(
+        "sensor_field_names_refused",
+        "Names that match no montage: labels_unrecognized in every map's place.",
+        names_view(named_values(channels), NAMED_COLUMNS, [NAME_ROWS, MAPS_HEADER]),
+    )
+    case(
+        "sensor_field_names_too_few",
+        "Seven names: sensor-labels refuses them first (too_few_channels).",
+        names_view(
+            named_values(NAMES_1020[:7]), NAMED_COLUMNS, [NAME_ROWS, MAPS_HEADER]
+        ),
+    )
+
+    # Per-map words and notes.
+    def flat_or_near(k, m):
+        if m == 1:
+            return "1.5"
+        if m == 2:
+            return "1.5000000001" if k == 0 else "1.5"
+        return pattern(k, m)
+
+    case(
+        "sensor_field_flat_map",
+        "Three maps: every sensor of the second has the value 1.5, a flat "
+        "field drawn at 1.5 with the note flat_field; the third differs by "
+        "1e-10 at one sensor, near flat (within 1e-9 of 1.5), drawn as one color "
+        "at its mean with the note near_flat; the first is interpolated.",
+        field_view(mixing(at=flat_or_near), chanlocs()),
+    )
+    overflow = mixing(at=lambda k, m: "1e308" if m == 1 and k % 2 else pattern(k, m))
+    case(
+        "sensor_field_one_map_overflows",
+        "Three maps on one layout; the second's values overflow the "
+        "interpolation (interpolation_failed) and the others are drawn.",
+        field_view(overflow, chanlocs()),
+    )
+    case(
+        "sensor_field_too_few_sensors",
+        "A layout of seven sensors: every map too_few_sensors (a map needs 8).",
+        field_view(mixing(7), chanlocs(TEN_TWENTY[:7])),
+    )
+    far = [*TEN_TWENTY[:18], ("O2", "-135", "1e10")]
+    case(
+        "sensor_field_head_outside_grid",
+        "A sensor at radius 1e10 stretches the grid past the head: "
+        "head_outside_grid in every map's place.",
+        field_view(values, chanlocs(far)),
+    )
+    return cases
+
+
+def _replace(data: bytes, old: str, new: str) -> bytes:
+    assert old.encode() in data, old
+    return data.replace(old.encode(), new.encode(), 1)
+
+
+def sensor_field_fault_cases() -> list[Case]:
+    """Each file fault of a scalp map: the view falls back to its tables."""
+    values, layout = mixing(), chanlocs()
+    cases = []
+
+    def case(name, covers, built, caps=None):
+        cases.append(Case(name, covers, built[0], built[1], caps))
+
+    case(
+        "sensor_field_values_ragged",
+        "The values file has a ragged row: tsv_ragged.",
+        field_view(values + b"1\n", layout),
+    )
+    case(
+        "sensor_field_values_column_missing",
+        "A declared map column the header lacks: column_missing.",
+        field_view(values, layout, columns=[*map_columns(), col("IC009", unit="uV")]),
+    )
+    case(
+        "sensor_field_values_value_type",
+        "A value column declared string: value_type.",
+        field_view(values, layout, columns=[*map_columns(2), col("IC003", "string")]),
+    )
+    case(
+        "sensor_field_values_units_differ",
+        "Maps in uV and in dB: value_units_differ.",
+        field_view(values, layout, columns=[*map_columns(2), col("IC003", unit="dB")]),
+    )
+    case(
+        "sensor_field_values_empty",
+        "A header and no rows (and a layout of none): empty.",
+        field_view(text_tsv(["IC001", "IC002", "IC003"], []), chanlocs([])),
+    )
+    case(
+        "sensor_field_values_n_a",
+        "n/a in a map's values: cell_not_number (only a place may be n/a).",
+        field_view(_replace(values, "\n0.25\t", "\nn/a\t"), layout),
+    )
+    case(
+        "sensor_field_values_not_finite",
+        "A value 1e400: cell_not_finite.",
+        field_view(_replace(values, "\n0.25\t", "\n1e400\t"), layout),
+    )
+    case(
+        "sensor_field_values_not_integer",
+        "2.5 in an integer map: cell_not_integer.",
+        field_view(
+            text_tsv(["IC001"], [[str(k)] for k in range(18)] + [["2.5"]]),
+            layout,
+            columns=map_columns(1, "integer", None),
+        ),
+    )
+    case(
+        "sensor_field_values_rows_cap",
+        "Nineteen sensor rows over caps.entries_per_dim 18: cap_exceeded.",
+        field_view(values, layout),
+        {"entries_per_dim": 18},
+    )
+    case(
+        "sensor_field_maps_header_on_rows",
+        "A maps dimension along the rows that names the header: "
+        "coords_unresolved (a header names columns).",
+        names_view(
+            text_tsv(
+                NAMES_1020, [[pattern(k, m) for k in range(19)] for m in range(2)]
+            ),
+            [col(n) for n in NAMES_1020],
+            [
+                dim("band", "rows", "string", {"header": True}),
+                dim("sensor", "columns", "string", {"header": True}),
+            ],
+        ),
+    )
+    case(
+        "sensor_field_names_coords_mismatch",
+        "The values' name column declared integer, the sensor dimension "
+        "string: coords_mismatch.",
+        names_view(
+            named_values(),
+            [col("name", "integer"), *map_columns()],
+            [NAME_ROWS, MAPS_HEADER],
+        ),
+    )
+    case(
+        "sensor_field_layout_short",
+        "A layout of 18 rows for 19 sensor rows: coords_length.",
+        field_view(values, chanlocs(TEN_TWENTY[:18])),
+    )
+    case(
+        "sensor_field_layout_long",
+        "A layout of 19 rows for 18 sensor rows: coords_length.",
+        field_view(mixing(18), layout),
+    )
+    case(
+        "sensor_field_positions_short",
+        "Positions of 18 rows for 19 sensor rows: coords_length.",
+        field_view(values, electrodes(NAMES_1020[:18]), "positions"),
+    )
+    bands = text_tsv(
+        ["band", *NAMES_1020],
+        [[b] + [pattern(k, m) for k in range(19)] for m, b in enumerate(("a", "b"))],
+    )
+    case(
+        "sensor_field_sensors_mismatch",
+        "Sensors along the columns, named by the header, and placed by a layout "
+        "listed in the other order: the value columns' names are not the "
+        "layout's name cells, so sensors_mismatch, never a value drawn at "
+        "another sensor's place.",
+        field_view(
+            bands,
+            chanlocs(TEN_TWENTY[::-1]),
+            columns=[col("band", "string")] + [col(n) for n in NAMES_1020],
+            dims=[
+                dim("band", "rows", "string", {"column": "band"}),
+                dim(
+                    "sensor", "columns", "string", {"role": "layout", "column": "name"}
+                ),
+            ],
+        ),
+    )
+    case(
+        "sensor_field_values_byte_order_mark",
+        "The values file begins with a byte order mark: tsv_encoding.",
+        field_view(b"\xef\xbb\xbf" + values, layout),
+    )
+    case(
+        "sensor_field_layout_header_repeated",
+        "The layout's header names radius twice: tsv_header_repeated.",
+        field_view(
+            values,
+            _replace(layout, "sensor_type", "radius"),
+            sensor_columns=TYPED_LAYOUT_COLUMNS,
+        ),
+    )
+    case(
+        "sensor_field_layout_line_endings",
+        "A layout with CRLF line endings: tsv_line_endings.",
+        field_view(values, layout.replace(b"\n", b"\r\n")),
+    )
+    case(
+        "sensor_field_layout_column_missing",
+        "The layout declares radius, and its header calls it rad: column_missing.",
+        field_view(values, _replace(layout, "radius", "rad")),
+    )
+    case(
+        "sensor_field_layout_column_repeated",
+        "The layout declares sensor_type twice: column_repeated.",
+        field_view(
+            values,
+            chanlocs(types=["EEG"] * 19),
+            sensor_columns=[*TYPED_LAYOUT_COLUMNS, col("sensor_type", "string")],
+        ),
+    )
+    case(
+        "sensor_field_layout_cells_cap",
+        "Nineteen layout rows of four declared columns are 76 cells, over 75: "
+        "cap_exceeded (the values hold 38).",
+        field_view(mixing(19, 2), layout, columns=map_columns(2)),
+        {"cells_per_role": 75},
+    )
+    case(
+        "sensor_field_layout_not_a_number",
+        "A theta NA (not n/a): cell_not_number.",
+        field_view(values, _replace(layout, "\t-54\t", "\tNA\t")),
+    )
+    case(
+        "sensor_field_layout_not_finite",
+        "A radius 1e400: cell_not_finite.",
+        field_view(values, _replace(layout, "\t0.333\tEEG\n", "\t1e400\tEEG\n")),
+    )
+    case(
+        "sensor_field_positions_not_a_number",
+        "A position nan: cell_not_number.",
+        field_view(values, _replace(electrodes(), "\t-0.00699", "\tnan"), "positions"),
+    )
+    return cases
+
+
+def sensor_field_order_pairs() -> list[tuple]:
+    """Two faults in neighboring checks, each with its one-fault sibling.
+
+    Each entry is (name, covers, the view with both faults, the view with the
+    later check's fault alone, the earlier word, the later word): the case
+    gives the earlier check's word, and the sibling shows that the later fault
+    is there and gives its own word.
+    """
+    values, layout = mixing(), chanlocs()
+    bands = [col("freq", unit="Hz")] + [col(n) for n in NAMES_1020]
+    by_freq = [
+        dim("freq", "rows", "number", {"column": "freq"}, unit="Hz"),
+        dim("sensor", "columns", "string", {"header": True}),
+    ]
+
+    def spectrum_like(freq_cell="2", value_cell="0.25"):
+        rows = [["1", *(pattern(k, 0) for k in range(19))]]
+        rows.append([freq_cell, value_cell, *(pattern(k, 1) for k in range(1, 19))])
+        return text_tsv(["freq", *NAMES_1020], rows)
+
+    named_unit = [
+        col("name", "string", "mm"),
+        col("theta_deg", unit="deg"),
+        col("radius"),
+        col("sensor_type", "string"),
+    ]
+    acpc = {"coordinate_system": "ACPC"}
+    far = [*TEN_TWENTY[:18], ("O2", "-135", "1e10")]
+    far_seven = [*TEN_TWENTY[:6], ("O2", "-135", "1e10")]
+
+    def huge(k, m):
+        return "1e308" if k % 2 else "-1e308"
+
+    overflow = mixing(19, 1, at=huge)
+    ragged = chanlocs() + b"O3\t9\tEEG\n"
+    components = text_tsv(["label"], [[f"IC{m + 1:03d}"] for m in range(3)])
+    labels = data_entry(
+        "components", COMPONENTS_AT, components, columns=[col("component", "string")]
+    )
+    maps_dim = dim(
+        "component", "columns", "string", {"role": "components", "column": "component"}
+    )
+    reversed_layout = chanlocs(TEN_TWENTY[::-1])
+    along_columns = [
+        dim("band", "rows", "string", {"column": "band"}),
+        dim("sensor", "columns", "string", {"role": "layout", "column": "name"}),
+    ]
+    band_values = text_tsv(
+        ["band", *NAMES_1020],
+        [[b] + [pattern(k, m) for k in range(19)] for m, b in enumerate(("a", "b"))],
+    )
+    band_columns = [col("band", "string")] + [col(n) for n in NAMES_1020]
+    unmatched = [*NAMES_1020[:8], "Status", "Trig1", "Resp"]
+    return [
+        (
+            "order_sensor_dimension_before_maps_dimension",
+            "The sensors' name column declared integer (coords_mismatch) and a "
+            "maps dimension along the columns that names a column "
+            "(coords_unresolved): the sensor dimension is checked first.",
+            names_view(
+                named_values(),
+                [col("name", "integer"), *map_columns()],
+                [NAME_ROWS, dim("component", "columns", "string", {"column": "x"})],
+            ),
+            names_view(
+                named_values(),
+                NAMED_COLUMNS,
+                [NAME_ROWS, dim("component", "columns", "string", {"column": "x"})],
+            ),
+            "coords_mismatch",
+            "coords_unresolved",
+        ),
+        (
+            "order_sensor_coordinate_before_values",
+            "The name column declared integer and a value column declared "
+            "string: coords_mismatch.",
+            names_view(
+                named_values(),
+                [col("name", "integer"), *map_columns(2), col("IC003", "string")],
+                [NAME_ROWS, MAPS_HEADER],
+            ),
+            names_view(
+                named_values(),
+                [col("name", "string"), *map_columns(2), col("IC003", "string")],
+                [NAME_ROWS, MAPS_HEADER],
+            ),
+            "coords_mismatch",
+            "value_type",
+        ),
+        (
+            "order_sensor_coordinate_cells_before_values",
+            "Sensors along the columns and maps labeled by a number column: a "
+            "frequency x in the second row and a value 1e400 in it: the "
+            "coordinate column's cells are read first, cell_not_number.",
+            names_view(spectrum_like("x", "1e400"), bands, by_freq),
+            names_view(spectrum_like("2", "1e400"), bands, by_freq),
+            "cell_not_number",
+            "cell_not_finite",
+        ),
+        (
+            "order_sensor_values_cells_before_layout",
+            "n/a in the values and a layout one row short: the values' cells "
+            "come first, cell_not_number.",
+            field_view(
+                _replace(values, "\n0.25\t", "\nn/a\t"), chanlocs(TEN_TWENTY[:18])
+            ),
+            field_view(values, chanlocs(TEN_TWENTY[:18])),
+            "cell_not_number",
+            "coords_length",
+        ),
+        (
+            "order_sensor_layout_grammar_before_columns",
+            "A ragged layout whose header calls radius rad: tsv_ragged.",
+            field_view(values, _replace(ragged, "radius", "rad")),
+            field_view(values, _replace(layout, "radius", "rad")),
+            "tsv_ragged",
+            "column_missing",
+        ),
+        (
+            "order_sensor_layout_repeated_before_missing",
+            "sensor_type declared twice, and radius missing from the header: "
+            "column_repeated.",
+            field_view(
+                values,
+                _replace(layout, "radius", "rad"),
+                sensor_columns=[*TYPED_LAYOUT_COLUMNS, col("sensor_type", "string")],
+            ),
+            field_view(values, _replace(layout, "radius", "rad")),
+            "column_repeated",
+            "column_missing",
+        ),
+        (
+            "order_sensor_layout_missing_before_mismatch",
+            "radius missing from the header, and the name column in mm while "
+            "the sensor dimension has no unit: column_missing.",
+            field_view(
+                values, _replace(layout, "radius", "rad"), sensor_columns=named_unit
+            ),
+            field_view(values, layout, sensor_columns=named_unit),
+            "column_missing",
+            "coords_mismatch",
+        ),
+        (
+            "order_sensor_layout_mismatch_before_length",
+            "The layout's name column in mm, and the layout a row short: "
+            "coords_mismatch.",
+            field_view(values, chanlocs(TEN_TWENTY[:18]), sensor_columns=named_unit),
+            field_view(values, chanlocs(TEN_TWENTY[:18])),
+            "coords_mismatch",
+            "coords_length",
+        ),
+        (
+            "order_sensor_layout_length_before_cap",
+            "The layout a row short, and over the cap on cells: coords_length.",
+            field_view(
+                mixing(19, 2), chanlocs(TEN_TWENTY[:18]), columns=map_columns(2)
+            ),
+            field_view(mixing(19, 2), layout, columns=map_columns(2)),
+            "coords_length",
+            "cap_exceeded",
+            ({"cells_per_role": 71}, {"cells_per_role": 71}),
+        ),
+        (
+            "order_sensor_layout_cap_before_cells",
+            "The layout over the cap on cells, with a theta NA: cap_exceeded.",
+            field_view(
+                mixing(19, 2),
+                _replace(layout, "\t-54\t", "\tNA\t"),
+                columns=map_columns(2),
+            ),
+            field_view(
+                mixing(19, 2),
+                _replace(layout, "\t-54\t", "\tNA\t"),
+                columns=map_columns(2),
+            ),
+            "cap_exceeded",
+            "cell_not_number",
+            ({"cells_per_role": 75}, None),
+        ),
+        (
+            "order_sensor_layout_column_by_column",
+            "A theta 1e400 in the last row and a radius x in the first, theta "
+            "declared first: the cells are read column by column, "
+            "cell_not_finite.",
+            field_view(
+                values,
+                _replace(
+                    _replace(layout, "\t162\t", "\t1e400\t"),
+                    "\t0.511\tEEG\n",
+                    "\tx\tEEG\n",
+                ),
+            ),
+            field_view(values, _replace(layout, "\t0.511\tEEG\n", "\tx\tEEG\n")),
+            "cell_not_finite",
+            "cell_not_number",
+        ),
+        (
+            "order_sensor_cells_before_names",
+            "Sensors along the columns placed by a layout listed in the other "
+            "order, with a theta NA: the layout's cells come first, "
+            "cell_not_number.",
+            field_view(
+                band_values,
+                _replace(reversed_layout, "\t-54\t", "\tNA\t"),
+                columns=band_columns,
+                dims=along_columns,
+            ),
+            field_view(
+                band_values, reversed_layout, columns=band_columns, dims=along_columns
+            ),
+            "cell_not_number",
+            "sensors_mismatch",
+        ),
+        (
+            "order_sensor_files_before_frame",
+            "A layout in ACPC with a theta NA: the files come first, so the view "
+            "falls back with cell_not_number rather than showing "
+            "frame_not_scalp.",
+            field_view(values, _replace(layout, "\t-54\t", "\tNA\t"), layout=acpc),
+            field_view(values, layout, layout=acpc),
+            "cell_not_number",
+            "frame_not_scalp",
+        ),
+        (
+            "order_sensor_frame_before_types",
+            "A layout in ACPC whose rows are all typed SEEG: frame_not_scalp.",
+            field_view(values, chanlocs(types=["SEEG"] * 19), layout=acpc),
+            field_view(values, chanlocs(types=["SEEG"] * 19)),
+            "frame_not_scalp",
+            "no_eeg_sensors",
+        ),
+        (
+            "order_sensor_types_before_projection",
+            "Flat positions all typed SEEG: no_eeg_sensors, before any projection.",
+            field_view(values, electrodes(types=["SEEG"] * 19, flat=True), "positions"),
+            field_view(values, electrodes(flat=True), "positions"),
+            "no_eeg_sensors",
+            "positions_flat",
+        ),
+        (
+            "order_sensor_frame_before_maps",
+            "Seven layout rows in ACPC: frame_not_scalp, not too_few_sensors.",
+            field_view(mixing(7), chanlocs(TEN_TWENTY[:7]), layout=acpc),
+            field_view(mixing(7), chanlocs(TEN_TWENTY[:7])),
+            "frame_not_scalp",
+            "too_few_sensors",
+        ),
+        (
+            "order_sensor_map_too_few_before_grid",
+            "Seven sensors, one at radius 1e10: too_few_sensors (step 5) before "
+            "head_outside_grid (step 7).",
+            field_view(mixing(7, 1), chanlocs(far_seven), columns=map_columns(1)),
+            field_view(mixing(19, 1), chanlocs(far), columns=map_columns(1)),
+            "too_few_sensors",
+            "head_outside_grid",
+        ),
+        (
+            "order_sensor_map_too_few_before_overflow",
+            "Seven sensors and values that overflow: too_few_sensors (step 5) "
+            "before interpolation_failed (step 10).",
+            field_view(
+                mixing(7, 1, at=huge),
+                chanlocs(TEN_TWENTY[:7]),
+                columns=map_columns(1),
+            ),
+            field_view(overflow, layout, columns=map_columns(1)),
+            "too_few_sensors",
+            "interpolation_failed",
+        ),
+        (
+            "order_sensor_map_grid_before_overflow",
+            "A sensor at radius 1e10 and values that overflow: head_outside_grid "
+            "(step 7) before interpolation_failed (step 10).",
+            field_view(overflow, chanlocs(far), columns=map_columns(1)),
+            field_view(overflow, layout, columns=map_columns(1)),
+            "head_outside_grid",
+            "interpolation_failed",
+        ),
+        (
+            "order_sensor_rows_before_columns",
+            "An unknown kind over nemar.sensor-field whose maps are labeled by "
+            "its components role, which lacks the column component, and whose "
+            "layout has a ragged row: the rows' dimension (the sensors) comes "
+            "first, tsv_ragged.",
+            field_view(
+                values,
+                ragged,
+                dims=[SENSOR_ROWS, maps_dim],
+                kind="acme.component-maps",
+                base="nemar.sensor-field",
+                base_version=1,
+                extra=[(labels, components)],
+            ),
+            field_view(
+                values,
+                layout,
+                dims=[SENSOR_ROWS, maps_dim],
+                kind="acme.component-maps",
+                base="nemar.sensor-field",
+                base_version=1,
+                extra=[(labels, components)],
+            ),
+            "tsv_ragged",
+            "column_missing",
+        ),
+        (
+            "order_sensor_names_keep_their_types",
+            "Flat positions typed EEG, eight 10-20 names and Status, Trig1 and "
+            "Resp: placed by name with their types, the three are EEG channels "
+            "no montage holds, so the share is 8 of 11 (share_too_low); without "
+            "the types they would be excluded by name, and the eight placed.",
+            field_view(
+                mixing(11),
+                electrodes(
+                    at=[(n, *POSITIONS_1005[n][:2], 0.0) for n in NAMES_1020[:8]]
+                    + [(n, 0.05 * i, -0.05, 0.0) for i, n in enumerate(unmatched[8:])],
+                    flat=True,
+                ),
+                "positions",
+            ),
+            field_view(
+                mixing(11),
+                electrodes(
+                    at=[(n, *POSITIONS_1005[n][:2], 0.0) for n in NAMES_1020[:8]]
+                    + [(n, 0.05 * i, -0.05, 0.0) for i, n in enumerate(unmatched[8:])],
+                    types=["EEG"] * 8 + ["n/a"] * 3,
+                    flat=True,
+                ),
+                "positions",
+            ),
+            "share_too_low",
+            "positions_flat",
+        ),
+    ]
+
+
+def sensor_field_order_cases() -> list[Case]:
+    out = []
+    for name, covers, both, alone, _first, second, *caps in sensor_field_order_pairs():
+        both_caps, alone_caps = caps[0] if caps else (None, None)
+        out.append(Case(name, covers, both[0], both[1], both_caps))
+        out.append(
+            Case(
+                f"{name}_alone",
+                f"The later fault of {name} alone: {second}.",
+                alone[0],
+                alone[1],
+                alone_caps,
+            )
+        )
+    return out
+
+
+def ic_maps_by_base_cases() -> list[Case]:
+    """nemar.ic-maps drawn by its base, with the files its base reads."""
+    components = components_table(IC_COMPONENTS)
+    short = chanlocs(TEN_TWENTY[:18], types=["EEG"] * 18)
+    return [
+        Case(
+            "ic_maps_by_base",
+            "nemar.ic-maps by its base: 18 component maps over the layout, "
+            "absmax, and the components table offered for download, not read.",
+            *ic_maps_files(components),
+        ),
+        Case(
+            "ic_maps_by_base_layout_short",
+            "nemar.ic-maps whose layout is a row short: the base refuses "
+            "(coords_length) and the view falls back to its tables.",
+            *ic_maps_files(components, short),
+        ),
+    ]
+
+
+FREQS = [2.0 * r for r in range(31)]
+
+
+def spectrum_text(names=NAMES_1020, rows=FREQS, at=None) -> bytes:
+    """freq_hz, then one sensor column per name, in decibels (5 to 16 dB)."""
+    at = at or (lambda k, r: repr(((7 * k + 3 * r) % 23) / 2 + 5.0))
+    body = [
+        [repr(f)] + [at(k, r) for k in range(len(names))] for r, f in enumerate(rows)
+    ]
+    return text_tsv(["freq_hz", *names], body)
+
+
+def spectrum_view(values: bytes, names=NAMES_1020, layout: bytes | None = None):
+    """The example's spectrum with these files: a layout, or names in the header."""
+    spectrum = copy.deepcopy(preset_views()["spectrum"])
+    sensor = (
+        {"role": "layout", "column": "name"} if layout is not None else {"header": True}
+    )
+    entry = data_entry(
+        "values",
+        _location(spectrum, "values"),
+        values,
+        columns=[col("freq_hz", unit="Hz")] + [col(n, unit="dB") for n in names],
+        dims=[
+            dim("freq", "rows", "number", {"column": "freq_hz"}, unit="Hz"),
+            dim("sensor", "columns", "string", sensor),
+        ],
+    )
+    files = {entry["location"]: values}
+    data = [entry]
+    if layout is not None:
+        layout_entry = copy.deepcopy(spectrum["data"][1])
+        layout_entry.update(size=len(layout), sha256=hashlib.sha256(layout).hexdigest())
+        data.append(layout_entry)
+        files[layout_entry["location"]] = layout
+    spectrum["data"] = data
+    return spectrum, files
+
+
+def spectrum_maps_cases() -> list[Case]:
+    """nemar.spectrum drawn by its base, with the maps a renderer that knows
+    it draws: at each frequency asked for, the row it snaps to."""
+    layout = chanlocs(types=["EEG"] * 19)
+    values = spectrum_text()
+    out = []
+    for name, covers, built, hz in [
+        (
+            "spectrum_maps_layout",
+            "The lines by their base, and maps at initial_maps_hz over the "
+            "layout: minmax limits, each map labeled by its row's frequency.",
+            spectrum_view(values, layout=layout),
+            [6, 10, 22, 50],
+        ),
+        (
+            "spectrum_maps_snap",
+            "Frequencies between rows snap as the readout does: 7 is the tie "
+            "between 6 and 8 and reads 6; 7.5 reads 8; 100 reads the last row.",
+            spectrum_view(values, layout=layout),
+            [7, 7.5, 100],
+        ),
+        (
+            "spectrum_maps_names",
+            "No layout: the header's sensor names are placed by "
+            "nemar.sensor-labels.v1 (standard_1005).",
+            spectrum_view(values),
+            [10],
+        ),
+        (
+            "spectrum_maps_layout_fault",
+            "A layout theta NA: the lines read only the layout's names and are "
+            "drawn, and every map shows cell_not_number.",
+            spectrum_view(values, layout=_replace(layout, "\t-54\t", "\tNA\t")),
+            [10],
+        ),
+        (
+            "spectrum_maps_sensors_mismatch",
+            "A layout listed in the other order than the sensor columns: the "
+            "preset's own check finds sensors_mismatch (the definition a scalp "
+            "map reads), the view shows as the fallback's tables, and there are "
+            "no lines and no maps, never a value at another sensor's place.",
+            spectrum_view(values, layout=chanlocs(TEN_TWENTY[::-1])),
+            [10],
+        ),
+        (
+            "spectrum_maps_mismatch_before_place_fault",
+            "A layout in the other order with a theta NA: the preset's check "
+            "runs before any map reads a place, so sensors_mismatch, the "
+            "fallback, and no maps (cell_not_number alone draws the lines).",
+            spectrum_view(
+                values,
+                layout=_replace(chanlocs(TEN_TWENTY[::-1]), "\t-54\t", "\tNA\t"),
+            ),
+            [10],
+        ),
+        (
+            "spectrum_maps_too_few",
+            "Seven sensors: the lines are drawn and every map is too_few_sensors.",
+            spectrum_view(
+                spectrum_text(NAMES_1020[:7]),
+                NAMES_1020[:7],
+                chanlocs(TEN_TWENTY[:7], types=["EEG"] * 7),
+            ),
+            [10, 22],
+        ),
+        (
+            "spectrum_maps_base_refused",
+            "Two rows at one frequency: the base refuses (x_not_increasing), "
+            "the view falls back to its tables, and there are no maps.",
+            spectrum_view(spectrum_text(rows=[0.0, 2.0, 2.0, 4.0]), layout=layout),
+            [2],
+        ),
+    ]:
+        out.append(Case(name, covers, built[0], built[1], maps=hz))
+    return out
 
 
 # ── The verdict corpus ────────────────────────────────────────────────────
@@ -3092,7 +4541,8 @@ def _location(view: dict, role: str) -> str:
     return next(e for e in view["data"] if e["role"] == role)["location"]
 
 
-IC_COMPONENTS = [f"IC{i:03d}" for i in range(1, 7)]
+IC_COMPONENTS = [f"IC{i:03d}" for i in range(1, 19)]
+WIDE_COLUMNS = [f"extra{i}" for i in range(20)]
 
 
 def components_table(names: list[str], header: str = "component") -> bytes:
@@ -3101,8 +4551,22 @@ def components_table(names: list[str], header: str = "component") -> bytes:
     return tsv(*rows)
 
 
+def ic_maps_files(components: bytes, layout: bytes | None = None) -> tuple:
+    """The example's component maps with every file its base and it read: the
+    mixing matrix (19 sensors, 18 components), the layout and the components
+    table. Returns the view and its files by location."""
+    files = {
+        "values": mixing(19, 18),
+        "layout": chanlocs(types=["EEG"] * 19) if layout is None else layout,
+        "components": components,
+    }
+    built = preset_views()["icmaps"]
+    for role, data in files.items():
+        built = _with_file(built, role, data)
+    return built, {_location(built, role): data for role, data in files.items()}
+
+
 def ic_maps_check_cases() -> list[Case]:
-    maps = preset_views()["icmaps"]
     out = []
     for name, covers, data in [
         (
@@ -3123,12 +4587,12 @@ def ic_maps_check_cases() -> list[Case]:
         (
             "ic_maps_long",
             "One component row more than the maps.",
-            components_table([*IC_COMPONENTS, "IC007"]),
+            components_table([*IC_COMPONENTS, "IC019"]),
         ),
         (
             "ic_maps_renamed",
             "IC1 is not IC001: names compare as text.",
-            components_table([f"IC{i}" for i in range(1, 7)]),
+            components_table([f"IC{i}" for i in range(1, 19)]),
         ),
         (
             "ic_maps_no_column",
@@ -3138,114 +4602,102 @@ def ic_maps_check_cases() -> list[Case]:
         (
             "ic_maps_ragged",
             "A row with a cell missing (the generic word).",
-            components_table(IC_COMPONENTS) + b"IC007\t1\n",
+            components_table(IC_COMPONENTS) + b"IC019\t1\n",
         ),
     ]:
-        view = _with_file(maps, "components", data)
-        out.append(Case(name, covers, view, {_location(view, "components"): data}))
-    table = components_table(IC_COMPONENTS)
-    view = _with_file(maps, "components", table)
-    out.append(
-        Case(
+        out.append(Case(name, covers, *ic_maps_files(data)))
+    for name, covers, header in [
+        (
             "ic_maps_components_too_many_cells",
-            "A components table over a cap on cells lowered to 20, every header "
-            "column counted: cap_exceeded, drawn by its base.",
-            view,
-            {_location(view, "components"): table},
-            caps={"cells_per_role": 20},
-        )
-    )
-    unnamed = components_table(IC_COMPONENTS, header="name")
-    view = _with_file(maps, "components", unnamed)
-    out.append(
-        Case(
+            "A components table over a cap on cells lowered to 400, every header "
+            "column counted (four declared, twenty more): cap_exceeded, drawn by "
+            "its base, whose files are under the cap.",
+            "component",
+        ),
+        (
             "ic_maps_order_cap_before_column",
             "Over the cap on cells and no column component: cap_exceeded.",
-            view,
-            {_location(view, "components"): unnamed},
-            caps={"cells_per_role": 20},
+            "name",
+        ),
+    ]:
+        rows = [f"{header} variance_pct brain other " + " ".join(WIDE_COLUMNS)]
+        rows += [
+            f"{name} {30 / (i + 1):.4f} 0.9 0.1 " + " ".join("0" for _ in WIDE_COLUMNS)
+            for i, name in enumerate(IC_COMPONENTS)
+        ]
+        out.append(
+            Case(name, covers, *ic_maps_files(tsv(*rows)), caps={"cells_per_role": 400})
         )
-    )
-    view = _with_file(maps, "components", components_table(IC_COMPONENTS))
+    view, files = ic_maps_files(components_table(IC_COMPONENTS))
     tampered = components_table(IC_COMPONENTS).replace(b"0.9", b"0.8", 1)
+    files[_location(view, "components")] = tampered
     out.append(
         Case(
             "ic_maps_digest",
             "The components file is not the one recorded.",
             view,
-            {_location(view, "components"): tampered},
+            files,
+        )
+    )
+    short = chanlocs(TEN_TWENTY[:18], types=["EEG"] * 18)
+    out.append(
+        Case(
+            "ic_maps_base_refuses",
+            "The layout a row short of the mixing matrix, and the components out "
+            "of order: the base refuses first (coords_length) and the view falls "
+            "back, so the preset's check never runs.",
+            *ic_maps_files(
+                components_table(
+                    [IC_COMPONENTS[1], IC_COMPONENTS[0], *IC_COMPONENTS[2:]]
+                ),
+                short,
+            ),
         )
     )
     return out
 
 
-SPECTRUM_SENSORS = ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"]
-
-
-def spectrum_values(names: list[str]) -> bytes:
-    """A spectrum from 0.5 Hz (the 0 Hz row excluded), one column per sensor."""
-    rows = [
-        f"{f} " + " ".join(f"{10 - i - k:.1f}" for k in range(len(names)))
-        for i, f in enumerate((0.5, 1, 1.5))
-    ]
-    return tsv(" ".join(["freq_hz", *names]), *rows)
-
-
-def spectrum_layout(names: list[str]) -> bytes:
-    rows = [f"{n} {18 * i - 54} 0.4 EEG" for i, n in enumerate(names)]
-    return tsv("name theta_deg radius sensor_type", *rows)
-
-
 def spectrum_check_cases() -> list[Case]:
-    spectrum = preset_views()["spectrum"]
-    values = spectrum_values(SPECTRUM_SENSORS)
+    """nemar.spectrum's own check, on the example's spectrum of the 19 sensors
+    of the 10-20 system (the files the base reads, as the model vectors build
+    them)."""
+    values = spectrum_text()
     out = []
     for name, covers, layout in [
         (
             "spectrum",
             "The values' sensor columns are the layout's names, in order.",
-            spectrum_layout(SPECTRUM_SENSORS),
+            chanlocs(),
         ),
         (
             "spectrum_sensors_reordered",
             "The layout's rows in another order than the values' columns: each "
             "spectrum would be drawn under another sensor's name, so "
             "sensors_mismatch, shown as the fallback (probe p16).",
-            spectrum_layout([*SPECTRUM_SENSORS[1:], SPECTRUM_SENSORS[0]]),
+            chanlocs([*TEN_TWENTY[1:], TEN_TWENTY[0]]),
         ),
         (
             "spectrum_sensors_renamed",
             "FP1 in the layout where the values say Fp1: names compare as text.",
-            spectrum_layout(["FP1", *SPECTRUM_SENSORS[1:]]),
+            chanlocs([("FP1", *TEN_TWENTY[0][1:]), *TEN_TWENTY[1:]]),
         ),
-    ]:
-        view = _with_file(_with_file(spectrum, "values", values), "layout", layout)
-        files = {_location(view, "values"): values, _location(view, "layout"): layout}
-        out.append(Case(name, covers, view, files))
-    bare = copy.deepcopy(spectrum)
-    bare["data"] = bare["data"][:1]
-    bare["data"][0]["dims"][1]["coords"] = {"header": True}
-    view = _with_file(bare, "values", values)
-    out.append(
-        Case(
+        (
             "spectrum_without_layout",
             "No layout: the sensors are the header's names, and there is nothing "
             "to compare.",
-            view,
-            {_location(view, "values"): values},
-        )
-    )
-    falling = spectrum_values(SPECTRUM_SENSORS).replace(b"\n1\t", b"\n0.25\t", 1)
-    layout = spectrum_layout(["FP1", *SPECTRUM_SENSORS[1:]])
-    view = _with_file(_with_file(spectrum, "values", falling), "layout", layout)
+            None,
+        ),
+    ]:
+        out.append(Case(name, covers, *spectrum_view(values, layout=layout)))
+    falling = spectrum_text(rows=[0.0, 4.0, 2.0, 6.0])
+    renamed = chanlocs([("FP1", *TEN_TWENTY[0][1:]), *TEN_TWENTY[1:]])
     out.append(
         Case(
             "spectrum_base_before_sensors",
             "Frequencies that fall (x_not_increasing) and a layout that names "
             "other sensors: the base refuses first, so the base's word, shown as "
             "the fallback.",
-            view,
-            {_location(view, "values"): falling, _location(view, "layout"): layout},
+            *spectrum_view(falling, layout=renamed),
         )
     )
     return out
@@ -3936,6 +5388,45 @@ def preset_checks() -> dict:
     }
 
 
+def sensor_field_verdicts() -> list[tuple[str, str, dict]]:
+    """Measured positions carry their types; template positions may not."""
+    template = {
+        "coordinate_system": "n/a",
+        "position_source": "template",
+        "montage": "standard_1005",
+    }
+    return [
+        (
+            "sensor_field_measured_layout_typed",
+            "A measured layout that declares sensor_type.",
+            field_view(mixing(), chanlocs())[0],
+        ),
+        (
+            "sensor_field_measured_layout_untyped",
+            "A measured layout without sensor_type: refused, since a scalp map "
+            "draws a measured row only when it is typed EEG.",
+            field_view(mixing(), chanlocs(types=None))[0],
+        ),
+        (
+            "sensor_field_template_layout_untyped",
+            "A template layout without sensor_type: valid.",
+            field_view(mixing(), chanlocs(types=None), layout=template)[0],
+        ),
+        (
+            "sensor_field_measured_positions_untyped",
+            "Measured positions without sensor_type: refused.",
+            field_view(mixing(), electrodes(types=None), "positions")[0],
+        ),
+        (
+            "sensor_field_template_positions_untyped",
+            "Template positions without sensor_type: valid.",
+            field_view(
+                mixing(), electrodes(types=None), "positions", positions=template
+            )[0],
+        ),
+    ]
+
+
 def _errors(validator, instance) -> list[list[str]]:
     """jsonschema's errors on the binary64 reading of the instance (the
     validators read it so): what an engine that parses the vectors file with
@@ -3950,7 +5441,11 @@ def _errors(validator, instance) -> list[list[str]]:
 def verdicts() -> dict:
     cases = []
     for schema, validator, items in [
-        ("view", view_validator(), [*view_verdicts(), *preset_verdicts()]),
+        (
+            "view",
+            view_validator(),
+            [*view_verdicts(), *preset_verdicts(), *sensor_field_verdicts()],
+        ),
         ("dataQuality", data_quality_validator(), data_quality_verdicts()),
         (
             DATA_PAPER,
@@ -3995,6 +5490,78 @@ def verdicts() -> dict:
     }
 
 
+# ── The example's product ─────────────────────────────────────────────────
+
+# The files of the presets example's stored views (examples/views), shipped at
+# their locations under examples/views/product so that the example draws: a
+# recording of the 19 electrodes of the 10-20 system, all good, decomposed
+# into 18 components (the rank under the average reference). Every number is
+# written by + - * / and round, so the bytes are the same on every platform.
+EXAMPLE_PRODUCT = ROOT / "examples" / "views" / "product"
+EXAMPLE_COMPONENTS = [f"IC{i:03d}" for i in range(1, 19)]
+ICLABEL_CLASSES = ["Brain", "Muscle", "Eye", "Heart", "Line Noise", "Channel Noise"]
+ICLABEL_CLASSES.append("Other")
+# Each component's most probable class, by its index in ICLABEL_CLASSES.
+DOMINANT = [0, 0, 2, 0, 1, 0, 2, 0, 6, 0, 3, 0, 1, 4, 0, 5, 6, 0]
+
+
+COMPONENT_COLUMNS = ["component", "variance_pct", "brain", "muscle", "eye"]
+COMPONENT_COLUMNS += ["heart", "line_noise", "channel_noise", "other"]
+
+
+def decibels(f: float, k: int) -> str:
+    """Sensor k's power at f hertz: falling with frequency, an alpha peak."""
+    return repr(round(28 - f / 6 + (6 if 8 <= f <= 12 else 0) + (3 * k % 5) / 2, 2))
+
+
+def example_product() -> dict[str, bytes]:
+    """Each stored file of the presets example, by its location."""
+    variance = [round(24 / (m + 1), 2) for m in range(18)]
+    probabilities = [
+        [("0.82" if c == DOMINANT[m] else "0.03") for c in range(7)] for m in range(18)
+    ]
+    components = text_tsv(
+        COMPONENT_COLUMNS,
+        [
+            [name, repr(variance[m]), *probabilities[m]]
+            for m, name in enumerate(EXAMPLE_COMPONENTS)
+        ],
+    )
+    counts = [DOMINANT.count(c) for c in range(7)]
+    summed = [
+        round(sum(v for v, d in zip(variance, DOMINANT, strict=True) if d == c), 2)
+        for c in range(7)
+    ]
+    classes = {
+        "classifier": "ICLabel",
+        "categories": ICLABEL_CLASSES,
+        "counts": counts,
+        "summed_variance_pct": summed,
+        "n_components": 18,
+    }
+    spectrum = text_tsv(
+        ["freq_hz", *NAMES_1020],
+        [
+            [repr(f)] + [decibels(f, k) for k in range(19)]
+            for f in (r / 2 for r in range(251))
+        ],
+    )
+    unmixing = text_tsv(
+        NAMES_1020, [[pattern(m, k) for k in range(19)] for m in range(18)]
+    )
+    return {
+        f"{PREFIX}_chanlocs.tsv": chanlocs(types=["EEG"] * 19),
+        f"{PREFIX}_mixing.tsv": text_tsv(
+            EXAMPLE_COMPONENTS,
+            [[pattern(k, m) for m in range(18)] for k in range(19)],
+        ),
+        f"{PREFIX}_components.tsv": components,
+        f"{PREFIX}_icclasses.json": (json.dumps(classes, indent=2) + "\n").encode(),
+        f"{PREFIX}_spectrum.tsv": spectrum,
+        f"{PREFIX}_servingunmixing.tsv": unmixing,
+    }
+
+
 # ── The model vectors ─────────────────────────────────────────────────────
 
 
@@ -4015,6 +5582,12 @@ def _model_case(case: Case) -> dict:
     if "snaps" in case.queries:
         xs = inner["x"]["values"]
         out["snaps"] = [{"x": x, "row": snap_row(xs, x)} for x in case.queries["snaps"]]
+    if "maps" in case.queries:
+        frequencies = case.queries["maps"]
+        maps = spectrum_maps(case.view, case.files, frequencies, case.registry())
+        empty = dict.fromkeys(("rows", "refused", "model"))
+        out["maps"] = {"hz": frequencies} | (maps or empty)
+        out["preset"] = check_preset(case.view, case.files, case.registry())
     if "locates" in case.queries:
         edges = [inner["items"][0]["lower"], *(i["upper"] for i in inner["items"])]
         out["locates"] = [
@@ -4040,6 +5613,11 @@ def models() -> dict:
         *cap_cases(),
         *order_cases(),
         *fallback_cases(),
+        *sensor_field_cases(),
+        *sensor_field_fault_cases(),
+        *sensor_field_order_cases(),
+        *ic_maps_by_base_cases(),
+        *spectrum_maps_cases(),
     ]
     names = [c.name for c in [*cases, *refusals()]]
     if len(names) != len(set(names)):
@@ -4054,8 +5632,12 @@ def models() -> dict:
             "and compare it with model: numbers by binary64 equality that tells "
             "-0 from 0 (Object.is), texts exactly. snaps give the row a pointer at "
             "x reads, and locates the bin that holds a value (-1 underflow, the "
-            "bin count overflow). Each refusal's view is refused with word, "
-            "nothing is drawn, and downloads lists the files still offered."
+            "bin count overflow). A nemar.sensor-field model (sensor-field.md) "
+            "holds each map's word from the scalp-map algorithm; a nemar.spectrum "
+            "case's maps give, for the frequencies hz, the rows they snap to and "
+            "the model of the scalp maps at them, or the word that refused them "
+            "(presets.md). Each refusal's view is refused with word, nothing is "
+            "drawn, and downloads lists the files still offered."
         ),
         "cases": [_model_case(case) for case in cases],
         "refusals": [_refusal(case) for case in refusals()],
@@ -4176,8 +5758,8 @@ def record_checks() -> dict:
 
 
 def render() -> dict[Path, str]:
-    """The text of each vectors file."""
-    return {
+    """The text of each vectors file, and of each file of the example's product."""
+    out = {
         path: dump(document) + "\n"
         for path, document in (
             (MODELS_PATH, models()),
@@ -4186,6 +5768,9 @@ def render() -> dict[Path, str]:
             (RECORD_CHECKS_PATH, record_checks()),
         )
     }
+    for location, data in example_product().items():
+        out[EXAMPLE_PRODUCT / location] = data.decode("utf-8")
+    return out
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -4200,6 +5785,7 @@ def main(argv: list[str] | None = None) -> int:
             if not path.is_file() or path.read_text(encoding="utf-8") != text:
                 stale.append(path.relative_to(ROOT))
         else:
+            path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(text, encoding="utf-8")
     if stale:
         print(

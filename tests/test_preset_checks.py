@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import inspect
 import json
 import math
 import re
@@ -18,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from neuroschema.views import load_registry
+from neuroschema.views import load_registry, models
 from neuroschema.views.models import (
     Refusal,
     content_validator,
@@ -50,6 +51,8 @@ def files_of(case: dict) -> dict[str, bytes]:
 
 @pytest.mark.parametrize("case", CASES, ids=[c["name"] for c in CASES])
 def test_cases_replay(case):
+    if case["view"]["kind"] == "nemar.ic-maps":
+        pytest.importorskip("numpy")  # its base, a scalp map, runs the maps
     registry = load_registry()
     registry = registry | {"caps": registry["caps"] | case.get("caps", {})}
     got = check_preset(case["view"], files_of(case), registry, case.get("store"))
@@ -96,8 +99,10 @@ GRAMMAR = {"tsv_encoding", "tsv_line_endings", "tsv_header_repeated", "tsv_ragge
 
 def _raised_words() -> set[str]:
     """The words the reference raises: its own, and the generic readers' it
-    calls (the TSV grammar, a cell's number, the caps)."""
+    calls (the TSV grammar, a cell's number, the caps, and the one definition
+    of ``sensors_mismatch`` it shares with a scalp map's model)."""
     source = (ROOT / "src" / "neuroschema" / "views" / "presets.py").read_text()
+    source += inspect.getsource(models.check_sensor_names)
     own = set(re.findall(r'(?:PresetRefused|KindRefused)\(\s*"([a-z_]+)"', source))
     return own | GRAMMAR | {"cell_not_number", "cell_not_finite", "cap_exceeded"}
 

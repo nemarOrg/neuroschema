@@ -18,6 +18,9 @@ A consumer that draws sensor positions (the viewer's live scalp map, and a `nema
    The caption says that the positions are template positions matched by name, names the montage, and says why measured positions were not used.
 3. When the algorithm refuses, the consumer draws no map and shows the reason.
 
+Positions in a coordinate system of intracranial electrodes (`Pixels`, `ACPC`, `ScanRAS`) are neither used nor replaced by names: no scalp map is drawn from them ([sensor-field.md](sensor-field.md#sensors), `frame_not_scalp`).
+A scalp map gives this algorithm only the channels it draws, by their types, as that page says.
+
 The pipeline does not use this algorithm: a recipe that needs positions (ICLabel) still needs positions the dataset declares.
 
 ## Input

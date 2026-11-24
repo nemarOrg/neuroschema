@@ -78,13 +78,13 @@ scripts/
 ## Quick Start
 
 ```bash
-# Install, with the reference renderers' numpy (the extra views)
+# Install, with the reference renderers' numpy (the extra views: the scalp maps, and so the full suite, need it)
 uv sync --extra dev --extra views
 
 # Validate a document (read as I-JSON; exit code 1 when invalid, 2 when unreadable)
 uv run python -m neuroschema.validate examples/schema1.json
 
-# Run tests
+# Run tests (without the views extra, the tests that draw scalp maps are skipped)
 uv run pytest tests/
 
 # Regenerate or check the vectors (the group vectors holds eegprep, MNE-Python and scipy)

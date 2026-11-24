@@ -33,8 +33,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
             "format": "tsv",
-            "size": 126,
-            "sha256": "27cd68d0d99f019b34b1f87a95a3d0c5c58fa3a934e23fd495c8ed11a0c2eebe",
+            "size": 2906,
+            "sha256": "e4d1da72bf1e0a6386b06fec6611becf5a800722ac7f5b39ce31c0073c786cab",
             "columns": [
               {
                 "name": "freq_hz",
@@ -52,7 +52,17 @@
                 "unit": "dB"
               },
               {
+                "name": "F7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -62,7 +72,22 @@
                 "unit": "dB"
               },
               {
+                "name": "F8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "T7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -72,7 +97,42 @@
                 "unit": "dB"
               },
               {
+                "name": "T8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Pz",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O2",
                 "type": "number",
                 "unit": "dB"
               }
@@ -102,8 +162,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 136,
-            "sha256": "63143a1fd4c380038df0040d55c69176e4f9e4be0812f9b51dceb44ed0395555",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -140,10 +200,10 @@
       },
       "files": {
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv": {
-          "text": "freq_hz\tFp1\tFp2\tF3\tF4\tC3\tC4\tP3\n0.5\t10.0\t9.0\t8.0\t7.0\t6.0\t5.0\t4.0\n1\t9.0\t8.0\t7.0\t6.0\t5.0\t4.0\t3.0\n1.5\t8.0\t7.0\t6.0\t5.0\t4.0\t3.0\t2.0\n"
+          "text": "freq_hz\tFp1\tFp2\tF7\tF3\tFz\tF4\tF8\tT7\tC3\tCz\tC4\tT8\tP7\tP3\tPz\tP4\tP8\tO1\tO2\n0.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\n2.0\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\n4.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\n6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\n8.0\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\n10.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\n12.0\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\n14.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\n16.0\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\n18.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\n20.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\n22.0\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\n24.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\n26.0\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\n28.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\n30.0\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\n32.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\n34.0\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\n36.0\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\n38.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\n40.0\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\n42.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\n44.0\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\n46.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\n48.0\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\n50.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\n52.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\n54.0\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\n56.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\n58.0\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\n60.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\n"
         },
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
-          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-54\t0.4\tEEG\nFp2\t-36\t0.4\tEEG\nF3\t-18\t0.4\tEEG\nF4\t0\t0.4\tEEG\nC3\t18\t0.4\tEEG\nC4\t36\t0.4\tEEG\nP3\t54\t0.4\tEEG\n"
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-18\t0.511\tEEG\nFp2\t18\t0.511\tEEG\nF7\t-54\t0.511\tEEG\nF3\t-39.9\t0.333\tEEG\nFz\t0\t0.256\tEEG\nF4\t39.9\t0.333\tEEG\nF8\t54\t0.511\tEEG\nT7\t-90\t0.511\tEEG\nC3\t-90\t0.256\tEEG\nCz\t0\t0\tEEG\nC4\t90\t0.256\tEEG\nT8\t90\t0.511\tEEG\nP7\t-126\t0.511\tEEG\nP3\t-140.1\t0.333\tEEG\nPz\t180\t0.256\tEEG\nP4\t140.1\t0.333\tEEG\nP8\t126\t0.511\tEEG\nO1\t-162\t0.511\tEEG\nO2\t162\t0.511\tEEG\n"
         }
       },
       "expected": {
@@ -180,8 +240,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
             "format": "tsv",
-            "size": 126,
-            "sha256": "27cd68d0d99f019b34b1f87a95a3d0c5c58fa3a934e23fd495c8ed11a0c2eebe",
+            "size": 2906,
+            "sha256": "e4d1da72bf1e0a6386b06fec6611becf5a800722ac7f5b39ce31c0073c786cab",
             "columns": [
               {
                 "name": "freq_hz",
@@ -199,7 +259,17 @@
                 "unit": "dB"
               },
               {
+                "name": "F7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -209,7 +279,22 @@
                 "unit": "dB"
               },
               {
+                "name": "F8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "T7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -219,7 +304,42 @@
                 "unit": "dB"
               },
               {
+                "name": "T8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Pz",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O2",
                 "type": "number",
                 "unit": "dB"
               }
@@ -249,8 +369,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 136,
-            "sha256": "14c937c587d5a807bc145d34add5fe0918aa5c012162cd9f1c666a5233423ac1",
+            "size": 357,
+            "sha256": "92bffcf5730f2112897f1b87b6a268034ff0c8017843c1f13c29b1f604a53e4e",
             "columns": [
               {
                 "name": "name",
@@ -287,10 +407,10 @@
       },
       "files": {
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv": {
-          "text": "freq_hz\tFp1\tFp2\tF3\tF4\tC3\tC4\tP3\n0.5\t10.0\t9.0\t8.0\t7.0\t6.0\t5.0\t4.0\n1\t9.0\t8.0\t7.0\t6.0\t5.0\t4.0\t3.0\n1.5\t8.0\t7.0\t6.0\t5.0\t4.0\t3.0\t2.0\n"
+          "text": "freq_hz\tFp1\tFp2\tF7\tF3\tFz\tF4\tF8\tT7\tC3\tCz\tC4\tT8\tP7\tP3\tPz\tP4\tP8\tO1\tO2\n0.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\n2.0\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\n4.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\n6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\n8.0\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\n10.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\n12.0\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\n14.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\n16.0\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\n18.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\n20.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\n22.0\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\n24.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\n26.0\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\n28.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\n30.0\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\n32.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\n34.0\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\n36.0\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\n38.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\n40.0\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\n42.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\n44.0\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\n46.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\n48.0\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\n50.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\n52.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\n54.0\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\n56.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\n58.0\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\n60.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\n"
         },
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
-          "text": "name\ttheta_deg\tradius\tsensor_type\nFp2\t-54\t0.4\tEEG\nF3\t-36\t0.4\tEEG\nF4\t-18\t0.4\tEEG\nC3\t0\t0.4\tEEG\nC4\t18\t0.4\tEEG\nP3\t36\t0.4\tEEG\nFp1\t54\t0.4\tEEG\n"
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp2\t18\t0.511\tEEG\nF7\t-54\t0.511\tEEG\nF3\t-39.9\t0.333\tEEG\nFz\t0\t0.256\tEEG\nF4\t39.9\t0.333\tEEG\nF8\t54\t0.511\tEEG\nT7\t-90\t0.511\tEEG\nC3\t-90\t0.256\tEEG\nCz\t0\t0\tEEG\nC4\t90\t0.256\tEEG\nT8\t90\t0.511\tEEG\nP7\t-126\t0.511\tEEG\nP3\t-140.1\t0.333\tEEG\nPz\t180\t0.256\tEEG\nP4\t140.1\t0.333\tEEG\nP8\t126\t0.511\tEEG\nO1\t-162\t0.511\tEEG\nO2\t162\t0.511\tEEG\nFp1\t-18\t0.511\tEEG\n"
         }
       },
       "expected": {
@@ -328,8 +448,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
             "format": "tsv",
-            "size": 126,
-            "sha256": "27cd68d0d99f019b34b1f87a95a3d0c5c58fa3a934e23fd495c8ed11a0c2eebe",
+            "size": 2906,
+            "sha256": "e4d1da72bf1e0a6386b06fec6611becf5a800722ac7f5b39ce31c0073c786cab",
             "columns": [
               {
                 "name": "freq_hz",
@@ -347,7 +467,17 @@
                 "unit": "dB"
               },
               {
+                "name": "F7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -357,7 +487,22 @@
                 "unit": "dB"
               },
               {
+                "name": "F8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "T7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -367,7 +512,42 @@
                 "unit": "dB"
               },
               {
+                "name": "T8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Pz",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O2",
                 "type": "number",
                 "unit": "dB"
               }
@@ -397,8 +577,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 136,
-            "sha256": "7820e497b135a4f70e20033459065eebcb13178ed6ddf3aa399be7aa30bfb306",
+            "size": 357,
+            "sha256": "ad7de69c1266eebd506e08fdaed0341ec984e8df99c4035b96b7019e1c9b18fd",
             "columns": [
               {
                 "name": "name",
@@ -435,10 +615,10 @@
       },
       "files": {
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv": {
-          "text": "freq_hz\tFp1\tFp2\tF3\tF4\tC3\tC4\tP3\n0.5\t10.0\t9.0\t8.0\t7.0\t6.0\t5.0\t4.0\n1\t9.0\t8.0\t7.0\t6.0\t5.0\t4.0\t3.0\n1.5\t8.0\t7.0\t6.0\t5.0\t4.0\t3.0\t2.0\n"
+          "text": "freq_hz\tFp1\tFp2\tF7\tF3\tFz\tF4\tF8\tT7\tC3\tCz\tC4\tT8\tP7\tP3\tPz\tP4\tP8\tO1\tO2\n0.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\n2.0\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\n4.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\n6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\n8.0\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\n10.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\n12.0\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\n14.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\n16.0\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\n18.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\n20.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\n22.0\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\n24.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\n26.0\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\n28.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\n30.0\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\n32.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\n34.0\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\n36.0\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\n38.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\n40.0\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\n42.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\n44.0\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\n46.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\n48.0\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\n50.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\n52.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\n54.0\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\n56.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\n58.0\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\n60.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\n"
         },
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
-          "text": "name\ttheta_deg\tradius\tsensor_type\nFP1\t-54\t0.4\tEEG\nFp2\t-36\t0.4\tEEG\nF3\t-18\t0.4\tEEG\nF4\t0\t0.4\tEEG\nC3\t18\t0.4\tEEG\nC4\t36\t0.4\tEEG\nP3\t54\t0.4\tEEG\n"
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFP1\t-18\t0.511\tEEG\nFp2\t18\t0.511\tEEG\nF7\t-54\t0.511\tEEG\nF3\t-39.9\t0.333\tEEG\nFz\t0\t0.256\tEEG\nF4\t39.9\t0.333\tEEG\nF8\t54\t0.511\tEEG\nT7\t-90\t0.511\tEEG\nC3\t-90\t0.256\tEEG\nCz\t0\t0\tEEG\nC4\t90\t0.256\tEEG\nT8\t90\t0.511\tEEG\nP7\t-126\t0.511\tEEG\nP3\t-140.1\t0.333\tEEG\nPz\t180\t0.256\tEEG\nP4\t140.1\t0.333\tEEG\nP8\t126\t0.511\tEEG\nO1\t-162\t0.511\tEEG\nO2\t162\t0.511\tEEG\n"
         }
       },
       "expected": {
@@ -476,8 +656,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
             "format": "tsv",
-            "size": 126,
-            "sha256": "27cd68d0d99f019b34b1f87a95a3d0c5c58fa3a934e23fd495c8ed11a0c2eebe",
+            "size": 2906,
+            "sha256": "e4d1da72bf1e0a6386b06fec6611becf5a800722ac7f5b39ce31c0073c786cab",
             "columns": [
               {
                 "name": "freq_hz",
@@ -495,7 +675,17 @@
                 "unit": "dB"
               },
               {
+                "name": "F7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -505,7 +695,22 @@
                 "unit": "dB"
               },
               {
+                "name": "F8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "T7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -515,7 +720,42 @@
                 "unit": "dB"
               },
               {
+                "name": "T8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Pz",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O2",
                 "type": "number",
                 "unit": "dB"
               }
@@ -544,7 +784,7 @@
       },
       "files": {
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv": {
-          "text": "freq_hz\tFp1\tFp2\tF3\tF4\tC3\tC4\tP3\n0.5\t10.0\t9.0\t8.0\t7.0\t6.0\t5.0\t4.0\n1\t9.0\t8.0\t7.0\t6.0\t5.0\t4.0\t3.0\n1.5\t8.0\t7.0\t6.0\t5.0\t4.0\t3.0\t2.0\n"
+          "text": "freq_hz\tFp1\tFp2\tF7\tF3\tFz\tF4\tF8\tT7\tC3\tCz\tC4\tT8\tP7\tP3\tPz\tP4\tP8\tO1\tO2\n0.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\n2.0\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\n4.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\n6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\n8.0\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\n10.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\n12.0\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\n14.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\n16.0\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\n18.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\n20.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\n22.0\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\n24.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\n26.0\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\n28.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\n30.0\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\n32.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\n34.0\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\n36.0\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\n38.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\n40.0\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\n42.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\n44.0\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\n46.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\n48.0\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\n50.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\n52.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\n54.0\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\n56.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\n58.0\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\n60.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\n"
         }
       },
       "expected": {
@@ -581,8 +821,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
             "format": "tsv",
-            "size": 129,
-            "sha256": "9cd0e0833c9a223bef5c2cf328dd020af5e85ae8d54ab4516a8affa36b8dafb4",
+            "size": 430,
+            "sha256": "ce77807b1bb5fe391275b2fd633496d88ba8dcace2cfb2906a33c6bbda9bb66f",
             "columns": [
               {
                 "name": "freq_hz",
@@ -600,7 +840,17 @@
                 "unit": "dB"
               },
               {
+                "name": "F7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -610,7 +860,22 @@
                 "unit": "dB"
               },
               {
+                "name": "F8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "T7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -620,7 +885,42 @@
                 "unit": "dB"
               },
               {
+                "name": "T8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Pz",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O2",
                 "type": "number",
                 "unit": "dB"
               }
@@ -650,8 +950,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 136,
-            "sha256": "7820e497b135a4f70e20033459065eebcb13178ed6ddf3aa399be7aa30bfb306",
+            "size": 357,
+            "sha256": "ad7de69c1266eebd506e08fdaed0341ec984e8df99c4035b96b7019e1c9b18fd",
             "columns": [
               {
                 "name": "name",
@@ -688,10 +988,10 @@
       },
       "files": {
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv": {
-          "text": "freq_hz\tFp1\tFp2\tF3\tF4\tC3\tC4\tP3\n0.5\t10.0\t9.0\t8.0\t7.0\t6.0\t5.0\t4.0\n0.25\t9.0\t8.0\t7.0\t6.0\t5.0\t4.0\t3.0\n1.5\t8.0\t7.0\t6.0\t5.0\t4.0\t3.0\t2.0\n"
+          "text": "freq_hz\tFp1\tFp2\tF7\tF3\tFz\tF4\tF8\tT7\tC3\tCz\tC4\tT8\tP7\tP3\tPz\tP4\tP8\tO1\tO2\n0.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\n4.0\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\n2.0\t8.0\t11.5\t15.0\t7.0\t10.5\t14.0\t6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\n6.0\t9.5\t13.0\t5.0\t8.5\t12.0\t15.5\t7.5\t11.0\t14.5\t6.5\t10.0\t13.5\t5.5\t9.0\t12.5\t16.0\t8.0\t11.5\t15.0\n"
         },
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
-          "text": "name\ttheta_deg\tradius\tsensor_type\nFP1\t-54\t0.4\tEEG\nFp2\t-36\t0.4\tEEG\nF3\t-18\t0.4\tEEG\nF4\t0\t0.4\tEEG\nC3\t18\t0.4\tEEG\nC4\t36\t0.4\tEEG\nP3\t54\t0.4\tEEG\n"
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFP1\t-18\t0.511\tEEG\nFp2\t18\t0.511\tEEG\nF7\t-54\t0.511\tEEG\nF3\t-39.9\t0.333\tEEG\nFz\t0\t0.256\tEEG\nF4\t39.9\t0.333\tEEG\nF8\t54\t0.511\tEEG\nT7\t-90\t0.511\tEEG\nC3\t-90\t0.256\tEEG\nCz\t0\t0\tEEG\nC4\t90\t0.256\tEEG\nT8\t90\t0.511\tEEG\nP7\t-126\t0.511\tEEG\nP3\t-140.1\t0.333\tEEG\nPz\t180\t0.256\tEEG\nP4\t140.1\t0.333\tEEG\nP8\t126\t0.511\tEEG\nO1\t-162\t0.511\tEEG\nO2\t162\t0.511\tEEG\n"
         }
       },
       "expected": {
@@ -720,8 +1020,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 1799,
+            "sha256": "2c154b01fdc257195de2a465a33a5be0fa901e27b2eff63ef27b2227afedc8ee",
             "columns": [
               {
                 "name": "IC001",
@@ -745,6 +1045,54 @@
               },
               {
                 "name": "IC006",
+                "type": "number"
+              },
+              {
+                "name": "IC007",
+                "type": "number"
+              },
+              {
+                "name": "IC008",
+                "type": "number"
+              },
+              {
+                "name": "IC009",
+                "type": "number"
+              },
+              {
+                "name": "IC010",
+                "type": "number"
+              },
+              {
+                "name": "IC011",
+                "type": "number"
+              },
+              {
+                "name": "IC012",
+                "type": "number"
+              },
+              {
+                "name": "IC013",
+                "type": "number"
+              },
+              {
+                "name": "IC014",
+                "type": "number"
+              },
+              {
+                "name": "IC015",
+                "type": "number"
+              },
+              {
+                "name": "IC016",
+                "type": "number"
+              },
+              {
+                "name": "IC017",
+                "type": "number"
+              },
+              {
+                "name": "IC018",
                 "type": "number"
               }
             ],
@@ -772,8 +1120,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -810,8 +1158,8 @@
             "role": "components",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
             "format": "tsv",
-            "size": 164,
-            "sha256": "e73050f7277b7eb875825f9c039eb11ddc520f18b286d1535ed57bdf6c381911",
+            "size": 416,
+            "sha256": "37743a0607a356d8079affca04f65d3691ffaa3c06cd616f4a9f79906662aa9d",
             "columns": [
               {
                 "name": "component",
@@ -865,8 +1213,14 @@
         ]
       },
       "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv": {
+          "text": "IC001\tIC002\tIC003\tIC004\tIC005\tIC006\tIC007\tIC008\tIC009\tIC010\tIC011\tIC012\tIC013\tIC014\tIC015\tIC016\tIC017\tIC018\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\n-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\n0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\n1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\n-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\n1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\n-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\n0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\n2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\n-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\n1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\n-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\n0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-18\t0.511\tEEG\nFp2\t18\t0.511\tEEG\nF7\t-54\t0.511\tEEG\nF3\t-39.9\t0.333\tEEG\nFz\t0\t0.256\tEEG\nF4\t39.9\t0.333\tEEG\nF8\t54\t0.511\tEEG\nT7\t-90\t0.511\tEEG\nC3\t-90\t0.256\tEEG\nCz\t0\t0\tEEG\nC4\t90\t0.256\tEEG\nT8\t90\t0.511\tEEG\nP7\t-126\t0.511\tEEG\nP3\t-140.1\t0.333\tEEG\nPz\t180\t0.256\tEEG\nP4\t140.1\t0.333\tEEG\nP8\t126\t0.511\tEEG\nO1\t-162\t0.511\tEEG\nO2\t162\t0.511\tEEG\n"
+        },
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
-          "text": "component\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.9\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\n"
+          "text": "component\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.9\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\nIC007\t4.2857\t0.9\t0.1\nIC008\t3.7500\t0.9\t0.1\nIC009\t3.3333\t0.9\t0.1\nIC010\t3.0000\t0.9\t0.1\nIC011\t2.7273\t0.9\t0.1\nIC012\t2.5000\t0.9\t0.1\nIC013\t2.3077\t0.9\t0.1\nIC014\t2.1429\t0.9\t0.1\nIC015\t2.0000\t0.9\t0.1\nIC016\t1.8750\t0.9\t0.1\nIC017\t1.7647\t0.9\t0.1\nIC018\t1.6667\t0.9\t0.1\n"
         }
       },
       "expected": {
@@ -894,8 +1248,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 1799,
+            "sha256": "2c154b01fdc257195de2a465a33a5be0fa901e27b2eff63ef27b2227afedc8ee",
             "columns": [
               {
                 "name": "IC001",
@@ -919,6 +1273,54 @@
               },
               {
                 "name": "IC006",
+                "type": "number"
+              },
+              {
+                "name": "IC007",
+                "type": "number"
+              },
+              {
+                "name": "IC008",
+                "type": "number"
+              },
+              {
+                "name": "IC009",
+                "type": "number"
+              },
+              {
+                "name": "IC010",
+                "type": "number"
+              },
+              {
+                "name": "IC011",
+                "type": "number"
+              },
+              {
+                "name": "IC012",
+                "type": "number"
+              },
+              {
+                "name": "IC013",
+                "type": "number"
+              },
+              {
+                "name": "IC014",
+                "type": "number"
+              },
+              {
+                "name": "IC015",
+                "type": "number"
+              },
+              {
+                "name": "IC016",
+                "type": "number"
+              },
+              {
+                "name": "IC017",
+                "type": "number"
+              },
+              {
+                "name": "IC018",
                 "type": "number"
               }
             ],
@@ -946,8 +1348,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -984,8 +1386,8 @@
             "role": "components",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
             "format": "tsv",
-            "size": 164,
-            "sha256": "57ce487254ebcca323cc6951066498544d572358e522df0cf23ab55d8e1df352",
+            "size": 416,
+            "sha256": "d84b86ffea877f14190415cc14a42df74a48af8931ba80f2a98106d5cb2abda6",
             "columns": [
               {
                 "name": "component",
@@ -1039,8 +1441,14 @@
         ]
       },
       "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv": {
+          "text": "IC001\tIC002\tIC003\tIC004\tIC005\tIC006\tIC007\tIC008\tIC009\tIC010\tIC011\tIC012\tIC013\tIC014\tIC015\tIC016\tIC017\tIC018\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\n-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\n0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\n1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\n-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\n1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\n-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\n0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\n2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\n-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\n1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\n-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\n0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-18\t0.511\tEEG\nFp2\t18\t0.511\tEEG\nF7\t-54\t0.511\tEEG\nF3\t-39.9\t0.333\tEEG\nFz\t0\t0.256\tEEG\nF4\t39.9\t0.333\tEEG\nF8\t54\t0.511\tEEG\nT7\t-90\t0.511\tEEG\nC3\t-90\t0.256\tEEG\nCz\t0\t0\tEEG\nC4\t90\t0.256\tEEG\nT8\t90\t0.511\tEEG\nP7\t-126\t0.511\tEEG\nP3\t-140.1\t0.333\tEEG\nPz\t180\t0.256\tEEG\nP4\t140.1\t0.333\tEEG\nP8\t126\t0.511\tEEG\nO1\t-162\t0.511\tEEG\nO2\t162\t0.511\tEEG\n"
+        },
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
-          "text": "component\tvariance_pct\tbrain\tother\nIC002\t30.0000\t0.9\t0.1\nIC001\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\n"
+          "text": "component\tvariance_pct\tbrain\tother\nIC002\t30.0000\t0.9\t0.1\nIC001\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\nIC007\t4.2857\t0.9\t0.1\nIC008\t3.7500\t0.9\t0.1\nIC009\t3.3333\t0.9\t0.1\nIC010\t3.0000\t0.9\t0.1\nIC011\t2.7273\t0.9\t0.1\nIC012\t2.5000\t0.9\t0.1\nIC013\t2.3077\t0.9\t0.1\nIC014\t2.1429\t0.9\t0.1\nIC015\t2.0000\t0.9\t0.1\nIC016\t1.8750\t0.9\t0.1\nIC017\t1.7647\t0.9\t0.1\nIC018\t1.6667\t0.9\t0.1\n"
         }
       },
       "expected": {
@@ -1069,8 +1477,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 1799,
+            "sha256": "2c154b01fdc257195de2a465a33a5be0fa901e27b2eff63ef27b2227afedc8ee",
             "columns": [
               {
                 "name": "IC001",
@@ -1094,6 +1502,54 @@
               },
               {
                 "name": "IC006",
+                "type": "number"
+              },
+              {
+                "name": "IC007",
+                "type": "number"
+              },
+              {
+                "name": "IC008",
+                "type": "number"
+              },
+              {
+                "name": "IC009",
+                "type": "number"
+              },
+              {
+                "name": "IC010",
+                "type": "number"
+              },
+              {
+                "name": "IC011",
+                "type": "number"
+              },
+              {
+                "name": "IC012",
+                "type": "number"
+              },
+              {
+                "name": "IC013",
+                "type": "number"
+              },
+              {
+                "name": "IC014",
+                "type": "number"
+              },
+              {
+                "name": "IC015",
+                "type": "number"
+              },
+              {
+                "name": "IC016",
+                "type": "number"
+              },
+              {
+                "name": "IC017",
+                "type": "number"
+              },
+              {
+                "name": "IC018",
                 "type": "number"
               }
             ],
@@ -1121,8 +1577,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -1214,6 +1670,12 @@
         ]
       },
       "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv": {
+          "text": "IC001\tIC002\tIC003\tIC004\tIC005\tIC006\tIC007\tIC008\tIC009\tIC010\tIC011\tIC012\tIC013\tIC014\tIC015\tIC016\tIC017\tIC018\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\n-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\n0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\n1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\n-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\n1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\n-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\n0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\n2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\n-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\n1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\n-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\n0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-18\t0.511\tEEG\nFp2\t18\t0.511\tEEG\nF7\t-54\t0.511\tEEG\nF3\t-39.9\t0.333\tEEG\nFz\t0\t0.256\tEEG\nF4\t39.9\t0.333\tEEG\nF8\t54\t0.511\tEEG\nT7\t-90\t0.511\tEEG\nC3\t-90\t0.256\tEEG\nCz\t0\t0\tEEG\nC4\t90\t0.256\tEEG\nT8\t90\t0.511\tEEG\nP7\t-126\t0.511\tEEG\nP3\t-140.1\t0.333\tEEG\nPz\t180\t0.256\tEEG\nP4\t140.1\t0.333\tEEG\nP8\t126\t0.511\tEEG\nO1\t-162\t0.511\tEEG\nO2\t162\t0.511\tEEG\n"
+        },
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
           "text": "component\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.9\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\n"
         }
@@ -1244,8 +1706,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 1799,
+            "sha256": "2c154b01fdc257195de2a465a33a5be0fa901e27b2eff63ef27b2227afedc8ee",
             "columns": [
               {
                 "name": "IC001",
@@ -1269,6 +1731,54 @@
               },
               {
                 "name": "IC006",
+                "type": "number"
+              },
+              {
+                "name": "IC007",
+                "type": "number"
+              },
+              {
+                "name": "IC008",
+                "type": "number"
+              },
+              {
+                "name": "IC009",
+                "type": "number"
+              },
+              {
+                "name": "IC010",
+                "type": "number"
+              },
+              {
+                "name": "IC011",
+                "type": "number"
+              },
+              {
+                "name": "IC012",
+                "type": "number"
+              },
+              {
+                "name": "IC013",
+                "type": "number"
+              },
+              {
+                "name": "IC014",
+                "type": "number"
+              },
+              {
+                "name": "IC015",
+                "type": "number"
+              },
+              {
+                "name": "IC016",
+                "type": "number"
+              },
+              {
+                "name": "IC017",
+                "type": "number"
+              },
+              {
+                "name": "IC018",
                 "type": "number"
               }
             ],
@@ -1296,8 +1806,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -1334,8 +1844,8 @@
             "role": "components",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
             "format": "tsv",
-            "size": 185,
-            "sha256": "2f5779ece0e256c3e6c720003ebe1f821b2674850e9cd7650c16692e0075ddec",
+            "size": 437,
+            "sha256": "611f89ae27db5474bfe56d46737e0fae762936a9f66f493cc9c87ff4111124a7",
             "columns": [
               {
                 "name": "component",
@@ -1389,8 +1899,14 @@
         ]
       },
       "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv": {
+          "text": "IC001\tIC002\tIC003\tIC004\tIC005\tIC006\tIC007\tIC008\tIC009\tIC010\tIC011\tIC012\tIC013\tIC014\tIC015\tIC016\tIC017\tIC018\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\n-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\n0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\n1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\n-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\n1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\n-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\n0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\n2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\n-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\n1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\n-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\n0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-18\t0.511\tEEG\nFp2\t18\t0.511\tEEG\nF7\t-54\t0.511\tEEG\nF3\t-39.9\t0.333\tEEG\nFz\t0\t0.256\tEEG\nF4\t39.9\t0.333\tEEG\nF8\t54\t0.511\tEEG\nT7\t-90\t0.511\tEEG\nC3\t-90\t0.256\tEEG\nCz\t0\t0\tEEG\nC4\t90\t0.256\tEEG\nT8\t90\t0.511\tEEG\nP7\t-126\t0.511\tEEG\nP3\t-140.1\t0.333\tEEG\nPz\t180\t0.256\tEEG\nP4\t140.1\t0.333\tEEG\nP8\t126\t0.511\tEEG\nO1\t-162\t0.511\tEEG\nO2\t162\t0.511\tEEG\n"
+        },
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
-          "text": "component\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.9\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\nIC007\t4.2857\t0.9\t0.1\n"
+          "text": "component\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.9\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\nIC007\t4.2857\t0.9\t0.1\nIC008\t3.7500\t0.9\t0.1\nIC009\t3.3333\t0.9\t0.1\nIC010\t3.0000\t0.9\t0.1\nIC011\t2.7273\t0.9\t0.1\nIC012\t2.5000\t0.9\t0.1\nIC013\t2.3077\t0.9\t0.1\nIC014\t2.1429\t0.9\t0.1\nIC015\t2.0000\t0.9\t0.1\nIC016\t1.8750\t0.9\t0.1\nIC017\t1.7647\t0.9\t0.1\nIC018\t1.6667\t0.9\t0.1\nIC019\t1.5789\t0.9\t0.1\n"
         }
       },
       "expected": {
@@ -1419,8 +1935,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 1799,
+            "sha256": "2c154b01fdc257195de2a465a33a5be0fa901e27b2eff63ef27b2227afedc8ee",
             "columns": [
               {
                 "name": "IC001",
@@ -1444,6 +1960,54 @@
               },
               {
                 "name": "IC006",
+                "type": "number"
+              },
+              {
+                "name": "IC007",
+                "type": "number"
+              },
+              {
+                "name": "IC008",
+                "type": "number"
+              },
+              {
+                "name": "IC009",
+                "type": "number"
+              },
+              {
+                "name": "IC010",
+                "type": "number"
+              },
+              {
+                "name": "IC011",
+                "type": "number"
+              },
+              {
+                "name": "IC012",
+                "type": "number"
+              },
+              {
+                "name": "IC013",
+                "type": "number"
+              },
+              {
+                "name": "IC014",
+                "type": "number"
+              },
+              {
+                "name": "IC015",
+                "type": "number"
+              },
+              {
+                "name": "IC016",
+                "type": "number"
+              },
+              {
+                "name": "IC017",
+                "type": "number"
+              },
+              {
+                "name": "IC018",
                 "type": "number"
               }
             ],
@@ -1471,8 +2035,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -1509,8 +2073,8 @@
             "role": "components",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
             "format": "tsv",
-            "size": 152,
-            "sha256": "9a663b87ba8d6a74afe706cfbdad7bd13c527cf542f542b9ebed7951e9f73ec9",
+            "size": 389,
+            "sha256": "acc4230270788c1e6ccd0ad25e2027bc911062fbbf4e449708fee9e2c935db84",
             "columns": [
               {
                 "name": "component",
@@ -1564,8 +2128,14 @@
         ]
       },
       "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv": {
+          "text": "IC001\tIC002\tIC003\tIC004\tIC005\tIC006\tIC007\tIC008\tIC009\tIC010\tIC011\tIC012\tIC013\tIC014\tIC015\tIC016\tIC017\tIC018\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\n-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\n0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\n1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\n-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\n1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\n-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\n0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\n2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\n-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\n1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\n-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\n0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-18\t0.511\tEEG\nFp2\t18\t0.511\tEEG\nF7\t-54\t0.511\tEEG\nF3\t-39.9\t0.333\tEEG\nFz\t0\t0.256\tEEG\nF4\t39.9\t0.333\tEEG\nF8\t54\t0.511\tEEG\nT7\t-90\t0.511\tEEG\nC3\t-90\t0.256\tEEG\nCz\t0\t0\tEEG\nC4\t90\t0.256\tEEG\nT8\t90\t0.511\tEEG\nP7\t-126\t0.511\tEEG\nP3\t-140.1\t0.333\tEEG\nPz\t180\t0.256\tEEG\nP4\t140.1\t0.333\tEEG\nP8\t126\t0.511\tEEG\nO1\t-162\t0.511\tEEG\nO2\t162\t0.511\tEEG\n"
+        },
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
-          "text": "component\tvariance_pct\tbrain\tother\nIC1\t30.0000\t0.9\t0.1\nIC2\t15.0000\t0.9\t0.1\nIC3\t10.0000\t0.9\t0.1\nIC4\t7.5000\t0.9\t0.1\nIC5\t6.0000\t0.9\t0.1\nIC6\t5.0000\t0.9\t0.1\n"
+          "text": "component\tvariance_pct\tbrain\tother\nIC1\t30.0000\t0.9\t0.1\nIC2\t15.0000\t0.9\t0.1\nIC3\t10.0000\t0.9\t0.1\nIC4\t7.5000\t0.9\t0.1\nIC5\t6.0000\t0.9\t0.1\nIC6\t5.0000\t0.9\t0.1\nIC7\t4.2857\t0.9\t0.1\nIC8\t3.7500\t0.9\t0.1\nIC9\t3.3333\t0.9\t0.1\nIC10\t3.0000\t0.9\t0.1\nIC11\t2.7273\t0.9\t0.1\nIC12\t2.5000\t0.9\t0.1\nIC13\t2.3077\t0.9\t0.1\nIC14\t2.1429\t0.9\t0.1\nIC15\t2.0000\t0.9\t0.1\nIC16\t1.8750\t0.9\t0.1\nIC17\t1.7647\t0.9\t0.1\nIC18\t1.6667\t0.9\t0.1\n"
         }
       },
       "expected": {
@@ -1594,8 +2164,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 1799,
+            "sha256": "2c154b01fdc257195de2a465a33a5be0fa901e27b2eff63ef27b2227afedc8ee",
             "columns": [
               {
                 "name": "IC001",
@@ -1619,6 +2189,54 @@
               },
               {
                 "name": "IC006",
+                "type": "number"
+              },
+              {
+                "name": "IC007",
+                "type": "number"
+              },
+              {
+                "name": "IC008",
+                "type": "number"
+              },
+              {
+                "name": "IC009",
+                "type": "number"
+              },
+              {
+                "name": "IC010",
+                "type": "number"
+              },
+              {
+                "name": "IC011",
+                "type": "number"
+              },
+              {
+                "name": "IC012",
+                "type": "number"
+              },
+              {
+                "name": "IC013",
+                "type": "number"
+              },
+              {
+                "name": "IC014",
+                "type": "number"
+              },
+              {
+                "name": "IC015",
+                "type": "number"
+              },
+              {
+                "name": "IC016",
+                "type": "number"
+              },
+              {
+                "name": "IC017",
+                "type": "number"
+              },
+              {
+                "name": "IC018",
                 "type": "number"
               }
             ],
@@ -1646,8 +2264,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -1684,8 +2302,8 @@
             "role": "components",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
             "format": "tsv",
-            "size": 159,
-            "sha256": "1a6546493bf2b22dd9f955660a7e2cef43dfccba85b221a136aaa5c450971c58",
+            "size": 411,
+            "sha256": "b09e005f101ec673fe8a9206537f3dcbf6e15885ed1accd0e9c43c4ff197c7d4",
             "columns": [
               {
                 "name": "component",
@@ -1739,8 +2357,14 @@
         ]
       },
       "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv": {
+          "text": "IC001\tIC002\tIC003\tIC004\tIC005\tIC006\tIC007\tIC008\tIC009\tIC010\tIC011\tIC012\tIC013\tIC014\tIC015\tIC016\tIC017\tIC018\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\n-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\n0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\n1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\n-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\n1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\n-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\n0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\n2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\n-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\n1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\n-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\n0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-18\t0.511\tEEG\nFp2\t18\t0.511\tEEG\nF7\t-54\t0.511\tEEG\nF3\t-39.9\t0.333\tEEG\nFz\t0\t0.256\tEEG\nF4\t39.9\t0.333\tEEG\nF8\t54\t0.511\tEEG\nT7\t-90\t0.511\tEEG\nC3\t-90\t0.256\tEEG\nCz\t0\t0\tEEG\nC4\t90\t0.256\tEEG\nT8\t90\t0.511\tEEG\nP7\t-126\t0.511\tEEG\nP3\t-140.1\t0.333\tEEG\nPz\t180\t0.256\tEEG\nP4\t140.1\t0.333\tEEG\nP8\t126\t0.511\tEEG\nO1\t-162\t0.511\tEEG\nO2\t162\t0.511\tEEG\n"
+        },
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
-          "text": "name\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.9\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\n"
+          "text": "name\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.9\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\nIC007\t4.2857\t0.9\t0.1\nIC008\t3.7500\t0.9\t0.1\nIC009\t3.3333\t0.9\t0.1\nIC010\t3.0000\t0.9\t0.1\nIC011\t2.7273\t0.9\t0.1\nIC012\t2.5000\t0.9\t0.1\nIC013\t2.3077\t0.9\t0.1\nIC014\t2.1429\t0.9\t0.1\nIC015\t2.0000\t0.9\t0.1\nIC016\t1.8750\t0.9\t0.1\nIC017\t1.7647\t0.9\t0.1\nIC018\t1.6667\t0.9\t0.1\n"
         }
       },
       "expected": {
@@ -1769,8 +2393,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 1799,
+            "sha256": "2c154b01fdc257195de2a465a33a5be0fa901e27b2eff63ef27b2227afedc8ee",
             "columns": [
               {
                 "name": "IC001",
@@ -1794,6 +2418,54 @@
               },
               {
                 "name": "IC006",
+                "type": "number"
+              },
+              {
+                "name": "IC007",
+                "type": "number"
+              },
+              {
+                "name": "IC008",
+                "type": "number"
+              },
+              {
+                "name": "IC009",
+                "type": "number"
+              },
+              {
+                "name": "IC010",
+                "type": "number"
+              },
+              {
+                "name": "IC011",
+                "type": "number"
+              },
+              {
+                "name": "IC012",
+                "type": "number"
+              },
+              {
+                "name": "IC013",
+                "type": "number"
+              },
+              {
+                "name": "IC014",
+                "type": "number"
+              },
+              {
+                "name": "IC015",
+                "type": "number"
+              },
+              {
+                "name": "IC016",
+                "type": "number"
+              },
+              {
+                "name": "IC017",
+                "type": "number"
+              },
+              {
+                "name": "IC018",
                 "type": "number"
               }
             ],
@@ -1821,8 +2493,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -1859,8 +2531,8 @@
             "role": "components",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
             "format": "tsv",
-            "size": 172,
-            "sha256": "9f95aaecd8d89d2b866c992f38c26d1ea099a28b56cb8d5228c21a9716718b72",
+            "size": 424,
+            "sha256": "0c1f2f0ada08c9b44e2ff088cba3eeba79ded393b847613aba4bbace7cbe6386",
             "columns": [
               {
                 "name": "component",
@@ -1914,8 +2586,14 @@
         ]
       },
       "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv": {
+          "text": "IC001\tIC002\tIC003\tIC004\tIC005\tIC006\tIC007\tIC008\tIC009\tIC010\tIC011\tIC012\tIC013\tIC014\tIC015\tIC016\tIC017\tIC018\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\n-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\n0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\n1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\n-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\n1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\n-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\n0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\n2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\n-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\n1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\n-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\n0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-18\t0.511\tEEG\nFp2\t18\t0.511\tEEG\nF7\t-54\t0.511\tEEG\nF3\t-39.9\t0.333\tEEG\nFz\t0\t0.256\tEEG\nF4\t39.9\t0.333\tEEG\nF8\t54\t0.511\tEEG\nT7\t-90\t0.511\tEEG\nC3\t-90\t0.256\tEEG\nCz\t0\t0\tEEG\nC4\t90\t0.256\tEEG\nT8\t90\t0.511\tEEG\nP7\t-126\t0.511\tEEG\nP3\t-140.1\t0.333\tEEG\nPz\t180\t0.256\tEEG\nP4\t140.1\t0.333\tEEG\nP8\t126\t0.511\tEEG\nO1\t-162\t0.511\tEEG\nO2\t162\t0.511\tEEG\n"
+        },
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
-          "text": "component\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.9\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\nIC007\t1\n"
+          "text": "component\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.9\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\nIC007\t4.2857\t0.9\t0.1\nIC008\t3.7500\t0.9\t0.1\nIC009\t3.3333\t0.9\t0.1\nIC010\t3.0000\t0.9\t0.1\nIC011\t2.7273\t0.9\t0.1\nIC012\t2.5000\t0.9\t0.1\nIC013\t2.3077\t0.9\t0.1\nIC014\t2.1429\t0.9\t0.1\nIC015\t2.0000\t0.9\t0.1\nIC016\t1.8750\t0.9\t0.1\nIC017\t1.7647\t0.9\t0.1\nIC018\t1.6667\t0.9\t0.1\nIC019\t1\n"
         }
       },
       "expected": {
@@ -1925,7 +2603,7 @@
     },
     {
       "name": "ic_maps_components_too_many_cells",
-      "covers": "A components table over a cap on cells lowered to 20, every header column counted: cap_exceeded, drawn by its base.",
+      "covers": "A components table over a cap on cells lowered to 400, every header column counted (four declared, twenty more): cap_exceeded, drawn by its base, whose files are under the cap.",
       "view": {
         "key": "icmaps",
         "kind": "nemar.ic-maps",
@@ -1944,8 +2622,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 1799,
+            "sha256": "2c154b01fdc257195de2a465a33a5be0fa901e27b2eff63ef27b2227afedc8ee",
             "columns": [
               {
                 "name": "IC001",
@@ -1969,6 +2647,54 @@
               },
               {
                 "name": "IC006",
+                "type": "number"
+              },
+              {
+                "name": "IC007",
+                "type": "number"
+              },
+              {
+                "name": "IC008",
+                "type": "number"
+              },
+              {
+                "name": "IC009",
+                "type": "number"
+              },
+              {
+                "name": "IC010",
+                "type": "number"
+              },
+              {
+                "name": "IC011",
+                "type": "number"
+              },
+              {
+                "name": "IC012",
+                "type": "number"
+              },
+              {
+                "name": "IC013",
+                "type": "number"
+              },
+              {
+                "name": "IC014",
+                "type": "number"
+              },
+              {
+                "name": "IC015",
+                "type": "number"
+              },
+              {
+                "name": "IC016",
+                "type": "number"
+              },
+              {
+                "name": "IC017",
+                "type": "number"
+              },
+              {
+                "name": "IC018",
                 "type": "number"
               }
             ],
@@ -1996,8 +2722,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -2034,8 +2760,8 @@
             "role": "components",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
             "format": "tsv",
-            "size": 164,
-            "sha256": "e73050f7277b7eb875825f9c039eb11ddc520f18b286d1535ed57bdf6c381911",
+            "size": 1286,
+            "sha256": "183d43a0225d4313e8dc97ae0c428330181ccac07f734c20555d63e4c11f3270",
             "columns": [
               {
                 "name": "component",
@@ -2089,12 +2815,18 @@
         ]
       },
       "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv": {
+          "text": "IC001\tIC002\tIC003\tIC004\tIC005\tIC006\tIC007\tIC008\tIC009\tIC010\tIC011\tIC012\tIC013\tIC014\tIC015\tIC016\tIC017\tIC018\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\n-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\n0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\n1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\n-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\n1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\n-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\n0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\n2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\n-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\n1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\n-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\n0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-18\t0.511\tEEG\nFp2\t18\t0.511\tEEG\nF7\t-54\t0.511\tEEG\nF3\t-39.9\t0.333\tEEG\nFz\t0\t0.256\tEEG\nF4\t39.9\t0.333\tEEG\nF8\t54\t0.511\tEEG\nT7\t-90\t0.511\tEEG\nC3\t-90\t0.256\tEEG\nCz\t0\t0\tEEG\nC4\t90\t0.256\tEEG\nT8\t90\t0.511\tEEG\nP7\t-126\t0.511\tEEG\nP3\t-140.1\t0.333\tEEG\nPz\t180\t0.256\tEEG\nP4\t140.1\t0.333\tEEG\nP8\t126\t0.511\tEEG\nO1\t-162\t0.511\tEEG\nO2\t162\t0.511\tEEG\n"
+        },
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
-          "text": "component\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.9\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\n"
+          "text": "component\tvariance_pct\tbrain\tother\textra0\textra1\textra2\textra3\textra4\textra5\textra6\textra7\textra8\textra9\textra10\textra11\textra12\textra13\textra14\textra15\textra16\textra17\textra18\textra19\nIC001\t30.0000\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC002\t15.0000\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC003\t10.0000\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC004\t7.5000\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC005\t6.0000\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC006\t5.0000\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC007\t4.2857\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC008\t3.7500\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC009\t3.3333\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC010\t3.0000\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC011\t2.7273\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC012\t2.5000\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC013\t2.3077\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC014\t2.1429\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC015\t2.0000\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC016\t1.8750\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC017\t1.7647\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC018\t1.6667\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\n"
         }
       },
       "caps": {
-        "cells_per_role": 20
+        "cells_per_role": 400
       },
       "expected": {
         "word": "cap_exceeded",
@@ -2122,8 +2854,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 1799,
+            "sha256": "2c154b01fdc257195de2a465a33a5be0fa901e27b2eff63ef27b2227afedc8ee",
             "columns": [
               {
                 "name": "IC001",
@@ -2147,6 +2879,54 @@
               },
               {
                 "name": "IC006",
+                "type": "number"
+              },
+              {
+                "name": "IC007",
+                "type": "number"
+              },
+              {
+                "name": "IC008",
+                "type": "number"
+              },
+              {
+                "name": "IC009",
+                "type": "number"
+              },
+              {
+                "name": "IC010",
+                "type": "number"
+              },
+              {
+                "name": "IC011",
+                "type": "number"
+              },
+              {
+                "name": "IC012",
+                "type": "number"
+              },
+              {
+                "name": "IC013",
+                "type": "number"
+              },
+              {
+                "name": "IC014",
+                "type": "number"
+              },
+              {
+                "name": "IC015",
+                "type": "number"
+              },
+              {
+                "name": "IC016",
+                "type": "number"
+              },
+              {
+                "name": "IC017",
+                "type": "number"
+              },
+              {
+                "name": "IC018",
                 "type": "number"
               }
             ],
@@ -2174,8 +2954,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -2212,8 +2992,8 @@
             "role": "components",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
             "format": "tsv",
-            "size": 159,
-            "sha256": "1a6546493bf2b22dd9f955660a7e2cef43dfccba85b221a136aaa5c450971c58",
+            "size": 1281,
+            "sha256": "d2ea0271048cf55b1d22848b7d795de94025764732de79496b6fb2e2b8f165f1",
             "columns": [
               {
                 "name": "component",
@@ -2267,12 +3047,18 @@
         ]
       },
       "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv": {
+          "text": "IC001\tIC002\tIC003\tIC004\tIC005\tIC006\tIC007\tIC008\tIC009\tIC010\tIC011\tIC012\tIC013\tIC014\tIC015\tIC016\tIC017\tIC018\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\n-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\n0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\n1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\n-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\n1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\n-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\n0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\n2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\n-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\n1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\n-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\n0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-18\t0.511\tEEG\nFp2\t18\t0.511\tEEG\nF7\t-54\t0.511\tEEG\nF3\t-39.9\t0.333\tEEG\nFz\t0\t0.256\tEEG\nF4\t39.9\t0.333\tEEG\nF8\t54\t0.511\tEEG\nT7\t-90\t0.511\tEEG\nC3\t-90\t0.256\tEEG\nCz\t0\t0\tEEG\nC4\t90\t0.256\tEEG\nT8\t90\t0.511\tEEG\nP7\t-126\t0.511\tEEG\nP3\t-140.1\t0.333\tEEG\nPz\t180\t0.256\tEEG\nP4\t140.1\t0.333\tEEG\nP8\t126\t0.511\tEEG\nO1\t-162\t0.511\tEEG\nO2\t162\t0.511\tEEG\n"
+        },
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
-          "text": "name\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.9\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\n"
+          "text": "name\tvariance_pct\tbrain\tother\textra0\textra1\textra2\textra3\textra4\textra5\textra6\textra7\textra8\textra9\textra10\textra11\textra12\textra13\textra14\textra15\textra16\textra17\textra18\textra19\nIC001\t30.0000\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC002\t15.0000\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC003\t10.0000\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC004\t7.5000\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC005\t6.0000\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC006\t5.0000\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC007\t4.2857\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC008\t3.7500\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC009\t3.3333\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC010\t3.0000\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC011\t2.7273\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC012\t2.5000\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC013\t2.3077\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC014\t2.1429\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC015\t2.0000\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC016\t1.8750\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC017\t1.7647\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nIC018\t1.6667\t0.9\t0.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\n"
         }
       },
       "caps": {
-        "cells_per_role": 20
+        "cells_per_role": 400
       },
       "expected": {
         "word": "cap_exceeded",
@@ -2300,8 +3086,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 1799,
+            "sha256": "2c154b01fdc257195de2a465a33a5be0fa901e27b2eff63ef27b2227afedc8ee",
             "columns": [
               {
                 "name": "IC001",
@@ -2325,6 +3111,54 @@
               },
               {
                 "name": "IC006",
+                "type": "number"
+              },
+              {
+                "name": "IC007",
+                "type": "number"
+              },
+              {
+                "name": "IC008",
+                "type": "number"
+              },
+              {
+                "name": "IC009",
+                "type": "number"
+              },
+              {
+                "name": "IC010",
+                "type": "number"
+              },
+              {
+                "name": "IC011",
+                "type": "number"
+              },
+              {
+                "name": "IC012",
+                "type": "number"
+              },
+              {
+                "name": "IC013",
+                "type": "number"
+              },
+              {
+                "name": "IC014",
+                "type": "number"
+              },
+              {
+                "name": "IC015",
+                "type": "number"
+              },
+              {
+                "name": "IC016",
+                "type": "number"
+              },
+              {
+                "name": "IC017",
+                "type": "number"
+              },
+              {
+                "name": "IC018",
                 "type": "number"
               }
             ],
@@ -2352,8 +3186,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -2390,8 +3224,8 @@
             "role": "components",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
             "format": "tsv",
-            "size": 164,
-            "sha256": "e73050f7277b7eb875825f9c039eb11ddc520f18b286d1535ed57bdf6c381911",
+            "size": 416,
+            "sha256": "37743a0607a356d8079affca04f65d3691ffaa3c06cd616f4a9f79906662aa9d",
             "columns": [
               {
                 "name": "component",
@@ -2445,13 +3279,248 @@
         ]
       },
       "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv": {
+          "text": "IC001\tIC002\tIC003\tIC004\tIC005\tIC006\tIC007\tIC008\tIC009\tIC010\tIC011\tIC012\tIC013\tIC014\tIC015\tIC016\tIC017\tIC018\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\n-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\n0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\n1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\n-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\n1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\n-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\n0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\n2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\n-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\n1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\n-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\n0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-18\t0.511\tEEG\nFp2\t18\t0.511\tEEG\nF7\t-54\t0.511\tEEG\nF3\t-39.9\t0.333\tEEG\nFz\t0\t0.256\tEEG\nF4\t39.9\t0.333\tEEG\nF8\t54\t0.511\tEEG\nT7\t-90\t0.511\tEEG\nC3\t-90\t0.256\tEEG\nCz\t0\t0\tEEG\nC4\t90\t0.256\tEEG\nT8\t90\t0.511\tEEG\nP7\t-126\t0.511\tEEG\nP3\t-140.1\t0.333\tEEG\nPz\t180\t0.256\tEEG\nP4\t140.1\t0.333\tEEG\nP8\t126\t0.511\tEEG\nO1\t-162\t0.511\tEEG\nO2\t162\t0.511\tEEG\n"
+        },
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
-          "text": "component\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.8\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\n"
+          "text": "component\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.8\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\nIC007\t4.2857\t0.9\t0.1\nIC008\t3.7500\t0.9\t0.1\nIC009\t3.3333\t0.9\t0.1\nIC010\t3.0000\t0.9\t0.1\nIC011\t2.7273\t0.9\t0.1\nIC012\t2.5000\t0.9\t0.1\nIC013\t2.3077\t0.9\t0.1\nIC014\t2.1429\t0.9\t0.1\nIC015\t2.0000\t0.9\t0.1\nIC016\t1.8750\t0.9\t0.1\nIC017\t1.7647\t0.9\t0.1\nIC018\t1.6667\t0.9\t0.1\n"
         }
       },
       "expected": {
         "word": "file_digest_mismatch",
         "outcome": "nothing"
+      }
+    },
+    {
+      "name": "ic_maps_base_refuses",
+      "covers": "The layout a row short of the mixing matrix, and the components out of order: the base refuses first (coords_length) and the view falls back, so the preset's check never runs.",
+      "view": {
+        "key": "icmaps",
+        "kind": "nemar.ic-maps",
+        "kind_version": 1,
+        "base": "nemar.sensor-field",
+        "base_version": 1,
+        "caption": "Scalp maps of the independent components, each with its share of the variance and its ICLabel probabilities.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
+            "format": "tsv",
+            "size": 1799,
+            "sha256": "2c154b01fdc257195de2a465a33a5be0fa901e27b2eff63ef27b2227afedc8ee",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number"
+              },
+              {
+                "name": "IC002",
+                "type": "number"
+              },
+              {
+                "name": "IC003",
+                "type": "number"
+              },
+              {
+                "name": "IC004",
+                "type": "number"
+              },
+              {
+                "name": "IC005",
+                "type": "number"
+              },
+              {
+                "name": "IC006",
+                "type": "number"
+              },
+              {
+                "name": "IC007",
+                "type": "number"
+              },
+              {
+                "name": "IC008",
+                "type": "number"
+              },
+              {
+                "name": "IC009",
+                "type": "number"
+              },
+              {
+                "name": "IC010",
+                "type": "number"
+              },
+              {
+                "name": "IC011",
+                "type": "number"
+              },
+              {
+                "name": "IC012",
+                "type": "number"
+              },
+              {
+                "name": "IC013",
+                "type": "number"
+              },
+              {
+                "name": "IC014",
+                "type": "number"
+              },
+              {
+                "name": "IC015",
+                "type": "number"
+              },
+              {
+                "name": "IC016",
+                "type": "number"
+              },
+              {
+                "name": "IC017",
+                "type": "number"
+              },
+              {
+                "name": "IC018",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 340,
+            "sha256": "2c539a2e1d12683c693c2e4150fce0ece158bf208a5f4dcec7eabf976e10a5cd",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              },
+              {
+                "name": "sensor_type",
+                "type": "string"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured"
+          },
+          {
+            "role": "components",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
+            "format": "tsv",
+            "size": 416,
+            "sha256": "d84b86ffea877f14190415cc14a42df74a48af8931ba80f2a98106d5cb2abda6",
+            "columns": [
+              {
+                "name": "component",
+                "type": "string"
+              },
+              {
+                "name": "variance_pct",
+                "type": "number",
+                "unit": "%"
+              },
+              {
+                "name": "brain",
+                "type": "number"
+              },
+              {
+                "name": "muscle",
+                "type": "number"
+              },
+              {
+                "name": "eye",
+                "type": "number"
+              },
+              {
+                "name": "heart",
+                "type": "number"
+              },
+              {
+                "name": "line_noise",
+                "type": "number"
+              },
+              {
+                "name": "channel_noise",
+                "type": "number"
+              },
+              {
+                "name": "other",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "component",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "component"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv": {
+          "text": "IC001\tIC002\tIC003\tIC004\tIC005\tIC006\tIC007\tIC008\tIC009\tIC010\tIC011\tIC012\tIC013\tIC014\tIC015\tIC016\tIC017\tIC018\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\n-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\n0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\n1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\n-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\n1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\n-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\n0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\n2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\n-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\n1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\n-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\n0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-18\t0.511\tEEG\nFp2\t18\t0.511\tEEG\nF7\t-54\t0.511\tEEG\nF3\t-39.9\t0.333\tEEG\nFz\t0\t0.256\tEEG\nF4\t39.9\t0.333\tEEG\nF8\t54\t0.511\tEEG\nT7\t-90\t0.511\tEEG\nC3\t-90\t0.256\tEEG\nCz\t0\t0\tEEG\nC4\t90\t0.256\tEEG\nT8\t90\t0.511\tEEG\nP7\t-126\t0.511\tEEG\nP3\t-140.1\t0.333\tEEG\nPz\t180\t0.256\tEEG\nP4\t140.1\t0.333\tEEG\nP8\t126\t0.511\tEEG\nO1\t-162\t0.511\tEEG\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
+          "text": "component\tvariance_pct\tbrain\tother\nIC002\t30.0000\t0.9\t0.1\nIC001\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\nIC007\t4.2857\t0.9\t0.1\nIC008\t3.7500\t0.9\t0.1\nIC009\t3.3333\t0.9\t0.1\nIC010\t3.0000\t0.9\t0.1\nIC011\t2.7273\t0.9\t0.1\nIC012\t2.5000\t0.9\t0.1\nIC013\t2.3077\t0.9\t0.1\nIC014\t2.1429\t0.9\t0.1\nIC015\t2.0000\t0.9\t0.1\nIC016\t1.8750\t0.9\t0.1\nIC017\t1.7647\t0.9\t0.1\nIC018\t1.6667\t0.9\t0.1\n"
+        }
+      },
+      "expected": {
+        "word": "coords_length",
+        "outcome": "fallback"
       }
     },
     {

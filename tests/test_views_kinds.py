@@ -126,8 +126,16 @@ def test_same_tells_negative_zero(a, b, equal):
 # ── The model vectors ─────────────────────────────────────────────────────
 
 
+def needs_numpy(case: dict) -> None:
+    """A drawn scalp map's model runs the map, which needs numpy (the views
+    extra): skip such a case cleanly without it."""
+    if case["model"]["model"]["type"] == "sensor-field" or "maps" in case:
+        pytest.importorskip("numpy")
+
+
 @pytest.mark.parametrize("case", CASES, ids=[c["name"] for c in CASES])
 def test_model_vectors_replay(case):
+    needs_numpy(case)
     model = build_model(case["view"], decode(case["files"]), registry_for(case))
     assert same(model, case["model"])
 
@@ -228,6 +236,7 @@ def test_files_hold_the_declared_digests():
 
 def test_vectors_are_current():
     """The committed vectors are what the generator writes (its --check)."""
+    pytest.importorskip("numpy")  # the scalp maps' models run the maps
     generator = _load_generator()
     for path, text in generator.render().items():
         assert path.read_text(encoding="utf-8") == text, path.name
@@ -235,6 +244,7 @@ def test_vectors_are_current():
 
 
 def test_check_reports_a_stale_file(tmp_path, monkeypatch, capsys):
+    pytest.importorskip("numpy")
     generator = _load_generator()
     stale = tmp_path / "kinds-models.v1.json"
     stale.write_text("{}\n")
@@ -255,6 +265,8 @@ def test_every_drawing_and_model_type_is_covered():
         ("base", "heatmap"),
         ("base", "histogram"),
         ("table", "fallback"),
+        ("kind", "sensor-field"),
+        ("base", "sensor-field"),
     }
 
 

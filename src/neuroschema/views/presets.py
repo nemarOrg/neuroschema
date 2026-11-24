@@ -19,9 +19,12 @@ checks run, in the stated order, and the first that fails gives the word:
 
 A word of ``nemar.ic-maps`` or ``nemar.ic-classes`` draws the view by its base
 and keeps the word, ``nemar.spectrum``'s shows the view as the fallback's
-tables, and a word of ``nemar.signal-window`` draws nothing.
-``views/vectors/preset-checks.v1.json`` holds the cases; this module is the
-Python reference. ``nemar.ic-activity``'s checks are its transform's
+tables, and a word of ``nemar.signal-window`` draws nothing. All but the
+signal window's run after their base's model, and a base that refuses the
+files comes first. ``views/vectors/preset-checks.v1.json`` holds the cases;
+this module is the Python reference. ``nemar.spectrum``'s scalp maps are
+:func:`spectrum_maps`, drawn only when its check passes.
+``nemar.ic-activity``'s checks are its transform's
 (``neuroschema.views.ic_activity``).
 """
 
@@ -38,12 +41,17 @@ from neuroschema.views.models import (
     Refusal,
     ViewRefused,
     _Reader,
+    _sensor_role,
+    _Sensors,
     build_model,
     cell_value,
+    check_sensor_names,
     content_validator,
     declaration_valid,
     read_json,
     read_tsv,
+    sensor_field_model,
+    snap_row,
 )
 from neuroschema.views.registry import load_registry
 
@@ -160,22 +168,28 @@ def check_ic_maps(view: Mapping, files: Mapping[str, bytes], caps: Mapping) -> N
 
 def check_spectrum(view: Mapping, files: Mapping[str, bytes], caps: Mapping) -> None:
     """With a layout, the values' sensor columns are the layout's names, in
-    order, compared as text (``sensors_mismatch``).
+    order, compared as text (``sensors_mismatch``, by
+    :func:`~neuroschema.views.models.check_sensor_names`, the definition a
+    scalp map's model reads too).
 
     The base labels each series by the layout's name at its position, so a
     header that names other sensors (``O2``, ``O1`` where the layout says
     ``Fp1``, ``Fp2``) would draw each spectrum under another sensor's name
     (probe p16). Which of the two is right cannot be told, so the view shows as
-    the fallback's tables, with the word.
+    the fallback's tables, with the word, and no scalp map is drawn
+    (:func:`spectrum_maps`).
     """
     reader = _Reader(view, files, caps)
-    layout = reader.entry("layout")
-    if layout is None:
-        return
     values = reader.entry("values")
+    coords = next(d for d in values["dims"] if d["name"] == "sensor")["coords"]
+    if "role" not in coords:
+        return
     names = [c["name"] for c in values["columns"] if c["name"] != "freq_hz"]
-    if reader.tsv(layout).cells("name") != names:
-        raise PresetRefused("sensors_mismatch", "fallback")
+    cells = reader.tsv(reader.entry(coords["role"])).cells(coords["column"])
+    try:
+        check_sensor_names(coords["role"], cells, names)
+    except KindRefused as exc:
+        raise PresetRefused(exc.word, "fallback", str(exc)) from exc
 
 
 def check_ic_classes(view: Mapping, files: Mapping[str, bytes], caps: Mapping) -> None:
@@ -395,8 +409,9 @@ def check_preset(
     ``{"word": None}`` when they pass (with, for a ``nemar.signal-window``, its
     state, the window's ``first`` sample and ``count``, its ``bad_channels``,
     its ``segments`` and its ``notes``); ``{"word", "outcome"}`` when one fails, the
-    outcome ``base`` or ``nothing``; and, for ``nemar.ic-classes`` when its base
-    refuses its file first, the base's word with the outcome ``fallback``.
+    outcome ``base`` or ``nothing``; and, for ``nemar.ic-maps`` and
+    ``nemar.ic-classes`` when the base's model refuses the files first, the
+    base's word with the outcome ``fallback``.
     ``store`` holds a signal window's store ``labels``, ``samples``, ``rate``
     and ``published_sha256``. A file that is not the one recorded gives the
     generic kinds' word with the outcome ``nothing``.
@@ -425,11 +440,76 @@ def check_preset(
             else:
                 check_ic_classes(view, files, registry["caps"])
         elif kind == "nemar.ic-maps":
-            # The base's map has its own reference and vectors
-            # (neuroschema.views.sensor_field); this checks the preset's file.
+            base = build_model(view, files, _base_only(registry))
+            if base["refused"] is not None:
+                return {"word": base["refused"]["word"], "outcome": "fallback"}
             check_ic_maps(view, files, registry["caps"])
     except PresetRefused as exc:
         return {"word": exc.word, "outcome": exc.outcome}
     except ViewRefused as exc:
         return {"word": exc.word, "outcome": "nothing"}
     return {"word": None}
+
+
+def spectrum_maps(
+    view: Mapping,
+    files: Mapping[str, bytes],
+    frequencies: list[float],
+    registry: Mapping | None = None,
+) -> dict | None:
+    """The scalp maps a renderer that knows ``nemar.spectrum`` draws below its
+    lines, one at each of ``frequencies`` (presets.md).
+
+    None when the view is not drawn by its lines: the base, ``nemar.lines``,
+    refuses the files or draws them as tables, or the preset's own check
+    (:func:`check_spectrum`) finds the layout's names are not the sensor
+    columns (``sensors_mismatch``, the outcome ``fallback`` of
+    :func:`check_preset`): there are no lines and no maps. Otherwise
+    ``rows`` are the stored rows the frequencies snap to, by the lines'
+    readout rule, and ``model`` is the
+    ``nemar.sensor-field`` model of those rows' cells, one map per row labeled
+    by its frequency's stored text, with ``minmax`` limits, the sensors placed
+    by the layout or, without one, by their names. When the layout breaks a
+    rule of the files that only the maps read (a place column), ``refused``
+    is the word, shown in every map's place while the lines are drawn, and
+    ``model`` is None.
+
+    Raises :class:`ViewRefused`, as :func:`build_model` does, when a file the
+    lines or the maps read is missing or is not the one recorded: nothing is
+    drawn, neither the lines nor the maps.
+    """
+    registry = load_registry() if registry is None else registry
+    base = build_model(view, files, _base_only(registry))
+    if base["refused"] is not None or base["drawing"]["via"] == "table":
+        return None
+    try:
+        check_spectrum(view, files, registry["caps"])
+    except PresetRefused:
+        return None
+    lines = base["model"]
+    rows = [snap_row(lines["x"]["values"], hz) for hz in frequencies]
+    reader = _Reader(view, files, registry["caps"])
+    entry = reader.entry("values")
+    sensor_dim = next(d for d in entry["dims"] if d["name"] == "sensor")
+    freq_dim = next(d for d in entry["dims"] if d is not sensor_dim)
+    series = lines["series"]["items"]
+    try:
+        if "role" in sensor_dim["coords"]:
+            columns = [item["column"] for item in series]
+            sensors = _sensor_role(reader, sensor_dim, len(series), columns)
+        else:
+            sensors = _Sensors([item["label"] for item in series])
+    except KindRefused as exc:
+        return {"rows": rows, "refused": exc.word, "model": None}
+    maps = [
+        (
+            lines["x"]["text"][row],
+            [item["values"][row] for item in series],
+            [item["text"][row] for item in series],
+        )
+        for row in rows
+    ]
+    model = sensor_field_model(
+        sensors, maps, "minmax", lines["y"]["unit"], sensor_dim, freq_dim
+    )
+    return {"rows": rows, "refused": None, "model": model}

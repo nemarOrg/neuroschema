@@ -20,6 +20,7 @@ from jsonschema import Draft202012Validator
 from neuroschema.validate import load_schema
 from neuroschema.views import (
     Drawing,
+    ViewRefused,
     build_model,
     draw_as,
     draw_by_base,
@@ -63,6 +64,15 @@ def example_views() -> dict[str, dict]:
 
 def view(key: str) -> dict:
     return copy.deepcopy(example_views()[key])
+
+
+PRODUCT = ROOT / "examples" / "views" / "product"
+
+
+def _named_files(instance: dict) -> list[dict]:
+    """A view's data entries and file inputs: each {location, size, sha256}."""
+    files = list(instance.get("data", []))
+    return files + [i["file"] for i in instance.get("inputs", []) if "file" in i]
 
 
 def view_errors(instance) -> set[tuple[str, str]]:
@@ -171,6 +181,64 @@ class TestExample:
         else:
             assert drawing == Drawing("table", None, None)
         assert draw_by_base(instance, REGISTRY) == drawing
+
+    @pytest.mark.parametrize("key", list(example_views()))
+    def test_the_files_it_ships_are_the_ones_declared(self, key):
+        """A stored view's every file, and a computed view's shipped inputs, are
+        in examples/views/product with the declared size and SHA-256."""
+        instance = view(key)
+        for entry in _named_files(instance):
+            path = PRODUCT / entry["location"]
+            if instance["kind"] in STORED:
+                assert path.is_file(), entry["location"]
+            if path.is_file():
+                data = path.read_bytes()
+                assert len(data) == entry["size"], entry["location"]
+                assert hashlib.sha256(data).hexdigest() == entry["sha256"]
+
+    @pytest.mark.parametrize("kind", STORED)
+    def test_every_stored_view_draws(self, kind):
+        """The example draws: by its base with no word, every scalp map drawn,
+        and the preset's own checks passed."""
+        pytest.importorskip("numpy")
+        from neuroschema.views.presets import check_preset, spectrum_maps
+
+        instance = next(v for v in example_views().values() if v["kind"] == kind)
+        files = {
+            e["location"]: (PRODUCT / e["location"]).read_bytes()
+            for e in _named_files(instance)
+        }
+        model = build_model(instance, files, REGISTRY)
+        assert model["refused"] is None
+        assert model["drawing"]["via"] == "base"
+        assert check_preset(instance, files, REGISTRY) == {"word": None}
+        if kind == "nemar.ic-maps":
+            items = model["model"]["maps"]["items"]
+            assert len(items) == 18
+            assert all(item["word"] is None for item in items)
+        if kind == "nemar.spectrum":
+            hz = instance["parameters"]["initial_maps_hz"]
+            maps = spectrum_maps(instance, files, hz, REGISTRY)
+            items = maps["model"]["maps"]["items"]
+            assert len(items) == len(hz)
+            assert all(item["word"] is None for item in items)
+
+    def test_one_recording_throughout(self):
+        """The maps, the spectrum and the decomposition share the 19 channels of
+        the 10-20 system, and the components are the decomposition's rank."""
+        views = example_views()
+        layout = (PRODUCT / views["icmaps"]["data"][1]["location"]).read_text()
+        names = [line.split("\t")[0] for line in layout.splitlines()[1:]]
+        assert len(names) == 19
+        spectrum = [c["name"] for c in views["spectrum"]["data"][0]["columns"]]
+        assert spectrum == ["freq_hz", *names]
+        given = views["icactivity"]["parameters"]["decomposition_input"]
+        assert given["channels"] == names
+        assert views["icactivity"]["transform"]["parameters"]["columns"] == names
+        maps = [c["name"] for c in views["icmaps"]["data"][0]["columns"]]
+        document = json.loads(EXAMPLE.read_text())
+        rank = document["recipes"]["nemar-ica"]["metrics"]["icaRank"]["value"]
+        assert len(maps) == rank == len(names) - 1
 
     def test_every_valid_stored_preset_in_the_corpus_meets_its_base_contract(self):
         """Fails if a preset schema admits data its base would refuse."""
@@ -800,6 +868,10 @@ class TestTransform:
             "badsegments",
         ]
 
-    def test_build_model_names_a_base_it_has_no_model_for(self):
-        with pytest.raises(LookupError, match=r"nemar\.sensor-field"):
+    def test_build_model_draws_ic_maps_by_its_base(self):
+        """nemar.ic-maps draws by nemar.sensor-field, which reads the mixing
+        matrix first: without it, nothing is drawn and the rest is offered."""
+        with pytest.raises(ViewRefused) as raised:
             build_model(view("icmaps"), {})
+        assert raised.value.word == "file_missing"
+        assert [d["role"] for d in raised.value.downloads] == ["layout", "components"]

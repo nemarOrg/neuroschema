@@ -82,7 +82,8 @@ Each is a generic kind with no base, no inputs and no transform; [generic-kinds.
 This release also defines the generic kind `nemar.sensor-field` version 1, a scalp map: the role `values` holds one or more maps, each one value per sensor.
 The sensors are placed by one of three sources: the optional role `layout` (`name`, `theta_deg`, `radius`), the optional role `positions` (`name`, `x`, `y`, `z`, which the view's transform `nemar.sensor-layout.v1` projects), or, with neither, the sensors' names, which a renderer places with `nemar.sensor-labels.v1`.
 A view has at most one of `layout` and `positions`, and the values' `sensor` coordinates are that role's `name` column, by position.
-A renderer draws each map with the algorithm `nemar.sensor-field.v1`; [`views/sensor-field.md`](views/sensor-field.md) specifies the algorithm, the roles, how a renderer reads the maps, and parity.
+A renderer draws each map with the algorithm `nemar.sensor-field.v1`; [`views/sensor-field.md`](views/sensor-field.md) specifies the algorithm, the roles, how a renderer reads the maps, the model it builds, the words, the order of checks, and parity.
+A scalp map draws only sensors typed EEG (or, with no row typed, every sensor), never in an intracranial coordinate system (`Pixels`, `ACPC`, `ScanRAS`), and states where its sensors' positions came from.
 It is a generic kind: it has no base and no inputs, a transform only with `positions`, and its one parameter, `limits`, chooses `absmax` (the default) or `minmax` color limits.
 In the registry, the `values` role's dimensions are `null`, open names: its schema requires one `sensor` dimension (with `contains`) and admits one more of any name, which labels the maps; the `layout` and `positions` roles carry `sensor` only.
 A registry entry lists the dimensions a role may carry; which of them it must carry, the kind's schema says, and the role contract reads it there.
