@@ -11991,6 +11991,190 @@
       ]
     },
     {
+      "name": "refusal_shared_location_digest",
+      "covers": "The layout a preset's labels come from shares its location with the values and declares other bytes of their size: each entry is verified, so file_digest_mismatch (probe p2).",
+      "view": {
+        "key": "spectrum",
+        "kind": "acme.spectrum",
+        "kind_version": 1,
+        "caption": "Power spectral density per sensor, named by the layout.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "base": "nemar.lines",
+        "base_version": 1,
+        "parameters": {
+          "method": "welch"
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_numbered.tsv",
+            "format": "tsv",
+            "size": 36,
+            "sha256": "5244e58f9747329bf0dd4dbe0bc87b0c75694b8c069bbdc1615cb524928407b7",
+            "columns": [
+              {
+                "name": "freq_hz",
+                "type": "number",
+                "unit": "Hz"
+              },
+              {
+                "name": "ch1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "ch2",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "ch3",
+                "type": "number",
+                "unit": "dB"
+              }
+            ],
+            "dims": [
+              {
+                "name": "freq",
+                "axis": "rows",
+                "type": "number",
+                "unit": "Hz",
+                "coords": {
+                  "column": "freq_hz"
+                }
+              },
+              {
+                "name": "sensor",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_numbered.tsv",
+            "format": "tsv",
+            "size": 36,
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "columns": [
+              {
+                "name": "freq_hz",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_numbered.tsv": {
+          "text": "freq_hz\tch1\tch2\tch3\n0\t1\t2\t3\n1\t2\t3\t4\n"
+        }
+      },
+      "word": "file_digest_mismatch",
+      "downloads": []
+    },
+    {
+      "name": "refusal_shared_location_digest_first",
+      "covers": "The same, with the entry that declares other bytes listed first: file_digest_mismatch.",
+      "view": {
+        "key": "spectrum",
+        "kind": "acme.spectrum",
+        "kind_version": 1,
+        "caption": "Power spectral density per sensor, named by the layout.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "base": "nemar.lines",
+        "base_version": 1,
+        "parameters": {
+          "method": "welch"
+        },
+        "data": [
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_numbered.tsv",
+            "format": "tsv",
+            "size": 36,
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "columns": [
+              {
+                "name": "freq_hz",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_numbered.tsv",
+            "format": "tsv",
+            "size": 36,
+            "sha256": "5244e58f9747329bf0dd4dbe0bc87b0c75694b8c069bbdc1615cb524928407b7",
+            "columns": [
+              {
+                "name": "freq_hz",
+                "type": "number",
+                "unit": "Hz"
+              },
+              {
+                "name": "ch1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "ch2",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "ch3",
+                "type": "number",
+                "unit": "dB"
+              }
+            ],
+            "dims": [
+              {
+                "name": "freq",
+                "axis": "rows",
+                "type": "number",
+                "unit": "Hz",
+                "coords": {
+                  "column": "freq_hz"
+                }
+              },
+              {
+                "name": "sensor",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_numbered.tsv": {
+          "text": "freq_hz\tch1\tch2\tch3\n0\t1\t2\t3\n1\t2\t3\t4\n"
+        }
+      },
+      "word": "file_digest_mismatch",
+      "downloads": []
+    },
+    {
       "name": "refusal_caption_lone_surrogate",
       "covers": "A caption holding a lone surrogate meets the schema but has no digest: declaration_invalid.",
       "view": {

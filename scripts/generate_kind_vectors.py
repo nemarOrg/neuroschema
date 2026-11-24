@@ -346,6 +346,21 @@ def preset_spectrum(
     )
 
 
+def _shared_location(first: str) -> dict:
+    """A preset over nemar.lines whose layout names the values' own file, with
+    the values' size and another digest (probe p2: one entry hides another)."""
+    spectrum = preset_spectrum()
+    values, layout = spectrum["data"]
+    layout = layout | {
+        "location": values["location"],
+        "size": values["size"],
+        "sha256": "0" * 64,
+        "columns": [col("freq_hz", "string")],
+    }
+    spectrum["data"] = [values, layout] if first == "values" else [layout, values]
+    return spectrum
+
+
 def lines_cases() -> list[Case]:
     files = {SPECTRUM_AT: SPECTRUM}
     epochs = tsv("epoch power", "1 10", "2 12", "4 9")
@@ -1493,6 +1508,21 @@ def refusals() -> list[Case]:
                 f"{PREFIX}_labels.tsv": bad_layout,
                 f"{PREFIX}_broken.tsv": CHANNELS + b"x\n",
             },
+        ),
+        (
+            "refusal_shared_location_digest",
+            "The layout a preset's labels come from shares its location with the "
+            "values and declares other bytes of their size: each entry is "
+            "verified, so file_digest_mismatch (probe p2).",
+            _shared_location(first="values"),
+            {f"{PREFIX}_numbered.tsv": NUMBERED},
+        ),
+        (
+            "refusal_shared_location_digest_first",
+            "The same, with the entry that declares other bytes listed first: "
+            "file_digest_mismatch.",
+            _shared_location(first="layout"),
+            {f"{PREFIX}_numbered.tsv": NUMBERED},
         ),
         (
             "refusal_caption_lone_surrogate",

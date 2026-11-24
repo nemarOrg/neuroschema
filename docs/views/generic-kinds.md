@@ -25,6 +25,7 @@ First, before it fetches the file, the declared `size` is at most `caps.bytes_pe
 The schema caps `size` at 4,194,304, the registered cap, so this matters only under a lower cap (a vector's `caps`).
 Then the file must be present (`file_missing`), its length must be the declared `size` (`file_size_mismatch`), and its Secure Hash Algorithm 256 (SHA-256) digest must be the declared `sha256` (`file_digest_mismatch`).
 A failed check refuses the whole view and nothing is drawn, because the bytes are not the bytes NEMAR recorded.
+Each data entry it reads is checked against its own `size` and `sha256`, even when two entries share a location (one file can serve two roles), so one entry never vouches for another's bytes.
 Because no view hides data, the renderer still offers every other file of the view for download, and it checks a file it has not read when that file is downloaded.
 An invalid declaration offers no file, because the declaration that names the files is itself invalid.
 

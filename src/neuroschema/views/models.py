@@ -231,6 +231,7 @@ class _Reader:
         self.files = files
         self.caps = caps
         self._tsv: dict[str, Tsv] = {}
+        self._sha256: dict[str, str] = {}
 
     def entry(self, role: str) -> Mapping | None:
         entries = [e for e in self.view.get("data", []) if e.get("role") == role]
@@ -250,14 +251,20 @@ class _Reader:
         data = bytes(self.files[location])
         if len(data) != entry["size"]:
             raise ViewRefused("file_size_mismatch", location, location)
-        if hashlib.sha256(data).hexdigest() != entry["sha256"]:
+        if location not in self._sha256:
+            self._sha256[location] = hashlib.sha256(data).hexdigest()
+        if self._sha256[location] != entry["sha256"]:
             raise ViewRefused("file_digest_mismatch", location, location)
         return data
 
     def tsv(self, entry: Mapping) -> Tsv:
+        """The entry's file as a TSV, verified for this entry: two entries that
+        share a location are each checked against their own size and SHA-256,
+        and the file is parsed once."""
+        data = self.verified(entry)
         location = entry["location"]
         if location not in self._tsv:
-            self._tsv[location] = read_tsv(self.verified(entry))
+            self._tsv[location] = read_tsv(data)
         return self._tsv[location]
 
 
