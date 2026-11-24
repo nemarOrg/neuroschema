@@ -1166,6 +1166,14 @@ def refusals() -> list[Case]:
         bursts_repaired=True,
     )
     refused(
+        "no_table_where_bursts_were_repaired",
+        "The record says ASR repaired spans and the view declares no bad-segment "
+        "table (shaded.files null): the two contradict, so label_unmatched, "
+        "never drawn with a note that there is nothing to shade (review r29).",
+        _small_view(),
+        bursts_repaired=True,
+    )
+    refused(
         "segments_label_uppercase",
         "The same with BURST.",
         _small_view(segments=MISSPELLED.replace(b"Burst", b"BURST")),

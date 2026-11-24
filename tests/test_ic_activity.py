@@ -581,10 +581,9 @@ def _step_components(case):
 
 def _step_segments(case):
     data = _raw(case, "badsegments")
-    if data is not None:
-        label = case["view"]["transform"]["parameters"]["shaded"]["label"]
-        shaded = ia.read_shading(data, label, _caps(case))
-        ia.check_shaded(shaded, label, case["bursts_repaired"])
+    label = case["view"]["transform"]["parameters"]["shaded"]["label"]
+    shaded = None if data is None else ia.read_shading(data, label, _caps(case))
+    ia.check_shaded(shaded, label, case["bursts_repaired"])
 
 
 def _step_match(case):

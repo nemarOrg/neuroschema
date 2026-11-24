@@ -261,22 +261,25 @@ def read_shading(data: bytes, label: str, caps: Mapping = CAPS) -> list[dict]:
 
 
 def check_shaded(
-    shaded: Sequence[Mapping], label: str, bursts_repaired: bool | None
+    shaded: Sequence[Mapping] | None, label: str, bursts_repaired: bool | None
 ) -> list[str]:
-    """The notes for a bad-segment table whose rows hold none labeled ``label``.
+    """The notes for the spans a view shades: ``shaded`` holds the rows labeled
+    ``label``, or is None when the view declares no bad-segment table.
 
     When the record says ASR repaired at least one span of the decomposition's
     input (``bursts_repaired`` true), a table with no row of that label cannot
-    be the right one, or its labels are misspelled (``Burst``, ``BURST``):
-    ``label_unmatched`` refuses the view, never drawn with the bursts unshaded
-    (probe p7). Otherwise, false or unknown, the view is drawn with nothing
-    shaded and the note ``no_shaded_rows`` says so.
+    be the right one, or its labels are misspelled (``Burst``, ``BURST``), and
+    no table at all contradicts the record: ``label_unmatched`` refuses the
+    view, never drawn with the bursts unshaded (probe p7, review r29).
+    Otherwise, false or unknown, the view is drawn with nothing shaded, and the
+    note ``no_bad_segment_table`` or ``no_shaded_rows`` says so.
     """
     if shaded:
         return []
     if bursts_repaired:
-        raise IcActivityRefusal("label_unmatched", f"no row labeled {label!r}")
-    return [NO_SHADED_ROWS]
+        found = "no bad-segment table" if shaded is None else "no row"
+        raise IcActivityRefusal("label_unmatched", f"{found} labeled {label!r}")
+    return [NO_BAD_SEGMENT_TABLE] if shaded is None else [NO_SHADED_ROWS]
 
 
 def match_rows(
@@ -518,12 +521,12 @@ def ic_activity(
     )
     header, weights = read_unmixing(unmixing_bytes, caps)
     labels = read_components(components_bytes, weights.shape[0], caps)
-    if segments_bytes is None:
-        shaded, notes = [], [NO_BAD_SEGMENT_TABLE]
-    else:
-        label = transform["shaded"]["label"]
-        shaded = read_shading(segments_bytes, label, caps)
-        notes = check_shaded(shaded, label, bursts_repaired)
+    label = transform["shaded"]["label"]
+    shaded = (
+        None if segments_bytes is None else read_shading(segments_bytes, label, caps)
+    )
+    notes = check_shaded(shaded, label, bursts_repaired)
+    shaded = shaded or []
     rows = match_rows(
         header,
         store.labels,

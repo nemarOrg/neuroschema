@@ -148,7 +148,7 @@ A renderer runs these checks in this order, and the first that fails gives the w
    Its `component` cells, in order, label the matrix's rows.
 10. **The bad segments.**
    When the view declares `badsegments`, its file is read as [presets.md](presets.md#the-floors-tables) says for the floor's tables: the TSV grammar, at most `caps.cells_per_role` cells counting every header column (`cap_exceeded`), the columns `onset`, `duration` and `label`, found by name in any position and looked for in that order (`column_missing`), then every `onset` cell and then every `duration` cell a number (`cell_not_number`, `cell_not_finite`), then every duration above 0 (`duration_not_positive`).
-   Then, when no row's `label` cell is `shaded.label`: if the record says ASR repaired at least one span of the decomposition's input (`bursts_repaired`, below), the table cannot be the right one or its labels are misspelled (`Burst`, `BURST`), and the view is refused (`label_unmatched`); otherwise, when the record says it repaired none or the renderer does not know, the view is drawn with nothing shaded and the note `no_shaded_rows`.
+   Then, when no row's `label` cell is `shaded.label`, or the view declares no bad-segment table: if the record says ASR repaired at least one span of the decomposition's input (`bursts_repaired`, below), the table cannot be the right one, its labels are misspelled (`Burst`, `BURST`), or its absence contradicts the record, and the view is refused (`label_unmatched`); otherwise, when the record says it repaired none or the renderer does not know, the view is drawn with nothing shaded and the note `no_shaded_rows`, or `no_bad_segment_table` when there is no table.
    `bursts_repaired` is a fact of the record beside the view, not of the declaration: for nemar-ica, the recipe entry's metric `asrBurstFraction` is above 0; a renderer that has no such fact treats it as unknown.
    A fault refuses the whole view, as every other check does: activations drawn without their shading could pass the spans ASR repaired for brain signal.
 11. **The channel match.**
@@ -266,7 +266,7 @@ A filter case matches when every value is within 1e-6 times the largest magnitud
 | `window_outside_store` | The window holds no sample, or does not lie in the store. |
 | `window_too_long` | The window holds more than `floor(max_window_s · rate)` samples. |
 | `duration_not_positive` | A bad segment's `duration` is not above 0. |
-| `label_unmatched` | The record says ASR repaired a span, and no row of the bad segments is labeled `shaded.label`. |
+| `label_unmatched` | The record says ASR repaired a span, and no row of the bad segments is labeled `shaded.label`, or the view declares no bad-segment table. |
 | `file_missing` | An input file is not there. |
 | `file_size_mismatch` | An input file's length is not its declared `size`. |
 | `file_digest_mismatch` | An input file's SHA-256 is not its declared `sha256`. |
