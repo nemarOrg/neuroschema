@@ -237,6 +237,9 @@ WORST_CASES = {
     "bracket_pairs": "[" + "[]," * (FOUR_MB // 3) + "]",
     "one_long_string": '{"a": "' + "x" * FOUR_MB + '"}',
     "backslashes": '"' + "\\\\" * (FOUR_MB // 2),
+    "quotes": '"' * FOUR_MB,
+    "deep": "[" * FOUR_MB,
+    "quote_backslash": '"\\' * (FOUR_MB // 2),
 }
 
 
@@ -268,8 +271,9 @@ def test_the_depth_scan_reads_escapes(text, expected):
     assert ijson.depth(text) == expected
 
 
-def test_the_depth_scan_stops_past_the_limit():
-    assert ijson.depth("[" * 100 + "]" * 100, stop=64) == 65
+def test_the_depth_scan_counts_past_the_limit():
+    assert ijson.depth("[" * 100 + "]" * 100) == 100
+    assert ijson.depth('["\\\\", ["b"], {"c": [1]}]') == 3
 
 
 def test_the_view_validator_reads_binary64_too():
