@@ -13198,6 +13198,199 @@
       }
     },
     {
+      "name": "sensor_field_positions_fit_eeg_rows",
+      "covers": "Flat scalp positions (z = 0) beside depth contacts typed SEEG that lie off their plane: the projection fits the EEG rows alone, which are flat, so the sensors are placed by name (a fit through every row would have found a sphere).",
+      "view": {
+        "key": "maps",
+        "kind": "nemar.sensor-field",
+        "kind_version": 1,
+        "caption": "Scalp maps.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0"
+          }
+        },
+        "transform": {
+          "name": "nemar.sensor-layout.v1",
+          "parameters": {}
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv",
+            "format": "tsv",
+            "size": 686,
+            "sha256": "a8fd3791bccf06df31067361c6f60a752b0a1c265772d0b14327fe006919e47b",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC002",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC003",
+                "type": "number",
+                "unit": "uV"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "positions",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "positions",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_electrodes.tsv",
+            "format": "tsv",
+            "size": 1378,
+            "sha256": "fff1ac7b873a46335dc95218385e3f36798cb5263c61195aa143d4703b69767c",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "x",
+                "type": "number",
+                "unit": "m"
+              },
+              {
+                "name": "y",
+                "type": "number",
+                "unit": "m"
+              },
+              {
+                "name": "z",
+                "type": "number",
+                "unit": "m"
+              },
+              {
+                "name": "sensor_type",
+                "type": "string"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv": {
+          "text": "IC001\tIC002\tIC003\n-2.0\t0.75\t-0.75\n-0.25\t-1.75\t1.0\n1.5\t0.0\t-1.5\n-1.0\t1.75\t0.25\n0.75\t-0.75\t2.0\n-1.75\t1.0\t-0.5\n0.0\t-1.5\t1.25\n1.75\t0.25\t-1.25\n-0.75\t2.0\t0.5\n1.0\t-0.5\t-2.0\n-1.5\t1.25\t-0.25\n0.25\t-1.25\t1.5\n2.0\t0.5\t-1.0\n-0.5\t-2.0\t0.75\n1.25\t-0.25\t-1.75\n-1.25\t1.5\t0.0\n0.5\t-1.0\t1.75\n-2.0\t0.75\t-0.75\n-0.25\t-1.75\t1.0\n1.5\t0.0\t-1.5\n-1.0\t1.75\t0.25\n0.75\t-0.75\t2.0\n-1.75\t1.0\t-0.5\n0.0\t-1.5\t1.25\n1.75\t0.25\t-1.25\n-0.75\t2.0\t0.5\n1.0\t-0.5\t-2.0\n-1.5\t1.25\t-0.25\n0.25\t-1.25\t1.5\n2.0\t0.5\t-1.0\n-0.5\t-2.0\t0.75\n1.25\t-0.25\t-1.75\n-1.25\t1.5\t0.0\n0.5\t-1.0\t1.75\n-2.0\t0.75\t-0.75\n-0.25\t-1.75\t1.0\n1.5\t0.0\t-1.5\n-1.0\t1.75\t0.25\n0.75\t-0.75\t2.0\n-1.75\t1.0\t-0.5\n0.0\t-1.5\t1.25\n1.75\t0.25\t-1.25\n-0.75\t2.0\t0.5\n1.0\t-0.5\t-2.0\n-1.5\t1.25\t-0.25\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_electrodes.tsv": {
+          "text": "name\tx\ty\tz\tsensor_type\nFp1\t-0.0294367\t0.0839171\t0.0\tEEG\nFp2\t0.0298723\t0.0848959\t0.0\tEEG\nF7\t-0.0702629\t0.0424743\t0.0\tEEG\nF3\t-0.0502438\t0.0531112\t0.0\tEEG\nFz\t0.0003122\t0.058512\t0.0\tEEG\nF4\t0.0518362\t0.0543048\t0.0\tEEG\nF8\t0.0730431\t0.0444217\t0.0\tEEG\nT7\t-0.0841611\t-0.0160187\t0.0\tEEG\nC3\t-0.0653581\t-0.0116317\t0.0\tEEG\nCz\t0.0004009\t-0.009167\t0.0\tEEG\nC4\t0.0671179\t-0.0109003\t0.0\tEEG\nT8\t0.0850799\t-0.0150203\t0.0\tEEG\nP7\t-0.0724343\t-0.0734527\t0.0\tEEG\nP3\t-0.0530073\t-0.0787878\t0.0\tEEG\nPz\t0.0003247\t-0.081115\t0.0\tEEG\nP4\t0.0556667\t-0.0785602\t0.0\tEEG\nP8\t0.0730557\t-0.0730683\t0.0\tEEG\nO1\t-0.0294134\t-0.112449\t0.0\tEEG\nO2\t0.0298426\t-0.112156\t0.0\tEEG\nLA1\t-0.022\t-0.004\t-0.018\tSEEG\nLA2\t-0.026\t-0.004\t-0.018\tSEEG\nLA3\t-0.03\t-0.004\t-0.018\tSEEG\nLA4\t-0.034\t-0.004\t-0.018\tSEEG\nLA5\t-0.038\t-0.004\t-0.018\tSEEG\nLA6\t-0.042\t-0.004\t-0.018\tSEEG\nLA7\t-0.046\t-0.004\t-0.018\tSEEG\nLA8\t-0.05\t-0.004\t-0.018\tSEEG\nLH1\t-0.026\t-0.02\t-0.012\tSEEG\nLH2\t-0.03\t-0.02\t-0.012\tSEEG\nLH3\t-0.034\t-0.02\t-0.012\tSEEG\nLH4\t-0.038\t-0.02\t-0.012\tSEEG\nLH5\t-0.042\t-0.02\t-0.012\tSEEG\nLH6\t-0.046\t-0.02\t-0.012\tSEEG\nLH7\t-0.05\t-0.02\t-0.012\tSEEG\nLH8\t-0.054\t-0.02\t-0.012\tSEEG\nC1\t-0.062\t-0.032\t-0.003\tSEEG\nC2\t-0.062\t-0.024\t0.0\tSEEG\nC3\t-0.062\t-0.016\t0.003\tSEEG\nC4\t-0.062\t-0.008\t0.006\tSEEG\nC5\t-0.062\t0.0\t0.009\tSEEG\nC6\t-0.062\t0.008\t0.012\tSEEG\nDBS1\t0.012\t-0.013\t-0.003\tSEEG\nDBS2\t0.012\t-0.013\t-0.001\tSEEG\nDBS3\t0.012\t-0.013\t0.001\tSEEG\nDBS4\t0.012\t-0.013\t0.003\tSEEG\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "kind",
+          "kind": "nemar.sensor-field",
+          "kind_version": 1
+        },
+        "refused": null,
+        "downloads": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv",
+            "size": 686,
+            "sha256": "a8fd3791bccf06df31067361c6f60a752b0a1c265772d0b14327fe006919e47b"
+          },
+          {
+            "role": "positions",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_electrodes.tsv",
+            "size": 1378,
+            "sha256": "fff1ac7b873a46335dc95218385e3f36798cb5263c61195aa143d4703b69767c"
+          }
+        ],
+        "model": {
+          "type": "sensor-field",
+          "limits": "absmax",
+          "unit": "uV",
+          "placement": {
+            "source": "names",
+            "role": "positions",
+            "coordinate_system": "n/a",
+            "position_source": "template",
+            "montage": "standard_1005",
+            "unused_positions": "positions_flat",
+            "word": null
+          },
+          "sensors": {
+            "dim": "sensor",
+            "type": "string",
+            "unit": null,
+            "axis": "rows",
+            "labels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2", "LA1", "LA2", "LA3", "LA4", "LA5", "LA6", "LA7", "LA8", "LH1", "LH2", "LH3", "LH4", "LH5", "LH6", "LH7", "LH8", "C1", "C2", "C3", "C4", "C5", "C6", "DBS1", "DBS2", "DBS3", "DBS4"],
+            "types": ["EEG", "EEG", "EEG", "EEG", "EEG", "EEG", "EEG", "EEG", "EEG", "EEG", "EEG", "EEG", "EEG", "EEG", "EEG", "EEG", "EEG", "EEG", "EEG", "SEEG", "SEEG", "SEEG", "SEEG", "SEEG", "SEEG", "SEEG", "SEEG", "SEEG", "SEEG", "SEEG", "SEEG", "SEEG", "SEEG", "SEEG", "SEEG", "SEEG", "SEEG", "SEEG", "SEEG", "SEEG", "SEEG", "SEEG", "SEEG", "SEEG", "SEEG"],
+            "drawn": [true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+            "electrodes": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+            "theta_deg": null,
+            "radius": null,
+            "x": [-0.0294367, 0.0298723, -0.0702629, -0.0502438, 0.0003122, 0.0518362, 0.0730431, -0.0841611, -0.0653581, 0.0004009, 0.0671179, 0.0850799, -0.0724343, -0.0530073, 0.0003247, 0.0556667, 0.0730557, -0.0294134, 0.0298426, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+            "y": [0.0839171, 0.0848959, 0.0424743, 0.0531112, 0.058512, 0.0543048, 0.0444217, -0.0160187, -0.0116317, -0.009167, -0.0109003, -0.0150203, -0.0734527, -0.0787878, -0.081115, -0.0785602, -0.0730683, -0.112449, -0.112156, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+            "z": [-0.00699, -0.00708, -0.01142, 0.042192, 0.066462, 0.040814, -0.012, -0.009346, 0.064358, 0.100244, 0.06358, -0.00949, -0.002487, 0.05594, 0.082615, 0.056561, -0.00254, 0.008839, 0.0088, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]
+          },
+          "maps": {
+            "dim": "component",
+            "type": "string",
+            "unit": null,
+            "items": [
+              {
+                "label": "IC001",
+                "values": [-2.0, -0.25, 1.5, -1.0, 0.75, -1.75, 0.0, 1.75, -0.75, 1.0, -1.5, 0.25, 2.0, -0.5, 1.25, -1.25, 0.5, -2.0, -0.25, 1.5, -1.0, 0.75, -1.75, 0.0, 1.75, -0.75, 1.0, -1.5, 0.25, 2.0, -0.5, 1.25, -1.25, 0.5, -2.0, -0.25, 1.5, -1.0, 0.75, -1.75, 0.0, 1.75, -0.75, 1.0, -1.5],
+                "text": ["-2.0", "-0.25", "1.5", "-1.0", "0.75", "-1.75", "0.0", "1.75", "-0.75", "1.0", "-1.5", "0.25", "2.0", "-0.5", "1.25", "-1.25", "0.5", "-2.0", "-0.25", "1.5", "-1.0", "0.75", "-1.75", "0.0", "1.75", "-0.75", "1.0", "-1.5", "0.25", "2.0", "-0.5", "1.25", "-1.25", "0.5", "-2.0", "-0.25", "1.5", "-1.0", "0.75", "-1.75", "0.0", "1.75", "-0.75", "1.0", "-1.5"],
+                "word": null
+              },
+              {
+                "label": "IC002",
+                "values": [0.75, -1.75, 0.0, 1.75, -0.75, 1.0, -1.5, 0.25, 2.0, -0.5, 1.25, -1.25, 0.5, -2.0, -0.25, 1.5, -1.0, 0.75, -1.75, 0.0, 1.75, -0.75, 1.0, -1.5, 0.25, 2.0, -0.5, 1.25, -1.25, 0.5, -2.0, -0.25, 1.5, -1.0, 0.75, -1.75, 0.0, 1.75, -0.75, 1.0, -1.5, 0.25, 2.0, -0.5, 1.25],
+                "text": ["0.75", "-1.75", "0.0", "1.75", "-0.75", "1.0", "-1.5", "0.25", "2.0", "-0.5", "1.25", "-1.25", "0.5", "-2.0", "-0.25", "1.5", "-1.0", "0.75", "-1.75", "0.0", "1.75", "-0.75", "1.0", "-1.5", "0.25", "2.0", "-0.5", "1.25", "-1.25", "0.5", "-2.0", "-0.25", "1.5", "-1.0", "0.75", "-1.75", "0.0", "1.75", "-0.75", "1.0", "-1.5", "0.25", "2.0", "-0.5", "1.25"],
+                "word": null
+              },
+              {
+                "label": "IC003",
+                "values": [-0.75, 1.0, -1.5, 0.25, 2.0, -0.5, 1.25, -1.25, 0.5, -2.0, -0.25, 1.5, -1.0, 0.75, -1.75, 0.0, 1.75, -0.75, 1.0, -1.5, 0.25, 2.0, -0.5, 1.25, -1.25, 0.5, -2.0, -0.25, 1.5, -1.0, 0.75, -1.75, 0.0, 1.75, -0.75, 1.0, -1.5, 0.25, 2.0, -0.5, 1.25, -1.25, 0.5, -2.0, -0.25],
+                "text": ["-0.75", "1.0", "-1.5", "0.25", "2.0", "-0.5", "1.25", "-1.25", "0.5", "-2.0", "-0.25", "1.5", "-1.0", "0.75", "-1.75", "0.0", "1.75", "-0.75", "1.0", "-1.5", "0.25", "2.0", "-0.5", "1.25", "-1.25", "0.5", "-2.0", "-0.25", "1.5", "-1.0", "0.75", "-1.75", "0.0", "1.75", "-0.75", "1.0", "-1.5", "0.25", "2.0", "-0.5", "1.25", "-1.25", "0.5", "-2.0", "-0.25"],
+                "word": null
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
       "name": "sensor_field_positions_flat_names",
       "covers": "Measured positions on one plane (z = 0): positions_flat, so the sensors are placed by name on standard_1005 instead, and the model says why the positions were not used.",
       "view": {
@@ -15232,6 +15425,145 @@
                 "label": "2",
                 "values": [0.75, -1.75, 0.0, 1.75, -0.75, 1.0, -1.5, 0.25, 2.0, -0.5, 1.25, -1.25, 0.5, -2.0, -0.25, 1.5, -1.0, 0.75, -1.75],
                 "text": ["0.75", "-1.75", "0.0", "1.75", "-0.75", "1.0", "-1.5", "0.25", "2.0", "-0.5", "1.25", "-1.25", "0.5", "-2.0", "-0.25", "1.5", "-1.0", "0.75", "-1.75"],
+                "word": null
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "sensor_field_names_some_unplaced",
+      "covers": "Names with an EOG and a trigger channel among them: sensor-labels places the 19 scalp names, and the two it leaves unplaced are not drawn.",
+      "view": {
+        "key": "maps",
+        "kind": "nemar.sensor-field",
+        "kind_version": 1,
+        "caption": "Scalp maps.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv",
+            "format": "tsv",
+            "size": 406,
+            "sha256": "abd197168f33bab1051836e1b6fe34f201177c3909b8b4d0a051b997d345efed",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "IC001",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC002",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC003",
+                "type": "number",
+                "unit": "uV"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv": {
+          "text": "name\tIC001\tIC002\tIC003\nFp1\t-2.0\t0.75\t-0.75\nFp2\t-0.25\t-1.75\t1.0\nF7\t1.5\t0.0\t-1.5\nF3\t-1.0\t1.75\t0.25\nFz\t0.75\t-0.75\t2.0\nF4\t-1.75\t1.0\t-0.5\nF8\t0.0\t-1.5\t1.25\nT7\t1.75\t0.25\t-1.25\nC3\t-0.75\t2.0\t0.5\nCz\t1.0\t-0.5\t-2.0\nEOG1\t-1.5\t1.25\t-0.25\nC4\t0.25\t-1.25\t1.5\nT8\t2.0\t0.5\t-1.0\nP7\t-0.5\t-2.0\t0.75\nP3\t1.25\t-0.25\t-1.75\nPz\t-1.25\t1.5\t0.0\nP4\t0.5\t-1.0\t1.75\nP8\t-2.0\t0.75\t-0.75\nO1\t-0.25\t-1.75\t1.0\nO2\t1.5\t0.0\t-1.5\nStatus\t-1.0\t1.75\t0.25\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "kind",
+          "kind": "nemar.sensor-field",
+          "kind_version": 1
+        },
+        "refused": null,
+        "downloads": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv",
+            "size": 406,
+            "sha256": "abd197168f33bab1051836e1b6fe34f201177c3909b8b4d0a051b997d345efed"
+          }
+        ],
+        "model": {
+          "type": "sensor-field",
+          "limits": "absmax",
+          "unit": "uV",
+          "placement": {
+            "source": "names",
+            "role": null,
+            "coordinate_system": "n/a",
+            "position_source": "template",
+            "montage": "standard_1005",
+            "unused_positions": null,
+            "word": null
+          },
+          "sensors": {
+            "dim": "sensor",
+            "type": "string",
+            "unit": null,
+            "axis": "rows",
+            "labels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "EOG1", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2", "Status"],
+            "types": null,
+            "drawn": [true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, true, true, false],
+            "electrodes": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", null, "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2", null],
+            "theta_deg": null,
+            "radius": null,
+            "x": [-0.0294367, 0.0298723, -0.0702629, -0.0502438, 0.0003122, 0.0518362, 0.0730431, -0.0841611, -0.0653581, 0.0004009, null, 0.0671179, 0.0850799, -0.0724343, -0.0530073, 0.0003247, 0.0556667, 0.0730557, -0.0294134, 0.0298426, null],
+            "y": [0.0839171, 0.0848959, 0.0424743, 0.0531112, 0.058512, 0.0543048, 0.0444217, -0.0160187, -0.0116317, -0.009167, null, -0.0109003, -0.0150203, -0.0734527, -0.0787878, -0.081115, -0.0785602, -0.0730683, -0.112449, -0.112156, null],
+            "z": [-0.00699, -0.00708, -0.01142, 0.042192, 0.066462, 0.040814, -0.012, -0.009346, 0.064358, 0.100244, null, 0.06358, -0.00949, -0.002487, 0.05594, 0.082615, 0.056561, -0.00254, 0.008839, 0.0088, null]
+          },
+          "maps": {
+            "dim": "component",
+            "type": "string",
+            "unit": null,
+            "items": [
+              {
+                "label": "IC001",
+                "values": [-2.0, -0.25, 1.5, -1.0, 0.75, -1.75, 0.0, 1.75, -0.75, 1.0, -1.5, 0.25, 2.0, -0.5, 1.25, -1.25, 0.5, -2.0, -0.25, 1.5, -1.0],
+                "text": ["-2.0", "-0.25", "1.5", "-1.0", "0.75", "-1.75", "0.0", "1.75", "-0.75", "1.0", "-1.5", "0.25", "2.0", "-0.5", "1.25", "-1.25", "0.5", "-2.0", "-0.25", "1.5", "-1.0"],
+                "word": null
+              },
+              {
+                "label": "IC002",
+                "values": [0.75, -1.75, 0.0, 1.75, -0.75, 1.0, -1.5, 0.25, 2.0, -0.5, 1.25, -1.25, 0.5, -2.0, -0.25, 1.5, -1.0, 0.75, -1.75, 0.0, 1.75],
+                "text": ["0.75", "-1.75", "0.0", "1.75", "-0.75", "1.0", "-1.5", "0.25", "2.0", "-0.5", "1.25", "-1.25", "0.5", "-2.0", "-0.25", "1.5", "-1.0", "0.75", "-1.75", "0.0", "1.75"],
+                "word": null
+              },
+              {
+                "label": "IC003",
+                "values": [-0.75, 1.0, -1.5, 0.25, 2.0, -0.5, 1.25, -1.25, 0.5, -2.0, -0.25, 1.5, -1.0, 0.75, -1.75, 0.0, 1.75, -0.75, 1.0, -1.5, 0.25],
+                "text": ["-0.75", "1.0", "-1.5", "0.25", "2.0", "-0.5", "1.25", "-1.25", "0.5", "-2.0", "-0.25", "1.5", "-1.0", "0.75", "-1.75", "0.0", "1.75", "-0.75", "1.0", "-1.5", "0.25"],
                 "word": null
               }
             ]

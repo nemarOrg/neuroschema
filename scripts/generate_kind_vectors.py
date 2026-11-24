@@ -1790,6 +1790,21 @@ def sensor_field_cases() -> list[Case]:
             sensor_columns=TYPED_POSITION_COLUMNS,
         ),
     )
+    flat_scalp = [(n, *POSITIONS_1005[n][:2], 0.0) for n in NAMES_1020]
+    depth = [(n, x / 1000, y / 1000, z / 1000) for n, x, y, z, _t in IMPLANT]
+    case(
+        "sensor_field_positions_fit_eeg_rows",
+        "Flat scalp positions (z = 0) beside depth contacts typed SEEG that lie "
+        "off their plane: the projection fits the EEG rows alone, which are "
+        "flat, so the sensors are placed by name (a fit through every row would "
+        "have found a sphere).",
+        field_view(
+            mixing(45),
+            electrodes(types=["EEG"] * 19 + ["SEEG"] * 26, at=flat_scalp + depth),
+            "positions",
+            sensor_columns=TYPED_POSITION_COLUMNS,
+        ),
+    )
     case(
         "sensor_field_positions_flat_names",
         "Measured positions on one plane (z = 0): positions_flat, so the "
@@ -1928,6 +1943,17 @@ def sensor_field_cases() -> list[Case]:
             ),
             [col(n) for n in NAMES_1020],
             [dim("sensor", "columns", "string", {"header": True})],
+        ),
+    )
+    case(
+        "sensor_field_names_some_unplaced",
+        "Names with an EOG and a trigger channel among them: sensor-labels "
+        "places the 19 scalp names, and the two it leaves unplaced are not "
+        "drawn.",
+        names_view(
+            named_values([*NAMES_1020[:10], "EOG1", *NAMES_1020[10:], "Status"]),
+            NAMED_COLUMNS,
+            [NAME_ROWS, MAPS_HEADER],
         ),
     )
     case(
