@@ -41,9 +41,10 @@ The writer sets `shaded.files` and `bad_segment_table` from the record, null and
 
 **Named.** A declared table is the one the record names, and a renderer checks it before it fetches anything (`table_location_mismatch`), because a view that read a decoy table with no rows would draw a clean window.
 A `nemar.ic-activity`'s `badsegments` input is at `shaded.files[0]`, which comes from the record ([ic-activity.md](ic-activity.md#the-checks-in-order)).
-A `nemar.signal-window`'s tables are the recording's: each lies in the directory of the `signal` store's `recording` and is named `<stem>_channels.tsv` or `<stem>_badsegments.tsv` (the schema checks the suffix), and the two share one stem, as the floor writes them.
-The stem is a product's of that recording, as nemar-process names one: the recording's entities (its file name up to its last `_`, `sub-01_task-rest` for `sub-01_task-rest_eeg.set`) and then `_desc-<label>` (`sub-01_task-rest_desc-nemarfloor`), or, when the recording's last entity is a `desc`, the label appended to its value (`sub-01_task-rest_desc-cleannemarfloor` for `sub-01_task-rest_desc-clean_eeg.set`), the label being letters and digits.
-Anything else after the entities names another recording (`_run-2`, the `ingstate` of `task-restingstate`, `_acq-other`), and is refused.
+A `nemar.signal-window`'s tables are the recording's: each lies in the directory of the `signal` store's `recording` and is named `<stem>_channels.tsv` or `<stem>_badsegments.tsv` (the schema checks the suffix), so the two share one stem, as the recipe writes them.
+The stem is exactly the one nemar-process gives that recording's products under the label of the recipe that wrote the view, `L`, its id without hyphens (`naming.product_stem` and `naming.label`; `nemarica` for `nemar-ica`): the recording's file name without its last `_<suffix>.<ext>`, with its first `desc-<x>` entity becoming `desc-<x>L` in place (`sub-01_task-rest_desc-cleannemarica` for `sub-01_task-rest_desc-clean_eeg.set`), or, when it has none, `_desc-L` appended (`sub-01_task-rest_desc-nemarica` for `sub-01_task-rest_eeg.set`).
+Any other stem is refused: another recording's (`_run-2`, the `ingstate` of `task-restingstate`, `_acq-other`, or the sibling `sub-01_task-rest_desc-preproc`, whose products begin the same way) or another recipe's (`desc-nemarfloor` in a view nemar-ica wrote).
+A view a plugin wrote names no recipe, so its tables cannot be tied, and are refused.
 
 **Verified.** A declared table is verified like any data file, and a fault refuses the whole view.
 It declares at most `caps.bytes_per_role` bytes (`cap_exceeded`, checked before the file is fetched), it is present, and its length is its `size` and its SHA-256 its `sha256` (`file_missing`, `file_size_mismatch`, `file_digest_mismatch`); when a view declares both tables, the channels' file is checked first.
@@ -187,7 +188,7 @@ The vectors give, for a window drawn, its state, its `first` sample and `count`,
 | `variance_length` | `nemar.ic-classes` | base | `summed_variance_pct` does not have one entry per category. |
 | `components_total` | `nemar.ic-classes` | base | The counts do not sum to `n_components`. |
 | `declaration_invalid` | `nemar.signal-window` | nothing drawn | The declaration fails `view.schema.json#/$defs/view` or has no digest (for example, `bad_segment_table` true and no `badsegments` declared). |
-| `table_location_mismatch` | `nemar.signal-window` | nothing drawn | A floor table is not beside the recording, not named for it, or not under the other table's stem. |
+| `table_location_mismatch` | `nemar.signal-window` | nothing drawn | A floor table is not beside the recording, or its stem is not the one the view's recipe gives the recording's products (so the two tables share one stem). |
 | `tsv_encoding`, `tsv_line_endings`, `tsv_header_repeated`, `tsv_ragged` | `nemar.signal-window` | nothing drawn | A floor table breaks the TSV grammar. |
 | `column_missing` | `nemar.signal-window` | nothing drawn | The bad segments lack `onset`, `duration` or `label`, or the channels lack `name` or `status`. |
 | `cell_not_number`, `cell_not_finite` | `nemar.signal-window` | nothing drawn | A bad segment's `onset` or `duration` is not a finite JSON number. |

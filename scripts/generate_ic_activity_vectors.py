@@ -838,6 +838,13 @@ def refusals() -> list[Case]:
         "transform's schema: the verdict corpus holds that.)",
         (view | {"kind": "acme.activity"}, files),
     )
+    view, files = _small_view()
+    refused(
+        "kind_version_true",
+        "kind_version written true: JSON's true is no version, though Python "
+        "reads True == 1, so kind_unsupported (review r29, round 2).",
+        (view | {"kind_version": True}, files),
+    )
     view, files = _small_view(segments=True)
     refused(
         "order_kind_before_declaration",
@@ -887,6 +894,26 @@ def refusals() -> list[Case]:
         "The matrix, the components and the bad segments of run 2, named for it "
         "and consistent with matrix and shaded.files: not the recording's, so "
         "table_location_mismatch (review r29).",
+        (view, files),
+    )
+    view, files = _small_view(segments=True)
+    sibling = "sub-01/eeg/sub-01_task-rest_desc-preprocnemarica"
+    for given in view["inputs"]:
+        if "file" in given:
+            role, old = given["role"], given["file"]["location"]
+            moved = sibling + old.removeprefix(PREFIX)
+            files[moved] = files.pop(old)
+            given["file"]["location"] = moved
+            if role == "unmixing":
+                view["transform"]["parameters"]["matrix"] = moved
+            if role == "badsegments":
+                view["transform"]["parameters"]["shaded"]["files"] = [moved]
+    refused(
+        "tables_of_a_sibling_recording",
+        "The three tables of the sibling recording sub-01_task-rest_desc-preproc "
+        "(desc-preprocnemarica), consistent with matrix and shaded.files: the "
+        "stem must be exactly the one nemar-process gives this recording under "
+        "the view's recipe, so table_location_mismatch (review r29, round 2).",
         (view, files),
     )
     view, files = _small_view()

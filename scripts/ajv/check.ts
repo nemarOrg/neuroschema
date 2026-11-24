@@ -73,7 +73,9 @@ function validator(name: string) {
       ? `${BASE}definitions/view.schema.json#/$defs/view`
       : name === "dataQuality"
         ? `${BASE}extensions/dataQuality.schema.json`
-        : `${BASE}views/${name}`;
+        : name.includes("/")
+          ? `${BASE}${name}`
+          : `${BASE}views/${name}`;
   const validate = ajv.getSchema(id);
   if (!validate) throw new Error(`no schema ${id}`);
   return validate;

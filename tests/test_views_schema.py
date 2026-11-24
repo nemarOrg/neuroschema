@@ -979,6 +979,16 @@ class TestRendererRule:
         view["data"].append(unknown_kind()["data"][0])
         assert draw_as(view, REGISTRY) == Drawing("base", "nemar.table", 1)
 
+    @pytest.mark.parametrize("field", ["kind_version", "base_version"])
+    def test_a_boolean_version_is_no_version(self, field):
+        """True == 1 in Python, and they hash alike; JSON's true is no version,
+        so it never finds version 1 of a kind or a base (review r29, round 2)."""
+        if field == "kind_version":
+            view = table() | {"kind_version": True}
+        else:
+            view = self._preset(table()) | {"base_version": True}
+        assert draw_as(view, REGISTRY) == Drawing("table", None, None)
+
     @pytest.mark.parametrize("preset", ["nemar.spectrum", "nemar.ic-classes"])
     def test_a_preset_is_no_base(self, preset):
         """An unknown kind that names a preset as its base (probe p2: the

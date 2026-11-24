@@ -1470,7 +1470,41 @@ def test_null_dataset_version_and_range_min_are_allowed():
 
 
 # Older patterns with a bare $, tracked in nemarOrg/neuroschema#20.
-NEWLINE_GAP_ALLOWLIST = {("dataPaper.schema.json", "^10\\.\\d{4,9}/\\S+$")}
+NEWLINE_GAP_ALLOWLIST = {
+    ("dataset.schema.json", "^[a-z]{2}[0-9]+$"),
+    ("record.schema.json", "^[a-z]{2}[0-9]+$"),
+    ("neuroschema.schema.json", "^[0-9]+\\.[0-9]+\\.[0-9]+$"),
+}
+# Patterns with a token whose meaning differs between Python's re and
+# JavaScript's RegExp with the u flag, tracked in nemarOrg/neuroschema#20.
+TOKEN_ALLOWLIST: set[tuple[str, str]] = set()
+# A bare . (JavaScript's stops at a line terminator; Python's at a line feed
+# only), and the classes \s, \S, \d, \D, \w, \W, \b, \B (Unicode in Python,
+# narrower or other sets in JavaScript). The class [\s\S] means any character
+# in both, and is allowed.
+DIVERGENT = set("sSdDwWbB")
+
+
+def divergent_tokens(pattern: str) -> list[str]:
+    """The engine-dependent tokens of a pattern: a . outside a class, and the
+    shorthand classes, inside a class or out, but for the idiom [\\s\\S]."""
+    found, in_class, i = [], False, 0
+    text = pattern.replace("[\\s\\S]", "")
+    while i < len(text):
+        char = text[i]
+        if char == "\\":
+            if text[i + 1 : i + 2] in DIVERGENT:
+                found.append(text[i : i + 2])
+            i += 2
+            continue
+        if in_class:
+            in_class = char != "]"
+        elif char == "[":
+            in_class = True
+        elif char == ".":
+            found.append(".")
+        i += 1
+    return found
 
 
 def _patterns(node):
@@ -1486,26 +1520,45 @@ def _patterns(node):
 
 
 def anchor_problems(paths) -> list[str]:
+    """Patterns with a bare $ (Python's matches before a final newline), or with
+    a token Python and JavaScript read apart (review r29, round 2)."""
     problems = []
     for path in paths:
         for pattern in _patterns(json.loads(path.read_text())):
-            if (path.name, pattern) in NEWLINE_GAP_ALLOWLIST:
-                continue
-            if "$" in pattern and not pattern.endswith("$(?!\n)"):
+            key = (path.name, pattern)
+            if (
+                key not in NEWLINE_GAP_ALLOWLIST
+                and "$" in pattern
+                and not pattern.endswith("$(?!\n)")
+            ):
                 problems.append(f"{path.name}: {pattern!r}")
+            if key not in TOKEN_ALLOWLIST and divergent_tokens(pattern):
+                problems.append(f"{path.name}: {pattern!r} {divergent_tokens(pattern)}")
     return problems
 
 
 def test_anchored_patterns_close_the_newline_gap():
-    paths = sorted(
-        [
-            *EXTENSIONS.glob("*.schema.json"),
-            *DEFINITIONS.glob("*.schema.json"),
-            *VIEWS.glob("*.schema.json"),
-        ]
-    )
+    """Every pattern of every schema, the core and the root included."""
+    paths = ALL_SCHEMAS
     assert VIEWS.is_dir() and any(p.parent == VIEWS for p in paths)
     assert anchor_problems(paths) == []
+
+
+@pytest.mark.parametrize(
+    ("pattern", "tokens"),
+    [
+        ("^a.b$(?!\n)", ["."]),
+        ("^[a.b]$(?!\n)", []),
+        ("^\\.$(?!\n)", []),
+        ("^\\d+$(?!\n)", ["\\d"]),
+        ("^[\\w-]+$(?!\n)", ["\\w"]),
+        ("^\\S+\\b$(?!\n)", ["\\S", "\\b"]),
+        ("^(?![\\s\\S]*//)[a]+$(?!\n)", []),
+        ("^(?!.*//)[a]+$(?!\n)", ["."]),
+    ],
+)
+def test_divergent_tokens(pattern, tokens):
+    assert divergent_tokens(pattern) == tokens
 
 
 def test_anchor_check_catches_a_bare_dollar(tmp_path):

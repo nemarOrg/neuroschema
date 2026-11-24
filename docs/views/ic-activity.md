@@ -125,7 +125,7 @@ A renderer runs these checks in this order, and the first that fails gives the w
    Then the declaration is valid (`declaration_invalid`): it has a digest and meets `view.schema.json#/$defs/view`, which applies the transform's schema to every view that names the transform, whatever its kind ([generic-kinds.md](generic-kinds.md#building-a-model)); the transform's schema requires the parameters the computation reads (`display_filter`, `max_window_s`, `decomposition_input`).
 2. **The inputs' locations.**
    Each file input is where the record says (`table_location_mismatch`): the `unmixing` input's location is the transform's `matrix`, then the `badsegments` input's, when there is one, is `shaded.files[0]`.
-   Then the `unmixing`, `components` and `badsegments` tables are the recording's: each is named `<stem>_<suffix>.tsv` beside the `signal` store's `recording`, with the stem of a product of it, and all share one stem ([the floor's tables](presets.md#the-floors-tables) gives the rule).
+   Then the `unmixing`, `components` and `badsegments` tables are the recording's: each is named `<stem>_<suffix>.tsv` beside the `signal` store's `recording`, the stem exactly the one the view's recipe gives that recording's products, so all three share one stem ([the floor's tables](presets.md#the-floors-tables) gives the rule).
    A view cannot read one table and name another, such as a decoy table with no rows in place of the floor's.
 3. **The decomposition's store.**
    For a decomposition of the serving copy, `decomposition_input.store` names the `signal` store (`store_mismatch`): its `path` is the store's `path` (or its `recording`, when it has no `path`) and its `group` the store's `group`, then its `content_sha256` is the store's.
@@ -279,7 +279,7 @@ A filter case matches when every value is within 1e-6 times the largest magnitud
 |---|---|
 | `kind_unsupported` | The view's kind is not `nemar.ic-activity` version 1, whose display filter and window these checks apply. |
 | `declaration_invalid` | The declaration fails `view.schema.json#/$defs/view` (with the transform's schema) or has no digest; among others, it declares `badsegments` when `shaded.files` is null, or not when it names a table. |
-| `table_location_mismatch` | The `unmixing` input is not at the transform's `matrix`, or the `badsegments` input is not at `shaded.files[0]`. |
+| `table_location_mismatch` | The `unmixing` input is not at the transform's `matrix`, the `badsegments` input is not at `shaded.files[0]`, or a table's stem is not the one the view's recipe gives the recording's products, the stem all three share. |
 | `store_mismatch` | `decomposition_input.store` does not name the `signal` store: another path, group or digest. |
 | `rate_invalid` | The store's sampling rate is not a finite number above 0. |
 | `window_outside_store` | The window holds no sample, or does not lie in the store. |

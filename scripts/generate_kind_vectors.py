@@ -34,6 +34,7 @@ from neuroschema.views.models import (
     data_quality_validator,
     histogram_content_validator,
     locate_bin,
+    schema_validator,
     snap_row,
     view_validator,
 )
@@ -1642,6 +1643,13 @@ def refusals() -> list[Case]:
             {SPECTRUM_AT: SPECTRUM},
         ),
         (
+            "refusal_kind_version_true",
+            "A nemar.lines view whose kind_version is true: no version, so the "
+            "declaration is invalid, never drawn as version 1.",
+            lines_view() | {"kind_version": True},
+            {SPECTRUM_AT: SPECTRUM},
+        ),
+        (
             "refusal_preset_as_base",
             "An unknown kind over the preset nemar.spectrum: a preset is no base, "
             "so declaration_invalid (probe p2).",
@@ -1892,6 +1900,17 @@ def view_verdicts() -> list[tuple[str, str, dict]]:
             _set(unknown, "kind_version", 1000),
         ),
         (
+            "envelope_kind_version_true",
+            "kind_version true: a boolean is no integer, though Python reads "
+            "True == 1.",
+            _set(unknown, "kind_version", True),
+        ),
+        (
+            "table_kind_version_true",
+            "A nemar.table view whose kind_version is true: not version 1.",
+            _set(table, "kind_version", True),
+        ),
+        (
             "envelope_kind_version_text",
             "kind_version is an integer, not text.",
             _set(unknown, "kind_version", "1"),
@@ -2131,6 +2150,39 @@ def view_verdicts() -> list[tuple[str, str, dict]]:
             "histogram_parameters",
             "Version 1 takes no parameters.",
             _set(hist, "parameters", {"log": True}),
+        ),
+    ]
+
+
+DATA_PAPER = "definitions/dataPaper.schema.json"
+
+
+def data_paper_verdicts() -> list[tuple[str, str, dict]]:
+    """The DOI pattern, whose old \\d and \\S Python and JavaScript read apart."""
+    paper = {"doi": "10.1038/s41597-019-0027-4"}
+    return [
+        ("doi_valid", "A DOI as the producer serves it.", paper),
+        (
+            "doi_arabic_indic_digits",
+            "Arabic-Indic digits in the prefix: Python's \\d took them, "
+            "JavaScript's does not; [0-9] in both.",
+            {"doi": "10.\u0661\u0662\u0663\u0664/abc"},
+        ),
+        (
+            "doi_byte_order_mark",
+            "U+FEFF in the suffix: \\S took it in Python and not in JavaScript.",
+            {"doi": "10.1234/a\ufeffb"},
+        ),
+        (
+            "doi_information_separator",
+            "U+001C in the suffix: \\S took it in JavaScript and not in Python.",
+            {"doi": "10.1234/a\u001cb"},
+        ),
+        ("doi_space", "A space in the suffix.", {"doi": "10.1234/a b"}),
+        (
+            "doi_trailing_newline",
+            "A final newline, which Python's bare $ let pass.",
+            {"doi": "10.1234/abc\n"},
         ),
     ]
 
@@ -3623,6 +3675,37 @@ def signal_window_check_cases() -> list[tuple[str, str, dict, dict, dict]]:
             ),
         ),
         (
+            "signal_window_tables_sibling_recording",
+            "Both tables of the sibling recording sub-01_task-rest_desc-preproc "
+            "(desc-preprocnemarica): its name begins with this recording's "
+            "entities and then _desc-, but the stem is exactly the one "
+            "nemar-process gives this recording, so table_location_mismatch "
+            "(review r29, round 2).",
+            *_relocated(
+                _relocated(
+                    at(151.5, 2),
+                    "channels",
+                    "sub-01/eeg/sub-01_task-rest_desc-preprocnemarica_channels.tsv",
+                ),
+                "badsegments",
+                "sub-01/eeg/sub-01_task-rest_desc-preprocnemarica_badsegments.tsv",
+            ),
+        ),
+        (
+            "signal_window_tables_other_recipe",
+            "Both tables under the label of another recipe (desc-nemarfloor) in a "
+            "view nemar-ica wrote: table_location_mismatch.",
+            *_relocated(
+                _relocated(
+                    at(151.5, 2),
+                    "channels",
+                    "sub-01/eeg/sub-01_task-rest_desc-nemarfloor_channels.tsv",
+                ),
+                "badsegments",
+                "sub-01/eeg/sub-01_task-rest_desc-nemarfloor_badsegments.tsv",
+            ),
+        ),
+        (
             "signal_window_tables_desc_recording",
             "A recording whose last entity is a desc (desc-clean): the tables "
             "append the label to its value (desc-cleannemarica), as nemar-process "
@@ -3867,6 +3950,11 @@ def verdicts() -> dict:
     for schema, validator, items in [
         ("view", view_validator(), [*view_verdicts(), *preset_verdicts()]),
         ("dataQuality", data_quality_validator(), data_quality_verdicts()),
+        (
+            DATA_PAPER,
+            schema_validator(DATA_PAPER),
+            data_paper_verdicts(),
+        ),
         (HISTOGRAM_CONTENT, histogram_content_validator(), content_verdicts()),
         (
             IC_CLASSES_CONTENT,
@@ -3896,8 +3984,9 @@ def verdicts() -> dict:
             "binary64 reading of the instance, as JSON.parse reads it, so an integer "
             "beyond 2^53 is checked as the nearest binary64. schema view means "
             "schema/definitions/view.schema.json#/$defs/view, dataQuality "
-            "schema/extensions/dataQuality.schema.json; any other schema is "
-            "a file in schema/views/. Only valid binds an implementation; errors "
+            "schema/extensions/dataQuality.schema.json, a path with a slash that "
+            "path under schema/; any other schema is a file in schema/views/. "
+            "Only valid binds an implementation; errors "
             "list each failing keyword and instance path jsonschema reports."
         ),
         "cases": cases,

@@ -1,7 +1,7 @@
 {
   "format": "nemar.kinds-verdicts.v1",
   "spec": "docs/views/generic-kinds.md",
-  "description": "Declarations and contents with jsonschema's verdicts, for a renderer that checks them without a JSON Schema engine, or with another one. Each verdict is on the binary64 reading of the instance, as JSON.parse reads it, so an integer beyond 2^53 is checked as the nearest binary64. schema view means schema/definitions/view.schema.json#/$defs/view, dataQuality schema/extensions/dataQuality.schema.json; any other schema is a file in schema/views/. Only valid binds an implementation; errors list each failing keyword and instance path jsonschema reports.",
+  "description": "Declarations and contents with jsonschema's verdicts, for a renderer that checks them without a JSON Schema engine, or with another one. Each verdict is on the binary64 reading of the instance, as JSON.parse reads it, so an integer beyond 2^53 is checked as the nearest binary64. schema view means schema/definitions/view.schema.json#/$defs/view, dataQuality schema/extensions/dataQuality.schema.json, a path with a slash that path under schema/; any other schema is a file in schema/views/. Only valid binds an implementation; errors list each failing keyword and instance path jsonschema reports.",
   "cases": [
     {
       "name": "envelope_unknown_kind",
@@ -1833,6 +1833,93 @@
       "valid": false,
       "errors": [
         ["maximum", "kind_version"]
+      ]
+    },
+    {
+      "name": "envelope_kind_version_true",
+      "covers": "kind_version true: a boolean is no integer, though Python reads True == 1.",
+      "schema": "view",
+      "instance": {
+        "key": "movie",
+        "kind": "acme.scalp-movie",
+        "kind_version": true,
+        "caption": "A kind no renderer knows.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "parameters": {
+          "fps": 30
+        },
+        "data": [
+          {
+            "role": "frames",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_frames.npy",
+            "format": "npy",
+            "size": 8,
+            "sha256": "21eaac327f0aecbb787b9a1ce54d68aa855cfc59ae5c9f4f6924cd61028bcd90"
+          },
+          {
+            "role": "labels",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_labels.tsv",
+            "format": "tsv",
+            "size": 78,
+            "sha256": "af77dc802bf58662721f76a369e4e6859dd95f46d07b854597ed1055e0f839e7"
+          },
+          {
+            "role": "broken",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_broken.tsv",
+            "format": "tsv",
+            "size": 88,
+            "sha256": "12a03501c6ca2c77a554f56f9750c087b1a1e19e6b5528bd8f303a09de1fe552"
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["type", "kind_version"]
+      ]
+    },
+    {
+      "name": "table_kind_version_true",
+      "covers": "A nemar.table view whose kind_version is true: not version 1.",
+      "schema": "view",
+      "instance": {
+        "key": "channels",
+        "kind": "nemar.table",
+        "kind_version": true,
+        "caption": "Channels and the floor's decisions.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "table",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+            "format": "tsv",
+            "size": 86,
+            "sha256": "0cad6be49122197e1babfc62712a4de6fabebe2e8884380808f58c7a006ec062",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "status",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["type", "kind_version"]
       ]
     },
     {
@@ -18954,6 +19041,76 @@
       "valid": false,
       "errors": [
         ["pattern", "recipes/nemar-ica/metrics/nemar-quality:percentBrainComponents/plugin/name"]
+      ]
+    },
+    {
+      "name": "doi_valid",
+      "covers": "A DOI as the producer serves it.",
+      "schema": "definitions/dataPaper.schema.json",
+      "instance": {
+        "doi": "10.1038/s41597-019-0027-4"
+      },
+      "valid": true,
+      "errors": []
+    },
+    {
+      "name": "doi_arabic_indic_digits",
+      "covers": "Arabic-Indic digits in the prefix: Python's \\d took them, JavaScript's does not; [0-9] in both.",
+      "schema": "definitions/dataPaper.schema.json",
+      "instance": {
+        "doi": "10.١٢٣٤/abc"
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "doi"]
+      ]
+    },
+    {
+      "name": "doi_byte_order_mark",
+      "covers": "U+FEFF in the suffix: \\S took it in Python and not in JavaScript.",
+      "schema": "definitions/dataPaper.schema.json",
+      "instance": {
+        "doi": "10.1234/a﻿b"
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "doi"]
+      ]
+    },
+    {
+      "name": "doi_information_separator",
+      "covers": "U+001C in the suffix: \\S took it in JavaScript and not in Python.",
+      "schema": "definitions/dataPaper.schema.json",
+      "instance": {
+        "doi": "10.1234/a\u001cb"
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "doi"]
+      ]
+    },
+    {
+      "name": "doi_space",
+      "covers": "A space in the suffix.",
+      "schema": "definitions/dataPaper.schema.json",
+      "instance": {
+        "doi": "10.1234/a b"
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "doi"]
+      ]
+    },
+    {
+      "name": "doi_trailing_newline",
+      "covers": "A final newline, which Python's bare $ let pass.",
+      "schema": "definitions/dataPaper.schema.json",
+      "instance": {
+        "doi": "10.1234/abc\n"
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "doi"]
       ]
     },
     {
