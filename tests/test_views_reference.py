@@ -215,6 +215,7 @@ FIELD_MUTATIONS = {
     "merge distance 1e-3 -> 0": ("MERGE_DISTANCE", 0.0),
     "merge distance 1e-3 -> 2e-3": ("MERGE_DISTANCE", 2e-3),
     "contours 6 -> 5": ("CONTOUR_COUNT", 5),
+    "contours on a flat field": ("is_flat", lambda values: False),
     "fewest sensors 8 -> 7": ("MIN_SENSORS", 7),
     "fewest sensors 8 -> 9": ("MIN_SENSORS", 9),
     "fewest sensors 8 -> 3 (the old minimum)": ("MIN_SENSORS", 3),
@@ -301,6 +302,17 @@ def test_color_axis_of_zero_is_zero():
         low, high = sf.color_axis((-0.0, 0.0), rule)
         assert (low, high) == (0.0, 0.0)
         assert math.copysign(1.0, low) == 1.0
+
+
+def test_a_flat_field_has_no_contours():
+    """Equal values ripple through the spline; the ripple draws no contour."""
+    case = FIELD_CASES["constant_values"]
+    assert len(set(case["sensors"]["value"])) == 1
+    limits = case["expected"]["limits"]["minmax"]
+    assert limits[0] < limits[1], "the interpolant ripples"
+    assert case["expected"]["contours"] == []
+    assert sf.is_flat(np.array([2.5, 2.5, 2.5]))
+    assert not sf.is_flat(np.array([2.5, 2.5, 2.5000000000000004]))
 
 
 def test_color_axis_rules():

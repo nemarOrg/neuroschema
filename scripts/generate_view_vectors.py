@@ -181,11 +181,13 @@ def eegprep_clim(z):
     return [float(limits["vmin"]), float(limits["vmax"])]
 
 
-def eegprep_contours(z):
+def eegprep_contours(z, flat):
+    """eegprep's levels, or none for a flat field: the spec draws no contours
+    when every interpolated value is equal (eegprep draws the spline's ripple)."""
     from eegprep.functions.sigprocfunc.topoplot import _contour_levels
 
     low, high = float(np.nanmin(z)), float(np.nanmax(z))
-    if not low < high:
+    if flat or not low < high:
         return []
     return [float(v) for v in _contour_levels(low, high, 6)]
 
@@ -408,7 +410,9 @@ def field_case_from(name, description, sensors, extra=None):
                 high + 0.05 * (high - low) + 0.0,
             ],
         },
-        "contours": eegprep_contours(zi),
+        "contours": eegprep_contours(
+            zi, len({means[kept.index(k)] for k in interpolated}) == 1
+        ),
     }
     if extra:
         case["expected"].update(extra(theta, radius, values, zi))
@@ -671,7 +675,8 @@ def field_cases():
         field_case(
             "constant_values",
             "montage_32 with every value 2.5: the biharmonic interpolant of equal "
-            "values is not constant (it has no constant term), as in EEGLAB.",
+            "values is not constant (it has no constant term), as in EEGLAB, and "
+            "the field is flat, so it has no contours.",
             labels,
             theta,
             radius,

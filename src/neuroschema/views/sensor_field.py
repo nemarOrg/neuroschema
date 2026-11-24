@@ -195,8 +195,21 @@ def color_axis(pair: tuple[float, float], rule: str) -> tuple[float, float]:
     return float(low) + 0.0, float(high) + 0.0
 
 
-def contour_levels(z: np.ndarray) -> tuple[float, ...]:
-    """``CONTOUR_COUNT`` levels evenly inside (min, max); none for a constant map."""
+def is_flat(values: np.ndarray) -> bool:
+    """A flat field: every interpolated sensor's value (merged values) is equal."""
+    return bool(values.min() == values.max())
+
+
+def contour_levels(z: np.ndarray, values: np.ndarray) -> tuple[float, ...]:
+    """``CONTOUR_COUNT`` levels evenly inside (min, max) of the cells ``z``.
+
+    None for a constant map, and none for a flat field (:func:`is_flat` of the
+    interpolated ``values``): the biharmonic interpolant of equal values is not
+    constant, because it has no constant term, so its ripple is the spline's and
+    contours would draw it as structure.
+    """
+    if is_flat(values):
+        return ()
     cells = z[~np.isnan(z)]
     low, high = float(cells.min()), float(cells.max())
     if not low < high:
@@ -297,7 +310,7 @@ def sensor_field(
         merged={int(k): tuple(m) for k, m in groups.items() if len(m) > 1},
         limits=lim,
         color_axis={name: color_axis(pair, name) for name, pair in lim.items()},
-        contours=contour_levels(z),
+        contours=contour_levels(z, v),
     )
 
 
