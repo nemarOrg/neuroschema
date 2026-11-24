@@ -10250,6 +10250,441 @@
       }
     },
     {
+      "name": "caps_role_cells",
+      "covers": "The layout a preset's labels come from holds 12 cells, every header column counted, over a cap on cells lowered to 10 that the values' 8 meet: cap_exceeded, the coordinate role held to the caps as every role is.",
+      "view": {
+        "key": "spectrum",
+        "kind": "acme.spectrum",
+        "kind_version": 1,
+        "caption": "Power spectral density per sensor, named by the layout.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "base": "nemar.lines",
+        "base_version": 1,
+        "parameters": {
+          "method": "welch"
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_numbered.tsv",
+            "format": "tsv",
+            "size": 36,
+            "sha256": "5244e58f9747329bf0dd4dbe0bc87b0c75694b8c069bbdc1615cb524928407b7",
+            "columns": [
+              {
+                "name": "freq_hz",
+                "type": "number",
+                "unit": "Hz"
+              },
+              {
+                "name": "ch1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "ch2",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "ch3",
+                "type": "number",
+                "unit": "dB"
+              }
+            ],
+            "dims": [
+              {
+                "name": "freq",
+                "axis": "rows",
+                "type": "number",
+                "unit": "Hz",
+                "coords": {
+                  "column": "freq_hz"
+                }
+              },
+              {
+                "name": "sensor",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 78,
+            "sha256": "af77dc802bf58662721f76a369e4e6859dd95f46d07b854597ed1055e0f839e7",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_numbered.tsv": {
+          "text": "freq_hz\tch1\tch2\tch3\n0\t1\t2\t3\n1\t2\t3\t4\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-18\t0.51\tEEG\nFp2\t18\t0.51\tEEG\nCz\t0\t0\tEEG\n"
+        }
+      },
+      "caps": {
+        "cells_per_role": 10
+      },
+      "model": {
+        "drawing": {
+          "via": "table",
+          "kind": null,
+          "kind_version": null
+        },
+        "refused": {
+          "kind": "nemar.lines",
+          "kind_version": 1,
+          "word": "cap_exceeded"
+        },
+        "downloads": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_numbered.tsv",
+            "size": 36,
+            "sha256": "5244e58f9747329bf0dd4dbe0bc87b0c75694b8c069bbdc1615cb524928407b7"
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "size": 78,
+            "sha256": "af77dc802bf58662721f76a369e4e6859dd95f46d07b854597ed1055e0f839e7"
+          }
+        ],
+        "model": {
+          "type": "fallback",
+          "tables": [
+            {
+              "role": "values",
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_numbered.tsv",
+              "header": ["freq_hz", "ch1", "ch2", "ch3"],
+              "rows": [
+                ["0", "1", "2", "3"],
+                ["1", "2", "3", "4"]
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "order_role_grammar_before_cap",
+      "covers": "The layout's file has a ragged row and is over the cap on cells: tsv_ragged.",
+      "view": {
+        "key": "spectrum",
+        "kind": "acme.spectrum",
+        "kind_version": 1,
+        "caption": "Power spectral density per sensor, named by the layout.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "base": "nemar.lines",
+        "base_version": 1,
+        "parameters": {
+          "method": "welch"
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_numbered.tsv",
+            "format": "tsv",
+            "size": 36,
+            "sha256": "5244e58f9747329bf0dd4dbe0bc87b0c75694b8c069bbdc1615cb524928407b7",
+            "columns": [
+              {
+                "name": "freq_hz",
+                "type": "number",
+                "unit": "Hz"
+              },
+              {
+                "name": "ch1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "ch2",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "ch3",
+                "type": "number",
+                "unit": "dB"
+              }
+            ],
+            "dims": [
+              {
+                "name": "freq",
+                "axis": "rows",
+                "type": "number",
+                "unit": "Hz",
+                "coords": {
+                  "column": "freq_hz"
+                }
+              },
+              {
+                "name": "sensor",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 84,
+            "sha256": "92fa077f587dfb68e1c95daa12518516e955c5265b50e912822481d52b2e2161",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_numbered.tsv": {
+          "text": "freq_hz\tch1\tch2\tch3\n0\t1\t2\t3\n1\t2\t3\t4\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-18\t0.51\tEEG\nFp2\t18\t0.51\tEEG\nCz\t0\t0\tEEG\nO1\t90\n"
+        }
+      },
+      "caps": {
+        "cells_per_role": 10
+      },
+      "model": {
+        "drawing": {
+          "via": "table",
+          "kind": null,
+          "kind_version": null
+        },
+        "refused": {
+          "kind": "nemar.lines",
+          "kind_version": 1,
+          "word": "tsv_ragged"
+        },
+        "downloads": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_numbered.tsv",
+            "size": 36,
+            "sha256": "5244e58f9747329bf0dd4dbe0bc87b0c75694b8c069bbdc1615cb524928407b7"
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "size": 84,
+            "sha256": "92fa077f587dfb68e1c95daa12518516e955c5265b50e912822481d52b2e2161"
+          }
+        ],
+        "model": {
+          "type": "fallback",
+          "tables": [
+            {
+              "role": "values",
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_numbered.tsv",
+              "header": ["freq_hz", "ch1", "ch2", "ch3"],
+              "rows": [
+                ["0", "1", "2", "3"],
+                ["1", "2", "3", "4"]
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "order_role_cap_before_column_missing",
+      "covers": "The layout is over the cap on cells and lacks the declared name: cap_exceeded.",
+      "view": {
+        "key": "spectrum",
+        "kind": "acme.spectrum",
+        "kind_version": 1,
+        "caption": "Power spectral density per sensor, named by the layout.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "base": "nemar.lines",
+        "base_version": 1,
+        "parameters": {
+          "method": "welch"
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_numbered.tsv",
+            "format": "tsv",
+            "size": 36,
+            "sha256": "5244e58f9747329bf0dd4dbe0bc87b0c75694b8c069bbdc1615cb524928407b7",
+            "columns": [
+              {
+                "name": "freq_hz",
+                "type": "number",
+                "unit": "Hz"
+              },
+              {
+                "name": "ch1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "ch2",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "ch3",
+                "type": "number",
+                "unit": "dB"
+              }
+            ],
+            "dims": [
+              {
+                "name": "freq",
+                "axis": "rows",
+                "type": "number",
+                "unit": "Hz",
+                "coords": {
+                  "column": "freq_hz"
+                }
+              },
+              {
+                "name": "sensor",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 79,
+            "sha256": "f7b21e5c528daee4cf459fabe20df512af210b47cfd4f0cea5a14c994add93f1",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_numbered.tsv": {
+          "text": "freq_hz\tch1\tch2\tch3\n0\t1\t2\t3\n1\t2\t3\t4\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "label\ttheta_deg\tradius\tsensor_type\nFp1\t-18\t0.51\tEEG\nFp2\t18\t0.51\tEEG\nCz\t0\t0\tEEG\n"
+        }
+      },
+      "caps": {
+        "cells_per_role": 10
+      },
+      "model": {
+        "drawing": {
+          "via": "table",
+          "kind": null,
+          "kind_version": null
+        },
+        "refused": {
+          "kind": "nemar.lines",
+          "kind_version": 1,
+          "word": "cap_exceeded"
+        },
+        "downloads": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_numbered.tsv",
+            "size": 36,
+            "sha256": "5244e58f9747329bf0dd4dbe0bc87b0c75694b8c069bbdc1615cb524928407b7"
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "size": 79,
+            "sha256": "f7b21e5c528daee4cf459fabe20df512af210b47cfd4f0cea5a14c994add93f1"
+          }
+        ],
+        "model": {
+          "type": "fallback",
+          "tables": [
+            {
+              "role": "values",
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_numbered.tsv",
+              "header": ["freq_hz", "ch1", "ch2", "ch3"],
+              "rows": [
+                ["0", "1", "2", "3"],
+                ["1", "2", "3", "4"]
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
       "name": "order_role_grammar_before_column_missing",
       "covers": "The layout's file has a ragged row, and its header lacks the declared name: tsv_ragged.",
       "view": {

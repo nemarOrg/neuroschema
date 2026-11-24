@@ -323,7 +323,11 @@ def _parse_column(tsv: Tsv, column: Mapping) -> tuple[list, list[str]]:
 
 
 def _role_labels(reader: _Reader, dim: Mapping, count: int) -> list[str]:
-    """Coordinates by position from a column of another role of the view."""
+    """Coordinates by position from a column of another role of the view.
+
+    The role is checked as every role is: its file (the cap on bytes, then
+    present, size, SHA-256), the TSV grammar and the cap on cells, counting
+    every header column, before its column is looked for."""
     role, name = dim["coords"]["role"], dim["coords"]["column"]
     other = reader.entry(role)
     if other is None or other.get("format") != "tsv":
@@ -332,6 +336,8 @@ def _role_labels(reader: _Reader, dim: Mapping, count: int) -> list[str]:
     if column is None:
         raise KindRefused("coords_unresolved", f"{dim['name']}: {role}.{name}")
     tsv = reader.tsv(other)
+    if len(tsv.rows) * len(tsv.header) > reader.caps["cells_per_role"]:
+        raise KindRefused("cap_exceeded", f"{role}: {len(tsv.rows)} rows")
     if name not in tsv.header:
         raise KindRefused("column_missing", f"{role}.{name}")
     _match(dim, column)

@@ -78,7 +78,8 @@ A dimension's coordinates label the rows or the columns of a role ([docs/views.m
   Its type is `string`.
 - `{"role": r, "column": c}`, on either: by position, the cells of column `c` of role `r` of the same view, top to bottom.
   Role `r` appears exactly once in the view's `data`, as a `tsv` file that declares `c` (`coords_unresolved`).
-  Its file is checked and read as above, `c` is in its header (`column_missing`), and it has one cell per position (`coords_length`): one per data row for a dimension along the rows, and one per value column for a dimension along the columns.
+  Its file is checked and read as above, and it is held to the caps as every role is: the cap on bytes before it is fetched, and at most `caps.cells_per_role` cells counting every header column (`cap_exceeded`), though only one column is read.
+  Then `c` is in its header (`column_missing`), and it has one cell per position (`coords_length`): one per data row for a dimension along the rows, and one per value column for a dimension along the columns.
 
 A coordinate column's declared `type` is its dimension's `type`, and its `unit`, when it declares one, is its dimension's `unit` (`coords_mismatch`).
 Each coordinate cell is read by the dimension's type, and its text is its label.
@@ -93,7 +94,7 @@ The value columns of a `nemar.lines` or `nemar.heatmap` role are its declared co
 Each has the type `number` or `integer` (`value_type`), and all of them have the same `unit` or all have none (`value_units_differ`); that unit is the unit of the values.
 A role with no data row or no value column is refused with `empty`.
 
-A role holds at most `caps.entries_per_dim` (1,024) data rows and 1,024 value columns, and at most `caps.cells_per_role` (262,144) cells, counting every declared column of every data row (`cap_exceeded`).
+A role holds at most `caps.entries_per_dim` (1,024) data rows and `caps.entries_per_dim` value columns, and at most `caps.cells_per_role` (262,144) cells, counting every declared column of every data row (`cap_exceeded`).
 
 ## Order of checks
 
@@ -108,7 +109,7 @@ For `nemar.table`, `nemar.lines` and `nemar.heatmap`, the checks run in this ord
    A table has only the cap on cells here.
 6. The cells, column by column and never row by row: the coordinate column first, then the value columns in declared order (for a table, the declared columns in declared order), each column from top to bottom.
 7. The kind's own rule (`x_not_increasing` for `nemar.lines`).
-8. Coordinates from another role, the rows' dimension before the columns'; for each, `coords_unresolved`, then that role's file and grammar, `column_missing`, `coords_mismatch`, `coords_length`, and its cells.
+8. Coordinates from another role, the rows' dimension before the columns'; for each, `coords_unresolved`, then that role's file (the cap on bytes, present, size, SHA-256) and grammar, the cap on its cells counting every header column, `column_missing`, `coords_mismatch`, `coords_length`, and its cells.
 
 For `nemar.histogram`, they run in this order: the cap on bytes and the file, `json_invalid`, `content_invalid`, `edges_not_increasing`, `counts_length`, then the cap on the total (`cap_exceeded`).
 The vectors hold one case for each pair of neighboring checks, with two faults, so a renderer that runs two checks in the other order gives the other word.

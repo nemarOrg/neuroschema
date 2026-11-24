@@ -137,15 +137,18 @@ def check_ic_maps(view: Mapping, files: Mapping[str, bytes], caps: Mapping) -> N
     """The components table names the values' components, in order.
 
     The values' component names are its declared columns (each one map); the
-    components table is read under the TSV grammar, and its ``component``
-    column, top to bottom, must be those names. A file that breaks the grammar
-    or lacks the column is refused with the generic kinds' word, and the view
-    is drawn by its base.
+    components table is read as a data file (the cap on bytes, the file, the
+    TSV grammar, then at most ``caps.cells_per_role`` cells counting every
+    header column), and its ``component`` column, top to bottom, must be those
+    names. A file that breaks a rule or lacks the column is refused with the
+    generic kinds' word, and the view is drawn by its base.
     """
     reader = _Reader(view, files, caps)
     names = [c["name"] for c in reader.entry("values")["columns"]]
     try:
         table = reader.tsv(reader.entry("components"))
+        if len(table.rows) * len(table.header) > caps["cells_per_role"]:
+            raise KindRefused("cap_exceeded", f"{len(table.rows)} rows")
         if "component" not in table.header:
             raise KindRefused("column_missing", "component")
     except KindRefused as exc:

@@ -96,7 +96,7 @@ The scalp maps of the independent components of one decomposition, over `nemar.s
 There are no parameters.
 A renderer that knows this kind draws one map per component with `nemar.sensor-field.v1` and `absmax` limits, because a component's polarity is arbitrary, and prints each component's text row beside its map: the cells of its row of `components`, each with its column's name and unit, as stored text.
 The text row of the component labeled L is the row of `components` whose `component` cell is L.
-The renderer reads the components table under the TSV grammar ([generic-kinds.md](generic-kinds.md#tsv), with its words), checks it has the column `component` (`column_missing`), and checks that its `component` cells, top to bottom, are the values' declared column names in declared order, compared as text (`components_mismatch`): one row per map, in the maps' order.
+The renderer reads the components table as a data file, in this order: its declared size within the cap on bytes, the file (present, size, SHA-256), the TSV grammar ([generic-kinds.md](generic-kinds.md#tsv), with its words), and at most `caps.cells_per_role` cells counting every header column (`cap_exceeded`); then it checks the table has the column `component` (`column_missing`), and that its `component` cells, top to bottom, are the values' declared column names in declared order, compared as text (`components_mismatch`): one row per map, in the maps' order.
 When any of these fails, it draws the maps by the base, without text rows, and keeps the word.
 A renderer that knows only `nemar.sensor-field` draws the maps and offers the components table for download.
 
@@ -171,6 +171,7 @@ The vectors give, for a window drawn, its state, its `first` sample and `count`,
 |---|---|---|---|
 | `sensors_mismatch` | `nemar.spectrum` | fallback | With a layout, the values' sensor columns are not the layout's names, in order. |
 | `tsv_encoding`, `tsv_line_endings`, `tsv_header_repeated`, `tsv_ragged` | `nemar.ic-maps` | base | The components table breaks the TSV grammar ([generic-kinds.md](generic-kinds.md#words)). |
+| `cap_exceeded` | `nemar.ic-maps` | base | The components table exceeds the registry's caps on bytes or cells. |
 | `column_missing` | `nemar.ic-maps` | base | The components table has no column `component`. |
 | `components_mismatch` | `nemar.ic-maps` | base | The components table's `component` cells are not the values' header names, in order. |
 | `content_invalid` | `nemar.ic-classes` | base | The content fails `content.nemar.ic-classes.v1` (it meets the histogram's). |

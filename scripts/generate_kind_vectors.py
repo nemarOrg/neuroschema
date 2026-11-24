@@ -1315,6 +1315,32 @@ def order_cases() -> list[Case]:
             {f"{PREFIX}_numbered.tsv": NUMBERED, LAYOUT_AT: ragged_layout},
         ),
         Case(
+            "caps_role_cells",
+            "The layout a preset's labels come from holds 12 cells, every header "
+            "column counted, over a cap on cells lowered to 10 that the values' 8 "
+            "meet: cap_exceeded, the coordinate role held to the caps as every "
+            "role is.",
+            preset_spectrum(),
+            {f"{PREFIX}_numbered.tsv": NUMBERED, LAYOUT_AT: LAYOUT},
+            caps={"cells_per_role": 10},
+        ),
+        Case(
+            "order_role_grammar_before_cap",
+            "The layout's file has a ragged row and is over the cap on cells: "
+            "tsv_ragged.",
+            preset_spectrum(ragged_layout),
+            {f"{PREFIX}_numbered.tsv": NUMBERED, LAYOUT_AT: ragged_layout},
+            caps={"cells_per_role": 10},
+        ),
+        Case(
+            "order_role_cap_before_column_missing",
+            "The layout is over the cap on cells and lacks the declared name: "
+            "cap_exceeded.",
+            preset_spectrum(unnamed),
+            {f"{PREFIX}_numbered.tsv": NUMBERED, LAYOUT_AT: unnamed},
+            caps={"cells_per_role": 10},
+        ),
+        Case(
             "order_role_grammar_before_column_missing",
             "The layout's file has a ragged row, and its header lacks the "
             "declared name: tsv_ragged.",
@@ -2869,6 +2895,29 @@ def ic_maps_check_cases() -> list[Case]:
     ]:
         view = _with_file(maps, "components", data)
         out.append(Case(name, covers, view, {_location(view, "components"): data}))
+    table = components_table(IC_COMPONENTS)
+    view = _with_file(maps, "components", table)
+    out.append(
+        Case(
+            "ic_maps_components_too_many_cells",
+            "A components table over a cap on cells lowered to 20, every header "
+            "column counted: cap_exceeded, drawn by its base.",
+            view,
+            {_location(view, "components"): table},
+            caps={"cells_per_role": 20},
+        )
+    )
+    unnamed = components_table(IC_COMPONENTS, header="name")
+    view = _with_file(maps, "components", unnamed)
+    out.append(
+        Case(
+            "ic_maps_order_cap_before_column",
+            "Over the cap on cells and no column component: cap_exceeded.",
+            view,
+            {_location(view, "components"): unnamed},
+            caps={"cells_per_role": 20},
+        )
+    )
     view = _with_file(maps, "components", components_table(IC_COMPONENTS))
     tampered = components_table(IC_COMPONENTS).replace(b"0.9", b"0.8", 1)
     out.append(
@@ -3460,7 +3509,7 @@ def preset_checks() -> dict:
         *ic_maps_check_cases(),
         *ic_classes_check_cases(),
     ]:
-        expected = check_preset(case.view, case.files, REGISTRY)
+        expected = check_preset(case.view, case.files, case.registry())
         cases.append(_header(case) | {"expected": expected})
     for name, covers, view, files, store, caps in signal_window_check_cases():
         registry = REGISTRY | {"caps": REGISTRY["caps"] | caps}

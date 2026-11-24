@@ -1924,6 +1924,362 @@
       }
     },
     {
+      "name": "ic_maps_components_too_many_cells",
+      "covers": "A components table over a cap on cells lowered to 20, every header column counted: cap_exceeded, drawn by its base.",
+      "view": {
+        "key": "icmaps",
+        "kind": "nemar.ic-maps",
+        "kind_version": 1,
+        "base": "nemar.sensor-field",
+        "base_version": 1,
+        "caption": "Scalp maps of the independent components, each with its share of the variance and its ICLabel probabilities.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
+            "format": "tsv",
+            "size": 836,
+            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number"
+              },
+              {
+                "name": "IC002",
+                "type": "number"
+              },
+              {
+                "name": "IC003",
+                "type": "number"
+              },
+              {
+                "name": "IC004",
+                "type": "number"
+              },
+              {
+                "name": "IC005",
+                "type": "number"
+              },
+              {
+                "name": "IC006",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 1094,
+            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              },
+              {
+                "name": "sensor_type",
+                "type": "string"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured"
+          },
+          {
+            "role": "components",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
+            "format": "tsv",
+            "size": 164,
+            "sha256": "e73050f7277b7eb875825f9c039eb11ddc520f18b286d1535ed57bdf6c381911",
+            "columns": [
+              {
+                "name": "component",
+                "type": "string"
+              },
+              {
+                "name": "variance_pct",
+                "type": "number",
+                "unit": "%"
+              },
+              {
+                "name": "brain",
+                "type": "number"
+              },
+              {
+                "name": "muscle",
+                "type": "number"
+              },
+              {
+                "name": "eye",
+                "type": "number"
+              },
+              {
+                "name": "heart",
+                "type": "number"
+              },
+              {
+                "name": "line_noise",
+                "type": "number"
+              },
+              {
+                "name": "channel_noise",
+                "type": "number"
+              },
+              {
+                "name": "other",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "component",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "component"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
+          "text": "component\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.9\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\n"
+        }
+      },
+      "caps": {
+        "cells_per_role": 20
+      },
+      "expected": {
+        "word": "cap_exceeded",
+        "outcome": "base"
+      }
+    },
+    {
+      "name": "ic_maps_order_cap_before_column",
+      "covers": "Over the cap on cells and no column component: cap_exceeded.",
+      "view": {
+        "key": "icmaps",
+        "kind": "nemar.ic-maps",
+        "kind_version": 1,
+        "base": "nemar.sensor-field",
+        "base_version": 1,
+        "caption": "Scalp maps of the independent components, each with its share of the variance and its ICLabel probabilities.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
+            "format": "tsv",
+            "size": 836,
+            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number"
+              },
+              {
+                "name": "IC002",
+                "type": "number"
+              },
+              {
+                "name": "IC003",
+                "type": "number"
+              },
+              {
+                "name": "IC004",
+                "type": "number"
+              },
+              {
+                "name": "IC005",
+                "type": "number"
+              },
+              {
+                "name": "IC006",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 1094,
+            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              },
+              {
+                "name": "sensor_type",
+                "type": "string"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured"
+          },
+          {
+            "role": "components",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
+            "format": "tsv",
+            "size": 159,
+            "sha256": "1a6546493bf2b22dd9f955660a7e2cef43dfccba85b221a136aaa5c450971c58",
+            "columns": [
+              {
+                "name": "component",
+                "type": "string"
+              },
+              {
+                "name": "variance_pct",
+                "type": "number",
+                "unit": "%"
+              },
+              {
+                "name": "brain",
+                "type": "number"
+              },
+              {
+                "name": "muscle",
+                "type": "number"
+              },
+              {
+                "name": "eye",
+                "type": "number"
+              },
+              {
+                "name": "heart",
+                "type": "number"
+              },
+              {
+                "name": "line_noise",
+                "type": "number"
+              },
+              {
+                "name": "channel_noise",
+                "type": "number"
+              },
+              {
+                "name": "other",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "component",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "component"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
+          "text": "name\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.9\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\n"
+        }
+      },
+      "caps": {
+        "cells_per_role": 20
+      },
+      "expected": {
+        "word": "cap_exceeded",
+        "outcome": "base"
+      }
+    },
+    {
       "name": "ic_maps_digest",
       "covers": "The components file is not the one recorded.",
       "view": {
