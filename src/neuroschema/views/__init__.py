@@ -33,6 +33,7 @@ from neuroschema.views.registry import (
     known_kinds,
     load_registry,
     meets_role_contract,
+    optional_roles,
     role_schemas,
 )
 
@@ -55,6 +56,7 @@ __all__ = [
     "load_registry",
     "locate_bin",
     "meets_role_contract",
+    "optional_roles",
     "parse_declaration",
     "read_json",
     "read_tsv",

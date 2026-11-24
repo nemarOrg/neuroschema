@@ -483,6 +483,22 @@ def biosemi_positions(source: Source, source_file: Path, mne_positions: dict):
     return {k: v[2] for k, v in ours.items()}, fiducials, corrections
 
 
+def montage_center(name: str, electrodes: list) -> list[float]:
+    """The montage's own center: the sphere nemar.sensor-layout.v1 fits to all
+    its electrodes (sensor_layout.sphere_center), rounded as the positions are.
+    Template positions taken from the montage are projected about this center,
+    never about a sphere fitted to the few a recording has."""
+    import numpy as np
+
+    from neuroschema.views.sensor_layout import SensorLayoutRefusal, sphere_center
+
+    try:
+        fit = sphere_center(np.array([e[1:4] for e in electrodes], dtype=float))
+    except SensorLayoutRefusal as exc:
+        fail(f"{name}: no center for the full montage ({exc})")
+    return [meters(v, 1.0) for v in fit.center]
+
+
 def build_montage(source: Source) -> tuple[str, dict]:
     """One montage file's text and its PROVENANCE.json entry."""
     import mne
@@ -541,6 +557,7 @@ def build_montage(source: Source) -> tuple[str, dict]:
         "orientation": "RAS",
         "unit": "m",
         "fiducials": fiducials,
+        "center": montage_center(source.name, electrodes),
         "electrodes": electrodes,
     }
     text = render(document) + "\n"

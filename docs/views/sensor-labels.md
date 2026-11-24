@@ -14,7 +14,7 @@ and [`views/montages/`](../../views/montages/) holds the montages, with their or
 A consumer that draws sensor positions (the viewer's live scalp map, and a `nemar.sensor-field` view without a layout role) chooses positions in this order:
 
 1. Measured positions in a frame that `nemar.sensor-layout.v1` knows are used as they are (`position_source` `measured`).
-2. When the recording has no positions, declares no frame, or declares a frame that `nemar.sensor-layout.v1` does not know, the consumer infers positions from the channel names with this algorithm.
+2. When the recording has no positions, declares no frame, declares a frame that `nemar.sensor-layout.v1` does not know (`frame_unknown`), or has measured positions that `nemar.sensor-layout.v1` refuses as too flat or too few to locate the head's center (`positions_flat`), the consumer infers positions from the channel names with this algorithm.
    The caption says that the positions are template positions matched by name, names the montage, and says why measured positions were not used.
 3. When the algorithm refuses, the consumer draws no map and shows the reason.
 
@@ -61,7 +61,9 @@ Each file holds the positions MNE-Python 1.13.2 returns from `make_standard_mont
   The generator instead reads the angles in MNE-Python's `biosemi*.txt` as written and places them with MNE-Python's own spherical conversion.
   An electrode whose angles are integers sits exactly where MNE-Python puts it; `PROVENANCE.json` lists every other electrode (`angle_corrections`) with its angles as written, MNE-Python's integer angles and the distance between the two positions.
 
-A montage file is `{"format": "nemar.montage.v1", "name", "family", "orientation": "RAS", "unit": "m", "fiducials": {"nasion", "lpa", "rpa"}, "electrodes": [[label, x, y, z], ...]}`, with the electrodes in MNE-Python's order.
+A montage file is `{"format": "nemar.montage.v1", "name", "family", "orientation": "RAS", "unit": "m", "fiducials": {"nasion", "lpa", "rpa"}, "center": [x, y, z], "electrodes": [[label, x, y, z], ...]}`, with the electrodes in MNE-Python's order.
+`center` is the montage's own center: the sphere `nemar.sensor-layout.v1` fits to all its electrodes, rounded to 9 decimal places as the positions are.
+Positions placed from the montage are projected about it, never about a sphere fitted to the few a recording has (see [`sensor-layout.md`](sensor-layout.md), step 3).
 A montage label's key is the label normalized as a channel name is (steps 1 to 7 below); no two labels of one montage share a key.
 
 ## Normalizing a name

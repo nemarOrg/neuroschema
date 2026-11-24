@@ -84,6 +84,10 @@ def _admitted(node: Mapping) -> list:
     raise ValueError(f"a kind schema's role must be a const or an enum: {node}")
 
 
+def _kind_schema(entry: Mapping) -> dict:
+    return json.loads((REPO_ROOT / entry["schema"]).read_text(encoding="utf-8"))
+
+
 def role_schemas(entry: Mapping) -> dict[str, dict]:
     """Each role a registered kind's schema admits, with the subschema for it.
 
@@ -92,8 +96,7 @@ def role_schemas(entry: Mapping) -> dict[str, dict]:
     admits that role. The kind's schema, not the registry's ``roles``, is the
     source: the registry mirrors it, and a test holds the two together.
     """
-    schema = json.loads((REPO_ROOT / entry["schema"]).read_text(encoding="utf-8"))
-    items = schema["properties"]["data"]["items"]
+    items = _kind_schema(entry)["properties"]["data"]["items"]
     branches = items.get("oneOf") or items.get("anyOf") or [items]
     roles: dict[str, dict] = {}
     for branch in branches:
@@ -104,28 +107,46 @@ def role_schemas(entry: Mapping) -> dict[str, dict]:
     return roles
 
 
+def optional_roles(entry: Mapping) -> set[str]:
+    """The roles a registered kind's schema marks optional.
+
+    A kind marks a role optional with a ``contains`` clause on ``data`` (or in
+    ``data.allOf``) whose subschema's ``role`` is that role and whose
+    ``minContains`` is 0. Every other role the kind admits is required.
+    """
+    data = _kind_schema(entry)["properties"]["data"]
+    optional: set[str] = set()
+    for clause in [data, *data.get("allOf", [])]:
+        if "contains" in clause and clause.get("minContains") == 0:
+            optional.update(_admitted(clause["contains"]["properties"]["role"]))
+    return optional
+
+
 def meets_role_contract(view: Mapping, entry: Mapping) -> bool:
     """Whether a view's stored data meet a registered kind's role contract.
 
-    Every role the kind's schema admits appears exactly once in the view's
-    ``data``, and that entry is valid under the kind schema's subschema for the
-    role (:func:`role_schemas`), so its format, its dimensions and every field
-    the kind requires come from the one schema. Roles the kind does not admit
-    are allowed; its renderer ignores them, and the renderer offers their files
-    for download.
+    Every role the kind's schema requires appears exactly once in the view's
+    ``data``, every role it marks optional (:func:`optional_roles`) at most
+    once, and the view's entries in the roles the kind admits, in their order,
+    are valid under the kind schema's ``data`` subschema. So each entry meets
+    the subschema for its role (:func:`role_schemas`), and the format, the
+    dimensions, every field the kind requires and every rule across roles come
+    from the one schema. Roles the kind does not admit are allowed; its
+    renderer ignores them, and the renderer offers their files for download.
     """
     data = view.get("data")
     if not isinstance(data, list):
         return False
-    path = REPO_ROOT / entry["schema"]
-    for role, subschema in role_schemas(entry).items():
-        files = [f for f in data if isinstance(f, Mapping) and f.get("role") == role]
-        if len(files) != 1:
+    roles = role_schemas(entry)
+    optional = optional_roles(entry)
+    files = [f for f in data if isinstance(f, Mapping) and f.get("role") in roles]
+    for role in roles:
+        count = sum(1 for f in files if f.get("role") == role)
+        if count > 1 or (count == 0 and role not in optional):
             return False
-        _schema, resolver = load_schema(path)
-        if not Draft202012Validator(subschema, resolver=resolver).is_valid(files[0]):
-            return False
-    return True
+    schema, resolver = load_schema(REPO_ROOT / entry["schema"])
+    validator = Draft202012Validator(schema["properties"]["data"], resolver=resolver)
+    return validator.is_valid(files)
 
 
 def draw_as(view: Mapping, registry: Mapping | None = None) -> Drawing:

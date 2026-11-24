@@ -21,6 +21,23 @@ dev = [
     "ruff>=0.8",
     "coverage>=7.0",
 ]
+# The Python reference renderer for the view algorithms (neuroschema.views.sensor_field,
+# neuroschema.views.sensor_layout): numpy only.
+views = [
+    "numpy>=1.26",
+]
+
+[dependency-groups]
+# Generators of reference data, run with `uv run --group vectors`; never a
+# runtime dependency. mne is pinned exactly: scripts/generate_montages.py
+# refuses any other version. eegprep, at the reference commit, is the reference
+# for scripts/generate_view_vectors.py, and needs Python 3.12 or later.
+vectors = [
+    "mne==1.13.2",
+    "eegprep @ git+https://github.com/sccn/eegprep@edf694c8344b9c4c68672eac3acf9a819f1462a8 ; python_full_version >= '3.12'",
+    "numpy>=2.1",
+    "scipy>=1.14.1",
+]
 
 [tool.ruff]
 target-version = "py311"
@@ -32,11 +49,3 @@ select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--tb=short -q"
-
-[dependency-groups]
-# Generators of reference data, run with `uv run --group vectors`; never a
-# runtime dependency. mne is pinned exactly: scripts/generate_montages.py
-# refuses any other version.
-vectors = [
-    "mne==1.13.2",
-]
