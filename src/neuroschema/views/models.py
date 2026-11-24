@@ -759,7 +759,9 @@ def sensor_field_model(
 
     The placement runs in order: a sensor role in a frame no scalp map is
     drawn in (``frame_not_scalp``); no row to draw (``no_eeg_sensors``: rows
-    typed and none EEG, or measured positions with no row typed EEG); for
+    typed and none EEG, or measured positions with no row typed EEG);
+    template positions whose rows are not all their montage's electrodes
+    (``template_name_unknown``); for
     positions, the projection, whose refusal (``frame_unknown``,
     ``positions_flat``) places the sensors by name instead when every drawn
     row is typed EEG, and is every map's word otherwise; and for names,
@@ -769,7 +771,12 @@ def sensor_field_model(
     drawn map's (``flat_field``). The projection and the
     maps need numpy (the ``views`` extra).
     """
-    from neuroschema.views.sensor_labels import infer_positions
+    from neuroschema.views.sensor_labels import (
+        MONTAGE_ORDER,
+        infer_positions,
+        label_key,
+        load_montages,
+    )
     from neuroschema.views.sensor_layout import SensorLayoutRefusal
 
     count = len(sensors.labels)
@@ -793,10 +800,20 @@ def sensor_field_model(
     }
     places = dict.fromkeys(("electrodes", "theta_deg", "radius", "x", "y", "z"))
     layout = None  # theta and radius of every row, for the maps
+    montage = entry.get("montage")
     if entry.get("coordinate_system") in NOT_SCALP_FRAMES:
         placement["word"] = "frame_not_scalp"
     elif not rows:
         placement["word"] = "no_eeg_sensors"
+    elif (
+        entry.get("position_source") == "template"
+        and montage in MONTAGE_ORDER
+        and not set(map(label_key, sensors.labels))
+        <= set(load_montages(names=(montage,))[0].positions)
+    ):
+        # Template positions are a montage's: every row names one of its
+        # electrodes, compared as sensor-labels compares names.
+        placement["word"] = "template_name_unknown"
     elif sensors.role == "layout":
         theta, radius = sensors.places["theta_deg"], sensors.places["radius"]
         places.update(theta_deg=list(theta), radius=list(radius))
@@ -836,6 +853,14 @@ def sensor_field_model(
             layout = _projected(placed, "n/a", inference.montage, rows, count)
     if placement["word"] is not None:
         drawn = [False] * count
+    else:
+        # A row with no place (an n/a cell, or a position the projection gives
+        # none) is not drawn.
+        drawn = [
+            drawn[k] and math.isfinite(layout[0][k]) and math.isfinite(layout[1][k])
+            for k in range(count)
+        ]
+        rows = [k for k in range(count) if drawn[k]]
     items = []
     for label, values, texts in maps:
         word, notes = placement["word"], []

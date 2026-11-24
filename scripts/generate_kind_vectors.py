@@ -2044,6 +2044,54 @@ def sensor_field_cases() -> list[Case]:
                 positions={"coordinate_system": "Other"},
             ),
         )
+    in_1005 = {
+        "coordinate_system": "n/a",
+        "position_source": "template",
+        "montage": "standard_1005",
+    }
+    case(
+        "template_names_not_in_montage",
+        "The real ECoG implant's contacts (named 1 to 47) declared template "
+        "positions of standard_1005: their names are none of its electrodes, so "
+        "template_name_unknown.",
+        field_view(
+            mixing(len(contacts)),
+            implant_file(None),
+            "positions",
+            sensor_columns=mm_columns,
+            positions=in_1005,
+        ),
+    )
+    case(
+        "template_layout_name_unknown",
+        "A template layout of standard_1005 whose last row is named X1, no "
+        "electrode of it: template_name_unknown.",
+        field_view(
+            values,
+            chanlocs([*TEN_TWENTY[:18], ("X1", "162", "0.511")], types=None),
+            layout=in_1005,
+        ),
+    )
+    case(
+        "template_strip_named_like_the_montage",
+        "The ECoG strip named F1 to F8, C1 to C6, Fz and Cz, declared template "
+        "positions of standard_1005: every name is an electrode of it, so the "
+        "check passes and the positions are projected and drawn. Template "
+        "positions are checked by their names, never by their places: the "
+        "writer's declaration is believed.",
+        field_view(
+            mixing(16),
+            text_tsv(
+                ["name", "x", "y", "z"],
+                [
+                    [n, str(x / 1000), str(y / 1000), str(z / 1000)]
+                    for n, x, y, z in strip
+                ],
+            ),
+            "positions",
+            positions=in_1005,
+        ),
+    )
     unknown_cap = {
         "coordinate_system": "n/a",
         "position_source": "template",
@@ -2123,13 +2171,22 @@ def sensor_field_cases() -> list[Case]:
             named_values(NAMES_1020[:7]), NAMED_COLUMNS, [NAME_ROWS, MAPS_HEADER]
         ),
     )
+
     # Per-map words and notes.
-    flat = mixing(at=lambda k, m: "1.5" if m == 1 else pattern(k, m))
+    def flat_or_near(k, m):
+        if m == 1:
+            return "1.5"
+        if m == 2:
+            return "1.5000000001" if k == 0 else "1.5"
+        return pattern(k, m)
+
     case(
         "sensor_field_flat_map",
-        "Three maps; every sensor of the second has the value 1.5: a flat field, "
-        "drawn at 1.5 with the note flat_field, and the others interpolated.",
-        field_view(flat, chanlocs()),
+        "Three maps: every sensor of the second has the value 1.5, a flat "
+        "field drawn at 1.5 with the note flat_field; the third differs by "
+        "1e-10 at one sensor, near flat (within 1e-9 of 1.5), drawn as one color "
+        "at its mean with the note near_flat; the first is interpolated.",
+        field_view(mixing(at=flat_or_near), chanlocs()),
     )
     overflow = mixing(at=lambda k, m: "1e308" if m == 1 and k % 2 else pattern(k, m))
     case(

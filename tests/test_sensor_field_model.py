@@ -178,17 +178,22 @@ def test_every_word_has_a_vector():
 
 
 def test_notes_table_matches_the_reference_and_the_vectors():
-    """flat_field is the one note; a drawn map of the model vectors carries it."""
-    assert _doc_table("Note") == {sf.FLAT_FIELD}
+    """flat_field and near_flat are the notes; maps of the model vectors carry
+    each."""
+    assert _doc_table("Note") == {sf.FLAT_FIELD, sf.NEAR_FLAT_NOTE}
     notes = {
         note
         for case in DRAWN
         for item in case["model"]["model"]["maps"]["items"]
         for note in item["notes"]
     }
-    assert notes == {sf.FLAT_FIELD}
+    assert notes == {sf.FLAT_FIELD, sf.NEAR_FLAT_NOTE}
     items = BY_NAME["sensor_field_flat_map"]["model"]["model"]["maps"]["items"]
-    assert [item["notes"] for item in items] == [[], [sf.FLAT_FIELD], []]
+    assert [item["notes"] for item in items] == [
+        [],
+        [sf.FLAT_FIELD],
+        [sf.NEAR_FLAT_NOTE],
+    ]
 
 
 GENERIC = ROOT / "docs" / "views" / "generic-kinds.md"
@@ -694,3 +699,24 @@ def test_untyped_rows_are_drawn_only_from_templates_and_names():
         assert placement["source"] != "names", name
     typed = BY_NAME["template_unknown_montage_typed_eeg"]["model"]["model"]
     assert typed["placement"]["source"] == "names"
+
+
+def test_template_positions_name_their_montage():
+    """Every row of a template role names an electrode of its montage, compared
+    as sensor-labels compares names; the check is by name, never by place."""
+    for name in ("template_names_not_in_montage", "template_layout_name_unknown"):
+        placement = BY_NAME[name]["model"]["model"]["placement"]
+        assert placement["word"] == "template_name_unknown", name
+    boundary = BY_NAME["template_strip_named_like_the_montage"]["model"]["model"]
+    assert boundary["placement"]["word"] is None
+    assert all(boundary["sensors"]["drawn"])
+
+
+def test_a_row_with_no_place_is_not_drawn():
+    """An n/a place cell, or a position the projection gives no layout."""
+    for name, row in (
+        ("sensor_field_layout_no_place", 4),
+        ("sensor_field_positions_no_place", 11),
+    ):
+        drawn = BY_NAME[name]["model"]["model"]["sensors"]["drawn"]
+        assert drawn[row] is False and drawn.count(False) >= 1, name

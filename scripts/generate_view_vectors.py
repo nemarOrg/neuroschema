@@ -55,6 +55,7 @@ CHECK_SCALARS = 1e-12
 
 GRID = 67
 MERGE = 1e-3
+NEAR_FLAT = 1e-9  # a range at most this share of the magnitude is near flat
 FEWEST = 8  # a map needs 8 interpolated sensors, as sensor-labels needs 8 channels
 
 # The BIDS frame table, from the coordinate-systems appendix (BIDS_SPEC).
@@ -405,12 +406,10 @@ def merged_inputs(theta, radius, values):
         else:
             groups.append([i])
     kept = [g[0] for g in groups]
-    means = []
-    for group in groups:
-        total = 0.0
-        for i in group:
-            total += float(values[i])
-        means.append(total / len(group))
+    # A merged value is the members' mean as the spec computes a mean: the
+    # first plus the mean of the differences from it, so equal members give
+    # their value exactly and huge ones do not overflow.
+    means = [deviation_center([values[i] for i in group]) for group in groups]
     return usable, groups, kept, means
 
 
@@ -448,12 +447,24 @@ def field_case_from(name, description, sensors, extra=None):
     m = deviation_center([means[kept.index(k)] for k in interpolated])
     deviations = [mean - m for mean in means]
     finite = math.isfinite(m) and all(map(math.isfinite, deviations))
+    # Near flat: the usable values' range at most 1e-9 of their magnitude.
+    # The spec draws the mean in every cell; eegprep is given zeros, for the
+    # grid alone.
+    spread = float(max(values[i] for i in usable)) - float(
+        min(values[i] for i in usable)
+    )
+    magnitude = float(max(abs(values[i]) for i in usable))
+    near_flat = 0 < spread <= NEAR_FLAT * magnitude
+    finite = finite and not near_flat
     # Deviations that overflow make the weights and cells not finite; eegprep
     # drops a value that is not finite, so it draws zeros, for the grid alone.
     zi, plotrad, gx, gy = eegprep_topoplot(
         theta[kept], radius[kept], deviations if finite else [0.0] * len(kept), option
     )
-    zi = m + zi if finite else np.full_like(zi, np.nan)
+    if near_flat:
+        zi = np.where(np.isnan(zi), np.nan, m)
+    else:
+        zi = m + zi if finite else np.full_like(zi, np.nan)
     if plotrad != plotrad_all:
         sys.exit(f"{name}: eegprep's plotrad {plotrad!r} is not {plotrad_all!r}")
     inside_head = np.sqrt(gx[:, None] * gx[:, None] + gy[None, :] * gy[None, :]) <= 0.5
@@ -490,7 +501,8 @@ def field_case_from(name, description, sensors, extra=None):
         },
         "contours": eegprep_contours(zi),
         "head": eeglab_head(plotrad),
-        "notes": ["flat_field"] if flat else [],
+        "notes": ["flat_field"] if flat else ["near_flat"] if near_flat else [],
+        "value_range": float(spread) + 0.0,
     }
     if extra:
         case["expected"].update(extra(theta, radius, values, zi))
@@ -924,6 +936,27 @@ def field_cases():
             ("FRONT", 0.0, 1.2, 9.0),
         ),
         (
+            "flat_merge_group",
+            "montage_32 at 0.1 and two more sensors at row 5's place: a merge "
+            "group of three whose mean, computed as the spec computes one, is "
+            "0.1 exactly (summed, then divided, it is not), so the map is 0.1 "
+            "in every cell, with the note flat_field.",
+            [*theta, theta[5], theta[5]],
+            [*radius, radius[5], radius[5]],
+            np.full(34, 0.1),
+            None,
+        ),
+        (
+            "flat_huge_duplicate_pair",
+            "montage_32 at 1.5e308 and a second sensor at row 4's place: the "
+            "pair's mean is 1.5e308 (summed, it would overflow), so the map is "
+            "1.5e308 in every cell, with the note flat_field.",
+            [*theta, theta[4]],
+            [*radius, radius[4]],
+            np.full(33, 1.5e308),
+            None,
+        ),
+        (
             "flat_minus_zero",
             "montage_32 at 0, row 0 at -0: equal values (-0 equals 0), so the note "
             "flat_field, and every cell is 0, never -0.",
@@ -935,17 +968,28 @@ def field_cases():
         (
             "near_flat_one_ulp",
             "montage_32 at 30 and the next binary64 above 30, alternating: not "
-            "equal, so no note; the map is its mean plus a ripple a few ulps wide, "
-            "compared within the magnitude tolerance.",
+            "equal, but within 1e-9 of their magnitude, so near flat: one color "
+            "at the mean, no contours, the note near_flat.",
             theta,
             radius,
             np.where(np.arange(32) % 2 == 0, np.nextafter(30.0, 31.0), 30.0),
             None,
         ),
         (
+            "near_flat_above_threshold",
+            "montage_32 at 30 dB but row 0 at 30 + 4e-8: a range of 1.3e-9 of "
+            "the magnitude, above the near-flat bound 1e-9, so the map is drawn "
+            "as any other, with no note.",
+            theta,
+            radius,
+            np.where(np.arange(32) == 0, 30.0 + 4e-8, 30.0),
+            None,
+        ),
+        (
             "near_flat_one_nano_db",
-            "montage_32 at 30 dB but row 0 at 30 + 1e-9: not flat, so no note, "
-            "and the map is the mean plus the one sensor's bump.",
+            "montage_32 at 30 dB but row 0 at 30 + 1e-9: a range of 3.3e-11 of "
+            "the magnitude, near flat, so one color at the mean, with the note "
+            "near_flat.",
             theta,
             radius,
             np.where(np.arange(32) == 0, 30.0 + 1e-9, 30.0),
@@ -953,6 +997,7 @@ def field_cases():
         ),
     ]:
         labels_k = list(labels)
+        labels_k += [f"DUP{i + 1}" for i in range(len(case_theta) - len(labels_k))]
         if extra_rows:
             extra_name, extra_theta, extra_radius, extra_value = extra_rows
             labels_k.append(extra_name)
@@ -1174,7 +1219,9 @@ def sensor_field_vectors(ref):
             "group, the kept sensor first. The expected maps are eegprep's topoplot "
             "of the merged, finite sensors' deviations from their mean, plus the "
             "mean; a flat field (every usable value equal) carries the note "
-            "flat_field. "
+            "flat_field, and a near-flat one (a range at most 1e-9 of the "
+            "magnitude) is its mean in every cell, with the note near_flat; "
+            "value_range is the usable values' max - min. "
             "A case whose sensors give x, y and z "
             "instead of theta_deg and radius places them by 3D positions in the "
             "frame coordinate_system names (or n/a with a montage): "
@@ -1759,7 +1806,7 @@ def differences(new, old, path="", scale=None, extent=None):
             finite = [v for row in grid for v in row if v is not None]
             # The map's range, and a share of its magnitude: a near-flat map's
             # cells are its mean plus a ripple a few ulps wide.
-            magnitude = max(1.0, *(abs(v) for v in finite))
+            magnitude = max(abs(v) for v in finite)
             local = max(finite) - min(finite) + 1e-3 * magnitude
         for key in new:
             if key in SCALED_KEYS or scale is not None:

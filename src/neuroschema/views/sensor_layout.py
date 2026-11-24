@@ -302,7 +302,8 @@ def sensor_layout(
     the sphere fitted to every row with a finite position (:func:`sphere_center`),
     so the rows should be all of the recording's measured positions. Raises
     :class:`SensorLayoutRefusal` with ``frame_unknown`` or ``positions_flat``,
-    after which a renderer places the sensors by name.
+    after which a renderer places the sensors by name only when every drawn
+    row is typed EEG.
     """
     xyz = np.asarray(xyz, dtype=np.float64)
     if xyz.ndim != 2 or xyz.shape[1] != 3:

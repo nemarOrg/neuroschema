@@ -80,7 +80,7 @@ def field_mismatches(case: dict) -> list[str]:
         problems.append("mask")
     cells = z[~np.isnan(z)]
     low, high = cells.min(), cells.max()
-    magnitude = max(1.0, float(np.abs(cells).max()))
+    magnitude = float(np.abs(cells).max())
     bound = (
         TOL["cells_relative_to_range"] * (high - low)
         + TOL["cells_relative_to_magnitude"] * magnitude
@@ -108,6 +108,8 @@ def field_mismatches(case: dict) -> list[str]:
         problems.append("contours")
     if list(drawn.notes) != expected["notes"]:
         problems.append("notes")
+    if not close(drawn.value_range, expected["value_range"], geometry):
+        problems.append("value range")
     head = expected["head"]
     if not close(drawn.head.radius, head["radius"], geometry):
         problems.append("head radius")
@@ -378,31 +380,40 @@ def test_a_flat_field_is_drawn_at_its_value():
         "zero_map",
         "flat_nan_value",
         "flat_no_place",
+        "flat_merge_group",
+        "flat_huge_duplicate_pair",
         "flat_minus_zero",
     }
-    assert all(c["expected"]["notes"] in ([], [sf.FLAT_FIELD]) for c in DRAWN)
+    allowed = ([], [sf.FLAT_FIELD], [sf.NEAR_FLAT_NOTE])
+    assert all(c["expected"]["notes"] in allowed for c in DRAWN)
     assert sf.is_flat(np.array([2.5, 2.5, 2.5]))
     assert not sf.is_flat(np.array([2.5, 2.5, 2.5000000000000004]))
 
 
+@pytest.mark.parametrize("group", [1, 2, 3, 4])
 @pytest.mark.parametrize("count", [8, 10, 12, 15, 19, 32])
 @pytest.mark.parametrize(
     "value", [2.5, 0.1, 0.7, -110.0, 1e-300, 1e300, 1.5e308, -1.5e308, -0.0]
 )
-def test_a_flat_field_draws_exactly_its_value(value, count):
+def test_a_flat_field_draws_exactly_its_value(value, count, group):
     """Equal values have deviations of exactly 0 from their mean, as the spec
-    computes it, so every cell is the value itself, with no special case; a
-    mean summed and then divided would overflow on values near the binary64
-    limit (two of 1.5e308 sum to infinity) and refuse a map that is flat."""
+    computes it (the merge's mean too), so every cell is the value itself, with
+    no special case. A mean summed and then divided would not be: three 0.1s
+    summed and divided by 3 are 0.10000000000000002, and two of 1.5e308 sum to
+    infinity and would refuse a map that is flat."""
     case = FIELD_CASES["montage_32"]["sensors"]
     theta = numbers(case["theta_deg"])[:count]
     radius = numbers(case["radius"])[:count]
-    drawn = sf.sensor_field(theta, radius, np.full(count, value))
+    theta = np.concatenate([theta, np.repeat(theta[5], group - 1)])
+    radius = np.concatenate([radius, np.repeat(radius[5], group - 1)])
+    drawn = sf.sensor_field(theta, radius, np.full(len(theta), value))
     cells = drawn.z[~np.isnan(drawn.z)]
     assert (cells == value).all()
     if value == 0:
         assert not np.signbit(cells).any(), "never -0"
     assert drawn.contours == () and drawn.notes == (sf.FLAT_FIELD,)
+    if group > 1:
+        assert next(iter(drawn.merged.values()))[0] == 5
 
 
 @pytest.mark.parametrize("offset", [30.0, -110.0, 1e3])
@@ -446,6 +457,15 @@ FLAT_RULES = {
         "flat = is_flat(v)",
     ),
     "raw values interpolated, as EEGLAB does": ("m = center(v)", "m = 0.0"),
+    "no near-flat field": (
+        "near_flat = not flat and is_near_flat(values[rows])",
+        "near_flat = False",
+    ),
+    "near flat within 1e-7": (
+        "near_flat = not flat and is_near_flat(values[rows])",
+        "near_flat = not flat and bool(np.ptp(values[rows]) "
+        "<= 1e-7 * np.abs(values[rows]).max())",
+    ),
 }
 
 
@@ -457,13 +477,35 @@ def test_the_vectors_catch_a_wrong_flat_or_offset_rule(monkeypatch, rule):
     assert any(field_mismatches(case) for case in FIELD["cases"]), rule
 
 
+def test_a_near_flat_field_is_one_color_at_its_mean():
+    """Within 1e-9 of their magnitude, the values' map would be the spline of
+    their last digits stretched over the color axis: it is one color at the
+    mean, with no contours and the note near_flat. Just above the bound, the
+    map is drawn as any other."""
+    for name in ("near_flat_one_ulp", "near_flat_one_nano_db"):
+        expected = FIELD_CASES[name]["expected"]
+        assert expected["notes"] == [sf.NEAR_FLAT_NOTE], name
+        assert len(set(_drawn_cells(FIELD_CASES[name]))) == 1, name
+        assert expected["contours"] == [], name
+        values = numbers(FIELD_CASES[name]["sensors"]["value"])
+        assert 0 < expected["value_range"] <= sf.NEAR_FLAT * np.abs(values).max()
+    above = FIELD_CASES["near_flat_above_threshold"]
+    values = numbers(above["sensors"]["value"])
+    assert above["expected"]["value_range"] > sf.NEAR_FLAT * np.abs(values).max()
+    assert above["expected"]["notes"] == [] and len(above["expected"]["contours"]) == 6
+    assert sf.is_near_flat(np.array([30.0, 30.0 + 1e-9]))
+    assert not sf.is_near_flat(np.array([30.0, 30.0 + 4e-8]))
+    assert not sf.is_near_flat(np.array([30.0, 30.0])), "flat is not near flat"
+    assert not sf.is_near_flat(np.zeros(3))
+
+
 def test_a_flat_field_note_reads_as_its_caption():
     """The note's caption, as sensor-field.md's Notes table gives it."""
     section = (ROOT / FIELD["spec"]).read_text().split("\n## Refusals\n", 1)[1]
     notes = re.findall(r"^\| `([a-z_]+)` \| [^|]+ \| ([^|]+) \|", section, re.M)
-    assert ("flat_field", "all sensors have the same value") in [
-        (word, caption.strip()) for word, caption in notes
-    ]
+    captions = [(word, caption.strip()) for word, caption in notes]
+    assert ("flat_field", "all sensors have the same value") in captions
+    assert ("near_flat", "all sensors are within <range> of each other") in captions
 
 
 def test_color_axis_rules():
@@ -1001,6 +1043,23 @@ def _as_linux(field: dict, layout: dict) -> tuple[dict, dict]:
     name, center = LINUX_CENTER
     next(c for c in layout["cases"] if c["name"] == name)["expected"]["center"] = center
     return field, layout
+
+
+def test_check_bounds_cells_by_range_and_magnitude_with_no_floor():
+    """A cell may move 1e-9 of the map's range plus 1e-12 of its magnitude: a
+    map of zeros is compared exactly, and a map drawn at 30 within 3e-11."""
+    gen = _generator()
+    zero = json.loads(json.dumps(FIELD_CASES["zero_map"]))
+    moved = json.loads(json.dumps(zero))
+    row = next(i for i, r in enumerate(moved["expected"]["z"]) if r[33] is not None)
+    moved["expected"]["z"][row][33] = 1e-300
+    assert gen.differences(moved, zero)
+    near = json.loads(json.dumps(FIELD_CASES["near_flat_one_ulp"]))
+    moved = json.loads(json.dumps(near))
+    moved["expected"]["z"][row][33] += 2e-11
+    assert gen.differences(moved, near) == []
+    moved["expected"]["z"][row][33] += 2e-11
+    assert gen.differences(moved, near)
 
 
 def test_check_absorbs_the_linux_rounding():

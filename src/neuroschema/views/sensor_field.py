@@ -41,6 +41,12 @@ CONTOUR_COUNT = 6
 FLAT_FIELD = "flat_field"
 """The note of a flat field, every usable sensor one value: "all sensors have
 the same value". Its map is that value in every cell."""
+NEAR_FLAT = 1e-9
+"""A map whose values' range is at most this share of their magnitude is near
+flat: one color at the mean, with no contours."""
+NEAR_FLAT_NOTE = "near_flat"
+"""The note of a near-flat field: "all sensors are within <range> of each
+other", the range of the usable values."""
 COLOR_MARGIN = 0.05
 """The color axis widens the limits by this share: of each limit's magnitude
 for ``absmax`` (EEGLAB's ``caxis``), of their range for ``minmax``."""
@@ -112,8 +118,9 @@ class SensorField:
     right. Cells outside the head circle are NaN. Sensor indices are row
     numbers of the input, counted from 0; ``merged`` maps each kept sensor
     that absorbed others to its whole group, itself first. ``head`` is the
-    outline drawn over the map (:func:`head_outline`), and ``notes`` what a
-    renderer says with it (:data:`FLAT_FIELD`).
+    outline drawn over the map (:func:`head_outline`), ``notes`` what a
+    renderer says with it (:data:`FLAT_FIELD`, :data:`NEAR_FLAT_NOTE`), and
+    ``value_range`` the range of the usable values, for the near-flat caption.
     """
 
     plotrad: float
@@ -130,6 +137,7 @@ class SensorField:
     contours: tuple[float, ...]
     head: Head
     notes: tuple[str, ...]
+    value_range: float
 
 
 def planar(theta_deg: np.ndarray, radius: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -181,11 +189,10 @@ def outermost(radius: np.ndarray, usable: list[int]) -> float:
 
 
 def mean(values: np.ndarray, members: list[int]) -> float:
-    """A merged sensor's value: the members' values summed in row order, over count."""
-    total = 0.0
-    for row in members:
-        total += float(values[row])
-    return total / len(members)
+    """A merged sensor's value: the mean of its members' values, in row order,
+    computed as :func:`center` computes one, ``first + sum(x - first) / k``,
+    so equal members give their value exactly and huge ones do not overflow."""
+    return center(np.array([values[row] for row in members], dtype=np.float64))
 
 
 def in_square(x: np.ndarray, y: np.ndarray, intrad: float) -> np.ndarray:
@@ -275,6 +282,26 @@ def center(v: np.ndarray) -> float:
     return first + total / len(v) + 0.0
 
 
+def value_spread(values: np.ndarray) -> float:
+    """The range of the usable values, ``max - min``, for the note's caption."""
+    with np.errstate(over="ignore", invalid="ignore"):
+        return float(values.max() - values.min()) + 0.0
+
+
+def is_near_flat(values: np.ndarray) -> bool:
+    """A near-flat field: the usable values' range is at most
+    :data:`NEAR_FLAT` times their magnitude (the largest absolute value).
+
+    Its map would be the spline of differences in the last digits, stretched
+    over the whole color axis; it is drawn as one color at the mean instead,
+    with the note :data:`NEAR_FLAT_NOTE`. A flat field (range 0) is not near
+    flat: it has its own note.
+    """
+    spread = value_spread(values)
+    magnitude = float(np.abs(values).max())
+    return bool(0 < spread <= NEAR_FLAT * magnitude)
+
+
 def contour_levels(z: np.ndarray) -> tuple[float, ...]:
     """``CONTOUR_COUNT`` levels evenly inside (min, max) of the cells ``z``;
     none for a constant map, a flat field among them."""
@@ -351,21 +378,29 @@ def sensor_field(
             "head_outside_grid", "no grid cell lies inside the head circle"
         )
 
-    # 8. Biharmonic interpolation of the deviations from the mean: solve
-    # G w = v - m. A flat field's deviations are exactly 0, so are its
-    # weights, and every cell is m, its value: no special case draws it.
+    # 8. The mean of the interpolated values, and whether the usable values
+    # are flat (all equal) or near flat (their range at most NEAR_FLAT of
+    # their magnitude): a near-flat map is its mean in every cell.
     m = center(v)
-    d = np.hypot(px[:, None] - px[None, :], py[:, None] - py[None, :])
-    with np.errstate(over="ignore", invalid="ignore"):
-        w = lu_solve(green(d), v - m)
-
-    # 9. Evaluation, with the mean added back. A weight that is not finite (a
-    # zero pivot, or an overflow) makes the cells not finite, so step 10's
-    # check serves.
-    dq = np.hypot(qx[:, :, None] - px, qy[:, :, None] - py)
-    with np.errstate(over="ignore", invalid="ignore"):
-        z = m + green(dq) @ w
     flat = is_flat(values[rows])
+    value_range = value_spread(values[rows])
+    near_flat = not flat and is_near_flat(values[rows])
+    if near_flat:
+        z = np.full(qx.shape, m)
+    else:
+        # Biharmonic interpolation of the deviations from the mean: solve
+        # G w = v - m. A flat field's deviations are exactly 0, so are its
+        # weights, and every cell is m, its value: no special case draws it.
+        d = np.hypot(px[:, None] - px[None, :], py[:, None] - py[None, :])
+        with np.errstate(over="ignore", invalid="ignore"):
+            w = lu_solve(green(d), v - m)
+
+        # 9. Evaluation, with the mean added back. A weight that is not
+        # finite (a zero pivot, or an overflow) makes the cells not finite, so
+        # step 10's check serves.
+        dq = np.hypot(qx[:, :, None] - px, qy[:, :, None] - py)
+        with np.errstate(over="ignore", invalid="ignore"):
+            z = m + green(dq) @ w
     # 10. The mask.
     z[masked] = np.nan
     if not np.isfinite(z[~masked]).all():
@@ -387,7 +422,8 @@ def sensor_field(
         color_axis={name: color_axis(pair, name) for name, pair in lim.items()},
         contours=contour_levels(z),
         head=head_outline(squeezefac),
-        notes=(FLAT_FIELD,) if flat else (),
+        notes=(FLAT_FIELD,) if flat else (NEAR_FLAT_NOTE,) if near_flat else (),
+        value_range=value_range,
     )
 
 
@@ -407,7 +443,8 @@ def sensor_field_from_positions(
     dropped like any sensor without a place. Raises
     :class:`~neuroschema.views.sensor_layout.SensorLayoutRefusal`
     (``frame_unknown`` or ``positions_flat``), after which a renderer places
-    the sensors by name, or :class:`SensorFieldRefusal`.
+    the sensors by name only when every drawn row is typed EEG, or
+    :class:`SensorFieldRefusal`.
     """
     layout = sensor_layout(xyz, coordinate_system, montage=montage)
     return sensor_field(layout.theta_deg, layout.radius, values)

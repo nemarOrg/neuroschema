@@ -216,7 +216,7 @@
               },
               "columns": {
                 "type": "array",
-                "description": "name, theta_deg and radius, each once, and optionally sensor_type.",
+                "description": "name, theta_deg and radius, each once, and sensor_type, required when position_source is measured.",
                 "items": {
                   "type": "object",
                   "properties": {
@@ -445,7 +445,7 @@
               },
               "columns": {
                 "type": "array",
-                "description": "name, x, y and z, each once, and optionally sensor_type.",
+                "description": "name, x, y and z, each once, and sensor_type, required when position_source is measured.",
                 "items": {
                   "type": "object",
                   "properties": {
