@@ -169,6 +169,16 @@ def test_duplicate_member_name_is_refused_at_any_depth():
         parse_declaration('{"a":[{"b":{"name":"x","name":"x"}}]}')
 
 
+def test_a_declared_size_is_within_the_cap_on_bytes():
+    """A file's size is capped at the registry's caps.bytes_per_role, so a
+    renderer can refuse a file before it fetches it (L3)."""
+    view = ROOT / "schema" / "definitions" / "view.schema.json"
+    defs = json.loads(view.read_text())
+    cap = load_registry()["caps"]["bytes_per_role"]
+    for name in ("viewData", "fileInput"):
+        assert defs["$defs"][name]["properties"]["size"]["maximum"] == cap
+
+
 def test_vector_file_header():
     assert VECTORS["format"] == "nemar.view-digest.v1"
     assert (ROOT / VECTORS["spec"]).is_file()

@@ -1152,6 +1152,23 @@ def order_cases() -> list[Case]:
         columns=[col("number", "integer")],
     )
     return [
+        Case(
+            "order_bytes_cap_before_fetch",
+            "A declared size over the byte cap and no file: cap_exceeded, from the "
+            "declaration before the file is fetched, so the view falls back "
+            "rather than refusing on file_missing.",
+            lines_view(),
+            {},
+            caps={"bytes_per_role": 10},
+        ),
+        Case(
+            "order_bytes_cap_before_digest",
+            "A declared size over the byte cap and other bytes of that size: "
+            "cap_exceeded, before the digest is computed.",
+            lines_view(),
+            {SPECTRUM_AT: SPECTRUM.replace(b"12.5", b"12.6")},
+            caps={"bytes_per_role": 10},
+        ),
         lines_case(
             "order_bytes_cap_before_grammar",
             "Over the byte cap and CRLF line endings: cap_exceeded.",
@@ -1497,14 +1514,6 @@ def refusals() -> list[Case]:
             lines_view(base="nemar.table", base_version=1),
             {},
         ),
-        (
-            "order_digest_before_bytes_cap",
-            "Other bytes of the declared size, over the byte cap: "
-            "file_digest_mismatch.",
-            lines_view(),
-            {SPECTRUM_AT: wrong},
-            {"bytes_per_role": 10},
-        ),
     ]
     return [Case(*fields) for fields in cases]
 
@@ -1686,6 +1695,17 @@ def view_verdicts() -> list[tuple[str, str, dict]]:
             "envelope_size_0",
             "A file has at least one byte.",
             _set(table, "data/0/size", 0),
+        ),
+        (
+            "envelope_size_at_cap",
+            "A declared size of caps.bytes_per_role, 4,194,304 bytes.",
+            _set(table, "data/0/size", 4194304),
+        ),
+        (
+            "envelope_size_over_cap",
+            "A declared size one byte over caps.bytes_per_role: a renderer never "
+            "fetches it.",
+            _set(table, "data/0/size", 4194305),
         ),
         (
             "envelope_sha256_uppercase",

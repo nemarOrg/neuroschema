@@ -40,7 +40,7 @@ It writes `_badsegments.tsv` unless its window step was skipped and ASR repaired
 The writer sets `shaded.files` and `bad_segment_table` from the record, null and false only when the floor wrote no table.
 
 **Verified.** A declared table is verified like any data file, and a fault refuses the whole view.
-It is present, its length is its `size` and its SHA-256 its `sha256` (`file_missing`, `file_size_mismatch`, `file_digest_mismatch`), and it holds at most `caps.bytes_per_role` bytes (`cap_exceeded`); when a view declares both tables, the channels' file is checked first.
+It declares at most `caps.bytes_per_role` bytes (`cap_exceeded`, checked before the file is fetched), it is present, and its length is its `size` and its SHA-256 its `sha256` (`file_missing`, `file_size_mismatch`, `file_digest_mismatch`); when a view declares both tables, the channels' file is checked first.
 It meets the TSV grammar, with its words ([generic-kinds.md](generic-kinds.md#tsv)), and holds at most `caps.cells_per_role` cells counting every header column (`cap_exceeded`).
 It has its columns (`column_missing`): `onset`, `duration` and `label` for the bad segments, and `name` and `status` for the channels.
 A column is found by its name in any position of the header, and the names are looked for in that order; other columns are ignored.

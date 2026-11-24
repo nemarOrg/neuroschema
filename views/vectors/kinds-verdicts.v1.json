@@ -1435,6 +1435,84 @@
       ]
     },
     {
+      "name": "envelope_size_at_cap",
+      "covers": "A declared size of caps.bytes_per_role, 4,194,304 bytes.",
+      "schema": "view",
+      "instance": {
+        "key": "channels",
+        "kind": "nemar.table",
+        "kind_version": 1,
+        "caption": "Channels and the floor's decisions.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "table",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+            "format": "tsv",
+            "size": 4194304,
+            "sha256": "0cad6be49122197e1babfc62712a4de6fabebe2e8884380808f58c7a006ec062",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "status",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "valid": true,
+      "errors": []
+    },
+    {
+      "name": "envelope_size_over_cap",
+      "covers": "A declared size one byte over caps.bytes_per_role: a renderer never fetches it.",
+      "schema": "view",
+      "instance": {
+        "key": "channels",
+        "kind": "nemar.table",
+        "kind_version": 1,
+        "caption": "Channels and the floor's decisions.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "table",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+            "format": "tsv",
+            "size": 4194305,
+            "sha256": "0cad6be49122197e1babfc62712a4de6fabebe2e8884380808f58c7a006ec062",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "status",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["maximum", "data/0/size"]
+      ]
+    },
+    {
       "name": "envelope_sha256_uppercase",
       "covers": "A SHA-256 in capitals.",
       "schema": "view",

@@ -237,7 +237,14 @@ class _Reader:
         return entries[0] if len(entries) == 1 else None
 
     def verified(self, entry: Mapping) -> bytes:
+        """The entry's bytes: its declared size within the cap on bytes, checked
+        before the file is fetched (``cap_exceeded``), then the file present, of
+        its declared size and SHA-256 (``file_missing``, ``file_size_mismatch``,
+        ``file_digest_mismatch``). Every entry is checked, even one that shares
+        its location with another."""
         location = entry["location"]
+        if entry["size"] > self.caps["bytes_per_role"]:
+            raise KindRefused("cap_exceeded", f"{location}: {entry['size']} bytes")
         if location not in self.files:
             raise ViewRefused("file_missing", location, location)
         data = bytes(self.files[location])
@@ -245,8 +252,6 @@ class _Reader:
             raise ViewRefused("file_size_mismatch", location, location)
         if hashlib.sha256(data).hexdigest() != entry["sha256"]:
             raise ViewRefused("file_digest_mismatch", location, location)
-        if len(data) > self.caps["bytes_per_role"]:
-            raise KindRefused("cap_exceeded", f"{location}: bytes")
         return data
 
     def tsv(self, entry: Mapping) -> Tsv:

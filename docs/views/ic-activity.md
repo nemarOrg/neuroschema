@@ -119,7 +119,7 @@ two binary64 operations, each rounded, as the store content digest `nemar.store-
 A renderer runs these checks in this order, and the first that fails gives the word.
 
 1. **The files.**
-   The `unmixing` file, then the `components` file, then the `badsegments` file when the view declares one, in that order: each is present (`file_missing`), its length is the declared `size` (`file_size_mismatch`), its SHA-256 is the declared `sha256` (`file_digest_mismatch`), and it holds at most `caps.bytes_per_role` bytes (`cap_exceeded`).
+   The `unmixing` file, then the `components` file, then the `badsegments` file when the view declares one, in that order: each declares at most `caps.bytes_per_role` bytes (`cap_exceeded`, checked before the file is fetched), is present (`file_missing`), has the declared `size` as its length (`file_size_mismatch`) and the declared `sha256` as its SHA-256 (`file_digest_mismatch`).
 2. **The store digest.**
    When the view declares a digest (`content_sha256` is not null) and the serving copy publishes one for that group, the two are equal (`store_digest_mismatch`).
    Where the serving copy publishes each group's digest is nemarOrg/nemar-cli#2343's (the converter writes it at commit); until it does, no store publishes one and every view is `not_checked`.

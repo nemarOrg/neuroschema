@@ -201,12 +201,17 @@ def test_model_vectors_header():
 
 
 def test_files_hold_the_declared_digests():
-    """Every file of a drawn case is the declared bytes; the refusals hold the rest."""
+    """Every file of a drawn case is the declared bytes; the refusals hold the rest.
+    A file whose declared size is over the case's cap on bytes is never fetched,
+    so its bytes may differ (order_bytes_cap_before_digest)."""
     for case in CASES:
         files = decode(case["files"])
+        cap = case.get("caps", {}).get(
+            "bytes_per_role", REGISTRY["caps"]["bytes_per_role"]
+        )
         for entry in case["view"].get("data", []):
             data = files.get(entry["location"])
-            if data is not None:
+            if data is not None and entry["size"] <= cap:
                 assert len(data) == entry["size"], case["name"]
                 assert hashlib.sha256(data).hexdigest() == entry["sha256"], case["name"]
 

@@ -101,8 +101,11 @@ def _input(view: Mapping, role: str) -> Mapping:
 
 
 def verified(entry: Mapping, files: Mapping[str, bytes], caps: Mapping) -> bytes:
-    """A file input's bytes, checked against its declared size and SHA-256."""
+    """A file input's bytes: its declared size within the cap on bytes, checked
+    before the file is fetched, then its presence, size and SHA-256."""
     location = entry["location"]
+    if entry["size"] > caps["bytes_per_role"]:
+        raise IcActivityRefusal("cap_exceeded", f"{location}: {entry['size']} bytes")
     if location not in files:
         raise IcActivityRefusal("file_missing", location)
     data = bytes(files[location])
@@ -110,8 +113,6 @@ def verified(entry: Mapping, files: Mapping[str, bytes], caps: Mapping) -> bytes
         raise IcActivityRefusal("file_size_mismatch", location)
     if hashlib.sha256(data).hexdigest() != entry["sha256"]:
         raise IcActivityRefusal("file_digest_mismatch", location)
-    if len(data) > caps["bytes_per_role"]:
-        raise IcActivityRefusal("cap_exceeded", f"{location}: bytes")
     return data
 
 

@@ -21,11 +21,12 @@ A renderer builds a view's model in four steps.
 4. When the kind's rules refuse the files, it builds the [fallback](#the-fallback) instead and keeps the kind and the word, so the page can say why the view shows as a table.
 
 A renderer reads only the files its model needs, and it checks each one before it parses it.
-The file must be present (`file_missing`), its length must be the declared `size` (`file_size_mismatch`), and its Secure Hash Algorithm 256 (SHA-256) digest must be the declared `sha256` (`file_digest_mismatch`).
+First, before it fetches the file, the declared `size` is at most `caps.bytes_per_role` in the registry (4,194,304 bytes): a larger one is refused with `cap_exceeded`, and the view falls back, so no renderer fetches a file it would not read.
+The schema caps `size` at 4,194,304, the registered cap, so this matters only under a lower cap (a vector's `caps`).
+Then the file must be present (`file_missing`), its length must be the declared `size` (`file_size_mismatch`), and its Secure Hash Algorithm 256 (SHA-256) digest must be the declared `sha256` (`file_digest_mismatch`).
 A failed check refuses the whole view and nothing is drawn, because the bytes are not the bytes NEMAR recorded.
 Because no view hides data, the renderer still offers every other file of the view for download, and it checks a file it has not read when that file is downloaded.
 An invalid declaration offers no file, because the declaration that names the files is itself invalid.
-A file longer than `caps.bytes_per_role` in the registry (4,194,304 bytes) is refused with `cap_exceeded`, and the view falls back.
 
 Every model lists the view's files under `downloads`: each `data` entry, then each `file` input, in declaration order, with its role, location, size and SHA-256.
 A renderer offers each of them for download, so no view hides data, whether a file is drawn, shown as a table or neither.
@@ -98,7 +99,7 @@ A role holds at most `caps.entries_per_dim` (1,024) data rows and 1,024 value co
 When the files break more than one rule, the first rule broken gives the word.
 For `nemar.table`, `nemar.lines` and `nemar.heatmap`, the checks run in this order.
 
-1. The role's file: present, size, SHA-256, then the cap on bytes.
+1. The role's file: its declared size against the cap on bytes, before it is fetched, then present, size and SHA-256.
 2. The TSV grammar, in the order of its list.
 3. The declared columns: first whether any name is declared twice (`column_repeated`), then each name in declared order (`column_missing`).
 4. The coordinate column, if the role has one (`coords_unresolved`, then `coords_mismatch`).
@@ -108,7 +109,7 @@ For `nemar.table`, `nemar.lines` and `nemar.heatmap`, the checks run in this ord
 7. The kind's own rule (`x_not_increasing` for `nemar.lines`).
 8. Coordinates from another role, the rows' dimension before the columns'; for each, `coords_unresolved`, then that role's file and grammar, `column_missing`, `coords_mismatch`, `coords_length`, and its cells.
 
-For `nemar.histogram`, they run in this order: the file and the cap on bytes, `json_invalid`, `content_invalid`, `edges_not_increasing`, `counts_length`, then the cap on the total (`cap_exceeded`).
+For `nemar.histogram`, they run in this order: the cap on bytes and the file, `json_invalid`, `content_invalid`, `edges_not_increasing`, `counts_length`, then the cap on the total (`cap_exceeded`).
 The vectors hold one case for each pair of neighboring checks, with two faults, so a renderer that runs two checks in the other order gives the other word.
 
 ## `nemar.table` version 1

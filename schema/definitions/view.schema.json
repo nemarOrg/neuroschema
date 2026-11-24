@@ -472,8 +472,8 @@
         "size": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 9007199254740991,
-          "description": "Size of the file in bytes."
+          "maximum": 4194304,
+          "description": "Size of the file in bytes; at most views/registry.json caps.bytes_per_role (4,194,304), which a renderer checks before it fetches the file."
         },
         "sha256": {
           "$ref": "../definitions/processingTypes.schema.json#/$defs/sha256",
@@ -800,8 +800,8 @@
         "size": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 9007199254740991,
-          "description": "Size of the file in bytes."
+          "maximum": 4194304,
+          "description": "Size of the file in bytes; at most views/registry.json caps.bytes_per_role (4,194,304), which a renderer checks before it fetches the file."
         }
       },
       "additionalProperties": false
