@@ -6,8 +6,9 @@ average reference and the store unit's factor to microvolts folded in) times
 the serving copy's physical values of the decomposition's channels, with no
 preprocessing. The kind then draws each component's activations through a
 zero-phase high-pass that is for display only: a Butterworth of order 2, run
-forward and backward over an odd extension of at most 9 samples, from the
-steady state of its first sample.
+forward and backward from its steady state over the window and up to a second
+of real context on each side (:func:`context`), with an odd extension of at
+most 9 samples only at the recording's own ends.
 
 The arithmetic follows the specification's order (binary64, each operation
 rounded, no fused multiply-add), so the result does not depend on a linear
@@ -422,15 +423,23 @@ def padding(count: int) -> int:
     return min(PADDING, count - 1)
 
 
-def display_filter(series: np.ndarray, rate: float, cutoff_hz: float) -> np.ndarray:
+def display_filter(
+    series: np.ndarray,
+    rate: float,
+    cutoff_hz: float,
+    pad_start: bool = True,
+    pad_end: bool = True,
+) -> np.ndarray:
     """Each row of ``series`` through the zero-phase high-pass over its own samples.
 
-    The rows are extended at each end by p = min(9, n - 1) samples, the odd
-    extension (2 x[0] - x[p], ..., 2 x[0] - x[1] before, and
-    2 x[n-1] - x[n-2], ..., 2 x[n-1] - x[n-1-p] after), filtered forward from
-    the state (-b0, b2) times the first extended sample, reversed, filtered
-    again from that state times the first reversed sample, reversed back, and
-    cut to the window.
+    The rows are extended by p = min(9, n - 1) samples, the odd extension, at
+    each end the flags name: ``2 x[0] - x[p], ..., 2 x[0] - x[1]`` before, and
+    ``2 x[n-1] - x[n-2], ..., 2 x[n-1] - x[n-1-p]`` after. They are filtered
+    forward from the state (-b0, b2) times the first extended sample,
+    reversed, filtered again from that state times the first reversed sample,
+    reversed back, and cut to the series. With both flags this is scipy's
+    ``filtfilt(b, a, x, padtype="odd", padlen=p)``; an end without padding is
+    one where :func:`context` gave the stretch real samples instead.
     """
     b, a = highpass_coefficients(cutoff_hz, rate)
     x = np.asarray(series, dtype=np.float64)
@@ -438,15 +447,27 @@ def display_filter(series: np.ndarray, rate: float, cutoff_hz: float) -> np.ndar
     if count < 1:
         raise ValueError("a window has at least one sample")
     p = padding(count)
-    if p:
-        before = 2.0 * x[..., :1] - x[..., p:0:-1]
-        after = 2.0 * x[..., -1:] - x[..., -2 : -(p + 2) : -1]
-        x = np.concatenate([before, x, after], axis=-1)
+    head = p if pad_start else 0
+    if p and pad_start:
+        x = np.concatenate([2.0 * x[..., :1] - x[..., p:0:-1], x], axis=-1)
+    if p and pad_end:
+        x = np.concatenate([x, 2.0 * x[..., -1:] - x[..., -2 : -(p + 2) : -1]], axis=-1)
     zi = (-b[0], b[2])
     forward = _lfilter(b, a, x, zi[0] * x[..., 0], zi[1] * x[..., 0])
     back = forward[..., ::-1]
     back = _lfilter(b, a, back, zi[0] * back[..., 0], zi[1] * back[..., 0])
-    return back[..., ::-1][..., p : p + count]
+    return back[..., ::-1][..., head : head + count]
+
+
+CONTEXT_S = 1.0
+
+
+def context(start: int, count: int, samples: int, rate: float) -> tuple[int, int]:
+    """The samples of real context read on each side of a window, and filtered
+    with it: c = ceil(rate), the fewest that span one second, or as many as the
+    recording holds before the window and after it."""
+    c = math.ceil(CONTEXT_S * rate)
+    return min(c, start), min(c, samples - (start + count))
 
 
 # ── The whole view ────────────────────────────────────────────────────────
@@ -546,7 +567,17 @@ def ic_activity(
     factors = unit_factors(store.units, rows, transform["unit"])
     cutoff = parameters["display_filter"]["highpass_hz"]
     highpass_coefficients(cutoff, store.rate)  # refuses before any multiply
-    raw = multiply(weights, store, rows, factors, start, count)
+    samples = store.digital.shape[-1]
+    before, after = context(start, count, samples, store.rate)
+    first = start - before
+    stretch = multiply(weights, store, rows, factors, first, before + count + after)
+    filtered = display_filter(
+        stretch,
+        store.rate,
+        cutoff,
+        pad_start=first == 0,
+        pad_end=start + count + after == samples,
+    )
     return Activations(
         state=state,
         components=labels,
@@ -554,8 +585,8 @@ def ic_activity(
         rows=rows,
         factors=factors,
         time_s=(start + np.arange(count, dtype=np.float64)) / store.rate,
-        activations=raw,
-        filtered=display_filter(raw, store.rate, cutoff),
+        activations=stretch[:, before : before + count],
+        filtered=filtered[:, before : before + count],
         shaded=shaded,
         notes=notes,
     )

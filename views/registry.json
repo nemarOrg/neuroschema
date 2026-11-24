@@ -272,6 +272,11 @@
       "name": "nemar.preset-checks.v1",
       "spec": "docs/views/presets.md",
       "vectors": "views/vectors/preset-checks.v1.json"
+    },
+    {
+      "name": "nemar.record-checks.v1",
+      "spec": "docs/processing-extensions.md",
+      "vectors": "views/vectors/record-checks.v1.json"
     }
   ],
   "formats": {

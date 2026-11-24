@@ -302,10 +302,17 @@ def _misses(compute) -> list[str]:
     return misses
 
 
-def _variant(case, *, factors=None, rows=None, reference=False, filt=None):
-    """The reference's own steps, with one of them replaced."""
+def _variant(
+    case, *, factors=None, rows=None, reference=False, filt=None, context=True
+):
+    """The reference's own steps, with one of them replaced: the stretch of the
+    window and its real context is multiplied and filtered, then cut to the
+    window (with ``context`` False, the window alone, padded at both ends)."""
     view, store = case["view"], store_of(case["store"])
     start, count = case["window"]["start"], case["window"]["count"]
+    samples = store.digital.shape[-1]
+    before, after = ia.context(start, count, samples, store.rate) if context else (0, 0)
+    first, n = start - before, before + count + after
     _header, weights = ia.read_unmixing(
         files_of(case)[view["inputs"][0]["file"]["location"]]
     )
@@ -315,21 +322,51 @@ def _variant(case, *, factors=None, rows=None, reference=False, filt=None):
     if reference:
         values = np.array(
             [
-                ia.physical(store, r, start, count) * f
+                ia.physical(store, r, first, n) * f
                 for r, f in zip(rows, factors, strict=True)
             ]
         )
         raw = weights @ (values - values.mean(axis=0, keepdims=True))
     else:
-        raw = ia.multiply(weights, store, rows, factors, start, count)
+        raw = ia.multiply(weights, store, rows, factors, first, n)
     cutoff = view["parameters"]["display_filter"]["highpass_hz"]
-    filtered = (filt or ia.display_filter)(raw, store.rate, cutoff)
-    return raw, filtered
+    if filt is not None:
+        filtered = filt(raw, store.rate, cutoff)
+    elif context:
+        ends = {"pad_start": first == 0, "pad_end": first + n == samples}
+        filtered = ia.display_filter(raw, store.rate, cutoff, **ends)
+    else:
+        filtered = ia.display_filter(raw, store.rate, cutoff)
+    window = slice(before, before + count)
+    return raw[:, window], filtered[:, window]
 
 
 def test_the_reference_steps_reproduce_every_case():
     """The variants below change one step; unchanged, they miss nothing."""
     assert _misses(lambda case: _variant(case)) == []
+
+
+def test_a_renderer_that_filters_the_window_alone_is_caught():
+    """A renderer that pads every window instead of reading a second of real
+    context on each side misses every case with context (R4 L1), and a window
+    that is the whole recording is the same either way."""
+    misses = _misses(lambda case: _variant(case, context=False))
+    assert {
+        "context_both_sides",
+        "context_recording_start",
+        "context_short_before",
+        "context_recording_end",
+    } <= set(misses)
+    assert "last_window" in misses
+    assert "no_bad_segment_table" not in misses
+
+
+def test_context_is_a_second_or_what_the_recording_holds():
+    assert ia.context(80, 40, 200, 20.0) == (20, 20)
+    assert ia.context(0, 40, 200, 20.0) == (0, 20)
+    assert ia.context(10, 40, 200, 20.0) == (10, 20)
+    assert ia.context(160, 40, 200, 20.0) == (20, 0)
+    assert ia.context(100, 10, 1000, 500 / 7) == (72, 72)
 
 
 def test_a_renderer_that_references_again_is_caught():

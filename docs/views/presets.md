@@ -10,7 +10,7 @@ This page is normative for version 1 of NEMAR's five presets: what each declares
 | `nemar.ic-maps` | `nemar.sensor-field` | `values`, `layout`, `components` | none | the recipe `nemar-ica` |
 | `nemar.ic-classes` | `nemar.histogram` | `histogram` | none | the plugin `nemar-quality` |
 | `nemar.ic-activity` | `nemar.lines` | none | `unmixing`, `signal`, `components`, `badsegments` (optional) | the recipe `nemar-ica` |
-| `nemar.signal-window` | `nemar.lines` | none | `signal`, `channels` (optional), `badsegments` (optional) | a recipe |
+| `nemar.signal-window` | `nemar.lines` | none | `signal`, `channels`, `badsegments` (exactly when `bad_segment_table` is true) | a recipe |
 
 ## Presets and their bases
 
@@ -73,13 +73,19 @@ The parameters record how the spectrum was computed; a renderer prints them and 
 
 | Parameter | Required | Meaning |
 |---|---|---|
-| `method` | yes | `welch`: the average of the periodograms of overlapping windows. |
+| `method` | yes | `welch`: Welch's method, as stated below the table. |
 | `window` | yes | The taper, by its lowercase name (`hamming` for NEMAR's spectra). |
 | `window_s` | yes | Each window's length, in seconds (2 for NEMAR's). |
 | `overlap` | yes | The share of each window that overlaps the next, from 0 up to but not including 1 (0.5 for NEMAR's). |
 | `unit` | yes | `dB`: 10 log10 of the density in microvolts squared per hertz, so 0 dB is 1 µV²/Hz. |
 | `upper_hz` | yes | The highest frequency the rows reach (125 Hz for NEMAR's EEG spectra); every `freq_hz` cell is at most this and at most half the sampling rate. |
+
 | `initial_maps_hz` | no | Up to 8 frequencies whose maps are shown before the reader picks one. |
+
+`welch` names one computation, so two renderers that print the parameters describe the same numbers.
+The recording is cut into windows of `window_s` seconds overlapping by `overlap`; each window is detrended by subtracting its own mean (a constant detrend), tapered by `window`, and its periodogram taken; the periodograms are averaged by their mean, not their median.
+The density is one-sided: the power of each frequency above 0 and below half the sampling rate is doubled, so the rows integrate to the variance of the signal over the frequencies they cover.
+By rule the 0 Hz row is left out, since detrending each window by its mean makes it meaningless: the first row is the lowest frequency above 0, `1 / window_s` (0.5 Hz for NEMAR's), and the rows rise from it in steps of `1 / window_s`.
 
 A renderer that knows this kind draws the `nemar.lines` model of the values, and below it a scalp map of the sensors' values at one frequency row: the row the readout snaps to, or, before the reader picks one, the row nearest each frequency of `initial_maps_hz` by the same rule.
 A map is the row's cells as one value per sensor, drawn with `nemar.sensor-field.v1` with `minmax` limits (the decibels are not signed about zero), and placed by the layout or by the sensors' names.
@@ -90,7 +96,7 @@ When the base refuses the values, or the layout's names are not the sensor colum
 A file that is not the one recorded draws nothing, neither the lines nor the maps: `spectrum_maps` raises `ViewRefused`, as `build_model` does.
 `neuroschema.views.presets.spectrum_maps` is the Python reference, and the [model vectors](generic-kinds.md#the-model-vectors)' `nemar.spectrum` cases list `maps`: the frequencies asked for (`hz`), the `rows` they snap to, and the maps' `model`, or the word that `refused` them, all three `null` when the view falls back; and `preset`, the outcome of the preset's own check, as the [preset-check vectors](#the-preset-check-vectors) state it.
 
-The writer makes sure that the rows rise strictly to at most `upper_hz`, and, with a layout, that the values' sensor columns are the layout's rows in order.
+The writer makes sure that the rows rise strictly from above 0 to at most `upper_hz`, and, with a layout, that the values' sensor columns are the layout's rows in order.
 A renderer does not rely on the writer for the last rule: after the base's model is built, it checks, with a layout, that the values' sensor columns (every declared column but `freq_hz`) are the layout's `name` cells, top to bottom, compared as text (`sensors_mismatch`).
 The base labels each series by the layout's name at its position, so a header that named other sensors would draw each spectrum under another sensor's name; which of the two is right cannot be told, so the view shows as the fallback's tables ([generic-kinds.md](generic-kinds.md#the-fallback)), with the word, and no lines or maps are drawn.
 
@@ -133,7 +139,7 @@ The independent components of one decomposition counted by the class each is mos
 There are no parameters.
 `variance_pct` is the percent of the data's variance a component accounts for on its own (EEGLAB's `pvaf`), which is not bounded to 0 to 100 and does not sum to 100 across components, so neither does `summed_variance_pct`.
 
-A renderer that knows this kind draws the `nemar.histogram` model of the content, and prints with each bar its count and its class's summed variance, as the stored numbers; the text alternative names `n_components`.
+A renderer that knows this kind draws the `nemar.histogram` model of the content, and prints with each bar its count and its class's summed variance, as the stored numbers, labeled "summed variance of components classed X" (with the class for X), never "variance explained by X": each `variance_pct` is one component's own share, the components are not orthogonal, and their sum is not the share the class accounts for together; the text alternative names `n_components`.
 After the histogram's own checks, the renderer checks, in this order, that the content meets `content.nemar.ic-classes.v1` (`content_invalid`: content that meets the histogram's content schema but not this one, such as ICLabel's classes out of order), that `summed_variance_pct` has one entry per category (`variance_length`), and that the counts sum to `n_components` (`components_total`); JSON Schema cannot state the last two.
 When one fails, the view is drawn by the base with the word.
 A renderer that knows only `nemar.histogram` draws the categories and counts.

@@ -234,6 +234,8 @@ Its content meets [`content.nemar.histogram.v1`](../../schema/views/content.nema
   This is the shape of a `dataQuality` distribution's `histogram`.
 - Bins by category: `categories`, 1 to 1,024 distinct names with no TAB, CR or LF, and `counts`, one per category, with none of `edges`, `underflow`, `overflow` and `unit`.
 
+Either form may carry `missing`: the values that were missing or not a number, so in no bin, counted apart.
+
 Every count is an integer from 0 to 2^53 - 1.
 The content may hold other members, which a preset over this kind defines; this kind reads only these.
 Content that fails the schema is refused with `content_invalid`.
@@ -249,28 +251,38 @@ A value that is not a number (NaN) is in no bin, since every comparison with it 
 {
   "type": "histogram",
   "bins": "edges",
+  "heights": "count",
   "unit": "%",
   "items": [
-    {"label": "[0, 50)", "lower": 0, "upper": 50, "upper_closed": false, "count": 2},
-    {"label": "[50, 100]", "lower": 50, "upper": 100, "upper_closed": true, "count": 15}
+    {"label": "[0, 50)", "lower": 0, "upper": 50, "upper_closed": false, "count": 2, "width": 50, "density": 0.04},
+    {"label": "[50, 100]", "lower": 50, "upper": 100, "upper_closed": true, "count": 15, "width": 50, "density": 0.3}
   ],
   "underflow": {"label": "< 0", "count": 0},
   "overflow": {"label": "> 100", "count": 1},
+  "missing": {"label": "missing", "count": 2},
   "total": 18,
-  "max_count": 15
+  "max_count": 15,
+  "max_density": 0.3
 }
 ```
 
 - Each bin's label is `[a, b)`, or `[a, b]` for the last bin; the underflow's is `< e` with the first edge, and the overflow's `> e` with the last.
   A number in a label is printed as ECMAScript's `String(x)` prints it (`0.1`, `100`, `1e-7`, `1e+21`), as the [view digest](view-digest.md#canonical-form) prints numbers.
-- With bins by category, `bins` is `categories`, each item is `{"label", "count"}` with the category as its label, and `unit`, `underflow` and `overflow` are `null`.
-- `total` is the sum of all the counts, underflow and overflow included, summed in binary64, and `max_count` is the largest of them.
-  A content whose total would pass 2^53 - 1 is refused with `cap_exceeded`, so that sum is exact.
+- Each bin by edges has its `width`, `upper - lower`, and its `density`, `count / width`, each one binary64 operation; `max_density` is the largest density.
+  `heights` is `count` when the bins are of equal width, every width differing from the first by at most 1e-9 times the widest (so edges 0, 0.1, 0.2, 0.3, whose binary64 widths differ in the last bit, are equal, and edges 0, 1e-12, 3e-12 are not), and `density` otherwise.
+  A width too wide for binary64 (edges more than about 1.8e308 apart), or a density that is not finite (a count over a width so narrow that the division overflows, such as 2 over a bin from 0 to 1e-308), is refused with `cap_exceeded`.
+- With bins by category, `bins` is `categories`, `heights` is `count`, each item is `{"label", "count"}` with the category as its label, and `unit`, `underflow`, `overflow` and `max_density` are `null`.
+- `missing` is `{"label": "missing", "count"}` when the content carries `missing`, and `null` otherwise.
+- `total` is the sum of all the counts, underflow and overflow included and `missing` left out, summed in binary64, and `max_count` is the largest of them.
+  A content whose total, with `missing`, would pass 2^53 - 1 is refused with `cap_exceeded`, so every such sum is exact.
 
-A renderer draws one bar per bin, in order, whose height is its count, never a density.
+A renderer draws one bar per bin, in order.
+With `heights` `count`, a bar's height is its count.
+With `heights` `density`, the bins differ in width, and a bar's height is its density, so its area, not its height, is its count; the renderer says so on the value axis ("count per unit width", with the unit when there is one), because counts drawn over unequal widths make a wide bin look fuller than it is.
 Bins by edges sit on a numeric axis from the first edge to the last, each bar spanning its bin; bins by category are bars of equal width.
-An underflow or overflow bar is drawn at its end only when its count is not zero.
-A pointer over a bar reads its label and its count, with the unit for bins by edges.
+An underflow or overflow bar is drawn at its end only when its count is not zero; with `heights` `density` it has no width, so it is drawn as a count marker apart from the density axis, labeled with its count.
+The `missing` count, when there is one, is shown beside the bars as a count with its label, never as a bar, so a reader sees how many values the bars leave out.
+A pointer over a bar reads its label and its count, and with `heights` `density` its density too, with the unit for bins by edges.
 
 ## Keyboard, data table and text alternative
 
@@ -279,8 +291,8 @@ A renderer offers each drawing three other ways, each built from the model alone
 - **Keyboard.** One step moves the selection to the next or previous stored row (`nemar.lines`), cell (`nemar.heatmap`, by row or by column) or bar (`nemar.histogram`), in model order, and shows the readout a pointer on it would show.
   It never stops between stored rows.
 - **Data table.** A toggle shows the model as a table built from its text arrays.
-  For `nemar.lines`, there is one row per stored row, with `x.text` and each series' `text`; for `nemar.heatmap`, one row per row label, with that row of `text`; for `nemar.histogram`, one row per item with its label and count, then the underflow and the overflow for bins by edges.
-  A count is printed as the integer it is, and no other number is printed again.
+  For `nemar.lines`, there is one row per stored row, with `x.text` and each series' `text`; for `nemar.heatmap`, one row per row label, with that row of `text`; for `nemar.histogram`, one row per item with its label and count (and its density with `heights` `density`), then the underflow and the overflow for bins by edges, then the missing count when there is one.
+  A count is printed as the integer it is, a density as ECMAScript's `String(x)` prints it, and no other number is printed again.
 - **Text alternative.** The text alternative of a drawing is the view's caption followed by text from the model: its axes or dimensions with their units, and the stored texts through the data table.
   It states no number the model does not hold.
 

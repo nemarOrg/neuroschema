@@ -44,6 +44,10 @@ HISTOGRAM_CONTENT = (
     REPO_ROOT / "schema" / "views" / "content.nemar.histogram.v1.schema.json"
 )
 MAX_SAFE_INTEGER = 2**53 - 1
+# Bins are of equal width when every width differs from the first by at most
+# this share of the widest: edges such as 0, 0.1, 0.2, 0.3 differ in binary64
+# by an ulp.
+EQUAL_WIDTHS = 1e-9
 
 _NUMBER = re.compile(r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?")
 _INTEGER = re.compile(r"-?(?:0|[1-9][0-9]*)")
@@ -513,13 +517,18 @@ def _histogram(reader: _Reader, own: bool) -> dict:
     if not histogram_content_validator().is_valid(content):
         raise KindRefused("content_invalid")
     counts = [int(count) for count in content["counts"]]
+    missing = None
+    if "missing" in content:
+        missing = {"label": "missing", "count": int(content["missing"])}
+    lacking = 0 if missing is None else missing["count"]
     if "categories" in content:
         if len(counts) != len(content["categories"]):
             raise KindRefused("counts_length")
-        _check_total(sum(counts))
+        _check_total(sum(counts) + lacking)
         return {
             "type": "histogram",
             "bins": "categories",
+            "heights": "count",
             "unit": None,
             "items": [
                 {"label": label, "count": count}
@@ -527,8 +536,10 @@ def _histogram(reader: _Reader, own: bool) -> dict:
             ],
             "underflow": None,
             "overflow": None,
+            "missing": missing,
             "total": sum(counts),
             "max_count": max(counts),
+            "max_density": None,
         }
     edges = [float(edge) + 0.0 for edge in content["edges"]]
     if any(b <= a for a, b in pairwise(edges)):
@@ -536,7 +547,12 @@ def _histogram(reader: _Reader, own: bool) -> dict:
     if len(counts) != len(edges) - 1:
         raise KindRefused("counts_length")
     under, over = int(content["underflow"]), int(content["overflow"])
-    _check_total(sum(counts) + under + over)
+    _check_total(sum(counts) + under + over + lacking)
+    widths = [high - low for low, high in pairwise(edges)]
+    if not all(math.isfinite(width) for width in widths):
+        raise KindRefused("cap_exceeded", "a bin wider than binary64 holds")
+    widest = max(widths)
+    equal = all(abs(width - widths[0]) <= EQUAL_WIDTHS * widest for width in widths)
     last = len(counts) - 1
     items = []
     for i, count in enumerate(counts):
@@ -549,17 +565,24 @@ def _histogram(reader: _Reader, own: bool) -> dict:
                 "upper": high,
                 "upper_closed": i == last,
                 "count": count,
+                "width": widths[i],
+                "density": count / widths[i],
             }
         )
+    if not all(math.isfinite(item["density"]) for item in items):
+        raise KindRefused("cap_exceeded", "a density beyond binary64")
     return {
         "type": "histogram",
         "bins": "edges",
+        "heights": "count" if equal else "density",
         "unit": content.get("unit"),
         "items": items,
         "underflow": {"label": f"< {number_text(edges[0])}", "count": under},
         "overflow": {"label": f"> {number_text(edges[-1])}", "count": over},
+        "missing": missing,
         "total": sum(counts) + under + over,
         "max_count": max([*counts, under, over]),
+        "max_density": max(item["density"] for item in items),
     }
 
 

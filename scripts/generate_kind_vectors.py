@@ -1,14 +1,17 @@
-"""Write the generic-kind vectors from the cases defined here.
+"""Write the generic-kind, preset-check and verdict vectors from the cases here.
 
 Writes ``views/vectors/kinds-models.v1.json`` (each case's model, from the
-Python reference ``neuroschema.views.build_model``) and
+Python reference ``neuroschema.views.build_model``),
+``views/vectors/preset-checks.v1.json`` (each preset case's outcome, from
+``neuroschema.views.presets.check_preset``) and
 ``views/vectors/kinds-verdicts.v1.json`` (each instance's verdict, from
-jsonschema). ``docs/views/generic-kinds.md`` says how a renderer replays them.
+jsonschema, on the binary64 reading). ``docs/views/generic-kinds.md`` and
+``docs/views/presets.md`` say how a renderer replays them.
 
 Usage::
 
-    uv run python scripts/generate_kind_vectors.py           # write both files
-    uv run python scripts/generate_kind_vectors.py --check   # fail if either differs
+    uv run python scripts/generate_kind_vectors.py           # write the three files
+    uv run python scripts/generate_kind_vectors.py --check   # fail if any differs
 """
 
 from __future__ import annotations
@@ -23,6 +26,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from neuroschema.ijson import FORBIDDEN
+from neuroschema.records import RECORD_CHECKS_FORMAT, check_record
 from neuroschema.views import load_registry
 from neuroschema.views.models import (
     MODELS_FORMAT,
@@ -47,6 +51,7 @@ MODELS_PATH = ROOT / "views" / "vectors" / "kinds-models.v1.json"
 VERDICTS_PATH = ROOT / "views" / "vectors" / "kinds-verdicts.v1.json"
 VERDICTS_FORMAT = "nemar.kinds-verdicts.v1"
 PRESET_CHECKS_PATH = ROOT / "views" / "vectors" / "preset-checks.v1.json"
+RECORD_CHECKS_PATH = ROOT / "views" / "vectors" / "record-checks.v1.json"
 SPEC = "docs/views/generic-kinds.md"
 HISTOGRAM_CONTENT = "content.nemar.histogram.v1.schema.json"
 IC_CLASSES_CONTENT = "content.nemar.ic-classes.v1.schema.json"
@@ -842,6 +847,20 @@ def histogram_cases() -> list[Case]:
         summed_variance_pct=[80.5, 19.5],
         n_components=35,
     )
+    tenths = content(
+        edges=[0, 0.1, 0.2, 0.3], counts=[4, 5, 6], underflow=0, overflow=0
+    )
+    fractions = content(
+        edges=[0, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5, 1],
+        counts=[40, 22, 18, 9, 6, 3, 1, 1],
+        underflow=0,
+        overflow=0,
+    )
+    lacking = content(
+        edges=[0, 50, 100], counts=[3, 4], underflow=0, overflow=1, missing=2
+    )
+    lacking_classes = content(categories=["a", "b"], counts=[3, 4], missing=5)
+    tiny = content(edges=[0, 1e-12, 3e-12], counts=[1, 2], underflow=0, overflow=0)
     nested_64 = (
         b'{"categories": ["a"], "counts": [1], "x": ' + b"[" * 63 + b"]" * 63 + b"}\n"
     )
@@ -862,6 +881,43 @@ def histogram_cases() -> list[Case]:
             "negative zero, so the total and max_count are 0, not -0.",
             histogram_view(negative_zeros),
             {HIST_AT: negative_zeros},
+        ),
+        Case(
+            "histogram_equal_widths_to_rounding",
+            "Edges 0, 0.1, 0.2 and 0.3, whose binary64 widths differ in the last "
+            "bit: equal widths, so heights are counts.",
+            histogram_view(tenths),
+            {HIST_AT: tenths},
+        ),
+        Case(
+            "histogram_unequal_widths",
+            "The bins of a dataQuality distribution (0, 0.01, 0.02, 0.05, 0.1, "
+            "0.2, 0.3, 0.5, 1): unequal widths, so each bar's height is its "
+            "density, count over width, and the model says so (heights density).",
+            histogram_view(fractions),
+            {HIST_AT: fractions},
+            locates=[0.005, 0.05, 1, 1.5],
+        ),
+        Case(
+            "histogram_tiny_unequal_widths",
+            "Edges 0, 1e-12 and 3e-12: widths 1e-12 and 2e-12 differ from the "
+            "first by far more than 1e-9 times the widest, however small they "
+            "are, so heights are densities.",
+            histogram_view(tiny),
+            {HIST_AT: tiny},
+        ),
+        Case(
+            "histogram_missing_edges",
+            "Values missing or not a number, counted apart: shown beside the "
+            "bars, outside the total.",
+            histogram_view(lacking),
+            {HIST_AT: lacking},
+        ),
+        Case(
+            "histogram_missing_categories",
+            "A missing count beside bins by category.",
+            histogram_view(lacking_classes),
+            {HIST_AT: lacking_classes},
         ),
         Case(
             "histogram_edges",
@@ -970,6 +1026,23 @@ def histogram_cases() -> list[Case]:
             "histogram_total_with_underflow_beyond_2_53",
             content(edges=[0, 1], counts=[2**53 - 1], underflow=1, overflow=0),
             "The underflow counts in the total: cap_exceeded.",
+        ),
+        (
+            "histogram_bin_too_wide",
+            content(edges=[-1.7e308, 1.7e308], counts=[1], underflow=0, overflow=0),
+            "A bin from -1.7e308 to 1.7e308, wider than binary64 holds: "
+            "cap_exceeded, since its density cannot be computed.",
+        ),
+        (
+            "histogram_density_too_large",
+            content(edges=[0, 1e-308], counts=[2], underflow=0, overflow=0),
+            "Two values in a bin 1e-308 wide: the density, count over width, "
+            "overflows binary64, so cap_exceeded.",
+        ),
+        (
+            "histogram_total_with_missing_beyond_2_53",
+            content(categories=["a"], counts=[2**53 - 1], missing=1),
+            "The missing count in the sum a renderer may compute: cap_exceeded.",
         ),
         (
             "histogram_byte_order_mark",
@@ -3713,6 +3786,11 @@ def data_quality_verdicts() -> list[tuple[str, str, dict]]:
         _set(entry, f"{ica}/input_kind", "bids"), f"{ica}/profile", "archive"
     )
     metric = "nemar-quality:percentBrainComponents"
+    skipped = {
+        "key": "icactivity",
+        "kind": "nemar.ic-activity",
+        "reason": "labels_unusable",
+    }
     return [
         ("dataquality_record", "The example's record entry.", entry),
         (
@@ -3731,6 +3809,23 @@ def data_quality_verdicts() -> list[tuple[str, str, dict]]:
             "An entry of the archive whose views name stores of the serving copy: "
             "a store's profile is its entry's.",
             archive,
+        ),
+        (
+            "dataquality_views_skipped",
+            "A view the run did not write for this recording, with the reason.",
+            _set(entry, f"{ica}/views_skipped", [skipped]),
+        ),
+        (
+            "dataquality_views_skipped_closed",
+            "A skipped view is {key, kind, reason}, closed.",
+            _set(entry, f"{ica}/views_skipped", [skipped | {"note": "x"}]),
+        ),
+        (
+            "dataquality_views_skipped_reason",
+            "A reason is a lowercase word.",
+            _set(
+                entry, f"{ica}/views_skipped", [skipped | {"reason": "Labels Unusable"}]
+            ),
         ),
         (
             "dataquality_plugin_name_with_dot",
@@ -3755,6 +3850,21 @@ def content_verdicts() -> list[tuple[str, str, object]]:
             cats | {"counts": [9007199254740993, *cats["counts"][1:]]},
         ),
         ("content_edges", "Bins by edges.", edges),
+        (
+            "content_edges_missing",
+            "Values missing or not a number, counted apart.",
+            edges | {"missing": 3},
+        ),
+        (
+            "content_categories_missing",
+            "A missing count beside bins by category.",
+            cats | {"missing": 0},
+        ),
+        (
+            "content_missing_negative",
+            "A negative missing count.",
+            edges | {"missing": -1},
+        ),
         (
             "content_edges_no_unit",
             "unit is optional.",
@@ -5762,6 +5872,96 @@ def _scalars(value) -> str:
     return text
 
 
+def record_checks() -> dict:
+    """nemar.record-checks.v1: an entry of the example, and the cross-field
+    rules of a recording's dataQuality entry that the schema cannot state."""
+    document = json.loads(PRESET_EXAMPLE.read_text(encoding="utf-8"))
+    entry = document["recipes"]["nemar-ica"]
+    metric = "nemar-quality:percentBrainComponents"
+    first, second = entry["views"][0]["key"], entry["views"][1]["key"]
+    plugin = {"plugin": {"name": "nemar-quality", "version": "0.1.0"}}
+    activity = {"kind": "nemar.ic-activity", "reason": "step_failed"}
+    lines = {"key": "linenoise", "kind": "nemar.lines", "reason": "plugin_failed"}
+    cases = [
+        ("record", "The example's entry: no finding.", entry),
+        (
+            "metric_prefix_other_plugin",
+            "A metric nemar-quality:x whose producer is the plugin evil-plugin.",
+            _set(entry, f"metrics/{metric}/plugin/name", "evil-plugin"),
+        ),
+        (
+            "bare_metric_other_recipe",
+            "A bare metric in the nemar-ica entry produced by the recipe nemar-floor.",
+            _set(entry, "metrics/icaRank/recipe/name", "nemar-floor"),
+        ),
+        (
+            "view_source_other_recipe",
+            "A view in the nemar-ica entry whose source is another recipe.",
+            _set(
+                entry,
+                "views/0/source",
+                {"recipe": {"name": "someone-else", "version": "9"}},
+            ),
+        ),
+        (
+            "view_source_plugin",
+            "A view a plugin wrote within the run: the plugin's, no finding.",
+            _set(entry, "views/0/source", plugin),
+        ),
+        (
+            "view_key_repeated",
+            "Two views with one key: the second is the finding.",
+            _set(entry, "views/1/key", first),
+        ),
+        (
+            "skipped_key_names_a_view",
+            "A view skipped under the key of a view the entry declares.",
+            entry | {"views_skipped": [{"key": second} | activity]},
+        ),
+        (
+            "skipped_key_repeated",
+            "A key skipped twice.",
+            entry | {"views_skipped": [lines, lines]},
+        ),
+        (
+            "every_finding_in_order",
+            "Every rule broken at once: metrics, then views, then the views "
+            "skipped, each in document order.",
+            _set(
+                _set(
+                    _set(entry, "views/1/key", first),
+                    "views/1/source",
+                    {"recipe": {"name": "nemar-floor", "version": "1"}},
+                ),
+                f"metrics/{metric}/plugin/name",
+                "evil-plugin",
+            )
+            | {"views_skipped": [{"key": first} | activity]},
+        ),
+    ]
+    return {
+        "format": RECORD_CHECKS_FORMAT,
+        "spec": "docs/processing-extensions.md",
+        "description": (
+            "The rules of a recording's dataQuality entry that JSON Schema cannot "
+            "state. For each case, run the record checks on entry, the entry of "
+            "the recipe recipe, and compare the findings with expected: each "
+            "{word, at}, at a slash path inside the entry, metrics first, then "
+            "views, then views_skipped, in document order; an empty list passes."
+        ),
+        "cases": [
+            {
+                "name": name,
+                "covers": covers,
+                "recipe": "nemar-ica",
+                "entry": body,
+                "expected": check_record("nemar-ica", body),
+            }
+            for name, covers, body in cases
+        ],
+    }
+
+
 def render() -> dict[Path, str]:
     """The text of each vectors file, and of each file of the example's product."""
     out = {
@@ -5770,6 +5970,7 @@ def render() -> dict[Path, str]:
             (MODELS_PATH, models()),
             (VERDICTS_PATH, verdicts()),
             (PRESET_CHECKS_PATH, preset_checks()),
+            (RECORD_CHECKS_PATH, record_checks()),
         )
     }
     for location, data in example_product().items():

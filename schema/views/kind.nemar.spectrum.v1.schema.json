@@ -41,7 +41,7 @@
       "properties": {
         "method": {
           "const": "welch",
-          "description": "Welch's method: the average of the periodograms of overlapping windows."
+          "description": "Welch's method: the mean of the periodograms of overlapping windows of window_s seconds, each detrended by its own mean and tapered by window; one-sided (the power above 0 and below half the rate doubled); the 0 Hz row left out by rule, since detrending each window by its mean makes it meaningless (docs/views/presets.md)."
         },
         "window": {
           "type": "string",

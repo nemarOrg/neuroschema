@@ -5,7 +5,7 @@ No figure image is stored: a view names small data files and says what they mean
 The files are tab-separated values (TSV) or JavaScript Object Notation (JSON) today.
 neuroschema owns the vocabulary: the declaration (`schema/definitions/view.schema.json`), the kinds (`schema/views/`), the registry (`views/registry.json`), and the algorithms with their test vectors (`docs/views/`, `views/vectors/`).
 
-A recording's views sit in its record-level `dataQuality` entry, under `recipes.<recipe id>.views` (at most 32).
+A recording's views sit in its record-level `dataQuality` entry, under `recipes.<recipe id>.views` (at most 32), and the views its run did not write for it, with the reason, under `views_skipped` ([Views a run skipped](#views-a-run-skipped)).
 In the signalJourney record a run writes, the same declarations sit in `extensions.nemar.views`, and each data file is an `outputTargets` entry of the step that wrote it; the NEMAR backend projects them into `dataQuality`.
 
 ## The declaration
@@ -151,6 +151,20 @@ These names are reserved, with fixed meanings (`reserved_dims` in the registry):
 No name is banned.
 A view does not carry a recording's samples: its declared derivation (the step and parameters that wrote it, or its inputs by digest and a named transform), the caps below and the review of every plugin hold that together.
 
+## Views a run skipped
+
+A recording's `dataQuality` entry may list, in `views_skipped`, the views its run declares for a recording and did not write for this one, as `{key, kind, reason}`: the view's key and kind as the run declares them elsewhere, and why it is absent.
+A renderer that finds a view of other recordings missing here says why, with the reason's sentence, instead of leaving it out silently; a reason this table does not list is shown as its word.
+The keys are unique, and none is the key of a view the entry declares (the writer's rule).
+
+| Reason | Sentence |
+|---|---|
+| `labels_unusable` | The channel labels cannot head the matrix's columns, so the file the view reads was not written (for nemar-ica, a decomposition of the archive whose labels fall back to `Ch001`, `Ch002` and so on). |
+| `plugin_failed` | The plugin that writes the view failed on this recording. |
+| `step_failed` | The step whose output the view draws failed on this recording. |
+| `step_skipped` | The step whose output the view draws was skipped for this recording. |
+| `cap_exceeded` | The view's data would exceed the registry's caps, so it was not written. |
+
 ## Inputs and transforms
 
 A computed view names its inputs and the transform that computes it; the browser computes it and nothing stores the result.
@@ -235,7 +249,7 @@ The schema checks the envelope, each registered kind and transform, identifier p
 Every integer it takes is at most 2^53 - 1 in magnitude, and every verdict is on the binary64 reading of the declaration ([JSON](#json)), so jsonschema and ajv agree on it.
 JSON Schema cannot compare one value with another, so the writer enforces:
 
-- view keys are unique within a recipe entry, and roles are unique within a view;
+- view keys are unique within a recipe entry, and a view's `source` recipe is the entry's (record checks the backend and a renderer run too: [processing-extensions.md](processing-extensions.md#record-checks)), and roles are unique within a view;
 - column names are unique within a role, and every declared column is in the file's header;
 - a `{role, column}` coordinate names a role of the same view and a column that role declares;
 - `size` and `sha256` are those of the file, and `location` is the `outputTargets` location of the step that wrote it;

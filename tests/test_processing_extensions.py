@@ -400,6 +400,63 @@ def test_each_view_store_names_the_copy_its_entry_read(input_kind, profile, stor
     assert failing <= errors_for(DATA_QUALITY, doc)
 
 
+SKIPPED = {
+    "key": "icactivity",
+    "kind": "nemar.ic-activity",
+    "reason": "labels_unusable",
+}
+
+
+@pytest.mark.parametrize(
+    ("change", "expected"),
+    [
+        ({}, set()),
+        ({"reason": "an_unlisted_word"}, set()),
+        ({"reason": "Labels Unusable"}, {("pattern", "reason")}),
+        ({"kind": "Nemar.Ic"}, {("pattern", "kind")}),
+        ({"key": "ic-activity"}, {("pattern", "key")}),
+        ({"note": "x"}, {("additionalProperties", "")}),
+    ],
+)
+def test_views_skipped_say_why(change, expected):
+    """An entry lists the views its run did not write, with a reason (F3);
+    the reason is an open word, and each item is closed."""
+    doc = json.loads(
+        (EXAMPLES_DIR / "views" / "dataquality-record-nemar-ica.json").read_text()
+    )
+    entry = doc["recipes"]["nemar-ica"]
+    entry["views_skipped"] = [SKIPPED | change]
+    base = "recipes/nemar-ica/views_skipped/0"
+    found = errors_for(DATA_QUALITY, doc)
+    assert found == {(v, f"{base}/{p}" if p else base) for v, p in expected}
+
+
+def test_views_skipped_need_every_member():
+    doc = json.loads(
+        (EXAMPLES_DIR / "views" / "dataquality-record-nemar-ica.json").read_text()
+    )
+    skipped = dict(SKIPPED)
+    del skipped["reason"]
+    doc["recipes"]["nemar-ica"]["views_skipped"] = [skipped]
+    assert errors_for(DATA_QUALITY, doc) == {
+        ("required", "recipes/nemar-ica/views_skipped/0")
+    }
+
+
+def test_the_skip_reasons_are_documented():
+    """The words table lists the reasons the schema names."""
+    schema = json.loads(DATA_QUALITY.read_text())
+    named = re.findall(
+        r"[a-z]+_[a-z_]+",
+        schema["$defs"]["viewSkipped"]["properties"]["reason"]["description"],
+    )
+    section = (
+        (ROOT / "docs" / "views.md").read_text().split("## Views a run skipped")[1]
+    )
+    table = re.findall(r"^\| `([a-z_]+)` \|", section.split("\n## ")[0], re.M)
+    assert named == table
+
+
 class TestDataQualityRecord:
     def test_valid(self):
         assert errors_for(DATA_QUALITY, dq_record()) == set()
