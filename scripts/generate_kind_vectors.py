@@ -1526,6 +1526,9 @@ POSITIONS_1005 = {
         (ROOT / "views" / "montages" / "standard_1005.json").read_text("utf-8")
     )["electrodes"]
 }
+FIDUCIALS_1005 = json.loads(
+    (ROOT / "views" / "montages" / "standard_1005.json").read_text("utf-8")
+)["fiducials"]
 # An intracranial implant in millimeters (ACPC): two depth shafts (SEEG), a
 # strip on the left temporal lobe (ECOG) and a deep brain stimulation lead
 # (DBS), named as clinicians name them, some like scalp electrodes.
@@ -1612,9 +1615,11 @@ def field_view(
     sensor_columns=None,
     kind: str = "nemar.sensor-field",
     extra: list | None = None,
+    values_fields: dict | None = None,
     **fields,
 ) -> tuple[dict, dict]:
-    """A scalp map view and its files: values, and a layout or positions role."""
+    """A scalp map view and its files: values (with ``values_fields`` on its
+    entry), and a layout or positions role."""
     entry = data_entry(
         "values",
         FIELD_AT,
@@ -1625,6 +1630,7 @@ def field_view(
             dim("sensor", "rows", "string", {"role": role, "column": "name"}),
             MAPS_HEADER,
         ],
+        **(values_fields or {}),
     )
     data, files = [entry], {FIELD_AT: values}
     if sensors is not None:
@@ -1862,6 +1868,108 @@ def sensor_field_cases() -> list[Case]:
             positions={"coordinate_system": "Other"},
         ),
     )
+    motor = ["FC3", "FCz", "FC4", "C5", "C3", "C1", "Cz", "C2", "C4", "C6"]
+    motor += ["CP3", "CP1", "CPz", "CP2", "CP4", "Pz"]
+    case(
+        "sensor_field_positions_partial_names",
+        "Measured positions of 16 motor-imagery electrodes, FC3 to Pz: they "
+        "cover the top of the head only (positions_partial), so the sensors "
+        "are placed by name on standard_1005 instead, and the model says why "
+        "the positions were not used.",
+        field_view(mixing(16), electrodes(names=motor), "positions"),
+    )
+    # An EGI 128-channel net with its vertex reference, named in the values
+    # file: the cap model and the reference are the values entry's.
+    net = [f"E{i}" for i in range(1, 129)] + ["Cz"]
+    hbn = {"cap_model": "HydroCel GSN 128 1.0", "reference": "Cz"}
+
+    def net_values(cz=("0", "-0", "0")):
+        rows = [[n] + [pattern(k, m) for m in range(3)] for k, n in enumerate(net)]
+        rows[-1][1:] = list(cz)
+        return text_tsv(["name", "IC001", "IC002", "IC003"], rows)
+
+    for name, covers, cz, fields in [
+        (
+            "sensor_field_names_egi_cap_model",
+            "E1 to E128 and Cz named in the values, with the cap model HydroCel "
+            "GSN 128 1.0 on the values entry: placed on GSN-HydroCel-129, and "
+            "every map is drawn, Cz among the sensors (no reference given).",
+            ("1.5", "-0.5", "0.25"),
+            {"cap_model": hbn["cap_model"]},
+        ),
+        (
+            "sensor_field_names_egi_no_cap_model",
+            "The same names with no cap model: an EGI net's numbers alone do "
+            "not say which net, so cap_model_unknown takes every map's place.",
+            ("1.5", "-0.5", "0.25"),
+            {},
+        ),
+        (
+            "sensor_field_names_reference_zero",
+            "The HBN net as published but with its cap model corrected, and "
+            "EEGReference Cz: Cz is the reference channel, its values are 0, "
+            "-0 and 0, all exactly zero, so no map draws it; the 128 others "
+            "are drawn.",
+            ("0", "-0", "0"),
+            hbn,
+        ),
+        (
+            "sensor_field_names_reference_with_data",
+            "The same, with Cz zero in two maps and 0.25 in the third (data "
+            "re-referenced after recording): the reference channel carries "
+            "data, so every map draws it.",
+            ("0", "0", "0.25"),
+            hbn,
+        ),
+    ]:
+        case(
+            name,
+            covers,
+            names_view(
+                net_values(cz),
+                NAMED_COLUMNS,
+                [NAME_ROWS, MAPS_HEADER],
+                values_fields=fields,
+            ),
+        )
+    flat_net = [(n, 0.01 * (k % 12), 0.01 * (k // 12), 0.0) for k, n in enumerate(net)]
+    case(
+        "sensor_field_positions_egi_reference",
+        "Measured positions of the same net on one plane, typed EEG, whose "
+        "role carries the cap model and EEGReference Cz: positions_flat, so "
+        "the sensors are placed by name on GSN-HydroCel-129 with the role's "
+        "cap model, and Cz, the reference, all zero, is not drawn.",
+        field_view(
+            net_values(),
+            electrodes(at=flat_net),
+            "positions",
+            columns=map_columns(),
+            dims=[
+                dim(
+                    "sensor", "rows", "string", {"role": "positions", "column": "name"}
+                ),
+                MAPS_HEADER,
+            ],
+            positions=hbn,
+        ),
+    )
+    with_fiducials = [(n, *POSITIONS_1005[n]) for n in NAMES_1020] + [
+        (name, *FIDUCIALS_1005[key])
+        for name, key in (("Nz", "nasion"), ("LPA", "lpa"), ("RPA", "rpa"))
+    ]
+    case(
+        "sensor_field_positions_fiducial_rows",
+        "The 10-20 positions with the nasion and the preauricular points as "
+        "rows named Nz, LPA and RPA, every row typed EEG: a fiducial is never "
+        "a scalp row, so the projection, given the rows' names, fits the 19 "
+        "electrodes alone and gives the fiducials no place; they are not drawn.",
+        field_view(
+            mixing(22),
+            electrodes(at=with_fiducials),
+            "positions",
+            columns=map_columns(),
+        ),
+    )
     channels = [f"Ch{k + 1}" for k in range(19)]
     case(
         "sensor_field_positions_flat_names_refused",
@@ -2060,6 +2168,36 @@ def sensor_field_cases() -> list[Case]:
             "positions",
             sensor_columns=mm_columns,
             positions=in_1005,
+        ),
+    )
+    case(
+        "template_layout_montage_unknown",
+        "A template layout naming acme-cap-19, a montage views/montages does "
+        "not hold: a layout is drawn as stored, so the placement refuses it "
+        "(montage_unknown) rather than draw places from no known montage.",
+        field_view(
+            values,
+            chanlocs(types=None),
+            layout={
+                "coordinate_system": "n/a",
+                "position_source": "template",
+                "montage": "acme-cap-19",
+            },
+        ),
+    )
+    case(
+        "template_layout_older_net_name_unknown",
+        "A template layout of GSN129, an older EGI net that serves template "
+        "positions only, whose rows are the 10-20 names: none is an electrode "
+        "of it (template_name_unknown), as for any montage views/montages holds.",
+        field_view(
+            values,
+            chanlocs(types=None),
+            layout={
+                "coordinate_system": "n/a",
+                "position_source": "template",
+                "montage": "GSN129",
+            },
         ),
     )
     case(
@@ -4365,6 +4503,37 @@ def sensor_field_verdicts() -> list[tuple[str, str, dict]]:
             "Template positions without sensor_type: valid.",
             field_view(
                 mixing(), electrodes(types=None), "positions", positions=template
+            )[0],
+        ),
+        (
+            "sensor_field_positions_label_inputs",
+            "Positions carrying the recording's cap_model and reference, which "
+            "a placement by name reads: valid.",
+            field_view(
+                mixing(),
+                electrodes(),
+                "positions",
+                positions={"cap_model": "HydroCel GSN 128", "reference": "Cz"},
+            )[0],
+        ),
+        (
+            "sensor_field_values_label_inputs",
+            "Names in the values carrying cap_model and reference: valid.",
+            names_view(
+                named_values(),
+                NAMED_COLUMNS,
+                [NAME_ROWS, MAPS_HEADER],
+                values_fields={"cap_model": "HydroCel GSN", "reference": "Cz"},
+            )[0],
+        ),
+        (
+            "sensor_field_layout_label_inputs",
+            "A layout carrying a cap_model and a reference: refused, since a "
+            "layout is drawn as stored and never placed by name.",
+            field_view(
+                mixing(),
+                chanlocs(),
+                layout={"cap_model": "HydroCel GSN", "reference": "Cz"},
             )[0],
         ),
     ]

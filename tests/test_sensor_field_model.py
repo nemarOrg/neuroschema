@@ -311,7 +311,7 @@ TYPES += ["n/a", "N/A", "", "  ", "MEGMAG", "eeg2", "\u00a0EEG", "\uff25EG", Non
 
 @pytest.mark.parametrize("text", TYPES)
 def test_a_type_is_read_as_sensor_labels_reads_it(text):
-    assert models.sensor_type_class(text) == sensor_labels._type_class(text)
+    assert models.sensor_type_class(text) == sensor_labels.type_class(text)
 
 
 @pytest.mark.parametrize(
@@ -588,14 +588,111 @@ def test_the_vectors_catch_a_projection_never_used(monkeypatch):
 
     projected = models._projected
 
-    def refuse(xyz, coordinate_system, montage, rows, count):
+    def refuse(xyz, coordinate_system, montage, *rows_count_names_types):
         """Measured positions are never projected; templates still are."""
         if montage is None:
             raise SensorLayoutRefusal("positions_flat", "always")
-        return projected(xyz, coordinate_system, montage, rows, count)
+        return projected(xyz, coordinate_system, montage, *rows_count_names_types)
 
     monkeypatch.setattr(models, "_projected", refuse)
     assert failing()
+
+
+def test_a_placement_by_name_reads_the_cap_model_and_reference():
+    """The role that names the sensors carries the recording's cap model and
+    reference; a placement by name reads them, and leaves the reference
+    channel out only when all its values, in every map, are exactly zero."""
+    expected = {
+        "sensor_field_names_egi_cap_model": ("GSN-HydroCel-129", None, None, 129),
+        "sensor_field_names_egi_no_cap_model": (None, "cap_model_unknown", None, 0),
+        "sensor_field_names_reference_zero": ("GSN-HydroCel-129", None, "Cz", 128),
+        "sensor_field_names_reference_with_data": (
+            "GSN-HydroCel-129",
+            None,
+            "Cz",
+            129,
+        ),
+        "sensor_field_positions_egi_reference": ("GSN-HydroCel-129", None, "Cz", 128),
+    }
+    for name, (montage, word, reference, drawn) in expected.items():
+        model = BY_NAME[name]["model"]["model"]
+        placement = model["placement"]
+        assert (placement["montage"], placement["word"]) == (montage, word), name
+        assert placement["reference"] == reference, name
+        assert sum(model["sensors"]["drawn"]) == drawn, name
+    sensors = models._Sensors(["Cz"])
+    assert models.label_inputs(sensors, {"cap_model": 7, "reference": "Cz"}) == {
+        "cap_model": None,
+        "reference": "Cz",
+    }
+    role = models._Sensors(["Cz"], "positions", {"reference": "FCz"})
+    assert models.label_inputs(role, {"reference": "Cz"})["reference"] == "FCz"
+
+
+def test_a_template_layout_names_a_held_montage():
+    model = BY_NAME["template_layout_montage_unknown"]["model"]["model"]
+    assert model["placement"]["word"] == "montage_unknown"
+    assert not any(model["sensors"]["drawn"])
+
+
+def test_the_projection_reads_the_rows_names():
+    """Fiducial rows typed EEG get no layout and are not drawn."""
+    drawn = BY_NAME["sensor_field_positions_fiducial_rows"]["model"]["model"]
+    assert drawn["sensors"]["drawn"] == [True] * 19 + [False] * 3
+
+
+def test_the_vectors_catch_label_inputs_never_read(monkeypatch):
+    monkeypatch.setattr(models, "label_inputs", lambda *_a: {})
+    assert set(failing()) >= {
+        "sensor_field_names_egi_cap_model",
+        "sensor_field_names_reference_zero",
+        "sensor_field_positions_egi_reference",
+    }
+
+
+def test_the_vectors_catch_a_projection_without_names(monkeypatch):
+    projected = models._projected
+
+    def unnamed(xyz, coordinate_system, montage, rows, count, _names, _types):
+        """Every row is a scalp row: no names, no types."""
+        blank = [""] * count
+        return projected(xyz, coordinate_system, montage, rows, count, blank, None)
+
+    monkeypatch.setattr(models, "_projected", unnamed)
+    assert "sensor_field_positions_fiducial_rows" in failing()
+
+
+@pytest.mark.parametrize(
+    ("old", "new", "caught"),
+    [
+        (
+            "if all(values[reference] == 0 for _m, values, _t in maps):",
+            "if any(values[reference] == 0 for _m, values, _t in maps):",
+            "sensor_field_names_reference_with_data",
+        ),
+        (
+            "if all(values[reference] == 0 for _m, values, _t in maps):",
+            "if False:",
+            "sensor_field_names_reference_zero",
+        ),
+        (
+            'placement["reference"] = sensors.labels[reference]',
+            "pass",
+            "sensor_field_names_reference_with_data",
+        ),
+        (
+            'placement["word"] = "montage_unknown"',
+            "pass",
+            "template_layout_montage_unknown",
+        ),
+    ],
+)
+def test_the_vectors_catch_a_wrong_reference_or_montage_rule(
+    monkeypatch, old, new, caught
+):
+    variant = _variant(models.sensor_field_model, old, new)
+    monkeypatch.setattr(models, "sensor_field_model", variant)
+    assert caught in failing()
 
 
 def test_the_vectors_catch_names_never_placed(monkeypatch):
@@ -704,7 +801,11 @@ def test_untyped_rows_are_drawn_only_from_templates_and_names():
 def test_template_positions_name_their_montage():
     """Every row of a template role names an electrode of its montage, compared
     as sensor-labels compares names; the check is by name, never by place."""
-    for name in ("template_names_not_in_montage", "template_layout_name_unknown"):
+    for name in (
+        "template_names_not_in_montage",
+        "template_layout_name_unknown",
+        "template_layout_older_net_name_unknown",
+    ):
         placement = BY_NAME[name]["model"]["model"]["placement"]
         assert placement["word"] == "template_name_unknown", name
     boundary = BY_NAME["template_strip_named_like_the_montage"]["model"]["model"]

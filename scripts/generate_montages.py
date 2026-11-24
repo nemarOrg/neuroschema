@@ -1,15 +1,22 @@
-"""Generate the montages and vectors of ``nemar.sensor-labels.v1`` from MNE-Python.
+"""Generate the montages and vectors of ``nemar.sensor-labels.v1`` from MNE-Python
+and EEGLAB.
 
     uv run --group vectors python scripts/generate_montages.py
     uv run --group vectors python scripts/generate_montages.py --check
 
 Writes ``views/montages/<name>.json`` (one per montage), ``views/montages/
-PROVENANCE.json`` (MNE-Python's version and license, each montage's MNE source
-file and its upstream origin, and the BioSemi angle corrections) and
+PROVENANCE.json`` (MNE-Python's version and license, EEGLAB's commit and
+license, each montage's source file and its upstream origin, and the BioSemi
+angle corrections) and
 ``views/vectors/sensor-labels.v1.json`` (the
 cases every implementation reproduces, computed by the Python reference from the
 montages written here). ``--check`` regenerates everything in memory and exits
 with status 1 when a file on disk differs, is missing or is not generated here.
+
+The older EGI nets come from EEGLAB's ``sample_locs`` files, copied unchanged
+into ``scripts/montage_sources/eeglab`` (with EEGLAB's LICENSE) from
+sccn/eeglab at EEGLAB_COMMIT; each file's SHA-256 is pinned in EEGLAB_SHA256,
+and MNE-Python's own .sfp reader reads them as it reads the HydroCel nets.
 
 The output is deterministic: coordinates are rounded to 9 decimal places of a
 meter (1 nm), which absorbs last-bit differences in the trigonometry of the
@@ -35,8 +42,10 @@ from neuroschema.views.sensor_labels import (
     FIDUCIALS,
     MONTAGE_ALIASES,
     MONTAGE_FORMAT,
+    MONTAGE_NAMES,
     MONTAGE_ORDER,
     NON_EEG_PREFIXES,
+    TEMPLATE_ONLY_MONTAGES,
     infer_positions,
     label_key,
     montage_from_json,
@@ -100,6 +109,23 @@ SOURCE_SHA256 = {
     ),
 }
 
+# EEGLAB's sample_locs files for the older EGI nets, copied unchanged from
+# sccn/eeglab (develop at EEGLAB_COMMIT; every file last changed in
+# EEGLAB_FILES_COMMIT, 2010-02-06), and EEGLAB's LICENSE at EEGLAB_COMMIT.
+EEGLAB_SOURCES = ROOT / "scripts" / "montage_sources" / "eeglab"
+EEGLAB_REPOSITORY = "https://github.com/sccn/eeglab"
+EEGLAB_COMMIT = "1f8488b81eaec671319938278ab59bace267d341"
+EEGLAB_FILES_COMMIT = "188434a932dc34977be8befeefcea85d0e8b918a"
+EEGLAB_SHA256 = {
+    "GSN64v2_0.sfp": "1986f9dd14dea9c2d5d8f717bec1c0e7c04c85dc6b403b4bd36c4ce981e2f69a",
+    "GSN65v2_0.sfp": "c2a89461879fb713078de9cad406dc8cc34738e28b262fc8cade1e60eb5c05f4",
+    "GSN128.sfp": "a127c4faeaa81fe39acc6d2770654c803d6b2a6f473b7d7ba39c8d2429f17e48",
+    "GSN129.sfp": "0340f4505a30b04faa46be47f6761888ad67bbc689d1f8ab7fc3b0fc2af75c8b",
+    "GSN256.sfp": "ef3a1b6009358fc378969fa259f2ea245f9b16e6cdf7fe262771efcb58292ab6",
+    "GSN257.sfp": "b130d6508d785a806482facfade59306eb060da378896575c55d9b55872ca6dd",
+    "LICENSE": "f098d1bbf6c5628b507fd4040810b77000fa1796e988be4ee68bd0ff6607bfe2",
+}
+
 UPSTREAM = {
     "FieldTrip": (
         "FieldTrip template/electrode/standard_1005.elc: 10-05 positions "
@@ -119,6 +145,26 @@ UPSTREAM = {
         "same numbers as FieldTrip's (FieldTrip names the 64 and 65 nets without "
         "_1.0); the bytes differ in whitespace. No license is stated for the "
         "layouts by EGI or FieldTrip; MNE-Python ships them under BSD-3-Clause."
+    ),
+    "EGI via EEGLAB": (
+        "Electrical Geodesics, Inc. (EGI) Geodesic Sensor Net layouts from before "
+        "the HydroCel nets, in EGI's .sfp format with EGI's fiducial names "
+        "(FidNz, FidT9, FidT10), as EEGLAB ships them in sample_locs: "
+        "GSN64v2_0.sfp and GSN65v2_0.sfp (a 64-channel net, version 2.0, "
+        "without and with Cz), GSN128.sfp and GSN129.sfp (a 128-channel net) "
+        "and GSN256.sfp and GSN257.sfp (a 256-channel net). EEGLAB's "
+        "readegilocs.m, given no file, defaults a 64 or 65 channel EGI recording "
+        "to GSN65v2_0.sfp and a 128 or 129 channel one to GSN129.sfp, with a "
+        "warning to check the file, and has mapped 256 and 257 channels to "
+        "GSN-HydroCel-257.sfp since sccn/eeglab commit 3affa98b (2010-09-24); "
+        "nothing in EEGLAB reads GSN256.sfp or GSN257.sfp. The files record "
+        "neither their EGI source nor a net version beyond the 64 net's, and "
+        "have not changed since commit 188434a9 (2010-02-06, no message). No "
+        "cap model names these nets, so nemar.sensor-labels.v1 never places a "
+        "recording on them by name; they are kept for template positions a "
+        "writer names exactly. EEGLAB's LICENSE (BSD 2-Clause, Copyright "
+        "(c) 2024 Swartz Center for Computational Neuroscience) covers eeglab.m "
+        "and the functions folder and states no license for sample_locs."
     ),
     "BioSemi": (
         "BioSemi head cap layouts (ABC labels, A1 to H32), as spherical angles "
@@ -282,15 +328,18 @@ def bank_labels(count: int) -> list[str]:
 
 @dataclass(frozen=True)
 class Source:
-    """How one montage is made from MNE-Python."""
+    """How one montage is made: from MNE-Python's built-in montage
+    ``mne_kind``, or from the EEGLAB file ``eeglab_file`` read by MNE-Python's
+    .sfp reader."""
 
     name: str
-    mne_kind: str
+    mne_kind: str | None
     head_size: float | None
     scale_to_m: float
     family: str
     upstream: str
     why: str
+    eeglab_file: str | None = None
 
 
 HYDROCEL_WHY = (
@@ -299,6 +348,15 @@ HYDROCEL_WHY = (
     "electrode positions exactly; MNE's default rescales each file by its own "
     "median radius, which moves the 64/65 and 256/257 pairs apart by up to "
     "0.14 mm."
+)
+OLDER_GSN_WHY = (
+    "EEGLAB's file, read by MNE-Python's own .sfp reader with head_size=None "
+    "as the HydroCel nets are: the file's geometry, in centimeters, converted "
+    "to meters. The older nets put each electrode number elsewhere than the "
+    "HydroCel nets: about each montage's own center, a median 22% of the head "
+    "radius from the HydroCel 129 net's place (128 and 129), 19% from the "
+    "HydroCel 257 net's (256 and 257) and 40% from the HydroCel 65 net's (64 "
+    "and 65)."
 )
 BANK_WHY = (
     "MNE's file names the electrodes by the 10-20 system; this montage names "
@@ -349,12 +407,19 @@ SOURCES = (
         )
         for n in ("128", "160", "256")
     ),
+    *(
+        Source(n, None, None, 0.01, "GSN", "EGI via EEGLAB", OLDER_GSN_WHY, f"{n}.sfp")
+        for n in TEMPLATE_ONLY_MONTAGES
+    ),
 )
 # Each net and its Cz variant must share every electrode position exactly.
 CZ_VARIANTS = (
     ("GSN-HydroCel-64_1.0", "GSN-HydroCel-65_1.0"),
     ("GSN-HydroCel-128", "GSN-HydroCel-129"),
     ("GSN-HydroCel-256", "GSN-HydroCel-257"),
+    ("GSN64v2_0", "GSN65v2_0"),
+    ("GSN128", "GSN129"),
+    ("GSN256", "GSN257"),
 )
 
 
@@ -507,17 +572,29 @@ def build_montage(source: Source) -> tuple[str, dict]:
         standard_montage_look_up_table,
     )
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
-        montage = mne.channels.make_standard_montage(
-            source.mne_kind, head_size=source.head_size
-        )
+    if source.eeglab_file is not None:
+        from mne.channels._standard_montage_utils import _read_sfp
+
+        basename = source.eeglab_file
+        source_file = EEGLAB_SOURCES / basename
+        source_sha = sha256(source_file.read_bytes())
+        if source_sha != EEGLAB_SHA256.get(basename):
+            fail(f"{basename} is not EEGLAB's file this generator was written for")
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            montage = _read_sfp(str(source_file), source.head_size)
+    else:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            montage = mne.channels.make_standard_montage(
+                source.mne_kind, head_size=source.head_size
+            )
+        basename = standard_montage_look_up_table[source.mne_kind].keywords["basename"]
+        source_file = Path(MONTAGE_PATH) / basename
+        source_sha = sha256(source_file.read_bytes())
+        if source_sha != SOURCE_SHA256.get(basename):
+            fail(f"{basename} is not the file this generator was written for")
     positions = montage.get_positions()
-    basename = standard_montage_look_up_table[source.mne_kind].keywords["basename"]
-    source_file = Path(MONTAGE_PATH) / basename
-    source_sha = sha256(source_file.read_bytes())
-    if source_sha != SOURCE_SHA256.get(basename):
-        fail(f"{basename} is not the file this generator was written for")
 
     ch_pos = positions["ch_pos"]
     fiducial_pos = {name: positions[name] for name in ("nasion", "lpa", "rpa")}
@@ -578,7 +655,19 @@ def build_montage(source: Source) -> tuple[str, dict]:
         "upstream": source.upstream,
         "notes": [source.why],
     }
-    provenance["mne_montage"] = source.mne_kind
+    if source.eeglab_file is not None:
+        del provenance["mne_source"], provenance["mne_source_sha256"]
+        provenance["mne_call"] = (
+            "mne.channels._standard_montage_utils._read_sfp(<source>, "
+            f"head_size={source.head_size!r}).get_positions()"
+        )
+        provenance["source"] = f"scripts/montage_sources/eeglab/{basename}"
+        provenance["source_sha256"] = source_sha
+        provenance["eeglab_source"] = (
+            f"{EEGLAB_REPOSITORY}/blob/{EEGLAB_COMMIT}/sample_locs/{basename}"
+        )
+    if source.mne_kind is not None:
+        provenance["mne_montage"] = source.mne_kind
     if banks is not None:
         provenance["bank_labels"] = {
             "source": BIOSEMI_DRAWINGS[source.name],
@@ -674,6 +763,73 @@ BANANA = [
     "F8-T8",
     "T8-P8",
     "P8-O2",
+]
+# A Neuroscan Quik-Cap 64's channel names, as its recordings spell them.
+QUIK_CAP_64 = [
+    "FP1",
+    "FPZ",
+    "FP2",
+    "AF3",
+    "AF4",
+    "F7",
+    "F5",
+    "F3",
+    "F1",
+    "FZ",
+    "F2",
+    "F4",
+    "F6",
+    "F8",
+    "FT7",
+    "FC5",
+    "FC3",
+    "FC1",
+    "FCZ",
+    "FC2",
+    "FC4",
+    "FC6",
+    "FT8",
+    "T7",
+    "C5",
+    "C3",
+    "C1",
+    "CZ",
+    "C2",
+    "C4",
+    "C6",
+    "T8",
+    "M1",
+    "TP7",
+    "CP5",
+    "CP3",
+    "CP1",
+    "CPZ",
+    "CP2",
+    "CP4",
+    "CP6",
+    "TP8",
+    "M2",
+    "P7",
+    "P5",
+    "P3",
+    "P1",
+    "PZ",
+    "P2",
+    "P4",
+    "P6",
+    "P8",
+    "PO7",
+    "PO5",
+    "PO3",
+    "POZ",
+    "PO4",
+    "PO6",
+    "PO8",
+    "CB1",
+    "O1",
+    "OZ",
+    "O2",
+    "CB2",
 ]
 PHYSIONET = [
     "Fc5.",
@@ -844,6 +1000,71 @@ CASES = [
         ("placed", None, "standard_1005"),
     ),
     (
+        "neuroscan_auxiliary_names",
+        "A Neuroscan Quik-Cap 64, untyped, with its HEO and VEO eye channels and "
+        "its cerebellar CB1 and CB2, which no montage places: their names "
+        "exclude them, so they are not counted.",
+        [[n, None] for n in QUIK_CAP_64] + [["HEO", None], ["VEO", None]],
+        ("placed", None, "standard_1005"),
+    ),
+    (
+        "clinical_auxiliary_names",
+        "A clinical EDF export (the TUH EEG corpus's names), untyped: the 10-20 "
+        "electrodes and A1 and A2 with -REF, the eye channels ROC, LOC, LUC and "
+        "RLC, an EKG, the photic stimulus and the burst suppression trends IBI, "
+        "BURSTS and SUPPR. The auxiliary names are excluded, so 21 of 21 "
+        "candidates match; counted, they would hold the share to 21 of 28.",
+        [
+            *([f"EEG {n.upper()}-REF", None] for n in [*LEGACY, "A1", "A2"]),
+            *(
+                [f"EEG {n}-REF", None]
+                for n in ["ROC", "LOC", "LUC", "RLC", "EKG1", "PHOTIC"]
+            ),
+            ["IBI", None],
+            ["BURSTS", None],
+            ["SUPPR", None],
+        ],
+        ("placed", None, "standard_1005"),
+    ),
+    (
+        "unicode_newer_than_some_runtimes",
+        "Characters whose Unicode normalization (NFKC) to ASCII depends on the "
+        "Unicode version a runtime ships: OZ in outlined letters (U+1CCE4 "
+        "U+1CCEF, Unicode 16), AF and an outlined 7 (U+1CCF7), Fp and the "
+        "subscript z of Unicode 18 (U+209F), and the modifier capital C "
+        "(U+A7F2, Unicode 14) before P1. The fold table maps none of them, so "
+        "every runtime leaves the four unmatched.",
+        eeg(
+            [
+                *TEN_TWENTY,
+                "\U0001cce4\U0001ccef",
+                "AF\U0001ccf7",
+                "Fp\u209f",
+                "\ua7f2P1",
+            ]
+        ),
+        ("placed", None, "standard_1005"),
+    ),
+    (
+        "unicode_compatibility_characters",
+        "Compatibility characters NFKC folds to ASCII in every runtime, but the "
+        "fold table does not: a subscript two (F\u2082), a Roman numeral one "
+        "hundred (U+216D) before 1, bold mathematical P, O and z (U+1D40F "
+        "U+1D428 U+1D433), and a superscript four (AF\u2074). They stay "
+        "unmatched; full-width letters and digits still fold (C3 in full width "
+        "is a duplicate of C3 and is not used here).",
+        eeg(
+            [
+                *TEN_TWENTY,
+                "F\u2082",
+                "\u216d1",
+                "\U0001d40f\U0001d428\U0001d433",
+                "AF\u2074",
+            ]
+        ),
+        ("placed", None, "standard_1005"),
+    ),
+    (
         "common_reference_suffix",
         "Every name but the reference's carries -Cz: the shared suffix is the "
         "recording's reference and is stripped.",
@@ -980,6 +1201,14 @@ CASES = [
         ("placed", None, "standard_1005"),
     ),
     (
+        "fiducial_names_of_egi_and_eeglab",
+        "EGI's and EEGLAB's names for the nasion and the preauricular points "
+        "(FidNz, FidT9, FidT10, Nasion, LeftEar, RightEar) are fiducials too.",
+        eeg([*TEN_TWENTY[:8], "FidNz", "FidT9", "FidT10", "Nasion", "LeftEar"])
+        + eeg(["RightEar"]),
+        ("placed", None, "standard_1005"),
+    ),
+    (
         "vref_outside_egi_nets",
         "VREF is Cz only on an EGI net, so on the 10-05 montage it stays unplaced.",
         eeg([n for n in TEN_TWENTY if n != "Cz"] + ["VREF"]),
@@ -987,123 +1216,293 @@ CASES = [
     ),
     (
         "egi_129",
-        "An EGI 128-channel net with its vertex reference (E1 to E128 and Cz). "
-        "The 257 net holds the same names, but the 129 net, of the same family "
-        "and smaller, holds every name the 257 net matched.",
+        "An EGI 128-channel net with its vertex reference (E1 to E128 and Cz), "
+        "on a cap named HydroCel GSN 128 1.0 (the sensor layout name an MFF "
+        "recording carries). The 257 net holds the same names, but the 129 net, "
+        "of the same family and smaller, holds every name the 257 net matched.",
         egi(128, ["Cz"]),
         ("placed", None, "GSN-HydroCel-129"),
+        "HydroCel GSN 128 1.0",
     ),
     (
         "egi_129_zeros_and_vref",
-        "Zero-padded numbers and VREF for the vertex reference.",
+        "Zero-padded numbers and VREF for the vertex reference, on a cap named "
+        "by its montage name, GSN-HydroCel-129.",
         egi(128, ["VREF"], width=3),
         ("placed", None, "GSN-HydroCel-129"),
+        "GSN-HydroCel-129",
     ),
     (
         "egi_128",
-        "E1 to E128: the 129, 256 and 257 nets hold every name the 128 net "
-        "matched and are larger nets of its family, so they do not contend.",
+        "E1 to E128 on a HydroCel GSN 128 1.0: the 129, 256 and 257 nets hold "
+        "every name the 128 net matched and are larger nets of its family, so "
+        "they do not contend.",
         egi(128),
         ("placed", None, "GSN-HydroCel-128"),
+        "HydroCel GSN 128 1.0",
     ),
     (
         "egi_e129",
         "E1 to E129, as many EGI exports name a 129-channel net: E129 is Cz on "
         "the 129 net. The 256 and 257 nets hold E129 as an electrode of their "
         "own, but the 129 net, of the same family and smaller, matches every "
-        "channel they match.",
+        "channel they match. The cap model, Hydrocel Geodesic Sensor Net (as "
+        "OpenNeuro ds004444 writes it), names no size, so it fits every "
+        "HydroCel net.",
         egi(129),
         ("placed", None, "GSN-HydroCel-129"),
+        "Hydrocel Geodesic Sensor Net",
     ),
     (
         "egi_e129_and_cz",
         "E129 and Cz are one electrode on the 129 net.",
         egi(128, ["Cz", "E129"]),
         ("refused", "duplicate_label", None),
+        "HydroCel GSN 128 1.0",
     ),
     (
         "egi_duplicate_after_zeros",
         "E001 and E1 are one electrode.",
         egi(128, ["Cz", "E001"]),
         ("refused", "duplicate_label", None),
+        "HydroCel GSN 128 1.0",
     ),
     (
         "egi_257",
-        "A 256-channel net with its vertex reference.",
+        "A 256-channel net with its vertex reference, on a HydroCel GSN 256 1.0.",
         egi(256, ["Cz"]),
         ("placed", None, "GSN-HydroCel-257"),
+        "HydroCel GSN 256 1.0",
     ),
     (
         "egi_256",
-        "E1 to E256: the 257 net holds no name the 256 net lacks.",
+        "E1 to E256 on a HydroCel GSN 256 1.0: the 257 net holds no name the "
+        "256 net lacks.",
         egi(256),
         ("placed", None, "GSN-HydroCel-256"),
+        "HydroCel GSN 256 1.0",
     ),
     (
         "egi_65",
-        "The 64-channel net, version 1.0, with its vertex reference.",
+        "The 64-channel net, version 1.0, with its vertex reference, on a "
+        "HydroCel GSN 64 1.0.",
         egi(64, ["Cz"]),
         ("placed", None, "GSN-HydroCel-65_1.0"),
+        "HydroCel GSN 64 1.0",
     ),
     (
         "egi_64",
-        "E1 to E64.",
+        "E1 to E64 on a HydroCel GSN 64 1.0.",
         egi(64),
         ("placed", None, "GSN-HydroCel-64_1.0"),
+        "HydroCel GSN 64 1.0",
     ),
     (
         "egi_e257",
-        "E1 to E257: E257 is Cz on the 257 net.",
+        "E1 to E257 on a HydroCel GSN 256 1.0: E257 is Cz on the 257 net.",
         egi(257),
         ("placed", None, "GSN-HydroCel-257"),
+        "HydroCel GSN 256 1.0",
     ),
     (
         "egi_e65",
-        "E1 to E65: E65 is Cz on the 65 net. E65 is an electrode of the 128, "
-        "129, 256 and 257 nets, which the 65 net dismisses.",
+        "E1 to E65 on a HydroCel GSN 64 1.0: E65 is Cz on the 65 net. E65 is an "
+        "electrode of the 128, 129, 256 and 257 nets, which the 65 net "
+        "dismisses.",
         egi(65),
         ("placed", None, "GSN-HydroCel-65_1.0"),
+        "HydroCel GSN 64 1.0",
+    ),
+    (
+        "hbn_without_cap_model",
+        "The Healthy Brain Network (HBN) releases as published: E1 to E128 and Cz "
+        "on a HydroCel 128-channel net whose vertex reference is Cz, with no "
+        "CapManufacturersModelName (their ManufacturersModelName names the "
+        "recording system, says 128-channel GSN 200 v.2.1, and is not read). "
+        "The names are numbered alike on the HydroCel nets and on older nets, "
+        "on other positions, so they do not place the recording; nor is a "
+        "reference reported for a refusal.",
+        egi(128, ["Cz"]),
+        ("refused", "cap_model_unknown", None),
+        None,
+        "Cz",
+    ),
+    (
+        "hbn_with_cap_model",
+        "The same channels with a corrected CapManufacturersModelName, HydroCel "
+        "GSN 128 1.0, and EEGReference Cz: placed on the HydroCel 129 net, and "
+        "Cz is reported as the reference channel, not dropped (a map leaves it "
+        "out only when all its values are exactly zero).",
+        egi(128, ["Cz"]),
+        ("placed", None, "GSN-HydroCel-129"),
+        "HydroCel GSN 128 1.0",
+        "Cz",
+    ),
+    (
+        "reference_by_alias",
+        "E1 to E128 and Cz on a HydroCel GSN 128 1.0 with EEGReference VREF, "
+        "EGI's name for the vertex reference: VREF is Cz on an EGI net, so Cz "
+        "is the reference channel.",
+        egi(128, ["Cz"]),
+        ("placed", None, "GSN-HydroCel-129"),
+        "HydroCel GSN 128 1.0",
+        "VREF",
+    ),
+    (
+        "reference_on_ten_twenty",
+        "The 10-20 names referenced to Cz, which is recorded: Cz is placed and "
+        "reported as the reference (EEGReference written CZ, normalized as a "
+        "name).",
+        eeg(TEN_TWENTY),
+        ("placed", None, "standard_1005"),
+        None,
+        " CZ ",
+    ),
+    (
+        "reference_names_no_channel",
+        "The 10-20 names with EEGReference linked mastoids: no channel is the "
+        "reference.",
+        eeg(TEN_TWENTY),
+        ("placed", None, "standard_1005"),
+        None,
+        "linked mastoids",
+    ),
+    (
+        "reference_not_split",
+        "The 10-20 names with A1 and A2, and EEGReference A1-A2: a reference is "
+        "never split at a hyphen, so a1-a2 names no electrode, and no channel is "
+        "the reference (A1 would be, were it split).",
+        eeg([*TEN_TWENTY, "A1", "A2"]),
+        ("placed", None, "standard_1005"),
+        None,
+        "A1-A2",
+    ),
+    (
+        "reference_on_biosemi",
+        "A BioSemi 64 recording named by bank (A1 to B32) with EEGReference A1, "
+        "the left ear's 10-05 name and a bank label: a reference names a channel "
+        "only on the 10-05 montage and the HydroCel nets, so none here.",
+        biosemi_bank(64),
+        ("placed", None, "biosemi64"),
+        None,
+        "A1",
+    ),
+    (
+        "reference_not_recorded",
+        "The 10-20 names without Cz, with EEGReference Cz: the reference is not "
+        "among the channels.",
+        eeg(NO_CZ),
+        ("placed", None, "standard_1005"),
+        None,
+        "Cz",
+    ),
+    (
+        "older_egi_net_gsn_200",
+        "E1 to E128 and Cz on a cap named 128-channel GSN 200 v.2.1: no listed "
+        "model, so refused. The older nets' montages (EEGLAB's GSN128 and "
+        "GSN129) are never reached by name.",
+        egi(128, ["Cz"]),
+        ("refused", "cap_model_unknown", None),
+        "128-channel GSN 200 v.2.1",
+    ),
+    (
+        "older_egi_net_by_eeglab_file",
+        "E1 to E256 on a cap named GSN256, EEGLAB's file name for an older "
+        "256-channel net: not a listed model, so refused.",
+        egi(256),
+        ("refused", "cap_model_unknown", None),
+        "GSN256",
+    ),
+    (
+        "older_egi_net_gsn_64_v2",
+        "E1 to E64 on a cap named Geodesic Sensor Net 64 2.0, the GSN 64 version "
+        "2.0: not a listed model, so refused.",
+        egi(64),
+        ("refused", "cap_model_unknown", None),
+        "Geodesic Sensor Net 64 2.0",
+    ),
+    (
+        "cap_model_case_and_whitespace",
+        "E1 to E256 on a cap named '  hydroCEL   gsn 256 1.0 ': the model is "
+        "trimmed, its whitespace collapsed and its letters folded before it is "
+        "compared.",
+        egi(256),
+        ("placed", None, "GSN-HydroCel-256"),
+        "  hydroCEL   gsn 256 1.0 ",
+    ),
+    (
+        "cap_model_of_another_size",
+        "E1 to E256 on a cap named HydroCel GSN 128 1.0: the names point to the "
+        "256-channel net, which the model does not name.",
+        egi(256),
+        ("refused", "cap_model_unknown", None),
+        "HydroCel GSN 128 1.0",
+    ),
+    (
+        "cap_model_not_listed",
+        "E1 to E128 and Cz on a cap named EGI HydroCel 128: models are compared "
+        "against the list exactly, so a name the list does not hold is refused.",
+        egi(128, ["Cz"]),
+        ("refused", "cap_model_unknown", None),
+        "EGI HydroCel 128",
+    ),
+    (
+        "cap_model_beside_other_names",
+        "The 10-20 names on a cap named HydroCel GSN 128 1.0: the model is read "
+        "only when the names point to a HydroCel net.",
+        eeg(TEN_TWENTY),
+        ("placed", None, "standard_1005"),
+        "HydroCel GSN 128 1.0",
     ),
     (
         "egi_prefix_of_128",
-        "E1 to E100: the 128 net holds every name, but 100 is below 90% of its "
-        "128 electrodes, so the names may come from a cap this algorithm does "
-        "not list.",
+        "E1 to E100 on a HydroCel GSN 128 1.0: the 128 net holds every name, but "
+        "100 is below 90% of its 128 electrodes, so the names may come from a "
+        "cap this algorithm does not list.",
         egi(100),
         ("refused", "net_coverage_low", None),
+        "HydroCel GSN 128 1.0",
     ),
     (
         "egi_prefix_of_64",
-        "E1 to E40: 40 of the 64 net's electrodes.",
+        "E1 to E40 on a HydroCel GSN 64 1.0: 40 of the 64 net's electrodes.",
         egi(40),
         ("refused", "net_coverage_low", None),
+        "HydroCel GSN 64 1.0",
     ),
     (
         "egi_duplicate_on_a_partial_net",
-        "E1 to E100 and E001: a duplicate is reported before the coverage.",
+        "E1 to E100 and E001 on a HydroCel GSN 128 1.0: a duplicate is reported "
+        "before the coverage.",
         egi(100, ["E001"]),
         ("refused", "duplicate_label", None),
+        "HydroCel GSN 128 1.0",
     ),
     (
         "egi_e1_to_e28",
-        "E1 to E28: the 32 net and the BioSemi 160 E bank both hold the names; "
-        "an ambiguity is reported before the 32 net's coverage (28 of 33).",
+        "E1 to E28 on a HydroCel GSN 32: the 32 net and the BioSemi 160 E bank "
+        "both hold the names; an ambiguity is reported before the 32 net's "
+        "coverage (28 of 33).",
         egi(28),
         ("refused", "montage_ambiguous", None),
+        "HydroCel GSN 32",
     ),
     (
         "egi_129_twelve_dropped",
-        "E1 to E128 and Cz with twelve electrodes dropped: 117 of 129 is at least "
-        "90% of the net.",
+        "E1 to E128 and Cz with twelve electrodes dropped, on a HydroCel GSN "
+        "128: 117 of 129 is at least 90% of the net.",
         eeg([f"E{i}" for i in range(1, 129) if i not in DROPPED[:12]] + ["Cz"]),
         ("placed", None, "GSN-HydroCel-129"),
+        "HydroCel GSN 128",
     ),
     (
         "egi_129_thirteen_dropped",
         "E1 to E128 and Cz with thirteen electrodes dropped: 116 of 129 is below "
-        "90% of the net.",
+        "90% of the net, which is reported although the cap model names the "
+        "net.",
         eeg([f"E{i}" for i in range(1, 129) if i not in DROPPED] + ["Cz"]),
         ("refused", "net_coverage_low", None),
+        "HydroCel GSN 128 1.0",
     ),
     (
         "biosemi_160_at_ninety_percent",
@@ -1120,17 +1519,21 @@ CASES = [
     ),
     (
         "egi_e33_ambiguous_with_biosemi_e_bank",
-        "E1 to E33: E33 is Cz on the 32 net, which matches all 33 names, but the "
-        "BioSemi 160 cap's E bank matches E1 to E32 (97%) on other positions.",
+        "E1 to E33 on a cap named GSN-HydroCel-32: E33 is Cz on the 32 net, which "
+        "matches all 33 names, but the BioSemi 160 cap's E bank matches E1 to E32 "
+        "(97%) on other positions.",
         egi(33),
         ("refused", "montage_ambiguous", None),
+        "GSN-HydroCel-32",
     ),
     (
         "egi_32_ambiguous_with_biosemi_e_bank",
-        "E1 to E32 and Cz: the BioSemi 160 cap's E bank matches 32 of the 33 "
-        "names (97%), on other positions, so the names do not identify a net.",
+        "E1 to E32 and Cz on a cap named GSN-HydroCel-32: the BioSemi 160 cap's E "
+        "bank matches 32 of the 33 names (97%), on other positions, so the names "
+        "do not identify a net.",
         egi(32, ["Cz"]),
         ("refused", "montage_ambiguous", None),
+        "GSN-HydroCel-32",
     ),
     (
         "biosemi_16",
@@ -1260,8 +1663,14 @@ CASES = [
 
 def build_vectors(montages: tuple, sha: dict[str, str]) -> str:
     cases = []
-    for name, description, channels, expected in CASES:
-        result = infer_positions([tuple(c) for c in channels], montages).to_json()
+    for name, description, channels, expected, *inputs in CASES:
+        cap_model, reference = (*inputs, None, None)[:2]
+        result = infer_positions(
+            [tuple(c) for c in channels],
+            montages,
+            cap_model=cap_model,
+            reference=reference,
+        ).to_json()
         got = (result["outcome"], result["reason"], result["montage"])
         if got != expected:
             fail(f"vector case {name}: expected {expected}, the reference gives {got}")
@@ -1270,6 +1679,8 @@ def build_vectors(montages: tuple, sha: dict[str, str]) -> str:
                 "name": name,
                 "description": description,
                 "channels": channels,
+                "cap_model": cap_model,
+                "eeg_reference": reference,
                 "result": result,
             }
         )
@@ -1279,9 +1690,14 @@ def build_vectors(montages: tuple, sha: dict[str, str]) -> str:
         "description": (
             "Cases every implementation of nemar.sensor-labels.v1 reproduces. Each "
             "case lists a recording's channels as [name, BIDS type or null] in "
-            "recording order, and the result: the outcome, the refusal reason, the "
+            "recording order, its sidecar's cap_model and eeg_reference (BIDS "
+            "CapManufacturersModelName and EEGReference, each null when absent), "
+            "and the result: the outcome, the refusal reason, the "
             "montage, the counts, the contending montages, the duplicated "
-            "electrodes, and per channel its status, its normalized key and the "
+            "electrodes, the reference channel (reported, not dropped: a map "
+            "leaves it out only when all its values are exactly zero), and per "
+            "channel its status, its "
+            "normalized key and the "
             "montage electrode it is placed on. The montages are views/montages "
             "with the SHA-256 digests listed here."
         ),
@@ -1291,13 +1707,34 @@ def build_vectors(montages: tuple, sha: dict[str, str]) -> str:
     return render(document) + "\n"
 
 
+def eeglab_provenance() -> dict:
+    """EEGLAB's repository, commit and license, for the files copied from it."""
+    license_file = EEGLAB_SOURCES / "LICENSE"
+    if sha256(license_file.read_bytes()) != EEGLAB_SHA256["LICENSE"]:
+        fail("scripts/montage_sources/eeglab/LICENSE is not EEGLAB's")
+    return {
+        "repository": EEGLAB_REPOSITORY,
+        "commit": EEGLAB_COMMIT,
+        "files_last_changed": EEGLAB_FILES_COMMIT,
+        "copied_to": "scripts/montage_sources/eeglab",
+        "license": "BSD-2-Clause",
+        "license_scope": (
+            "EEGLAB's LICENSE covers eeglab.m and the functions folder; plugins "
+            "may have other licenses, and it states none for sample_locs, the "
+            "folder these files come from."
+        ),
+        "license_sha256": EEGLAB_SHA256["LICENSE"],
+        "license_text": license_file.read_text(encoding="utf-8"),
+    }
+
+
 def generate() -> dict[Path, str]:
     import mne
 
     if mne.__version__ != MNE_VERSION:
         fail(f"MNE-Python is {mne.__version__}; this generator pins {MNE_VERSION}")
     names = tuple(s.name for s in SOURCES)
-    if names != MONTAGE_ORDER:
+    if names != MONTAGE_NAMES:
         fail("the sources are not the montages of the algorithm, in its order")
 
     outputs: dict[Path, str] = {}
@@ -1321,9 +1758,10 @@ def generate() -> dict[Path, str]:
         "description": (
             f"Where the montages of {ALGORITHM} come from. Each file holds the "
             "electrode positions MNE-Python returns for one built-in montage, "
-            "times scale_to_m, rounded to 9 decimal places of a meter. Every "
-            "montage is RAS: +x toward the right preauricular point, +y toward "
-            "the nasion, +z up."
+            "or reads from one of EEGLAB's files (source, eeglab_source), times "
+            "scale_to_m, rounded to 9 decimal places of a meter. Every montage "
+            "is RAS: +x toward the right preauricular point, +y toward the "
+            "nasion, +z up."
         ),
         "generator": "scripts/generate_montages.py",
         "mne": {
@@ -1331,12 +1769,13 @@ def generate() -> dict[Path, str]:
             "license": "BSD-3-Clause",
             "license_text": license_text,
         },
+        "eeglab": eeglab_provenance(),
         "upstream": UPSTREAM,
         "montages": entries,
     }
     outputs[MONTAGES / "PROVENANCE.json"] = render(provenance) + "\n"
     montages = tuple(montage_from_json(documents[n]) for n in MONTAGE_ORDER)
-    outputs[VECTORS] = build_vectors(montages, sha)
+    outputs[VECTORS] = build_vectors(montages, {n: sha[n] for n in MONTAGE_ORDER})
     return outputs
 
 

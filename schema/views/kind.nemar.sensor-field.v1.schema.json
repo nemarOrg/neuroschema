@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "kind.nemar.sensor-field.v1.schema.json",
   "title": "View Kind nemar.sensor-field, Version 1",
-  "description": "A generic scalp map, applied on top of the envelope to a view declaration whose kind is nemar.sensor-field and kind_version 1. The role values holds one or more maps, each one value per sensor. The sensors are placed by one of three sources: the role layout (each sensor's theta and radius), the role positions (each sensor's x, y and z, which the transform nemar.sensor-layout.v1 projects to a layout, and which the view then declares as its transform), or, with neither, the sensor names, which a renderer places by nemar.sensor-labels.v1. A view has at most one of layout and positions, and the values' sensor coordinates are that role's name column, by position. A renderer draws each map with the algorithm nemar.sensor-field.v1 (docs/views/sensor-field.md). A generic kind: no base and no inputs.",
+  "description": "A generic scalp map, applied on top of the envelope to a view declaration whose kind is nemar.sensor-field and kind_version 1. The role values holds one or more maps, each one value per sensor. The sensors are placed by one of three sources: the role layout (each sensor's theta and radius), the role positions (each sensor's x, y and z, which the transform nemar.sensor-layout.v1 projects to a layout, and which the view then declares as its transform), or, with neither, the sensor names, which a renderer places by nemar.sensor-labels.v1. A view has at most one of layout and positions, and the values' sensor coordinates are that role's name column, by position. The role that names the sensors (positions, or values with no sensor role) may carry the recording's cap_model and reference, which a placement by name reads; a layout carries neither. A renderer draws each map with the algorithm nemar.sensor-field.v1 (docs/views/sensor-field.md). A generic kind: no base and no inputs.",
   "type": "object",
   "required": [
     "data"
@@ -387,6 +387,14 @@
                     }
                   }
                 }
+              },
+              "cap_model": {
+                "not": {},
+                "description": "A layout is drawn as stored and never placed by name, so it carries no cap model."
+              },
+              "reference": {
+                "not": {},
+                "description": "A layout is drawn as stored and never placed by name, so it carries no reference."
               }
             },
             "allOf": [
