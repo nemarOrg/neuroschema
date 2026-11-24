@@ -13206,6 +13206,164 @@
       ]
     },
     {
+      "name": "ic_classes_content_classifier_cyrillic",
+      "covers": "A classifier named ICLabel with a Cyrillic small ie (U+0435) for the e: not printable ASCII.",
+      "schema": "content.nemar.ic-classes.v1.schema.json",
+      "instance": {
+        "classifier": "ICLabеl",
+        "categories": ["a", "b", "c", "d", "e", "f", "g"],
+        "counts": [12, 3, 2, 0, 1, 0, 4],
+        "summed_variance_pct": [61.25, 9.5, 14.75, 0, 0.5, 0, 6.125],
+        "n_components": 22
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "classifier"]
+      ]
+    },
+    {
+      "name": "ic_classes_content_classifier_roman_numeral",
+      "covers": "A classifier named ICLabel with the Roman numeral fifty (U+217C) for the l: not printable ASCII.",
+      "schema": "content.nemar.ic-classes.v1.schema.json",
+      "instance": {
+        "classifier": "ICLabeⅼ",
+        "categories": ["a", "b", "c", "d", "e", "f", "g"],
+        "counts": [12, 3, 2, 0, 1, 0, 4],
+        "summed_variance_pct": [61.25, 9.5, 14.75, 0, 0.5, 0, 6.125],
+        "n_components": 22
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "classifier"]
+      ]
+    },
+    {
+      "name": "ic_classes_content_classifier_variation_selector",
+      "covers": "A classifier named ICLabel with a variation selector (U+FE0F) after it: not printable ASCII.",
+      "schema": "content.nemar.ic-classes.v1.schema.json",
+      "instance": {
+        "classifier": "ICLabel️",
+        "categories": ["a", "b", "c", "d", "e", "f", "g"],
+        "counts": [12, 3, 2, 0, 1, 0, 4],
+        "summed_variance_pct": [61.25, 9.5, 14.75, 0, 0.5, 0, 6.125],
+        "n_components": 22
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "classifier"]
+      ]
+    },
+    {
+      "name": "ic_classes_content_classifier_fullwidth",
+      "covers": "A classifier named ICLabel with fullwidth letters: not printable ASCII.",
+      "schema": "content.nemar.ic-classes.v1.schema.json",
+      "instance": {
+        "classifier": "ＩＣＬａｂｅｌ",
+        "categories": ["a", "b", "c", "d", "e", "f", "g"],
+        "counts": [12, 3, 2, 0, 1, 0, 4],
+        "summed_variance_pct": [61.25, 9.5, 14.75, 0, 0.5, 0, 6.125],
+        "n_components": 22
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "classifier"]
+      ]
+    },
+    {
+      "name": "ic_classes_content_classifier_combining",
+      "covers": "A classifier named ICLabel with a combining grapheme joiner (U+034F) after it: not printable ASCII.",
+      "schema": "content.nemar.ic-classes.v1.schema.json",
+      "instance": {
+        "classifier": "ICLabel͏",
+        "categories": ["a", "b", "c", "d", "e", "f", "g"],
+        "counts": [12, 3, 2, 0, 1, 0, 4],
+        "summed_variance_pct": [61.25, 9.5, 14.75, 0, 0.5, 0, 6.125],
+        "n_components": 22
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "classifier"]
+      ]
+    },
+    {
+      "name": "ic_classes_content_classifier_capital_i",
+      "covers": "ICLabeI, a capital I for the last l: it reads as ICLabel, so it is held to ICLabel's spelling and refused.",
+      "schema": "content.nemar.ic-classes.v1.schema.json",
+      "instance": {
+        "classifier": "ICLabeI",
+        "categories": ["a", "b", "c", "d", "e", "f", "g"],
+        "counts": [12, 3, 2, 0, 1, 0, 4],
+        "summed_variance_pct": [61.25, 9.5, 14.75, 0, 0.5, 0, 6.125],
+        "n_components": 22
+      },
+      "valid": false,
+      "errors": [
+        ["const", "classifier"]
+      ]
+    },
+    {
+      "name": "ic_classes_content_classifier_small_l",
+      "covers": "lCLabel, a small l for the first I.",
+      "schema": "content.nemar.ic-classes.v1.schema.json",
+      "instance": {
+        "classifier": "lCLabel",
+        "categories": ["a", "b", "c", "d", "e", "f", "g"],
+        "counts": [12, 3, 2, 0, 1, 0, 4],
+        "summed_variance_pct": [61.25, 9.5, 14.75, 0, 0.5, 0, 6.125],
+        "n_components": 22
+      },
+      "valid": false,
+      "errors": [
+        ["const", "classifier"]
+      ]
+    },
+    {
+      "name": "ic_classes_content_classifier_ascii_name",
+      "covers": "Another classifier's name in printable ASCII, with a space inside.",
+      "schema": "content.nemar.ic-classes.v1.schema.json",
+      "instance": {
+        "classifier": "ICLabel Lite",
+        "categories": ["Brain", "Muscle", "Eye", "Heart", "Line Noise", "Channel Noise", "Other"],
+        "counts": [12, 3, 2, 0, 1, 0, 4],
+        "summed_variance_pct": [61.25, 9.5, 14.75, 0, 0.5, 0, 6.125],
+        "n_components": 22
+      },
+      "valid": true,
+      "errors": []
+    },
+    {
+      "name": "ic_classes_content_category_cyrillic",
+      "covers": "A category with a Cyrillic capital ve (U+0412) for the B of Brain: not printable ASCII.",
+      "schema": "content.nemar.ic-classes.v1.schema.json",
+      "instance": {
+        "classifier": "MARA",
+        "categories": ["Вrain", "Brain"],
+        "counts": [4, 18],
+        "summed_variance_pct": [20.5, 79.5],
+        "n_components": 22
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "categories/0"]
+      ]
+    },
+    {
+      "name": "ic_classes_content_category_padded",
+      "covers": "A category with a space at its end.",
+      "schema": "content.nemar.ic-classes.v1.schema.json",
+      "instance": {
+        "classifier": "MARA",
+        "categories": ["Brain ", "Brain"],
+        "counts": [4, 18],
+        "summed_variance_pct": [20.5, 79.5],
+        "n_components": 22
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "categories/0"]
+      ]
+    },
+    {
       "name": "ic_classes_content_no_variance",
       "covers": "summed_variance_pct is required.",
       "schema": "content.nemar.ic-classes.v1.schema.json",

@@ -98,7 +98,8 @@ The independent components of one decomposition counted by the class each is mos
 
 - **`histogram`** is one JSON file (`_icclasses.json`) whose content meets [`content.nemar.ic-classes.v1`](../../schema/views/content.nemar.ic-classes.v1.schema.json): a `nemar.histogram` content binned by category, `categories` (the classes in the classifier's order) and `counts` (the number of components whose dominant class each is), with `classifier`, `summed_variance_pct` (for each class, the sum of its components' `variance_pct`) and `n_components`.
   With `classifier` `ICLabel`, `categories` is exactly ICLabel's seven classes in ICLabel's order and spelling: `Brain`, `Muscle`, `Eye`, `Heart`, `Line Noise`, `Channel Noise`, `Other` (eegprep's `DEFAULT_ICLABEL_CLASSES`).
-  The name is spelled `ICLabel`: any other case of it is refused, so a change of case cannot open the classes.
+  The name is spelled `ICLabel`: any other case of it, or `I`, `l`, `1` or `|` in place of one another (`ICLabeI`, `lCLabel`), is refused, so a change of case or a look-alike cannot open the classes.
+  The classifier and every category are printable ASCII (U+0020 to U+007E, with no space at either end), so no look-alike from outside ASCII (a Cyrillic letter, a Roman numeral, a fullwidth form, a variation selector or a format character) can pass for a known name.
   Any other classifier names its own classes.
 
 ```json

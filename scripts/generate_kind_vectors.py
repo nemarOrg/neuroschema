@@ -2602,6 +2602,84 @@ def ic_classes_content_verdicts() -> list[tuple[str, str, object]]:
             },
         ),
         (
+            "ic_classes_content_classifier_cyrillic",
+            "A classifier named ICLabel with a Cyrillic small ie (U+0435) for the e: "
+            "not printable ASCII.",
+            counts | {"classifier": "ICLab\u0435l", "categories": list("abcdefg")},
+        ),
+        (
+            "ic_classes_content_classifier_roman_numeral",
+            "A classifier named ICLabel with the Roman numeral fifty (U+217C) "
+            "for the l: "
+            "not printable ASCII.",
+            counts | {"classifier": "ICLabe\u217c", "categories": list("abcdefg")},
+        ),
+        (
+            "ic_classes_content_classifier_variation_selector",
+            "A classifier named ICLabel with a variation selector (U+FE0F) after it: "
+            "not printable ASCII.",
+            counts | {"classifier": "ICLabel\ufe0f", "categories": list("abcdefg")},
+        ),
+        (
+            "ic_classes_content_classifier_fullwidth",
+            "A classifier named ICLabel with fullwidth letters: not printable ASCII.",
+            counts
+            | {
+                "classifier": "\uff29\uff23\uff2c\uff41\uff42\uff45\uff4c",
+                "categories": list("abcdefg"),
+            },
+        ),
+        (
+            "ic_classes_content_classifier_combining",
+            "A classifier named ICLabel with a combining grapheme joiner "
+            "(U+034F) after it: "
+            "not printable ASCII.",
+            counts | {"classifier": "ICLabel\u034f", "categories": list("abcdefg")},
+        ),
+        (
+            "ic_classes_content_classifier_capital_i",
+            "ICLabeI, a capital I for the last l: it reads as ICLabel, so it is "
+            "held to ICLabel's spelling and refused.",
+            counts | {"classifier": "ICLabeI", "categories": list("abcdefg")},
+        ),
+        (
+            "ic_classes_content_classifier_small_l",
+            "lCLabel, a small l for the first I.",
+            counts | {"classifier": "lCLabel", "categories": list("abcdefg")},
+        ),
+        (
+            "ic_classes_content_classifier_ascii_name",
+            "Another classifier's name in printable ASCII, with a space inside.",
+            counts
+            | {
+                "classifier": "ICLabel Lite",
+                "categories": counts["categories"],
+            },
+        ),
+        (
+            "ic_classes_content_category_cyrillic",
+            "A category with a Cyrillic capital ve (U+0412) for the B of Brain: "
+            "not printable ASCII.",
+            counts
+            | {
+                "classifier": "MARA",
+                "categories": ["\u0412rain", "Brain"],
+                "counts": [4, 18],
+                "summed_variance_pct": [20.5, 79.5],
+            },
+        ),
+        (
+            "ic_classes_content_category_padded",
+            "A category with a space at its end.",
+            counts
+            | {
+                "classifier": "MARA",
+                "categories": ["Brain ", "Brain"],
+                "counts": [4, 18],
+                "summed_variance_pct": [20.5, 79.5],
+            },
+        ),
+        (
             "ic_classes_content_no_variance",
             "summed_variance_pct is required.",
             {k: v for k, v in counts.items() if k != "summed_variance_pct"},
