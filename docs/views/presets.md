@@ -69,19 +69,24 @@ The parameters record how the spectrum was computed; a renderer prints them and 
 
 | Parameter | Required | Meaning |
 |---|---|---|
-| `method` | yes | `welch`: the average of the periodograms of overlapping windows. |
+| `method` | yes | `welch`: Welch's method, as stated below the table. |
 | `window` | yes | The taper, by its lowercase name (`hamming` for NEMAR's spectra). |
 | `window_s` | yes | Each window's length, in seconds (2 for NEMAR's). |
 | `overlap` | yes | The share of each window that overlaps the next, from 0 up to but not including 1 (0.5 for NEMAR's). |
 | `unit` | yes | `dB`: 10 log10 of the density in microvolts squared per hertz, so 0 dB is 1 µV²/Hz. |
 | `upper_hz` | yes | The highest frequency the rows reach (125 Hz for NEMAR's EEG spectra); every `freq_hz` cell is at most this and at most half the sampling rate. |
+
+`welch` names one computation, so two renderers that print the parameters describe the same numbers.
+The recording is cut into windows of `window_s` seconds overlapping by `overlap`; each window is detrended by subtracting its own mean (a constant detrend), tapered by `window`, and its periodogram taken; the periodograms are averaged by their mean, not their median.
+The density is one-sided: the power of each frequency above 0 and below half the sampling rate is doubled, so the rows integrate to the variance of the signal over the frequencies they cover.
+The 0 Hz row is left out, since a mean-detrended window has no power there: the first row is the lowest frequency above 0, `1 / window_s` (0.5 Hz for NEMAR's), and the rows rise from it in steps of `1 / window_s`.
 | `initial_maps_hz` | no | Up to 8 frequencies whose maps are shown before the reader picks one. |
 
 A renderer that knows this kind draws the `nemar.lines` model of the values, and below it a scalp map of the sensors' values at one frequency row: the row the readout snaps to, or, before the reader picks one, the row nearest each frequency of `initial_maps_hz` by the same rule.
 A map is the row's cells as one value per sensor, drawn with `nemar.sensor-field.v1` with `minmax` limits (the decibels are not signed about zero), and placed by the layout or by the sensors' names.
 A map the scalp-map algorithm refuses (for example `too_few_sensors`) shows that word in its place, and the lines are drawn all the same.
 
-The writer makes sure that the rows rise strictly to at most `upper_hz`, and, with a layout, that the values' sensor columns are the layout's rows in order.
+The writer makes sure that the rows rise strictly from above 0 to at most `upper_hz`, and, with a layout, that the values' sensor columns are the layout's rows in order.
 A renderer does not rely on the writer for the last rule: after the base's model is built, it checks, with a layout, that the values' sensor columns (every declared column but `freq_hz`) are the layout's `name` cells, top to bottom, compared as text (`sensors_mismatch`).
 The base labels each series by the layout's name at its position, so a header that named other sensors would draw each spectrum under another sensor's name; which of the two is right cannot be told, so the view shows as the fallback's tables ([generic-kinds.md](generic-kinds.md#the-fallback)), with the word, and no lines or maps are drawn.
 
