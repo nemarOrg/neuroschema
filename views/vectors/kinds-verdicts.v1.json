@@ -13884,6 +13884,50 @@
       "errors": []
     },
     {
+      "name": "content_edges_missing",
+      "covers": "Values missing or not a number, counted apart.",
+      "schema": "content.nemar.histogram.v1.schema.json",
+      "instance": {
+        "edges": [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+        "counts": [0, 0, 0, 0, 1, 0, 0, 2, 3, 11],
+        "underflow": 1,
+        "overflow": 2,
+        "unit": "%",
+        "missing": 3
+      },
+      "valid": true,
+      "errors": []
+    },
+    {
+      "name": "content_categories_missing",
+      "covers": "A missing count beside bins by category.",
+      "schema": "content.nemar.histogram.v1.schema.json",
+      "instance": {
+        "categories": ["Brain", "Muscle", "Eye", "Heart", "Line Noise", "Channel Noise", "Other"],
+        "counts": [12, 3, 2, 0, 1, 0, 4],
+        "missing": 0
+      },
+      "valid": true,
+      "errors": []
+    },
+    {
+      "name": "content_missing_negative",
+      "covers": "A negative missing count.",
+      "schema": "content.nemar.histogram.v1.schema.json",
+      "instance": {
+        "edges": [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+        "counts": [0, 0, 0, 0, 1, 0, 0, 2, 3, 11],
+        "underflow": 1,
+        "overflow": 2,
+        "unit": "%",
+        "missing": -1
+      },
+      "valid": false,
+      "errors": [
+        ["minimum", "missing"]
+      ]
+    },
+    {
       "name": "content_edges_no_unit",
       "covers": "unit is optional.",
       "schema": "content.nemar.histogram.v1.schema.json",

@@ -835,6 +835,19 @@ def histogram_cases() -> list[Case]:
         summed_variance_pct=[80.5, 19.5],
         n_components=35,
     )
+    tenths = content(
+        edges=[0, 0.1, 0.2, 0.3], counts=[4, 5, 6], underflow=0, overflow=0
+    )
+    fractions = content(
+        edges=[0, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5, 1],
+        counts=[40, 22, 18, 9, 6, 3, 1, 1],
+        underflow=0,
+        overflow=0,
+    )
+    lacking = content(
+        edges=[0, 50, 100], counts=[3, 4], underflow=0, overflow=1, missing=2
+    )
+    lacking_classes = content(categories=["a", "b"], counts=[3, 4], missing=5)
     nested_64 = (
         b'{"categories": ["a"], "counts": [1], "x": ' + b"[" * 63 + b"]" * 63 + b"}\n"
     )
@@ -855,6 +868,35 @@ def histogram_cases() -> list[Case]:
             "negative zero, so the total and max_count are 0, not -0.",
             histogram_view(negative_zeros),
             {HIST_AT: negative_zeros},
+        ),
+        Case(
+            "histogram_equal_widths_to_rounding",
+            "Edges 0, 0.1, 0.2 and 0.3, whose binary64 widths differ in the last "
+            "bit: equal widths, so heights are counts.",
+            histogram_view(tenths),
+            {HIST_AT: tenths},
+        ),
+        Case(
+            "histogram_unequal_widths",
+            "The bins of a dataQuality distribution (0, 0.01, 0.02, 0.05, 0.1, "
+            "0.2, 0.3, 0.5, 1): unequal widths, so each bar's height is its "
+            "density, count over width, and the model says so (heights density).",
+            histogram_view(fractions),
+            {HIST_AT: fractions},
+            locates=[0.005, 0.05, 1, 1.5],
+        ),
+        Case(
+            "histogram_missing_edges",
+            "Values missing or not a number, counted apart: shown beside the "
+            "bars, outside the total.",
+            histogram_view(lacking),
+            {HIST_AT: lacking},
+        ),
+        Case(
+            "histogram_missing_categories",
+            "A missing count beside bins by category.",
+            histogram_view(lacking_classes),
+            {HIST_AT: lacking_classes},
         ),
         Case(
             "histogram_edges",
@@ -963,6 +1005,17 @@ def histogram_cases() -> list[Case]:
             "histogram_total_with_underflow_beyond_2_53",
             content(edges=[0, 1], counts=[2**53 - 1], underflow=1, overflow=0),
             "The underflow counts in the total: cap_exceeded.",
+        ),
+        (
+            "histogram_bin_too_wide",
+            content(edges=[-1.7e308, 1.7e308], counts=[1], underflow=0, overflow=0),
+            "A bin from -1.7e308 to 1.7e308, wider than binary64 holds: "
+            "cap_exceeded, since its density cannot be computed.",
+        ),
+        (
+            "histogram_total_with_missing_beyond_2_53",
+            content(categories=["a"], counts=[2**53 - 1], missing=1),
+            "The missing count in the sum a renderer may compute: cap_exceeded.",
         ),
         (
             "histogram_byte_order_mark",
@@ -2036,6 +2089,21 @@ def content_verdicts() -> list[tuple[str, str, object]]:
             cats | {"counts": [9007199254740993, *cats["counts"][1:]]},
         ),
         ("content_edges", "Bins by edges.", edges),
+        (
+            "content_edges_missing",
+            "Values missing or not a number, counted apart.",
+            edges | {"missing": 3},
+        ),
+        (
+            "content_categories_missing",
+            "A missing count beside bins by category.",
+            cats | {"missing": 0},
+        ),
+        (
+            "content_missing_negative",
+            "A negative missing count.",
+            edges | {"missing": -1},
+        ),
         (
             "content_edges_no_unit",
             "unit is optional.",

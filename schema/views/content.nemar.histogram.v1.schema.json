@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/views/content.nemar.histogram.v1.schema.json",
   "title": "Histogram Content, Version 1",
-  "description": "The content of the role histogram of a nemar.histogram view: counts per bin, with the bins given either as numeric edges, where bin i holds e_i <= v < e_(i+1) and the last bin also holds v equal to the last edge, or as named categories. Its shape is the shape of a dataQuality distribution's histogram, with an optional unit. The root is open: a preset over nemar.histogram may add members of its own, and a renderer that draws the preset by this base reads only the members below. docs/views/generic-kinds.md gives the model and the rules JSON Schema cannot state: edges strictly increasing, and one count per bin.",
+  "description": "The content of the role histogram of a nemar.histogram view: counts per bin, with the bins given either as numeric edges, where bin i holds e_i <= v < e_(i+1) and the last bin also holds v equal to the last edge, or as named categories. Its shape is the shape of a dataQuality distribution's histogram, with an optional unit; either form may count the values that were missing or not a number (missing). The root is open: a preset over nemar.histogram may add members of its own, and a renderer that draws the preset by this base reads only the members below. docs/views/generic-kinds.md gives the model and the rules JSON Schema cannot state: edges strictly increasing, and one count per bin.",
   "type": "object",
   "properties": {
     "edges": {
@@ -55,6 +55,12 @@
       "minLength": 1,
       "maxLength": 32,
       "description": "Unit of the binned values; edge bins only."
+    },
+    "missing": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991,
+      "description": "Values that were missing or not a number, so in no bin, counted apart (in either form); a renderer shows the count beside the bars, never as one."
     }
   },
   "oneOf": [

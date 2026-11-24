@@ -5854,6 +5854,7 @@
         "model": {
           "type": "histogram",
           "bins": "categories",
+          "heights": "count",
           "unit": null,
           "items": [
             {
@@ -5863,8 +5864,10 @@
           ],
           "underflow": null,
           "overflow": null,
+          "missing": null,
           "total": 1,
-          "max_count": 1
+          "max_count": 1,
+          "max_density": null
         }
       }
     },
@@ -5915,6 +5918,7 @@
         "model": {
           "type": "histogram",
           "bins": "edges",
+          "heights": "count",
           "unit": null,
           "items": [
             {
@@ -5922,7 +5926,9 @@
               "lower": 0.0,
               "upper": 1.0,
               "upper_closed": true,
-              "count": 0
+              "count": 0,
+              "width": 1.0,
+              "density": 0.0
             }
           ],
           "underflow": {
@@ -5933,8 +5939,417 @@
             "label": "> 1",
             "count": 0
           },
+          "missing": null,
           "total": 0,
-          "max_count": 0
+          "max_count": 0,
+          "max_density": 0.0
+        }
+      }
+    },
+    {
+      "name": "histogram_equal_widths_to_rounding",
+      "covers": "Edges 0, 0.1, 0.2 and 0.3, whose binary64 widths differ in the last bit: equal widths, so heights are counts.",
+      "view": {
+        "key": "hist",
+        "kind": "nemar.histogram",
+        "kind_version": 1,
+        "caption": "Recordings by share of good samples.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "format": "json",
+            "size": 108,
+            "sha256": "574fd28cfe79031a8152698908e2d759a8f4e9d6b2739df87a4139c43fb8074f"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json": {
+          "text": "{\n \"edges\": [\n  0,\n  0.1,\n  0.2,\n  0.3\n ],\n \"counts\": [\n  4,\n  5,\n  6\n ],\n \"underflow\": 0,\n \"overflow\": 0\n}\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "kind",
+          "kind": "nemar.histogram",
+          "kind_version": 1
+        },
+        "refused": null,
+        "downloads": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "size": 108,
+            "sha256": "574fd28cfe79031a8152698908e2d759a8f4e9d6b2739df87a4139c43fb8074f"
+          }
+        ],
+        "model": {
+          "type": "histogram",
+          "bins": "edges",
+          "heights": "count",
+          "unit": null,
+          "items": [
+            {
+              "label": "[0, 0.1)",
+              "lower": 0.0,
+              "upper": 0.1,
+              "upper_closed": false,
+              "count": 4,
+              "width": 0.1,
+              "density": 40.0
+            },
+            {
+              "label": "[0.1, 0.2)",
+              "lower": 0.1,
+              "upper": 0.2,
+              "upper_closed": false,
+              "count": 5,
+              "width": 0.1,
+              "density": 50.0
+            },
+            {
+              "label": "[0.2, 0.3]",
+              "lower": 0.2,
+              "upper": 0.3,
+              "upper_closed": true,
+              "count": 6,
+              "width": 0.09999999999999998,
+              "density": 60.000000000000014
+            }
+          ],
+          "underflow": {
+            "label": "< 0",
+            "count": 0
+          },
+          "overflow": {
+            "label": "> 0.3",
+            "count": 0
+          },
+          "missing": null,
+          "total": 15,
+          "max_count": 6,
+          "max_density": 60.000000000000014
+        }
+      }
+    },
+    {
+      "name": "histogram_unequal_widths",
+      "covers": "The bins of a dataQuality distribution (0, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5, 1): unequal widths, so each bar's height is its density, count over width, and the model says so (heights density).",
+      "view": {
+        "key": "hist",
+        "kind": "nemar.histogram",
+        "kind_version": 1,
+        "caption": "Recordings by share of good samples.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "format": "json",
+            "size": 172,
+            "sha256": "2fd27b0f9f80aeef6edfff80a294a343fb80806fc53f390cd4929292cd14cf2d"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json": {
+          "text": "{\n \"edges\": [\n  0,\n  0.01,\n  0.02,\n  0.05,\n  0.1,\n  0.2,\n  0.3,\n  0.5,\n  1\n ],\n \"counts\": [\n  40,\n  22,\n  18,\n  9,\n  6,\n  3,\n  1,\n  1\n ],\n \"underflow\": 0,\n \"overflow\": 0\n}\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "kind",
+          "kind": "nemar.histogram",
+          "kind_version": 1
+        },
+        "refused": null,
+        "downloads": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "size": 172,
+            "sha256": "2fd27b0f9f80aeef6edfff80a294a343fb80806fc53f390cd4929292cd14cf2d"
+          }
+        ],
+        "model": {
+          "type": "histogram",
+          "bins": "edges",
+          "heights": "density",
+          "unit": null,
+          "items": [
+            {
+              "label": "[0, 0.01)",
+              "lower": 0.0,
+              "upper": 0.01,
+              "upper_closed": false,
+              "count": 40,
+              "width": 0.01,
+              "density": 4000.0
+            },
+            {
+              "label": "[0.01, 0.02)",
+              "lower": 0.01,
+              "upper": 0.02,
+              "upper_closed": false,
+              "count": 22,
+              "width": 0.01,
+              "density": 2200.0
+            },
+            {
+              "label": "[0.02, 0.05)",
+              "lower": 0.02,
+              "upper": 0.05,
+              "upper_closed": false,
+              "count": 18,
+              "width": 0.030000000000000002,
+              "density": 600.0
+            },
+            {
+              "label": "[0.05, 0.1)",
+              "lower": 0.05,
+              "upper": 0.1,
+              "upper_closed": false,
+              "count": 9,
+              "width": 0.05,
+              "density": 180.0
+            },
+            {
+              "label": "[0.1, 0.2)",
+              "lower": 0.1,
+              "upper": 0.2,
+              "upper_closed": false,
+              "count": 6,
+              "width": 0.1,
+              "density": 60.0
+            },
+            {
+              "label": "[0.2, 0.3)",
+              "lower": 0.2,
+              "upper": 0.3,
+              "upper_closed": false,
+              "count": 3,
+              "width": 0.09999999999999998,
+              "density": 30.000000000000007
+            },
+            {
+              "label": "[0.3, 0.5)",
+              "lower": 0.3,
+              "upper": 0.5,
+              "upper_closed": false,
+              "count": 1,
+              "width": 0.2,
+              "density": 5.0
+            },
+            {
+              "label": "[0.5, 1]",
+              "lower": 0.5,
+              "upper": 1.0,
+              "upper_closed": true,
+              "count": 1,
+              "width": 0.5,
+              "density": 2.0
+            }
+          ],
+          "underflow": {
+            "label": "< 0",
+            "count": 0
+          },
+          "overflow": {
+            "label": "> 1",
+            "count": 0
+          },
+          "missing": null,
+          "total": 100,
+          "max_count": 40,
+          "max_density": 4000.0
+        }
+      },
+      "locates": [
+        {
+          "value": 0.005,
+          "bin": 0
+        },
+        {
+          "value": 0.05,
+          "bin": 3
+        },
+        {
+          "value": 1,
+          "bin": 7
+        },
+        {
+          "value": 1.5,
+          "bin": 8
+        }
+      ]
+    },
+    {
+      "name": "histogram_missing_edges",
+      "covers": "Values missing or not a number, counted apart: shown beside the bars, outside the total.",
+      "view": {
+        "key": "hist",
+        "kind": "nemar.histogram",
+        "kind_version": 1,
+        "caption": "Recordings by share of good samples.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "format": "json",
+            "size": 110,
+            "sha256": "4c098a6ece97c51afd22643159e8819040e6eb916b9c391fee49c8df66c888ee"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json": {
+          "text": "{\n \"edges\": [\n  0,\n  50,\n  100\n ],\n \"counts\": [\n  3,\n  4\n ],\n \"underflow\": 0,\n \"overflow\": 1,\n \"missing\": 2\n}\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "kind",
+          "kind": "nemar.histogram",
+          "kind_version": 1
+        },
+        "refused": null,
+        "downloads": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "size": 110,
+            "sha256": "4c098a6ece97c51afd22643159e8819040e6eb916b9c391fee49c8df66c888ee"
+          }
+        ],
+        "model": {
+          "type": "histogram",
+          "bins": "edges",
+          "heights": "count",
+          "unit": null,
+          "items": [
+            {
+              "label": "[0, 50)",
+              "lower": 0.0,
+              "upper": 50.0,
+              "upper_closed": false,
+              "count": 3,
+              "width": 50.0,
+              "density": 0.06
+            },
+            {
+              "label": "[50, 100]",
+              "lower": 50.0,
+              "upper": 100.0,
+              "upper_closed": true,
+              "count": 4,
+              "width": 50.0,
+              "density": 0.08
+            }
+          ],
+          "underflow": {
+            "label": "< 0",
+            "count": 0
+          },
+          "overflow": {
+            "label": "> 100",
+            "count": 1
+          },
+          "missing": {
+            "label": "missing",
+            "count": 2
+          },
+          "total": 8,
+          "max_count": 4,
+          "max_density": 0.08
+        }
+      }
+    },
+    {
+      "name": "histogram_missing_categories",
+      "covers": "A missing count beside bins by category.",
+      "view": {
+        "key": "hist",
+        "kind": "nemar.histogram",
+        "kind_version": 1,
+        "caption": "Recordings by share of good samples.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "format": "json",
+            "size": 78,
+            "sha256": "eb21ecd50b5ef5d6723437fe4d572f68d2d3939d5ea3270fb65c249352a10f7d"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json": {
+          "text": "{\n \"categories\": [\n  \"a\",\n  \"b\"\n ],\n \"counts\": [\n  3,\n  4\n ],\n \"missing\": 5\n}\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "kind",
+          "kind": "nemar.histogram",
+          "kind_version": 1
+        },
+        "refused": null,
+        "downloads": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "size": 78,
+            "sha256": "eb21ecd50b5ef5d6723437fe4d572f68d2d3939d5ea3270fb65c249352a10f7d"
+          }
+        ],
+        "model": {
+          "type": "histogram",
+          "bins": "categories",
+          "heights": "count",
+          "unit": null,
+          "items": [
+            {
+              "label": "a",
+              "count": 3
+            },
+            {
+              "label": "b",
+              "count": 4
+            }
+          ],
+          "underflow": null,
+          "overflow": null,
+          "missing": {
+            "label": "missing",
+            "count": 5
+          },
+          "total": 7,
+          "max_count": 4,
+          "max_density": null
         }
       }
     },
@@ -5985,6 +6400,7 @@
         "model": {
           "type": "histogram",
           "bins": "edges",
+          "heights": "count",
           "unit": "%",
           "items": [
             {
@@ -5992,70 +6408,90 @@
               "lower": 0.0,
               "upper": 10.0,
               "upper_closed": false,
-              "count": 0
+              "count": 0,
+              "width": 10.0,
+              "density": 0.0
             },
             {
               "label": "[10, 20)",
               "lower": 10.0,
               "upper": 20.0,
               "upper_closed": false,
-              "count": 0
+              "count": 0,
+              "width": 10.0,
+              "density": 0.0
             },
             {
               "label": "[20, 30)",
               "lower": 20.0,
               "upper": 30.0,
               "upper_closed": false,
-              "count": 0
+              "count": 0,
+              "width": 10.0,
+              "density": 0.0
             },
             {
               "label": "[30, 40)",
               "lower": 30.0,
               "upper": 40.0,
               "upper_closed": false,
-              "count": 0
+              "count": 0,
+              "width": 10.0,
+              "density": 0.0
             },
             {
               "label": "[40, 50)",
               "lower": 40.0,
               "upper": 50.0,
               "upper_closed": false,
-              "count": 1
+              "count": 1,
+              "width": 10.0,
+              "density": 0.1
             },
             {
               "label": "[50, 60)",
               "lower": 50.0,
               "upper": 60.0,
               "upper_closed": false,
-              "count": 0
+              "count": 0,
+              "width": 10.0,
+              "density": 0.0
             },
             {
               "label": "[60, 70)",
               "lower": 60.0,
               "upper": 70.0,
               "upper_closed": false,
-              "count": 0
+              "count": 0,
+              "width": 10.0,
+              "density": 0.0
             },
             {
               "label": "[70, 80)",
               "lower": 70.0,
               "upper": 80.0,
               "upper_closed": false,
-              "count": 2
+              "count": 2,
+              "width": 10.0,
+              "density": 0.2
             },
             {
               "label": "[80, 90)",
               "lower": 80.0,
               "upper": 90.0,
               "upper_closed": false,
-              "count": 3
+              "count": 3,
+              "width": 10.0,
+              "density": 0.3
             },
             {
               "label": "[90, 100]",
               "lower": 90.0,
               "upper": 100.0,
               "upper_closed": true,
-              "count": 11
+              "count": 11,
+              "width": 10.0,
+              "density": 1.1
             }
           ],
           "underflow": {
@@ -6066,8 +6502,10 @@
             "label": "> 100",
             "count": 2
           },
+          "missing": null,
           "total": 20,
-          "max_count": 11
+          "max_count": 11,
+          "max_density": 1.1
         }
       },
       "locates": [
@@ -6152,6 +6590,7 @@
         "model": {
           "type": "histogram",
           "bins": "edges",
+          "heights": "density",
           "unit": null,
           "items": [
             {
@@ -6159,28 +6598,36 @@
               "lower": -1e-07,
               "upper": 0.0,
               "upper_closed": false,
-              "count": 1
+              "count": 1,
+              "width": 1e-07,
+              "density": 10000000.0
             },
             {
               "label": "[0, 0.1)",
               "lower": 0.0,
               "upper": 0.1,
               "upper_closed": false,
-              "count": 2
+              "count": 2,
+              "width": 0.1,
+              "density": 20.0
             },
             {
               "label": "[0.1, 0.25)",
               "lower": 0.1,
               "upper": 0.25,
               "upper_closed": false,
-              "count": 3
+              "count": 3,
+              "width": 0.15,
+              "density": 20.0
             },
             {
               "label": "[0.25, 1e+21]",
               "lower": 0.25,
               "upper": 1e+21,
               "upper_closed": true,
-              "count": 4
+              "count": 4,
+              "width": 1e+21,
+              "density": 4e-21
             }
           ],
           "underflow": {
@@ -6191,8 +6638,10 @@
             "label": "> 1e+21",
             "count": 0
           },
+          "missing": null,
           "total": 10,
-          "max_count": 4
+          "max_count": 4,
+          "max_density": 10000000.0
         }
       },
       "locates": [
@@ -6261,6 +6710,7 @@
         "model": {
           "type": "histogram",
           "bins": "edges",
+          "heights": "count",
           "unit": null,
           "items": [
             {
@@ -6268,14 +6718,18 @@
               "lower": 0.0,
               "upper": 1.0,
               "upper_closed": false,
-              "count": 1
+              "count": 1,
+              "width": 1.0,
+              "density": 1.0
             },
             {
               "label": "[1, 2]",
               "lower": 1.0,
               "upper": 2.0,
               "upper_closed": true,
-              "count": 2
+              "count": 2,
+              "width": 1.0,
+              "density": 2.0
             }
           ],
           "underflow": {
@@ -6286,8 +6740,10 @@
             "label": "> 2",
             "count": 5
           },
+          "missing": null,
           "total": 8,
-          "max_count": 5
+          "max_count": 5,
+          "max_density": 2.0
         }
       },
       "locates": [
@@ -6348,6 +6804,7 @@
         "model": {
           "type": "histogram",
           "bins": "categories",
+          "heights": "count",
           "unit": null,
           "items": [
             {
@@ -6381,8 +6838,10 @@
           ],
           "underflow": null,
           "overflow": null,
+          "missing": null,
           "total": 22,
-          "max_count": 12
+          "max_count": 12,
+          "max_density": null
         }
       }
     },
@@ -6435,6 +6894,7 @@
         "model": {
           "type": "histogram",
           "bins": "categories",
+          "heights": "count",
           "unit": null,
           "items": [
             {
@@ -6448,8 +6908,10 @@
           ],
           "underflow": null,
           "overflow": null,
+          "missing": null,
           "total": 35,
-          "max_count": 30
+          "max_count": 30,
+          "max_density": null
         }
       }
     },
@@ -7093,6 +7555,114 @@
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
             "size": 97,
             "sha256": "36b2fe1dd7d806a9571f04214d8cd7feee784990ca5960d874ebd12af7b4325f"
+          }
+        ],
+        "model": {
+          "type": "fallback",
+          "tables": []
+        }
+      }
+    },
+    {
+      "name": "histogram_bin_too_wide",
+      "covers": "A bin from -1.7e308 to 1.7e308, wider than binary64 holds: cap_exceeded, since its density cannot be computed.",
+      "view": {
+        "key": "hist",
+        "kind": "nemar.histogram",
+        "kind_version": 1,
+        "caption": "Recordings by share of good samples.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "format": "json",
+            "size": 97,
+            "sha256": "7fd3079efbd42d0d988ad71407ee6fe04c3a911afeed8ed93b0ea01ba7c6a90b"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json": {
+          "text": "{\n \"edges\": [\n  -1.7e+308,\n  1.7e+308\n ],\n \"counts\": [\n  1\n ],\n \"underflow\": 0,\n \"overflow\": 0\n}\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "table",
+          "kind": null,
+          "kind_version": null
+        },
+        "refused": {
+          "kind": "nemar.histogram",
+          "kind_version": 1,
+          "word": "cap_exceeded"
+        },
+        "downloads": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "size": 97,
+            "sha256": "7fd3079efbd42d0d988ad71407ee6fe04c3a911afeed8ed93b0ea01ba7c6a90b"
+          }
+        ],
+        "model": {
+          "type": "fallback",
+          "tables": []
+        }
+      }
+    },
+    {
+      "name": "histogram_total_with_missing_beyond_2_53",
+      "covers": "The missing count in the sum a renderer may compute: cap_exceeded.",
+      "view": {
+        "key": "hist",
+        "kind": "nemar.histogram",
+        "kind_version": 1,
+        "caption": "Recordings by share of good samples.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "format": "json",
+            "size": 81,
+            "sha256": "49c18e5483a4d6c8764a9ad22fe5148cb072ca8494b1548461d9ac9e8ff8d9c1"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json": {
+          "text": "{\n \"categories\": [\n  \"a\"\n ],\n \"counts\": [\n  9007199254740991\n ],\n \"missing\": 1\n}\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "table",
+          "kind": null,
+          "kind_version": null
+        },
+        "refused": {
+          "kind": "nemar.histogram",
+          "kind_version": 1,
+          "word": "cap_exceeded"
+        },
+        "downloads": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "size": 81,
+            "sha256": "49c18e5483a4d6c8764a9ad22fe5148cb072ca8494b1548461d9ac9e8ff8d9c1"
           }
         ],
         "model": {
