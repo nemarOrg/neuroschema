@@ -4,6 +4,8 @@
 preset first builds its base's model; when the base draws, the preset's own
 checks run, in the stated order, and the first that fails gives the word:
 
+- ``nemar.spectrum``: with a layout, the values' sensor columns are the
+  layout's names, in order (``sensors_mismatch``, shown as the fallback);
 - ``nemar.ic-maps``: the components table's ``component`` cells are the
   values' component names, in order (``components_mismatch``);
 - ``nemar.ic-classes``: the content meets ``content.nemar.ic-classes.v1``
@@ -16,10 +18,11 @@ checks run, in the stated order, and the first that fails gives the word:
   the window, which must hold a sample of the recording (``window_outside``).
 
 A word of ``nemar.ic-maps`` or ``nemar.ic-classes`` draws the view by its base
-and keeps the word; a word of ``nemar.signal-window`` draws nothing.
+and keeps the word, ``nemar.spectrum``'s shows the view as the fallback's
+tables, and a word of ``nemar.signal-window`` draws nothing.
 ``views/vectors/preset-checks.v1.json`` holds the cases; this module is the
-Python reference. ``nemar.spectrum`` has no checks of its own, and
-``nemar.ic-activity``'s are its transform's (``neuroschema.views.ic_activity``).
+Python reference. ``nemar.ic-activity``'s checks are its transform's
+(``neuroschema.views.ic_activity``).
 """
 
 from __future__ import annotations
@@ -55,7 +58,8 @@ IC_CLASSES_CONTENT = "content.nemar.ic-classes.v1.schema.json"
 
 class PresetRefused(Refusal):
     """A preset's own check failed. ``outcome`` is ``base`` (the view is drawn
-    by its base, with the word) or ``nothing`` (nothing is drawn)."""
+    by its base, with the word), ``fallback`` (it shows as the fallback's
+    tables, with the word) or ``nothing`` (nothing is drawn)."""
 
     def __init__(self, word: str, outcome: str, detail: str = "") -> None:
         super().__init__(word, detail)
@@ -148,6 +152,26 @@ def check_ic_maps(view: Mapping, files: Mapping[str, bytes], caps: Mapping) -> N
         raise PresetRefused(exc.word, "base", str(exc)) from exc
     if table.cells("component") != names:
         raise PresetRefused("components_mismatch", "base")
+
+
+def check_spectrum(view: Mapping, files: Mapping[str, bytes], caps: Mapping) -> None:
+    """With a layout, the values' sensor columns are the layout's names, in
+    order, compared as text (``sensors_mismatch``).
+
+    The base labels each series by the layout's name at its position, so a
+    header that names other sensors (``O2``, ``O1`` where the layout says
+    ``Fp1``, ``Fp2``) would draw each spectrum under another sensor's name
+    (probe p16). Which of the two is right cannot be told, so the view shows as
+    the fallback's tables, with the word.
+    """
+    reader = _Reader(view, files, caps)
+    layout = reader.entry("layout")
+    if layout is None:
+        return
+    values = reader.entry("values")
+    names = [c["name"] for c in values["columns"] if c["name"] != "freq_hz"]
+    if reader.tsv(layout).cells("name") != names:
+        raise PresetRefused("sensors_mismatch", "fallback")
 
 
 def check_ic_classes(view: Mapping, files: Mapping[str, bytes], caps: Mapping) -> None:
@@ -332,11 +356,14 @@ def check_preset(
                 store["published_sha256"],
                 registry["caps"],
             )
-        if kind == "nemar.ic-classes":
+        if kind in ("nemar.ic-classes", "nemar.spectrum"):
             base = build_model(view, files, _base_only(registry))
             if base["refused"] is not None:
                 return {"word": base["refused"]["word"], "outcome": "fallback"}
-            check_ic_classes(view, files, registry["caps"])
+            if kind == "nemar.spectrum":
+                check_spectrum(view, files, registry["caps"])
+            else:
+                check_ic_classes(view, files, registry["caps"])
         elif kind == "nemar.ic-maps":
             # The base's map has its own reference and vectors
             # (neuroschema.views.sensor_field); this checks the preset's file.

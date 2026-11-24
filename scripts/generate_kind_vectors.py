@@ -2882,6 +2882,78 @@ def ic_maps_check_cases() -> list[Case]:
     return out
 
 
+SPECTRUM_SENSORS = ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"]
+
+
+def spectrum_values(names: list[str]) -> bytes:
+    """A spectrum from 0.5 Hz (the 0 Hz row excluded), one column per sensor."""
+    rows = [
+        f"{f} " + " ".join(f"{10 - i - k:.1f}" for k in range(len(names)))
+        for i, f in enumerate((0.5, 1, 1.5))
+    ]
+    return tsv(" ".join(["freq_hz", *names]), *rows)
+
+
+def spectrum_layout(names: list[str]) -> bytes:
+    rows = [f"{n} {18 * i - 54} 0.4 EEG" for i, n in enumerate(names)]
+    return tsv("name theta_deg radius sensor_type", *rows)
+
+
+def spectrum_check_cases() -> list[Case]:
+    spectrum = preset_views()["spectrum"]
+    values = spectrum_values(SPECTRUM_SENSORS)
+    out = []
+    for name, covers, layout in [
+        (
+            "spectrum",
+            "The values' sensor columns are the layout's names, in order.",
+            spectrum_layout(SPECTRUM_SENSORS),
+        ),
+        (
+            "spectrum_sensors_reordered",
+            "The layout's rows in another order than the values' columns: each "
+            "spectrum would be drawn under another sensor's name, so "
+            "sensors_mismatch, shown as the fallback (probe p16).",
+            spectrum_layout([*SPECTRUM_SENSORS[1:], SPECTRUM_SENSORS[0]]),
+        ),
+        (
+            "spectrum_sensors_renamed",
+            "FP1 in the layout where the values say Fp1: names compare as text.",
+            spectrum_layout(["FP1", *SPECTRUM_SENSORS[1:]]),
+        ),
+    ]:
+        view = _with_file(_with_file(spectrum, "values", values), "layout", layout)
+        files = {_location(view, "values"): values, _location(view, "layout"): layout}
+        out.append(Case(name, covers, view, files))
+    bare = copy.deepcopy(spectrum)
+    bare["data"] = bare["data"][:1]
+    bare["data"][0]["dims"][1]["coords"] = {"header": True}
+    view = _with_file(bare, "values", values)
+    out.append(
+        Case(
+            "spectrum_without_layout",
+            "No layout: the sensors are the header's names, and there is nothing "
+            "to compare.",
+            view,
+            {_location(view, "values"): values},
+        )
+    )
+    falling = spectrum_values(SPECTRUM_SENSORS).replace(b"\n1\t", b"\n0.25\t", 1)
+    layout = spectrum_layout(["FP1", *SPECTRUM_SENSORS[1:]])
+    view = _with_file(_with_file(spectrum, "values", falling), "layout", layout)
+    out.append(
+        Case(
+            "spectrum_base_before_sensors",
+            "Frequencies that fall (x_not_increasing) and a layout that names "
+            "other sensors: the base refuses first, so the base's word, shown as "
+            "the fallback.",
+            view,
+            {_location(view, "values"): falling, _location(view, "layout"): layout},
+        )
+    )
+    return out
+
+
 def ic_classes_check_cases() -> list[Case]:
     classes = preset_views()["icclasses"]
     good = {
@@ -3383,7 +3455,11 @@ def signal_window_check_cases() -> list[tuple[str, str, dict, dict, dict]]:
 
 def preset_checks() -> dict:
     cases = []
-    for case in [*ic_maps_check_cases(), *ic_classes_check_cases()]:
+    for case in [
+        *spectrum_check_cases(),
+        *ic_maps_check_cases(),
+        *ic_classes_check_cases(),
+    ]:
         expected = check_preset(case.view, case.files, REGISTRY)
         cases.append(_header(case) | {"expected": expected})
     for name, covers, view, files, store, caps in signal_window_check_cases():
@@ -3415,7 +3491,8 @@ def preset_checks() -> dict:
             "sample and count, the bad channels and the segments for a signal "
             "window), else the word and its outcome: "
             "base (drawn by its base, with the word), nothing (nothing drawn) or "
-            "fallback (the base itself refused the file first). A case's caps take "
+            "fallback (shown as the fallback's tables: the base itself refused the "
+            "file first, or the base's drawing would mislead). A case's caps take "
             "the place of the registry's caps of the same names for that case."
         ),
         "cases": cases,

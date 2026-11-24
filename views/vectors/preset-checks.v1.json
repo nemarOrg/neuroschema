@@ -1,8 +1,704 @@
 {
   "format": "nemar.preset-checks.v1",
   "spec": "docs/views/presets.md",
-  "description": "The checks a renderer of a preset runs beyond its base. For each case, decode files (UTF-8 text), run the preset's checks on view (for a signal window, with store: the recording's samples, its rate and the digest the serving copy publishes, or null) and compare with expected: word null when they pass (with the state, the window's first sample and count, the bad channels and the segments for a signal window), else the word and its outcome: base (drawn by its base, with the word), nothing (nothing drawn) or fallback (the base itself refused the file first). A case's caps take the place of the registry's caps of the same names for that case.",
+  "description": "The checks a renderer of a preset runs beyond its base. For each case, decode files (UTF-8 text), run the preset's checks on view (for a signal window, with store: the recording's samples, its rate and the digest the serving copy publishes, or null) and compare with expected: word null when they pass (with the state, the window's first sample and count, the bad channels and the segments for a signal window), else the word and its outcome: base (drawn by its base, with the word), nothing (nothing drawn) or fallback (shown as the fallback's tables: the base itself refused the file first, or the base's drawing would mislead). A case's caps take the place of the registry's caps of the same names for that case.",
   "cases": [
+    {
+      "name": "spectrum",
+      "covers": "The values' sensor columns are the layout's names, in order.",
+      "view": {
+        "key": "spectrum",
+        "kind": "nemar.spectrum",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Power spectral density of each good channel, with scalp maps at chosen frequencies.",
+        "source": {
+          "plugin": {
+            "name": "nemar-spectrum",
+            "version": "0.1.0"
+          }
+        },
+        "parameters": {
+          "method": "welch",
+          "window": "hamming",
+          "window_s": 2,
+          "overlap": 0.5,
+          "unit": "dB",
+          "upper_hz": 125,
+          "initial_maps_hz": [6, 10, 22, 50]
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
+            "format": "tsv",
+            "size": 126,
+            "sha256": "27cd68d0d99f019b34b1f87a95a3d0c5c58fa3a934e23fd495c8ed11a0c2eebe",
+            "columns": [
+              {
+                "name": "freq_hz",
+                "type": "number",
+                "unit": "Hz"
+              },
+              {
+                "name": "Fp1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fp2",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "F4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "C4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              }
+            ],
+            "dims": [
+              {
+                "name": "freq",
+                "axis": "rows",
+                "type": "number",
+                "unit": "Hz",
+                "coords": {
+                  "column": "freq_hz"
+                }
+              },
+              {
+                "name": "sensor",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 136,
+            "sha256": "63143a1fd4c380038df0040d55c69176e4f9e4be0812f9b51dceb44ed0395555",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              },
+              {
+                "name": "sensor_type",
+                "type": "string"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv": {
+          "text": "freq_hz\tFp1\tFp2\tF3\tF4\tC3\tC4\tP3\n0.5\t10.0\t9.0\t8.0\t7.0\t6.0\t5.0\t4.0\n1\t9.0\t8.0\t7.0\t6.0\t5.0\t4.0\t3.0\n1.5\t8.0\t7.0\t6.0\t5.0\t4.0\t3.0\t2.0\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-54\t0.4\tEEG\nFp2\t-36\t0.4\tEEG\nF3\t-18\t0.4\tEEG\nF4\t0\t0.4\tEEG\nC3\t18\t0.4\tEEG\nC4\t36\t0.4\tEEG\nP3\t54\t0.4\tEEG\n"
+        }
+      },
+      "expected": {
+        "word": null
+      }
+    },
+    {
+      "name": "spectrum_sensors_reordered",
+      "covers": "The layout's rows in another order than the values' columns: each spectrum would be drawn under another sensor's name, so sensors_mismatch, shown as the fallback (probe p16).",
+      "view": {
+        "key": "spectrum",
+        "kind": "nemar.spectrum",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Power spectral density of each good channel, with scalp maps at chosen frequencies.",
+        "source": {
+          "plugin": {
+            "name": "nemar-spectrum",
+            "version": "0.1.0"
+          }
+        },
+        "parameters": {
+          "method": "welch",
+          "window": "hamming",
+          "window_s": 2,
+          "overlap": 0.5,
+          "unit": "dB",
+          "upper_hz": 125,
+          "initial_maps_hz": [6, 10, 22, 50]
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
+            "format": "tsv",
+            "size": 126,
+            "sha256": "27cd68d0d99f019b34b1f87a95a3d0c5c58fa3a934e23fd495c8ed11a0c2eebe",
+            "columns": [
+              {
+                "name": "freq_hz",
+                "type": "number",
+                "unit": "Hz"
+              },
+              {
+                "name": "Fp1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fp2",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "F4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "C4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              }
+            ],
+            "dims": [
+              {
+                "name": "freq",
+                "axis": "rows",
+                "type": "number",
+                "unit": "Hz",
+                "coords": {
+                  "column": "freq_hz"
+                }
+              },
+              {
+                "name": "sensor",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 136,
+            "sha256": "14c937c587d5a807bc145d34add5fe0918aa5c012162cd9f1c666a5233423ac1",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              },
+              {
+                "name": "sensor_type",
+                "type": "string"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv": {
+          "text": "freq_hz\tFp1\tFp2\tF3\tF4\tC3\tC4\tP3\n0.5\t10.0\t9.0\t8.0\t7.0\t6.0\t5.0\t4.0\n1\t9.0\t8.0\t7.0\t6.0\t5.0\t4.0\t3.0\n1.5\t8.0\t7.0\t6.0\t5.0\t4.0\t3.0\t2.0\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp2\t-54\t0.4\tEEG\nF3\t-36\t0.4\tEEG\nF4\t-18\t0.4\tEEG\nC3\t0\t0.4\tEEG\nC4\t18\t0.4\tEEG\nP3\t36\t0.4\tEEG\nFp1\t54\t0.4\tEEG\n"
+        }
+      },
+      "expected": {
+        "word": "sensors_mismatch",
+        "outcome": "fallback"
+      }
+    },
+    {
+      "name": "spectrum_sensors_renamed",
+      "covers": "FP1 in the layout where the values say Fp1: names compare as text.",
+      "view": {
+        "key": "spectrum",
+        "kind": "nemar.spectrum",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Power spectral density of each good channel, with scalp maps at chosen frequencies.",
+        "source": {
+          "plugin": {
+            "name": "nemar-spectrum",
+            "version": "0.1.0"
+          }
+        },
+        "parameters": {
+          "method": "welch",
+          "window": "hamming",
+          "window_s": 2,
+          "overlap": 0.5,
+          "unit": "dB",
+          "upper_hz": 125,
+          "initial_maps_hz": [6, 10, 22, 50]
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
+            "format": "tsv",
+            "size": 126,
+            "sha256": "27cd68d0d99f019b34b1f87a95a3d0c5c58fa3a934e23fd495c8ed11a0c2eebe",
+            "columns": [
+              {
+                "name": "freq_hz",
+                "type": "number",
+                "unit": "Hz"
+              },
+              {
+                "name": "Fp1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fp2",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "F4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "C4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              }
+            ],
+            "dims": [
+              {
+                "name": "freq",
+                "axis": "rows",
+                "type": "number",
+                "unit": "Hz",
+                "coords": {
+                  "column": "freq_hz"
+                }
+              },
+              {
+                "name": "sensor",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 136,
+            "sha256": "7820e497b135a4f70e20033459065eebcb13178ed6ddf3aa399be7aa30bfb306",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              },
+              {
+                "name": "sensor_type",
+                "type": "string"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv": {
+          "text": "freq_hz\tFp1\tFp2\tF3\tF4\tC3\tC4\tP3\n0.5\t10.0\t9.0\t8.0\t7.0\t6.0\t5.0\t4.0\n1\t9.0\t8.0\t7.0\t6.0\t5.0\t4.0\t3.0\n1.5\t8.0\t7.0\t6.0\t5.0\t4.0\t3.0\t2.0\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFP1\t-54\t0.4\tEEG\nFp2\t-36\t0.4\tEEG\nF3\t-18\t0.4\tEEG\nF4\t0\t0.4\tEEG\nC3\t18\t0.4\tEEG\nC4\t36\t0.4\tEEG\nP3\t54\t0.4\tEEG\n"
+        }
+      },
+      "expected": {
+        "word": "sensors_mismatch",
+        "outcome": "fallback"
+      }
+    },
+    {
+      "name": "spectrum_without_layout",
+      "covers": "No layout: the sensors are the header's names, and there is nothing to compare.",
+      "view": {
+        "key": "spectrum",
+        "kind": "nemar.spectrum",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Power spectral density of each good channel, with scalp maps at chosen frequencies.",
+        "source": {
+          "plugin": {
+            "name": "nemar-spectrum",
+            "version": "0.1.0"
+          }
+        },
+        "parameters": {
+          "method": "welch",
+          "window": "hamming",
+          "window_s": 2,
+          "overlap": 0.5,
+          "unit": "dB",
+          "upper_hz": 125,
+          "initial_maps_hz": [6, 10, 22, 50]
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
+            "format": "tsv",
+            "size": 126,
+            "sha256": "27cd68d0d99f019b34b1f87a95a3d0c5c58fa3a934e23fd495c8ed11a0c2eebe",
+            "columns": [
+              {
+                "name": "freq_hz",
+                "type": "number",
+                "unit": "Hz"
+              },
+              {
+                "name": "Fp1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fp2",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "F4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "C4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              }
+            ],
+            "dims": [
+              {
+                "name": "freq",
+                "axis": "rows",
+                "type": "number",
+                "unit": "Hz",
+                "coords": {
+                  "column": "freq_hz"
+                }
+              },
+              {
+                "name": "sensor",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv": {
+          "text": "freq_hz\tFp1\tFp2\tF3\tF4\tC3\tC4\tP3\n0.5\t10.0\t9.0\t8.0\t7.0\t6.0\t5.0\t4.0\n1\t9.0\t8.0\t7.0\t6.0\t5.0\t4.0\t3.0\n1.5\t8.0\t7.0\t6.0\t5.0\t4.0\t3.0\t2.0\n"
+        }
+      },
+      "expected": {
+        "word": null
+      }
+    },
+    {
+      "name": "spectrum_base_before_sensors",
+      "covers": "Frequencies that fall (x_not_increasing) and a layout that names other sensors: the base refuses first, so the base's word, shown as the fallback.",
+      "view": {
+        "key": "spectrum",
+        "kind": "nemar.spectrum",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Power spectral density of each good channel, with scalp maps at chosen frequencies.",
+        "source": {
+          "plugin": {
+            "name": "nemar-spectrum",
+            "version": "0.1.0"
+          }
+        },
+        "parameters": {
+          "method": "welch",
+          "window": "hamming",
+          "window_s": 2,
+          "overlap": 0.5,
+          "unit": "dB",
+          "upper_hz": 125,
+          "initial_maps_hz": [6, 10, 22, 50]
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
+            "format": "tsv",
+            "size": 129,
+            "sha256": "9cd0e0833c9a223bef5c2cf328dd020af5e85ae8d54ab4516a8affa36b8dafb4",
+            "columns": [
+              {
+                "name": "freq_hz",
+                "type": "number",
+                "unit": "Hz"
+              },
+              {
+                "name": "Fp1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fp2",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "F4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "C4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              }
+            ],
+            "dims": [
+              {
+                "name": "freq",
+                "axis": "rows",
+                "type": "number",
+                "unit": "Hz",
+                "coords": {
+                  "column": "freq_hz"
+                }
+              },
+              {
+                "name": "sensor",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 136,
+            "sha256": "7820e497b135a4f70e20033459065eebcb13178ed6ddf3aa399be7aa30bfb306",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              },
+              {
+                "name": "sensor_type",
+                "type": "string"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv": {
+          "text": "freq_hz\tFp1\tFp2\tF3\tF4\tC3\tC4\tP3\n0.5\t10.0\t9.0\t8.0\t7.0\t6.0\t5.0\t4.0\n0.25\t9.0\t8.0\t7.0\t6.0\t5.0\t4.0\t3.0\n1.5\t8.0\t7.0\t6.0\t5.0\t4.0\t3.0\t2.0\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFP1\t-54\t0.4\tEEG\nFp2\t-36\t0.4\tEEG\nF3\t-18\t0.4\tEEG\nF4\t0\t0.4\tEEG\nC3\t18\t0.4\tEEG\nC4\t36\t0.4\tEEG\nP3\t54\t0.4\tEEG\n"
+        }
+      },
+      "expected": {
+        "word": "x_not_increasing",
+        "outcome": "fallback"
+      }
+    },
     {
       "name": "ic_maps",
       "covers": "The components table names the maps, in order.",

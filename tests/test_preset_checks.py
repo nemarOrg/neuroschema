@@ -79,12 +79,13 @@ def _doc_words() -> dict[tuple[str, str], str]:
     section = SPEC.read_text().split("\n## Words\n", 1)[1].split("\n## ", 1)[0]
     words = {}
     for cells, preset, outcome in re.findall(
-        r"^\| (`[a-z_]+`(?:, `[a-z_]+`)*) \| `([a-z.-]+)` \| (base|nothing drawn) \|",
+        r"^\| (`[a-z_]+`(?:, `[a-z_]+`)*) \| `([a-z.-]+)` \| "
+        r"(base|fallback|nothing drawn) \|",
         section,
         re.M,
     ):
         for word in re.findall(r"`([a-z_]+)`", cells):
-            words[(word, preset)] = "base" if outcome == "base" else "nothing"
+            words[(word, preset)] = {"nothing drawn": "nothing"}.get(outcome, outcome)
     return words
 
 
@@ -130,12 +131,16 @@ def test_every_word_has_a_vector_with_its_outcome():
     """Each (word, preset) of the table is some case's, with the table's
     outcome; the grammar's words other than tsv_ragged, and the caps, are the
     generic kinds' and vectored there."""
+    doc = _doc_words()
     seen = {
         (c["expected"]["word"], c["view"]["kind"]): c["expected"]["outcome"]
         for c in CASES
-        if c["expected"]["word"] and c["expected"]["outcome"] != "fallback"
+        if c["expected"]["word"]
+        and (
+            c["expected"]["outcome"] != "fallback"
+            or (c["expected"]["word"], c["view"]["kind"]) in doc
+        )
     }
-    doc = _doc_words()
     generic = GRAMMAR - {"tsv_ragged"} | {"cap_exceeded", "cell_not_finite"}
     for (word, preset), outcome in doc.items():
         if word in generic:

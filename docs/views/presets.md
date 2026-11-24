@@ -26,7 +26,7 @@ A renderer that does not know a computed preset offers its file inputs for downl
 However a preset is drawn, every file it names, in `data` or as a `file` input, is drawn or offered for download.
 
 A renderer that knows a preset first builds its base's model; when the base refuses the files, the view falls back as the base's rules say.
-When the base draws, the preset's own checks run in the order this page gives, and the first that fails gives the word: the renderer draws the view by its base and keeps the word, so the page can say why the preset's extras are missing, or, for `nemar.signal-window`, draws nothing.
+When the base draws, the preset's own checks run in the order this page gives, and the first that fails gives the word, with its outcome: `base`, the renderer draws the view by its base and keeps the word, so the page can say why the preset's extras are missing; `fallback`, it shows the view as the fallback's tables with the word, because the base's drawing would mislead; or `nothing`, for `nemar.signal-window`, it draws nothing.
 `neuroschema.views.presets.check_preset` is the Python reference of these checks, and [`views/vectors/preset-checks.v1.json`](../../views/vectors/preset-checks.v1.json) (`nemar.preset-checks.v1`) holds the cases every renderer reproduces.
 
 ### The floor's tables
@@ -81,7 +81,9 @@ A renderer that knows this kind draws the `nemar.lines` model of the values, and
 A map is the row's cells as one value per sensor, drawn with `nemar.sensor-field.v1` with `minmax` limits (the decibels are not signed about zero), and placed by the layout or by the sensors' names.
 A map the scalp-map algorithm refuses (for example `too_few_sensors`) shows that word in its place, and the lines are drawn all the same.
 
-The writer makes sure that the rows rise strictly from 0 to at most `upper_hz`, and, with a layout, that the values' sensor columns are the layout's rows in order.
+The writer makes sure that the rows rise strictly to at most `upper_hz`, and, with a layout, that the values' sensor columns are the layout's rows in order.
+A renderer does not rely on the writer for the last rule: after the base's model is built, it checks, with a layout, that the values' sensor columns (every declared column but `freq_hz`) are the layout's `name` cells, top to bottom, compared as text (`sensors_mismatch`).
+The base labels each series by the layout's name at its position, so a header that named other sensors would draw each spectrum under another sensor's name; which of the two is right cannot be told, so the view shows as the fallback's tables ([generic-kinds.md](generic-kinds.md#the-fallback)), with the word, and no lines or maps are drawn.
 
 ## `nemar.ic-maps` version 1
 
@@ -167,6 +169,7 @@ The vectors give, for a window drawn, its state, its `first` sample and `count`,
 
 | Word | Preset | Outcome | Meaning |
 |---|---|---|---|
+| `sensors_mismatch` | `nemar.spectrum` | fallback | With a layout, the values' sensor columns are not the layout's names, in order. |
 | `tsv_encoding`, `tsv_line_endings`, `tsv_header_repeated`, `tsv_ragged` | `nemar.ic-maps` | base | The components table breaks the TSV grammar ([generic-kinds.md](generic-kinds.md#words)). |
 | `column_missing` | `nemar.ic-maps` | base | The components table has no column `component`. |
 | `components_mismatch` | `nemar.ic-maps` | base | The components table's `component` cells are not the values' header names, in order. |
@@ -205,7 +208,7 @@ The vectors give the state in `state` and the notes in `notes`.
 ## The preset-check vectors
 
 `preset-checks.v1.json` has `format`, `spec`, `description` and `cases`.
-Each case has a `name`, what it `covers`, a `view` (built from the [example](../../examples/views/dataquality-record-nemar-ica.json)), its `files` (each location's UTF-8 text), for a signal window the `store` (its row `labels`, `samples`, `rate` and the digest the serving copy publishes, or null), optionally `caps` in place of the registry's caps of the same names, and the `expected` outcome: `word` null when the checks pass, with, for a signal window, the `state`, the window's `first` sample and `count`, its `bad_channels`, its `segments` and its `notes`; otherwise the `word` and its `outcome`, `base`, `nothing` or `fallback` (the base refused the file first, with its own word).
+Each case has a `name`, what it `covers`, a `view` (built from the [example](../../examples/views/dataquality-record-nemar-ica.json)), its `files` (each location's UTF-8 text), for a signal window the `store` (its row `labels`, `samples`, `rate` and the digest the serving copy publishes, or null), optionally `caps` in place of the registry's caps of the same names, and the `expected` outcome: `word` null when the checks pass, with, for a signal window, the `state`, the window's `first` sample and `count`, its `bad_channels`, its `segments` and its `notes`; otherwise the `word` and its `outcome`, `base`, `nothing` or `fallback` (the view shows as the fallback's tables: the base refused the file first, with its own word, or the preset's check found the base's drawing would mislead, `sensors_mismatch`).
 The cases cover every word of this page, each pair of neighboring checks with two faults, and a window at 500/7 Hz where the times rule and a rounded product disagree.
 `scripts/generate_kind_vectors.py` writes them with the Python reference.
 
