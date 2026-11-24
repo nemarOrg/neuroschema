@@ -401,8 +401,10 @@ def field_case_from(name, description, sensors, extra=None):
         "limits": {"absmax": absmax, "minmax": [low, high]},
         "color_axis": {
             "absmax": eegprep_clim(zi) if top > 0 else [0.0, 0.0],
+            # eegprep leaves maxmin to matplotlib; the spec widens by the range.
             "minmax": [
-                v + math.copysign(0.05, v) * abs(v) if v else 0.0 for v in (low, high)
+                low - 0.05 * (high - low) + 0.0,
+                high + 0.05 * (high - low) + 0.0,
             ],
         },
         "contours": eegprep_contours(zi),
@@ -781,6 +783,24 @@ def field_cases():
             [*base, base[outer] + 4.0],
         )
     )
+    for name, offset, sign in [
+        ("one_sign_positive_db", 25.0, "positive"),
+        ("one_sign_negative_db", -25.0, "negative"),
+    ]:
+        cases.append(
+            field_case(
+                name,
+                f"montage_32 with half its field plus {offset:g}: every value "
+                f"{sign}, as decibels are on a spectrum's map. Every cell lies "
+                "inside both color axes; minmax widens by 5% of the range, where "
+                "EEGLAB's magnitude rule would move the limit nearer zero inward "
+                "and clip the cells beside it.",
+                labels,
+                theta,
+                radius,
+                base * 0.5 + offset,
+            )
+        )
     labels, theta, radius = layouts[128]
     cases.append(
         field_case(

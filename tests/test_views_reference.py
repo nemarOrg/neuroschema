@@ -186,6 +186,12 @@ def _absmax_from_max(z):
     return {"absmax": (-cells.max(), cells.max()), "minmax": (cells.min(), cells.max())}
 
 
+def _eeglab_axis(pair, rule):
+    """EEGLAB's caxis for every choice: 5% of each limit's magnitude away from
+    zero (topoplot.m:1248-1250), the rule this page keeps for absmax only."""
+    return tuple(v + np.sign(v) * sf.COLOR_MARGIN * abs(v) for v in pair)
+
+
 def _mean_is_first(values, members):
     return float(values[members[0]])
 
@@ -211,6 +217,7 @@ FIELD_MUTATIONS = {
     "contours 6 -> 5": ("CONTOUR_COUNT", 5),
     "fewest sensors 3 -> 2": ("MIN_SENSORS", 2),
     "color margin 5% -> 0": ("COLOR_MARGIN", 0.0),
+    "minmax margin by magnitude (EEGLAB)": ("color_axis", _eeglab_axis),
     "square with abs()": ("in_square", _abs_square),
     "mask radius 0.5 -> 0.49": (
         "outside_head",
@@ -278,8 +285,46 @@ def test_grid_axis_is_numpy_linspace(low, high):
 
 
 def test_color_axis_of_zero_is_zero():
-    assert sf.color_axis((-0.0, 0.0)) == (0.0, 0.0)
-    assert sf.color_axis((-2.0, 4.0)) == (-2.1, 4.2)
+    for rule in ("absmax", "minmax"):
+        low, high = sf.color_axis((-0.0, 0.0), rule)
+        assert (low, high) == (0.0, 0.0)
+        assert math.copysign(1.0, low) == 1.0
+
+
+def test_color_axis_rules():
+    """absmax: 5% of each magnitude (EEGLAB's caxis); minmax: 5% of the range."""
+    assert sf.color_axis((-4.0, 4.0), "absmax") == (-4.2, 4.2)
+    assert sf.color_axis((-2.0, 4.0), "minmax") == (-2.3, 4.3)
+    assert sf.color_axis((10.0, 30.0), "minmax") == (9.0, 31.0)
+    assert sf.color_axis((-30.0, -10.0), "minmax") == (-31.0, -9.0)
+    assert sf.color_axis((2.5, 2.5), "minmax") == (2.5, 2.5)
+
+
+def _drawn_cells(case):
+    z = np.array([numbers(row) for row in case["expected"]["z"]])
+    return z[~np.isnan(z)]
+
+
+DRAWN = [c for c in FIELD["cases"] if "expected" in c]
+
+
+@pytest.mark.parametrize("case", DRAWN, ids=[c["name"] for c in DRAWN])
+def test_every_cell_lies_inside_both_color_axes(case):
+    """No cell of a drawn map takes the color at an end of the axis."""
+    cells = _drawn_cells(case)
+    for rule, (low, high) in case["expected"]["color_axis"].items():
+        assert low <= cells.min() and cells.max() <= high, rule
+
+
+@pytest.mark.parametrize("name", ["one_sign_positive_db", "one_sign_negative_db"])
+def test_eeglab_magnitude_rule_would_clip_a_one_sign_map(name):
+    """The divergence from EEGLAB, shown on the vectors: on a map of one sign
+    the magnitude rule moves the limit nearer zero inward, past cells."""
+    case = FIELD_CASES[name]
+    cells = _drawn_cells(case)
+    assert cells.min() > 0 or cells.max() < 0, "a map of one sign"
+    low, high = _eeglab_axis(case["expected"]["limits"]["minmax"], "minmax")
+    assert cells.min() < low or cells.max() > high
 
 
 # ── The LU solver ─────────────────────────────────────────────────────────
@@ -730,7 +775,9 @@ LINUX_FIELD = {
     ("close_pair", "limits", "absmax"): [-19.426989565881048, 19.426989565881048],
     ("close_pair", "limits", "minmax"): [-19.426989565881048, 13.450841521473963],
     ("close_pair", "color_axis", "absmax"): [-20.3983390441751, 20.3983390441751],
-    ("close_pair", "color_axis", "minmax"): [-20.3983390441751, 14.123383597547662],
+    # The minmax color axis widens by the range since; this is the Linux limits
+    # above widened by that rule, which binary64 computes alike everywhere.
+    ("close_pair", "color_axis", "minmax"): [-21.0708811202488, 15.094733075841713],
 }
 LINUX_RADIUS = ("nan_positions", 8, 0.48437218538703425)
 LINUX_CENTER = (

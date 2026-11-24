@@ -37,7 +37,8 @@ MIN_SENSORS = 3
 CONTOUR_COUNT = 6
 """Interior contour levels."""
 COLOR_MARGIN = 0.05
-"""Each color limit moves this share of its magnitude away from zero."""
+"""The color axis widens the limits by this share: of each limit's magnitude
+for ``absmax`` (EEGLAB's ``caxis``), of their range for ``minmax``."""
 DEG = np.pi / 180
 """Degrees to radians: the binary64 nearest pi, divided by 180."""
 
@@ -174,10 +175,23 @@ def limits(z: np.ndarray) -> dict[str, tuple[float, float]]:
     return {"absmax": (-top, top), "minmax": (low, high)}
 
 
-def color_axis(pair: tuple[float, float]) -> tuple[float, float]:
-    """EEGLAB's color axis: each limit moved 5% of its magnitude away from zero."""
-    low, high = (float(v + np.sign(v) * COLOR_MARGIN * abs(v)) for v in pair)
-    return low, high
+def color_axis(pair: tuple[float, float], rule: str) -> tuple[float, float]:
+    """The color axis around the limits ``pair`` of the rule ``absmax`` or ``minmax``.
+
+    ``absmax``: each limit moves 5% of its magnitude away from zero, as
+    EEGLAB's ``caxis`` does; the limits have opposite signs, so both move
+    outward. ``minmax``: both limits move outward by 5% of their range,
+    ``(low - 0.05 * span, high + 0.05 * span)`` with ``span = high - low``, so
+    a map of one sign keeps every cell inside the axis (EEGLAB's magnitude rule
+    would move its limit nearer zero inward and clip the cells beside it).
+    """
+    low, high = pair
+    if rule == "absmax":
+        low, high = (v + np.sign(v) * COLOR_MARGIN * abs(v) for v in pair)
+    else:
+        span = high - low
+        low, high = low - COLOR_MARGIN * span, high + COLOR_MARGIN * span
+    return float(low) + 0.0, float(high) + 0.0
 
 
 def contour_levels(z: np.ndarray) -> tuple[float, ...]:
@@ -281,7 +295,7 @@ def sensor_field(
         interpolated=tuple(int(r) for r in interpolated),
         merged={int(k): tuple(m) for k, m in groups.items() if len(m) > 1},
         limits=lim,
-        color_axis={name: color_axis(pair) for name, pair in lim.items()},
+        color_axis={name: color_axis(pair, name) for name, pair in lim.items()},
         contours=contour_levels(z),
     )
 
