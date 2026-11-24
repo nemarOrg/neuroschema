@@ -134,7 +134,11 @@ def test_sensor_field_vector_file():
 
 def test_vectors_project_positions_to_a_map():
     drawn = [c for c in FIELD["cases"] if "x" in c["sensors"] and "expected" in c]
-    assert {c.get("montage") for c in drawn} == {None, "GSN-HydroCel-32"}
+    assert {c.get("montage") for c in drawn} == {
+        None,
+        "GSN-HydroCel-32",
+        "standard_1005",
+    }
 
 
 def test_vectors_cover_the_sizes_in_the_plan():
@@ -327,12 +331,14 @@ def layout_mismatches(case: dict, frame: str | None = None) -> list[str]:
     try:
         layout = sl.sensor_layout(xyz, frame, montage=montage)
     except sl.SensorLayoutRefusal as exc:
-        return [] if case.get("refused") == exc.word else [f"refused {exc.word}"]
+        if case.get("refused") != exc.word:
+            return [f"refused {exc.word}"]
+        return bounds_mismatches(case, exc.singular_ratio, exc.radius_ratio)
     if "refused" in case:
         return [f"gave a layout; the vector refuses it ({case['refused']})"]
     expected = case["expected"]
     theta, radius = numbers(expected["theta_deg"]), numbers(expected["radius"])
-    problems = []
+    problems = bounds_mismatches(case, layout.singular_ratio, layout.radius_ratio)
     if not np.array_equal(np.isnan(layout.radius), np.isnan(radius)):
         return ["rows without a position"]
     if layout.center_method != expected["center_method"]:
@@ -358,6 +364,25 @@ def layout_mismatches(case: dict, frame: str | None = None) -> list[str]:
     )
     if not (gap <= LTOL["planar"]).all():
         problems.append("planar")
+    return problems
+
+
+def bounds_mismatches(case, singular_ratio, radius_ratio) -> list[str]:
+    """A measured case's flatness measures, within tolerance.bounds_absolute
+    (a template case has none)."""
+    bounds = case.get("bounds")
+    if bounds is None:
+        return [] if singular_ratio is None and radius_ratio is None else ["bounds"]
+    problems = []
+    for name, got in (
+        ("singular_ratio", singular_ratio),
+        ("radius_ratio", radius_ratio),
+    ):
+        want = bounds[name]
+        if (want is None) != (got is None) or (
+            want is not None and abs(got - want) > LTOL["bounds_absolute"]
+        ):
+            problems.append(f"bounds {name}")
     return problems
 
 
@@ -456,7 +481,8 @@ def _template_any_frame(coordinate_system, montage=None):
 
 
 def _always_centroid(points):
-    return points.sum(axis=0) / len(points), "centroid"
+    centroid = points.sum(axis=0) / len(points)
+    return sl.Fit(centroid, 1.0, 1.0)
 
 
 def _no_wrap(xyz):
@@ -466,18 +492,18 @@ def _no_wrap(xyz):
     ) / 180
 
 
-def _no_fewest(points):
-    """sphere_center without its three-or-fewer refusal."""
-    centroid = points.sum(axis=0) / len(points)
-    scale = float(np.sqrt(((points - centroid) ** 2).sum(axis=1)).max())
-    u = (points - centroid) / scale
-    return centroid + scale * sl.circle_center(u), "circle"
+def _fit_the_subset(points, coordinate_system, montage):
+    """Template positions fitted like measured ones: the round-2 fault."""
+    fit = sl.sphere_center(points)
+    return fit.center, "montage", None, None
 
 
 LAYOUT_MUTATIONS = {
-    "three or fewer positions accepted": ("sphere_center", _no_fewest),
-    "a flat disk accepted as a circle": ("CONCYCLIC", math.inf),
-    "a circle centered on the centroid": ("circle_center", lambda u: np.zeros(3)),
+    "flat ratio 0.05 -> 0.01": ("FLAT_RATIO", 0.01),
+    "flat ratio 0.05 -> 0.06": ("FLAT_RATIO", 0.06),
+    "radius ratio 3 -> 10": ("RADIUS_RATIO", 10.0),
+    "radius ratio 3 -> 2.5": ("RADIUS_RATIO", 2.5),
+    "templates fitted to the subset": ("center_of", _fit_the_subset),
     "an ALS name misspelled": (
         "ALS_FRAMES",
         (sl.ALS_FRAMES - {"EEGLAB-HJ"}) | {"EEGLAB_HJ"},
@@ -486,7 +512,6 @@ LAYOUT_MUTATIONS = {
     "RAS positions not rotated": ("to_als", _ras_unrotated),
     "template positions refused": ("orientation", _template_unknown),
     "a montage beside a named frame accepted": ("orientation", _template_any_frame),
-    "no degenerate fit": ("FIT_PIVOT", 0.0),
     "always the centroid": ("sphere_center", _always_centroid),
     "theta not written in (-180, 180]": ("cart2topo", _no_wrap),
 }
@@ -497,6 +522,68 @@ def test_sensor_layout_vectors_catch_a_mutation(monkeypatch, mutation):
     name, value = LAYOUT_MUTATIONS[mutation]
     monkeypatch.setattr(sl, name, value)
     assert layout_suite_fails(), mutation
+
+
+TEMPLATES = {"template_midline_9", "template_coronal_9"}
+
+
+@pytest.mark.parametrize("name", sorted(TEMPLATES))
+def test_a_template_subset_lands_where_the_full_cap_puts_it(name):
+    """A midline or a coronal row of standard_1005 is drawn at the full cap's
+    positions: the center is the montage's, never a sphere through the subset."""
+    full = LAYOUT_CASES["template_full_1005"]
+    by_name = {
+        n: (t, r)
+        for n, t, r in zip(
+            full["positions"]["name"],
+            full["expected"]["theta_deg"],
+            full["expected"]["radius"],
+            strict=True,
+        )
+    }
+    case = LAYOUT_CASES[name]
+    assert case["expected"]["center"] == full["expected"]["center"]
+    for n, t, r in zip(
+        case["positions"]["name"],
+        case["expected"]["theta_deg"],
+        case["expected"]["radius"],
+        strict=True,
+    ):
+        assert (t, r) == by_name[n], n
+
+
+def test_the_midline_runs_from_nose_to_back():
+    """The fault round 2 found: a midline fitted alone was stacked on the left
+    ear (theta near -90). About the montage's center it runs along theta 0
+    (front) and 180 (back)."""
+    theta = LAYOUT_CASES["template_midline_9"]["expected"]["theta_deg"]
+    assert all(abs(t) < 5 or abs(abs(t) - 180) < 5 for t in theta)
+    coronal = LAYOUT_CASES["template_coronal_9"]["expected"]
+    ends = [coronal["theta_deg"][0], coronal["theta_deg"][-1]]
+    assert abs(ends[0] + 90) < 5 and abs(ends[1] - 90) < 5
+
+
+MONTAGE_FILES = sorted(
+    p
+    for p in (ROOT / "views" / "montages").glob("*.json")
+    if p.name != "PROVENANCE.json"
+)
+
+
+@pytest.mark.parametrize("path", MONTAGE_FILES, ids=lambda p: p.stem)
+def test_each_montage_stores_its_own_center(path):
+    """The stored center is the sphere fitted to every electrode, rounded to
+    1e-9 m as the positions are (scripts/generate_montages.py writes it)."""
+    document = json.loads(path.read_text())
+    electrodes = np.array([e[1:4] for e in document["electrodes"]], dtype=float)
+    fit = sl.sphere_center(electrodes)
+    assert document["center"] == [round(float(v), 9) + 0.0 for v in fit.center]
+
+
+def test_an_unknown_montage_is_refused():
+    with pytest.raises(sl.SensorLayoutRefusal) as raised:
+        sl.sensor_layout(np.eye(3), "n/a", montage="no-such-cap")
+    assert raised.value.word == "frame_unknown"
 
 
 def test_positions_are_n_by_3():
@@ -685,6 +772,30 @@ def test_check_still_catches_changes_where_linux_rounds():
     biosemi = next(c for c in layout["cases"] if c["name"] == "biosemi_128_ras")
     biosemi["expected"]["center"][2] += 1e-9 * 100
     assert len(gen.differences(layout, LAYOUT)) == 1
+
+
+def test_generator_keeps_every_measure_off_its_bound():
+    """Each vector's flatness measures stay 0.002 and 0.05 from the bounds, so
+    an implementation's rounding cannot flip a case."""
+    gen = _generator()
+    gen.check_bounds("clear", {"singular_ratio": 0.06, "radius_ratio": 2.9})
+    gen.check_bounds("flat", {"singular_ratio": 0.0, "radius_ratio": None})
+    with pytest.raises(SystemExit, match="singular ratio"):
+        gen.check_bounds("near", {"singular_ratio": 0.0505, "radius_ratio": None})
+    with pytest.raises(SystemExit, match="radius ratio"):
+        gen.check_bounds("near", {"singular_ratio": 0.2, "radius_ratio": 3.01})
+
+
+def test_generator_checks_each_stored_montage_center(monkeypatch):
+    """The generator refits every montage and stops when the stored center is
+    not that fit."""
+    gen = _generator()
+    document = json.loads((ROOT / "views" / "montages" / "biosemi64.json").read_text())
+    monkeypatch.setattr(gen, "montage_document", lambda name: document)
+    assert np.array_equal(gen.montage_center("biosemi64"), document["center"])
+    document["center"] = [0.0, 0.001, 0.0]
+    with pytest.raises(SystemExit, match="not the fit"):
+        gen.montage_center("biosemi64")
 
 
 def test_generator_refuses_decisions_near_a_threshold():
