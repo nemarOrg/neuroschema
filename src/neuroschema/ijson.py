@@ -25,6 +25,8 @@ from __future__ import annotations
 import json
 import math
 import re
+from array import array
+from itertools import accumulate
 from typing import Any
 
 MAX_DEPTH = 64
@@ -38,6 +40,10 @@ _NONCHARACTERS = "﷐-﷯" + "".join(
     for plane in range(17)
 )
 FORBIDDEN = re.compile(f"[\ud800-\udfff{_NONCHARACTERS}]")
+# The depth scan's characters: anything but a bracket goes, and a bracket is a
+# step of +1 (opening) or -1 (closing, the byte 0xFF read as a signed byte).
+_NOT_BRACKET = re.compile(r"[^\[\]{}]+")
+_STEPS = bytes.maketrans(b"[{]}", b"\x01\x01\xff\xff")
 
 
 class IJsonError(ValueError):
@@ -60,43 +66,33 @@ def decode(data: bytes | bytearray | str) -> str:
         raise IJsonError(f"not UTF-8: {exc}") from exc
 
 
-def depth(text: str, stop: int | None = None) -> int:
+def depth(text: str) -> int:
     """How deep the text's arrays and objects nest (0 for a scalar).
 
-    One pass over the text, with a flag for being inside a string (where a
-    backslash escapes the next character), so a bracket inside a string does
-    not count and the cost is linear whatever the text: no regular expression
-    backtracks over an unterminated string. The scan runs before the parse, so
-    no parser recurses past :data:`MAX_DEPTH`; with ``stop``, it returns as
-    soon as the depth passes it.
+    Linear whatever the text, in passes that run in C, so it also stays fast
+    under a tracer such as coverage: first the escapes, left to right (``\\\\``
+    is one escaped backslash, then ``\\"`` an escaped quote); then the string
+    spans, which the quotes left bound in pairs, so the text between an odd and
+    an even quote is inside a string (the in-string flag, as the parity of the
+    quotes); then a running sum over the brackets left, +1 opening and -1
+    closing. No regular expression backtracks, so an unterminated string costs
+    one pass (review r29: the old scan was quadratic). For text that is not
+    JSON, the count is exact up to the first fault, where the parser stops. The
+    scan runs before the parse, so no parser recurses past :data:`MAX_DEPTH`.
     """
-    level = deepest = 0
-    in_string = escaped = False
-    for char in text:
-        if in_string:
-            if escaped:
-                escaped = False
-            elif char == "\\":
-                escaped = True
-            elif char == '"':
-                in_string = False
-        elif char == '"':
-            in_string = True
-        elif char == "[" or char == "{":
-            level += 1
-            if level > deepest:
-                deepest = level
-                if stop is not None and deepest > stop:
-                    return deepest
-        elif char == "]" or char == "}":
-            level -= 1
-    return deepest
+    plain = text.replace("\\\\", "").replace('\\"', "")
+    outside = "".join(plain.split('"')[::2])
+    brackets = _NOT_BRACKET.sub("", outside)
+    if not brackets:
+        return 0
+    steps = array("b", brackets.encode("ascii").translate(_STEPS))
+    return max(0, max(accumulate(steps)))
 
 
 def parse(data: bytes | bytearray | str, max_depth: int = MAX_DEPTH) -> Any:
     """Parse I-JSON text (module docstring), or raise :class:`IJsonError`."""
     text = decode(data)
-    if depth(text, stop=max_depth) > max_depth:
+    if depth(text) > max_depth:
         raise IJsonError(f"nested more than {max_depth} deep")
     try:
         value = json.loads(
