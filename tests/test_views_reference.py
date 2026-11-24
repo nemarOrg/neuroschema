@@ -522,6 +522,8 @@ def test_sensor_layout_vector_file():
 def test_frame_table_is_the_vectors():
     assert set(LAYOUT["frames"]["ALS"]) == sl.ALS_FRAMES
     assert set(LAYOUT["frames"]["RAS"]) == sl.RAS_FRAMES
+    assert LAYOUT["frames"]["aliases"] == sl.FRAME_ALIASES
+    assert "enums.yaml" in LAYOUT["reference"]["frame_names"]
     assert not sl.ALS_FRAMES & sl.RAS_FRAMES
     assert LAYOUT["frames"]["template"] == {
         "coordinate_system": "n/a",
@@ -541,6 +543,19 @@ def test_template_positions_need_n_a_and_a_montage(coordinate_system, montage):
 
 def test_template_positions_are_ras():
     assert sl.orientation("n/a", "standard_1005") == "RAS"
+
+
+def test_the_schema_enum_spelling_with_the_appendix_as_an_alias():
+    """BIDS's schema enum spells MNI152NLin6Asym and its appendix MNI152NLin6ASym:
+    the table holds the enum's spelling, and the appendix's is read as it."""
+    assert "MNI152NLin6Asym" in sl.RAS_FRAMES
+    assert "MNI152NLin6ASym" not in sl.RAS_FRAMES | sl.ALS_FRAMES
+    for alias, name in sl.FRAME_ALIASES.items():
+        assert name in sl.RAS_FRAMES | sl.ALS_FRAMES
+        assert sl.orientation(alias) == sl.orientation(name)
+        case = LAYOUT_CASES[f"alias_{alias}"]
+        assert case["expected"] == LAYOUT_CASES["frame_ras"]["expected"]
+        assert LAYOUT_CASES[f"alias_{alias}_lowercase"]["refused"] == "frame_unknown"
 
 
 @pytest.mark.parametrize("frame", LAYOUT["frames"]["ALS"])
@@ -631,6 +646,11 @@ LAYOUT_MUTATIONS = {
         (sl.ALS_FRAMES - {"EEGLAB-HJ"}) | {"EEGLAB_HJ"},
     ),
     "an RAS name moved to ALS": ("ALS_FRAMES", sl.ALS_FRAMES | {"ACPC"}),
+    "the appendix's spelling not read": ("FRAME_ALIASES", {}),
+    "the appendix's spelling in the table": (
+        "RAS_FRAMES",
+        (sl.RAS_FRAMES - {"MNI152NLin6Asym"}) | {"MNI152NLin6ASym"},
+    ),
     "RAS positions not rotated": ("to_als", _ras_unrotated),
     "template positions refused": ("orientation", _template_unknown),
     "a montage beside a named frame accepted": ("orientation", _template_any_frame),

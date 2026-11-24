@@ -58,7 +58,7 @@ RAS_FRAMES = frozenset(
         "MNI152NLin2009bAsym",
         "MNI152NLin2009cAsym",
         "MNI152NLin6Sym",
-        "MNI152NLin6ASym",
+        "MNI152NLin6Asym",
         "MNI305",
         "NIHPD",
         "OASIS30AntsOASISAnts",
@@ -74,7 +74,14 @@ RAS_FRAMES = frozenset(
         *(f"UNCInfant{age}V{version}" for age in "012" for version in (21, 22, 23)),
     }
 )
-"""BIDS coordinate systems with RAS orientation (x right, y anterior, z superior)."""
+"""BIDS coordinate systems with RAS orientation (x right, y anterior, z superior),
+spelled as the BIDS schema's enumerations spell them."""
+
+FRAME_ALIASES = {"MNI152NLin6ASym": "MNI152NLin6Asym"}
+"""Other spellings BIDS uses for a frame, each to the schema's spelling: its
+coordinate-systems appendix writes MNI152NLin6ASym where its schema enum,
+``src/schema/objects/enums.yaml``, writes MNI152NLin6Asym (both at the BIDS
+specification's commit 147b46d7)."""
 
 FLAT_RATIO = 0.05
 """Measured positions are flat when the smallest singular value of their
@@ -139,9 +146,11 @@ def orientation(coordinate_system: str, montage: str | None = None) -> str:
     Any other combination raises :class:`SensorLayoutRefusal`
     (``frame_unknown``): an unknown name, ``n/a`` without a montage, a name in
     another case, and a montage beside a coordinate system other than ``n/a``.
-    No frame is assumed.
+    A name of :data:`FRAME_ALIASES` is read as the name it maps to. No frame is
+    assumed.
     """
     if montage is None:
+        coordinate_system = FRAME_ALIASES.get(coordinate_system, coordinate_system)
         if coordinate_system in ALS_FRAMES:
             return "ALS"
         if coordinate_system in RAS_FRAMES:

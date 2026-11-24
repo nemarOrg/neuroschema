@@ -81,7 +81,7 @@ RAS = [
     "MNI152NLin2009bAsym",
     "MNI152NLin2009cAsym",
     "MNI152NLin6Sym",
-    "MNI152NLin6ASym",
+    "MNI152NLin6Asym",
     "MNI305",
     "NIHPD",
     "OASIS30AntsOASISAnts",
@@ -103,6 +103,12 @@ RAS = [
     "UNCInfant2V22",
     "UNCInfant2V23",
 ]
+# BIDS's schema enum (src/schema/objects/enums.yaml) spells MNI152NLin6Asym, its
+# appendix MNI152NLin6ASym; the spec reads the appendix's spelling as the enum's.
+ALIASES = {"MNI152NLin6ASym": "MNI152NLin6Asym"}
+BIDS_ENUMS = BIDS_SPEC.replace(
+    "src/appendices/coordinate-systems.md", "src/schema/objects/enums.yaml"
+)
 UNKNOWN_FRAMES = ["Other", "n/a", "", "Pixels", "individual", "study", "scanner"]
 UNKNOWN_FRAMES += ["eeglab", "captrak", "MNI", "CapTrak "]
 
@@ -248,6 +254,7 @@ def to_als(xyz, frame, montage=None):
     if montage is not None:
         orientation = "RAS" if frame == "n/a" and montage else None
     else:
+        frame = ALIASES.get(frame, frame)
         orientation = "ALS" if frame in ALS else "RAS" if frame in RAS else None
     if orientation == "ALS":
         return xyz.copy()
@@ -1408,6 +1415,27 @@ def layout_cases():
                 montage="standard_1005",
             )
         )
+    for alias, name in ALIASES.items():
+        cases.append(
+            layout_case(
+                f"alias_{alias}",
+                f"The coordinate-systems appendix's spelling {alias!r}, read as "
+                f"the schema enum's {name!r}: an RAS frame, so frame_ras's layout.",
+                small_labels,
+                small,
+                alias,
+            )
+        )
+        cases.append(
+            layout_case(
+                f"alias_{alias}_lowercase",
+                f"{alias.lower()!r}: names compare exactly, case included, and an "
+                "alias too, so it is refused (frame_unknown).",
+                small_labels,
+                small,
+                alias.lower(),
+            )
+        )
     for number, frame in enumerate(UNKNOWN_FRAMES, start=1):
         cases.append(
             layout_case(
@@ -1469,7 +1497,9 @@ def sensor_layout_vectors(ref):
             "of the positions minus the center, with -180 written 180. frames lists "
             "the BIDS coordinate systems of each orientation: an implementation "
             "gives frame_als's layout for every ALS name and frame_ras's for every "
-            "RAS name. cart2topo gives centered ALS points and the theta and "
+            "RAS name; aliases maps another spelling BIDS uses to the name it "
+            "means, which an implementation reads in its place. cart2topo gives "
+            "centered ALS points and the theta and "
             "radius each converts to, with no fit (theta within "
             "tolerance.cart2topo_theta_deg degrees, with no wrapping, and radius "
             "within tolerance.radius). Tolerances for the cases: radius within "
@@ -1479,7 +1509,7 @@ def sensor_layout_vectors(ref):
             "tolerance.center_relative_to_scale times the largest distance of a "
             "finite position from their centroid."
         ),
-        "reference": ref | {"frames": BIDS_SPEC},
+        "reference": ref | {"frames": BIDS_SPEC, "frame_names": BIDS_ENUMS},
         "tolerance": {
             "planar": 1e-12,
             "radius": 1e-12,
@@ -1490,6 +1520,7 @@ def sensor_layout_vectors(ref):
         "frames": {
             "ALS": sorted(ALS),
             "RAS": sorted(RAS),
+            "aliases": ALIASES,
             "template": {"coordinate_system": "n/a", "orientation": "RAS"},
         },
         "cart2topo": cart2topo_cases(),
