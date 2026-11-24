@@ -303,6 +303,18 @@ def _bad_channels_check(case):
     return "bad_channel_unknown" if unknown else None
 
 
+def _channel_rows_check(case):
+    caps = load_registry()["caps"] | case.get("caps", {})
+    entry = next(i for i in case["view"]["inputs"] if i["role"] == "channels")
+    try:
+        rows = read_channels(files_of(case)[entry["file"]["location"]], caps)
+    except Refusal:
+        return None  # the tables' check refuses this one
+    named = {r["name"] for r in rows}
+    missing = [label for label in case["store"]["labels"] if label not in named]
+    return "channel_row_missing" if missing else None
+
+
 def _window_check(case):
     parameters, store = case["view"]["parameters"], case["store"]
     _first, count = window_samples(
@@ -334,6 +346,7 @@ ORDERS = {
             _rate_check,
             _tables_check,
             _bad_channels_check,
+            _channel_rows_check,
             _window_check,
         ],
     ),

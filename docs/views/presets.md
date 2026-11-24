@@ -156,7 +156,7 @@ The view computes nothing and has no transform: the renderer opens the signal vi
 The window holds the samples k of the recording (0 <= k < S, for S samples at rate r) whose time `k / r`, one binary64 division, satisfies `start_s <= k / r < end`, where `end = start_s + duration_s`, one binary64 sum: the first is the least such k, and a window past the recording's end is clipped to its last sample.
 A renderer finds them from these times, not from `ceil(start_s * r)`, which can start a sample late at a rate such as 500/7 Hz.
 NEMAR's recipes declare the 2-second window inside the floor's good samples nearest the recording's middle (`midsegment`).
-The renderer runs eight checks in this order, and the first that fails gives the word; each draws nothing.
+The renderer runs nine checks in this order, and the first that fails gives the word; each draws nothing.
 First the declaration is valid (`declaration_invalid`).
 Then the tables are named as the recording's (`table_location_mismatch`, [the floor's tables](#the-floors-tables)).
 Then the tables' files (channels, then badsegments) are the ones recorded.
@@ -164,6 +164,7 @@ Then the store digest, as [ic-activity.md](ic-activity.md#the-checks-in-order) c
 Then the store's sampling rate is a finite number above 0 (`rate_invalid`).
 Then the tables, channels first, are read as [the floor's tables](#the-floors-tables) says.
 Then each bad channel's name is the label of a store row (`bad_channel_unknown`).
+Then each store row's label names a row of the channels table (`channel_row_missing`): the floor writes a row for every channel, so a store row with none is a decision dropped, and could be a bad channel drawn as good.
 Last, a window that holds no sample (one that starts at or after the recording's end, or lies between two samples) draws nothing (`window_outside`).
 The vectors give, for a window drawn, its state, its `first` sample and `count`, the names of its `bad_channels` (status `bad`, in file order), its `segments` (every row of the bad segments, `{onset, duration, label}`, in file order) and its `notes`.
 
@@ -190,6 +191,7 @@ The vectors give, for a window drawn, its state, its `first` sample and `count`,
 | `rate_invalid` | `nemar.signal-window` | nothing drawn | The store's sampling rate is not a finite number above 0. |
 | `store_digest_mismatch` | `nemar.signal-window` | nothing drawn | The serving copy publishes a digest other than the one the view declares. |
 | `bad_channel_unknown` | `nemar.signal-window` | nothing drawn | A channel the floor marked bad is no store row's label, compared as exact strings. |
+| `channel_row_missing` | `nemar.signal-window` | nothing drawn | A store row's label names no row of the channels table: a floor decision dropped. |
 | `window_outside` | `nemar.signal-window` | nothing drawn | The window holds no sample of the recording. |
 
 The words of a preset's base, of `nemar.sensor-field.v1` and of `nemar.ic-activity.v1` keep their meanings and outcomes; a file that is not the one recorded (`file_missing`, `file_size_mismatch`, `file_digest_mismatch`) draws nothing, as for every kind.

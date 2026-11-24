@@ -295,8 +295,10 @@ def check_signal_window(
     either is absent the state is ``not_checked``); the tables' grammar and
     columns (channels: name and status; badsegments: onset, duration and label,
     the first two numbers); each bad channel's name, which must be the label of
-    a store row, compared as exact strings (``bad_channel_unknown``); and a
-    window that holds a sample of the recording (``window_outside``). Every
+    a store row, compared as exact strings (``bad_channel_unknown``); every
+    store row's label, which must name a row of the channels table
+    (``channel_row_missing``: a floor decision dropped); and a window that holds
+    a sample of the recording (``window_outside``). Every
     refusal draws nothing: a window with its marks missing could pass for clean
     data. With no bad segments declared, the result notes
     ``no_bad_segment_table``.
@@ -338,6 +340,14 @@ def check_signal_window(
     for name in bad:
         if name not in labels:
             raise PresetRefused("bad_channel_unknown", "nothing", name)
+    if "channels" in tables:
+        named = {row["name"] for row in channels}
+        for label in labels:
+            if label not in named:
+                # The floor writes a row for every channel; a store row with
+                # none is a decision dropped, and could be a bad channel shown
+                # as good (review r29).
+                raise PresetRefused("channel_row_missing", "nothing", repr(label))
     parameters = view["parameters"]
     first, count = window_samples(
         parameters["start_s"], parameters["duration_s"], samples, rate

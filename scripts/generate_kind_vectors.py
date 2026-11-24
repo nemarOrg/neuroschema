@@ -3103,6 +3103,10 @@ FLOOR_CHANNELS = tsv(
     "Fp1 EEG good n/a n/a",
     "Fp2 EEG good n/a n/a",
     "F3 EEG good n/a n/a",
+    "F4 EEG good n/a n/a",
+    "C3 EEG good n/a n/a",
+    "C4 EEG good n/a n/a",
+    "P3 EEG good n/a n/a",
     "P4 EEG bad flat flatline",
     "ECG ECG n/a non-signal not_assessed",
 )
@@ -3224,7 +3228,8 @@ def signal_window_check_cases() -> list[tuple[str, str, dict, dict, dict]]:
                 2,
                 channels=tsv(
                     "status name type",
-                    "good Fp1 EEG",
+                    *[f"good {n} EEG" for n in ("Fp1", "Fp2", "F3", "F4", "C3")],
+                    *[f"good {n} EEG" for n in ("C4", "P3")],
                     "bad P4 EEG",
                     "n/a ECG ECG",
                 ),
@@ -3461,6 +3466,37 @@ def signal_window_check_cases() -> list[tuple[str, str, dict, dict, dict]]:
                     "sub-01/eeg/sub-01_task-rest_desc-cleannemarica_badsegments.tsv",
                 ),
                 "sub-01/eeg/sub-01_task-rest_desc-clean_eeg.set",
+            ),
+        ),
+        (
+            "signal_window_channel_row_missing",
+            "The store has a row ECG that the channels table does not name: a "
+            "floor decision dropped, so channel_row_missing, never a channel "
+            "drawn with no decision (review r29).",
+            *at(
+                151.5,
+                2,
+                channels=FLOOR_CHANNELS.replace(
+                    b"ECG\tECG\tn/a\tnon-signal\tnot_assessed\n", b""
+                ),
+            ),
+        ),
+        (
+            "signal_window_order_bad_channel_before_row_missing",
+            "A bad channel p4 no store row has, and the store's P4 with no row: "
+            "bad_channel_unknown comes first.",
+            *at(151.5, 2, channels=FLOOR_CHANNELS.replace(b"P4", b"p4", 1)),
+        ),
+        (
+            "signal_window_order_row_missing_before_window",
+            "The store's ECG with no row and a window at the recording's end: the "
+            "channel rows come first.",
+            *at(
+                300,
+                2,
+                channels=FLOOR_CHANNELS.replace(
+                    b"ECG\tECG\tn/a\tnon-signal\tnot_assessed\n", b""
+                ),
             ),
         ),
         (
