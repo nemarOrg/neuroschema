@@ -1119,33 +1119,42 @@ CASES = [
     ),
     (
         "egi_129",
-        "An EGI 128-channel net with its vertex reference (E1 to E128 and Cz). "
-        "The 257 net holds the same names, but the 129 net, of the same family "
-        "and smaller, holds every name the 257 net matched.",
+        "An EGI 128-channel net with its vertex reference (E1 to E128 and Cz), "
+        "on a cap named HydroCel GSN 128 1.0 (the sensor layout name an MFF "
+        "recording carries). The 257 net holds the same names, but the 129 net, "
+        "of the same family and smaller, holds every name the 257 net matched.",
         egi(128, ["Cz"]),
         ("placed", None, "GSN-HydroCel-129"),
+        "HydroCel GSN 128 1.0",
     ),
     (
         "egi_129_zeros_and_vref",
-        "Zero-padded numbers and VREF for the vertex reference.",
+        "Zero-padded numbers and VREF for the vertex reference, on a cap named "
+        "by its montage name, GSN-HydroCel-129.",
         egi(128, ["VREF"], width=3),
         ("placed", None, "GSN-HydroCel-129"),
+        "GSN-HydroCel-129",
     ),
     (
         "egi_128",
-        "E1 to E128: the 129, 256 and 257 nets hold every name the 128 net "
-        "matched and are larger nets of its family, so they do not contend.",
+        "E1 to E128 on a HydroCel GSN 128 1.0: the 129, 256 and 257 nets hold "
+        "every name the 128 net matched and are larger nets of its family, so "
+        "they do not contend.",
         egi(128),
         ("placed", None, "GSN-HydroCel-128"),
+        "HydroCel GSN 128 1.0",
     ),
     (
         "egi_e129",
         "E1 to E129, as many EGI exports name a 129-channel net: E129 is Cz on "
         "the 129 net. The 256 and 257 nets hold E129 as an electrode of their "
         "own, but the 129 net, of the same family and smaller, matches every "
-        "channel they match.",
+        "channel they match. The cap model, Hydrocel Geodesic Sensor Net (as "
+        "OpenNeuro ds004444 writes it), names no size, so it fits every "
+        "HydroCel net.",
         egi(129),
         ("placed", None, "GSN-HydroCel-129"),
+        "Hydrocel Geodesic Sensor Net",
     ),
     (
         "egi_e129_and_cz",
@@ -1161,40 +1170,118 @@ CASES = [
     ),
     (
         "egi_257",
-        "A 256-channel net with its vertex reference.",
+        "A 256-channel net with its vertex reference, on a HydroCel GSN 256 1.0.",
         egi(256, ["Cz"]),
         ("placed", None, "GSN-HydroCel-257"),
+        "HydroCel GSN 256 1.0",
     ),
     (
         "egi_256",
-        "E1 to E256: the 257 net holds no name the 256 net lacks.",
+        "E1 to E256 on a HydroCel GSN 256 1.0: the 257 net holds no name the "
+        "256 net lacks.",
         egi(256),
         ("placed", None, "GSN-HydroCel-256"),
+        "HydroCel GSN 256 1.0",
     ),
     (
         "egi_65",
-        "The 64-channel net, version 1.0, with its vertex reference.",
+        "The 64-channel net, version 1.0, with its vertex reference, on a "
+        "HydroCel GSN 64 1.0.",
         egi(64, ["Cz"]),
         ("placed", None, "GSN-HydroCel-65_1.0"),
+        "HydroCel GSN 64 1.0",
     ),
     (
         "egi_64",
-        "E1 to E64.",
+        "E1 to E64 on a HydroCel GSN 64 1.0.",
         egi(64),
         ("placed", None, "GSN-HydroCel-64_1.0"),
+        "HydroCel GSN 64 1.0",
     ),
     (
         "egi_e257",
-        "E1 to E257: E257 is Cz on the 257 net.",
+        "E1 to E257 on a HydroCel GSN 256 1.0: E257 is Cz on the 257 net.",
         egi(257),
         ("placed", None, "GSN-HydroCel-257"),
+        "HydroCel GSN 256 1.0",
     ),
     (
         "egi_e65",
-        "E1 to E65: E65 is Cz on the 65 net. E65 is an electrode of the 128, "
-        "129, 256 and 257 nets, which the 65 net dismisses.",
+        "E1 to E65 on a HydroCel GSN 64 1.0: E65 is Cz on the 65 net. E65 is an "
+        "electrode of the 128, 129, 256 and 257 nets, which the 65 net "
+        "dismisses.",
         egi(65),
         ("placed", None, "GSN-HydroCel-65_1.0"),
+        "HydroCel GSN 64 1.0",
+    ),
+    (
+        "hbn_without_cap_model",
+        "The Healthy Brain Network (HBN) releases' channels, E1 to E128 and Cz, "
+        "with no cap model, as their sidecars give none (their "
+        "ManufacturersModelName, the amplifier's field, says 128-channel GSN 200 "
+        "v.2.1, an older net). The names are a HydroCel net's numbering, but an "
+        "older EGI net numbers its electrodes the same way on other positions, "
+        "so the names alone do not place the recording.",
+        egi(128, ["Cz"]),
+        ("refused", "cap_model_unknown", None),
+    ),
+    (
+        "hbn_with_cap_model",
+        "The same channels with the cap model HydroCel GSN 128 1.0.",
+        egi(128, ["Cz"]),
+        ("placed", None, "GSN-HydroCel-129"),
+        "HydroCel GSN 128 1.0",
+    ),
+    (
+        "older_egi_net_gsn_200",
+        "E1 to E128 and Cz on a cap named 128-channel GSN 200 v.2.1, the "
+        "Geodesic Sensor Net 200: an older net, not a HydroCel model, whose "
+        "electrodes sit 20 to 40% of the head radius from the HydroCel "
+        "positions of the same numbers.",
+        egi(128, ["Cz"]),
+        ("refused", "cap_model_unknown", None),
+        "128-channel GSN 200 v.2.1",
+    ),
+    (
+        "older_egi_net_gsn_64_v2",
+        "E1 to E64 on a cap named Geodesic Sensor Net 64 2.0, the GSN 64 version "
+        "2.0: not a HydroCel model.",
+        egi(64),
+        ("refused", "cap_model_unknown", None),
+        "Geodesic Sensor Net 64 2.0",
+    ),
+    (
+        "cap_model_case_and_whitespace",
+        "E1 to E256 on a cap named '  hydroCEL   gsn 256 1.0 ': the model is "
+        "trimmed, its whitespace collapsed and its letters folded before it is "
+        "compared.",
+        egi(256),
+        ("placed", None, "GSN-HydroCel-256"),
+        "  hydroCEL   gsn 256 1.0 ",
+    ),
+    (
+        "cap_model_of_another_size",
+        "E1 to E256 on a cap named HydroCel GSN 128 1.0: the names point to the "
+        "256-channel net, which the model does not name.",
+        egi(256),
+        ("refused", "cap_model_unknown", None),
+        "HydroCel GSN 128 1.0",
+    ),
+    (
+        "cap_model_not_listed",
+        "E1 to E128 and Cz on a cap named EGI HydroCel 128: models are compared "
+        "against the list exactly, so a name the list does not hold is refused.",
+        egi(128, ["Cz"]),
+        ("refused", "cap_model_unknown", None),
+        "EGI HydroCel 128",
+    ),
+    (
+        "cap_model_beside_other_names",
+        "The 10-20 names on a cap named HydroCel GSN 128 1.0: the model is read "
+        "only when the names point to a HydroCel net.",
+        eeg(TEN_TWENTY),
+        ("placed", None, "standard_1005"),
+        "HydroCel GSN 128 1.0",
     ),
     (
         "egi_prefix_of_128",
@@ -1225,17 +1312,20 @@ CASES = [
     ),
     (
         "egi_129_twelve_dropped",
-        "E1 to E128 and Cz with twelve electrodes dropped: 117 of 129 is at least "
-        "90% of the net.",
+        "E1 to E128 and Cz with twelve electrodes dropped, on a HydroCel GSN "
+        "128: 117 of 129 is at least 90% of the net.",
         eeg([f"E{i}" for i in range(1, 129) if i not in DROPPED[:12]] + ["Cz"]),
         ("placed", None, "GSN-HydroCel-129"),
+        "HydroCel GSN 128",
     ),
     (
         "egi_129_thirteen_dropped",
         "E1 to E128 and Cz with thirteen electrodes dropped: 116 of 129 is below "
-        "90% of the net.",
+        "90% of the net, which is reported although the cap model names the "
+        "net.",
         eeg([f"E{i}" for i in range(1, 129) if i not in DROPPED] + ["Cz"]),
         ("refused", "net_coverage_low", None),
+        "HydroCel GSN 128 1.0",
     ),
     (
         "biosemi_160_at_ninety_percent",
@@ -1392,8 +1482,11 @@ CASES = [
 
 def build_vectors(montages: tuple, sha: dict[str, str]) -> str:
     cases = []
-    for name, description, channels, expected in CASES:
-        result = infer_positions([tuple(c) for c in channels], montages).to_json()
+    for name, description, channels, expected, *model in CASES:
+        cap_model = model[0] if model else None
+        result = infer_positions(
+            [tuple(c) for c in channels], montages, cap_model=cap_model
+        ).to_json()
         got = (result["outcome"], result["reason"], result["montage"])
         if got != expected:
             fail(f"vector case {name}: expected {expected}, the reference gives {got}")
@@ -1402,6 +1495,7 @@ def build_vectors(montages: tuple, sha: dict[str, str]) -> str:
                 "name": name,
                 "description": description,
                 "channels": channels,
+                "cap_model": cap_model,
                 "result": result,
             }
         )
@@ -1411,7 +1505,8 @@ def build_vectors(montages: tuple, sha: dict[str, str]) -> str:
         "description": (
             "Cases every implementation of nemar.sensor-labels.v1 reproduces. Each "
             "case lists a recording's channels as [name, BIDS type or null] in "
-            "recording order, and the result: the outcome, the refusal reason, the "
+            "recording order and its cap_model (BIDS CapManufacturersModelName, or "
+            "null), and the result: the outcome, the refusal reason, the "
             "montage, the counts, the contending montages, the duplicated "
             "electrodes, and per channel its status, its normalized key and the "
             "montage electrode it is placed on. The montages are views/montages "

@@ -1,10 +1,11 @@
 """``nemar.sensor-labels.v1``: sensor positions inferred from channel names.
 
-Given a recording's channels (name and BIDS type, in recording order), the
-algorithm normalizes each name, matches the names against a fixed set of
-standard montages, and either places the channels on the one montage the names
-identify or refuses with a reason. It never falls back to a default: when no
-montage is a confident match, nothing is placed and the reason says why.
+Given a recording's channels (name and BIDS type, in recording order) and,
+optionally, its cap model, the algorithm normalizes each name, matches the
+names against a fixed set of standard montages, and either places the channels
+on the one montage the names identify or refuses with a reason. It never falls
+back to a default: when no montage is a confident match, nothing is placed and
+the reason says why.
 
 ``docs/views/sensor-labels.md`` is the normative text,
 ``views/vectors/sensor-labels.v1.json`` holds the cases every implementation
@@ -137,6 +138,41 @@ COINCIDENT_M = 1e-9
 NET_FAMILIES = ("GSN-HydroCel", "BioSemi")
 NET_COVERAGE = (9, 10)
 
+# Older EGI nets (the Geodesic Sensor Net 200, the GSN 64 version 2.0) number
+# their electrodes E1, E2, ... as the HydroCel nets do, on other positions, so
+# names alone never place a recording on a HydroCel net: the recording's cap
+# model (BIDS CapManufacturersModelName) must name one. Each model, folded by
+# fold_cap_model, names the HydroCel montages it fits: a model without a size
+# fits every HydroCel net, and a sized one the net of that size with and
+# without its vertex reference. Any other string, an older net's name
+# included, is not a HydroCel model. A new model is a new version.
+HYDROCEL_FAMILY = "GSN-HydroCel"
+_HYDROCEL_NETS = {
+    "32": ("GSN-HydroCel-32",),
+    "64": ("GSN-HydroCel-64_1.0", "GSN-HydroCel-65_1.0"),
+    "128": ("GSN-HydroCel-128", "GSN-HydroCel-129"),
+    "256": ("GSN-HydroCel-256", "GSN-HydroCel-257"),
+}
+_EVERY_HYDROCEL_NET = tuple(n for nets in _HYDROCEL_NETS.values() for n in nets)
+HYDROCEL_CAP_MODELS: Mapping[str, tuple[str, ...]] = {
+    "hydrocel geodesic sensor net": _EVERY_HYDROCEL_NET,
+    # The misspelling of OpenNeuro ds004395's CapManufacturersModelName.
+    "hydrocel geodisic sensor net": _EVERY_HYDROCEL_NET,
+    "hydrocel gsn": _EVERY_HYDROCEL_NET,
+    **{
+        model: nets
+        for size, nets in _HYDROCEL_NETS.items()
+        for model in (
+            f"hydrocel geodesic sensor net {size}",
+            f"hydrocel gsn {size}",
+            # The sensor layout name an EGI MFF recording carries.
+            f"hydrocel gsn {size} 1.0",
+        )
+    },
+    # The montage names (MNE-Python's, EEGLAB's and FieldTrip's files).
+    **{name.lower(): nets for nets in _HYDROCEL_NETS.values() for name in nets},
+}
+
 # Channel status, decided from the names alone.
 EXCLUDED_TYPE = "excluded_type"
 EXCLUDED_NAME = "excluded_name"
@@ -154,6 +190,7 @@ REASONS = (
     "duplicate_label",
     "montage_ambiguous",
     "net_coverage_low",
+    "cap_model_unknown",
 )
 
 # Step 1's fold table, the same in every runtime: full-width ASCII (U+FF01 to
@@ -299,6 +336,20 @@ def _type_class(channel_type: str | None) -> str:
     return "eeg" if folded == "eeg" else "other"
 
 
+def fold_cap_model(model: str) -> str:
+    """A cap model as :data:`HYDROCEL_CAP_MODELS` compares it: trimmed and with
+    each run of step-2 whitespace one space, A to Z folded, and nothing else."""
+    return ascii_lower(_WHITESPACE_RUN.sub(" ", model.strip(_WHITESPACE)))
+
+
+def cap_model_nets(model: str | None) -> tuple[str, ...]:
+    """The HydroCel montages a recording's cap model names (none for no model,
+    or for any string not in :data:`HYDROCEL_CAP_MODELS`)."""
+    if model is None:
+        return ()
+    return tuple(HYDROCEL_CAP_MODELS.get(fold_cap_model(model), ()))
+
+
 def _common_reference(rights: Sequence[str], pending: int) -> str | None:
     """The right part most labels share, if it is the recording's reference.
 
@@ -410,11 +461,15 @@ def _refused(
 def infer_positions(
     channels: Iterable[tuple[str, str | None]],
     montages: Sequence[Montage] | None = None,
+    *,
+    cap_model: str | None = None,
 ) -> Inference:
     """Apply ``nemar.sensor-labels.v1`` to a recording's channels.
 
     ``channels`` is (name, BIDS type or None) per channel, in recording order;
-    ``montages`` defaults to :func:`load_montages`. See
+    ``montages`` defaults to :func:`load_montages`; ``cap_model`` is the
+    recording's BIDS ``CapManufacturersModelName``, if it has one, which a
+    placement on a HydroCel net needs (:data:`HYDROCEL_CAP_MODELS`). See
     ``docs/views/sensor-labels.md`` for each rule.
     """
     montages = load_montages() if montages is None else tuple(montages)
@@ -482,6 +537,11 @@ def infer_positions(
     num, den = NET_COVERAGE
     if winner.family in NET_FAMILIES and best * den < winner.size * num:
         return _refused("net_coverage_low", candidates, best, classified, names)
+
+    if winner.family == HYDROCEL_FAMILY and winner.name not in cap_model_nets(
+        cap_model
+    ):
+        return _refused("cap_model_unknown", candidates, best, classified, names)
 
     placed = []
     for i, channel in enumerate(classified):

@@ -32,6 +32,7 @@ from neuroschema.views.sensor_labels import (
     FAMILY_ALIASES,
     FIDUCIAL,
     FIDUCIALS,
+    HYDROCEL_CAP_MODELS,
     MONTAGE_ALIASES,
     MONTAGE_FORMAT,
     MONTAGE_ORDER,
@@ -40,10 +41,12 @@ from neuroschema.views.sensor_labels import (
     REASONS,
     REFERENCES,
     aliases,
+    cap_model_nets,
     classify,
     clean,
     finish,
     fold,
+    fold_cap_model,
     infer_positions,
     label_key,
     load_montages,
@@ -97,6 +100,37 @@ SPEC_PREFIXES = [
     "bursts",
     "suppr",
 ]
+# The cap models that name HydroCel nets, as the spec lists them: those
+# naming no size fit every net, a sized one the net of that size with and
+# without its vertex reference.
+_ALL_NETS = [n for n in MONTAGE_ORDER if n.startswith("GSN-HydroCel-")]
+_SIZED = {
+    "32": ["GSN-HydroCel-32"],
+    "64": ["GSN-HydroCel-64_1.0", "GSN-HydroCel-65_1.0"],
+    "128": ["GSN-HydroCel-128", "GSN-HydroCel-129"],
+    "256": ["GSN-HydroCel-256", "GSN-HydroCel-257"],
+}
+SPEC_CAP_MODELS = {
+    "hydrocel geodesic sensor net": _ALL_NETS,
+    "hydrocel geodisic sensor net": _ALL_NETS,
+    "hydrocel gsn": _ALL_NETS,
+    **{
+        f"{stem} {size}{suffix}": nets
+        for size, nets in _SIZED.items()
+        for stem, suffix in [
+            ("hydrocel geodesic sensor net", ""),
+            ("hydrocel gsn", ""),
+            ("hydrocel gsn", " 1.0"),
+        ]
+    },
+    "gsn-hydrocel-32": _SIZED["32"],
+    "gsn-hydrocel-64_1.0": _SIZED["64"],
+    "gsn-hydrocel-65_1.0": _SIZED["64"],
+    "gsn-hydrocel-128": _SIZED["128"],
+    "gsn-hydrocel-129": _SIZED["128"],
+    "gsn-hydrocel-256": _SIZED["256"],
+    "gsn-hydrocel-257": _SIZED["256"],
+}
 SPEC_REFERENCES = [
     "ref",
     "reference",
@@ -154,8 +188,10 @@ def generator():
     return module
 
 
-def infer(names, kind="EEG", montages=MONTAGES):
-    return infer_positions([(n, kind) for n in names], montages)
+def infer(names, kind="EEG", montages=MONTAGES, cap_model="HydroCel GSN"):
+    """Channels of one type; the cap model, unless given, is one that names
+    every HydroCel net, so a test of the montage choice is not refused for it."""
+    return infer_positions([(n, kind) for n in names], montages, cap_model=cap_model)
 
 
 def statuses(names_and_types):
@@ -172,7 +208,8 @@ def keys(names, kind="EEG"):
 @pytest.mark.parametrize("case", CASES, ids=[c["name"] for c in CASES])
 def test_vectors_replay(case):
     channels = [(name, kind) for name, kind in case["channels"]]
-    assert infer_positions(channels, MONTAGES).to_json() == case["result"]
+    result = infer_positions(channels, MONTAGES, cap_model=case["cap_model"])
+    assert result.to_json() == case["result"]
 
 
 def test_vector_file_header():
@@ -191,7 +228,7 @@ def test_vectors_are_the_hand_written_expectations():
     expectation, so this holds the file to those expectations, not only to
     whatever the reference computes.
     """
-    expected = {name: want for name, _desc, _channels, want in generator().CASES}
+    expected = {name: want for name, _desc, _channels, want, *_ in generator().CASES}
     assert list(expected) == [c["name"] for c in CASES]
     for case in CASES:
         result = case["result"]
@@ -640,6 +677,85 @@ def test_each_trend_channel_is_excluded_untyped(name):
     assert statuses([(name, None), (name, "")]) == [EXCLUDED_NAME] * 2
 
 
+# ── The cap model ─────────────────────────────────────────────────────────
+
+
+@pytest.mark.parametrize("model", sorted(SPEC_CAP_MODELS))
+def test_each_listed_cap_model_places_the_nets_it_names(model):
+    for net in _ALL_NETS:
+        if net == "GSN-HydroCel-32":
+            continue  # never placed: its names are also BioSemi 160's E bank
+        size = BY_NAME[net].size
+        names = [f"E{i}" for i in range(1, size + 1)]
+        if net.endswith(("-65_1.0", "-129", "-257")):
+            names[-1] = "Cz"
+        result = infer(names, cap_model=model)
+        if net in SPEC_CAP_MODELS[model]:
+            assert (result.outcome, result.montage) == ("placed", net), (model, net)
+        else:
+            assert result.reason == "cap_model_unknown", (model, net)
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        None,
+        "",
+        "n/a",
+        "128-channel GSN 200 v.2.1",
+        "Geodesic Sensor Net 200",
+        "Geodesic Sensor Net 64 2.0",
+        "GSN 64 2.0",
+        "GSN 200",
+        "EGI",
+        "HydroCel",
+        "HydroCel GSN 128 v1.0",
+        "GSN-HydroCel-129.sfp",
+        "\uff28ydroCel GSN",  # a full-width H: the model is not folded
+        "HydroCel\u00a0GSN",  # nor is a no-break space a space here
+    ],
+)
+def test_any_other_cap_model_refuses_a_hydrocel_placement(model):
+    result = infer([f"E{i}" for i in range(1, 129)] + ["Cz"], cap_model=model)
+    assert (result.outcome, result.reason) == ("refused", "cap_model_unknown")
+    assert result.contenders == ("GSN-HydroCel-128", "GSN-HydroCel-129")
+    assert all(c.electrode is None for c in result.channels)
+
+
+@pytest.mark.parametrize(
+    ("model", "folded"),
+    [
+        (" HydroCel  GSN\t128 1.0\r\n", "hydrocel gsn 128 1.0"),
+        ("GSN-HYDROCEL-129", "gsn-hydrocel-129"),
+        ("HydroCel\u00a0GSN", "hydrocel\u00a0gsn"),
+    ],
+)
+def test_a_cap_model_is_trimmed_collapsed_and_folded_only(model, folded):
+    assert fold_cap_model(model) == folded
+
+
+def test_the_cap_model_gates_hydrocel_placements_only():
+    """A cap model is read only when the names point to a HydroCel net."""
+    biosemi = [f"A{i}" for i in range(1, 33)] + [f"B{i}" for i in range(1, 33)]
+    for names, montage in [(TEN_TWENTY, "standard_1005"), (biosemi, "biosemi64")]:
+        for model in (None, "HydroCel GSN 128 1.0", "Geodesic Sensor Net 200"):
+            assert infer(names, cap_model=model).montage == montage
+    assert cap_model_nets(None) == ()
+    assert cap_model_nets("Geodesic Sensor Net 200") == ()
+
+
+def test_coverage_and_ambiguity_are_reported_before_the_cap_model():
+    """The names' own faults come first: without a model, E1 to E100 is still
+    net_coverage_low and E1 to E33 montage_ambiguous."""
+    assert infer([f"E{i}" for i in range(1, 101)], cap_model=None).reason == (
+        "net_coverage_low"
+    )
+    assert infer([f"E{i}" for i in range(1, 34)], cap_model=None).reason == (
+        "montage_ambiguous"
+    )
+    assert REASONS[-2:] == ("net_coverage_low", "cap_model_unknown")
+
+
 def test_clean_keeps_case_and_inner_hyphens():
     assert clean("  EEG  Fp1-REF ") == "Fp1-REF"
     assert finish(" 'Cz.' ") == "cz"
@@ -647,6 +763,7 @@ def test_clean_keeps_case_and_inner_hyphens():
 
 def test_the_lists_are_the_specs():
     assert list(NON_EEG_PREFIXES) == SPEC_PREFIXES
+    assert {k: list(v) for k, v in HYDROCEL_CAP_MODELS.items()} == SPEC_CAP_MODELS
     assert sorted(REFERENCES) == sorted(SPEC_REFERENCES)
     assert sorted(FIDUCIALS) == sorted(SPEC_FIDUCIALS)
     assert FAMILY_ALIASES == {
@@ -911,6 +1028,8 @@ def test_spec_names_every_list_member_and_threshold():
         for source, target in montage_aliases.items():
             row = f"| `{montage}` | `{source}` is `{target}` |"
             assert row in SPEC, row
+    for model in HYDROCEL_CAP_MODELS:
+        assert f"`{model}`" in SPEC, model
     for phrase in [
         "U+FF01 to U+FF5E, to U+0021 to U+007E",
         "U+00A0, U+2000 to U+200A, U+202F, U+205F and U+3000",

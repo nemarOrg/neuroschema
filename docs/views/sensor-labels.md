@@ -1,6 +1,6 @@
 # `nemar.sensor-labels.v1`
 
-Sensor positions inferred from channel names: given a recording's channels, the algorithm either places them on the one standard montage their names identify, or refuses and says why.
+Sensor positions inferred from channel names: given a recording's channels (and, for an EGI net, its cap model), the algorithm either places them on the one standard montage their names identify, or refuses and says why.
 It never assumes a default.
 When the names do not identify one montage with confidence, nothing is placed, and the reason is shown instead of a map.
 
@@ -22,7 +22,10 @@ The pipeline does not use this algorithm: a recipe that needs positions (ICLabel
 
 ## Input
 
-The recording's channels in recording order, each a name (a string) and a Brain Imaging Data Structure (BIDS) channel type (a string, or absent), as in `channels.tsv`.
+- The recording's channels in recording order, each a name (a string) and a Brain Imaging Data Structure (BIDS) channel type (a string, or absent), as in `channels.tsv`.
+- Optionally, the recording's cap model: the BIDS `CapManufacturersModelName` of its `eeg.json` (a string, or absent).
+  Only a placement on a HydroCel net reads it ([The cap model](#the-cap-model)).
+  `ManufacturersModelName`, the amplifier's model, is not a cap model and is not read.
 
 ## Montages
 
@@ -51,8 +54,8 @@ Each file holds the positions MNE-Python 1.13.2 returns from `make_standard_mont
   It lists T3, T4, T5 and T6 on the positions of T7, T8, P7 and P8.
 - The HydroCel nets are read with `head_size=None`, the file's own geometry in centimeters, converted to meters.
   Each net and its Cz variant (64 and 65, 128 and 129, 256 and 257) then share every electrode position exactly; MNE-Python's default rescales each file by its own median radius, which moves the 64/65 and 256/257 pairs apart by up to 0.14 mm.
-- Older EGI nets, such as the Geodesic Sensor Net 200 and the GSN 64 version 2.0, number their electrodes E1, E2 and so on as the HydroCel nets do.
-  Channel names cannot tell them apart, so a recording on one of them is placed on HydroCel positions.
+- Older EGI nets, such as the Geodesic Sensor Net 200 and the GSN 64 version 2.0, number their electrodes E1, E2 and so on as the HydroCel nets do, on positions 20% to 40% of the head radius away.
+  Channel names cannot tell them apart, so a recording is placed on a HydroCel net only when its cap model names one ([The cap model](#the-cap-model)).
 - The BioSemi caps lie on a sphere of radius 0.095 m (MNE-Python's default).
   A BioSemi recording names its channels by amplifier bank (A1 to A32, then B1 to B32, and so on), while MNE-Python names the electrodes of the 16, 32 and 64 channel caps by the 10-20 system.
   The montages of those caps carry the bank labels, given to MNE-Python's electrodes in file order; BioSemi's own layout drawings label the electrodes in that order, and the generator fails unless the file order is the drawings' (`bank_labels` in `PROVENANCE.json` lists each label with its 10-20 name).
@@ -160,7 +163,8 @@ These steps run in order, and the first that refuses decides the reason.
 7. **`duplicate_label`**: two or more candidates match one electrode of the montage (`T3` and `T7`, or `E1` and `E001`).
 8. **`montage_ambiguous`**: another remaining contender puts a channel that both match more than 1e-9 m (Euclidean distance) from where the montage puts it.
 9. **`net_coverage_low`**: the montage is a numbered net (family `GSN-HydroCel` or `BioSemi`) and best is below 90% of its electrodes (10 × best < 9 × electrodes).
-10. Otherwise every candidate the montage matches is placed on its electrode, and the other candidates stay unplaced.
+10. **`cap_model_unknown`**: the montage is a HydroCel net (family `GSN-HydroCel`) and the cap model does not name it ([The cap model](#the-cap-model)): there is none, or it is not a HydroCel model, or it names a net of another size.
+11. Otherwise every candidate the montage matches is placed on its electrode, and the other candidates stay unplaced.
 
 Every comparison of a share is between integers, so every implementation decides a boundary case the same way.
 
@@ -174,6 +178,25 @@ Every comparison of a share is between integers, so every implementation decides
 | `duplicate_label` | Two channels name the same electrode. |
 | `montage_ambiguous` | The names fit two montages that put the electrodes in different places. |
 | `net_coverage_low` | The names match fewer than 90% of the electrodes of the net they point to, so they may come from another cap that shares its numbering. |
+| `cap_model_unknown` | The names number an EGI net's electrodes, but the recording does not name its cap as the HydroCel net they point to, and older EGI nets number their electrodes the same way on other positions. |
+
+### The cap model
+
+A HydroCel placement needs the recording's cap model to name the net, because the names alone are also an older EGI net's.
+The cap model is trimmed of the step-2 whitespace at both ends, each run of that whitespace inside it becomes one space, and its letters A to Z are folded to a to z; nothing else is folded.
+It names the nets of the one row of this table it then equals exactly, and no net when it equals none:
+
+| Cap model | Nets it names |
+|---|---|
+| `hydrocel geodesic sensor net`, `hydrocel gsn`, and `hydrocel geodisic sensor net` (the spelling of OpenNeuro ds004395) | every HydroCel net |
+| `hydrocel geodesic sensor net 32`, `hydrocel gsn 32`, `hydrocel gsn 32 1.0`, `gsn-hydrocel-32` | `GSN-HydroCel-32` |
+| `hydrocel geodesic sensor net 64`, `hydrocel gsn 64`, `hydrocel gsn 64 1.0`, `gsn-hydrocel-64_1.0`, `gsn-hydrocel-65_1.0` | `GSN-HydroCel-64_1.0`, `GSN-HydroCel-65_1.0` |
+| `hydrocel geodesic sensor net 128`, `hydrocel gsn 128`, `hydrocel gsn 128 1.0`, `gsn-hydrocel-128`, `gsn-hydrocel-129` | `GSN-HydroCel-128`, `GSN-HydroCel-129` |
+| `hydrocel geodesic sensor net 256`, `hydrocel gsn 256`, `hydrocel gsn 256 1.0`, `gsn-hydrocel-256`, `gsn-hydrocel-257` | `GSN-HydroCel-256`, `GSN-HydroCel-257` |
+
+`HydroCel GSN 128 1.0` is the sensor layout name an EGI MFF recording carries, and `GSN-HydroCel-129` a montage name as MNE-Python, EEGLAB and FieldTrip spell it; a sized model names its net with and without the vertex reference, one physical net.
+Every other string is no HydroCel model: an older net's name (`Geodesic Sensor Net 200`, `128-channel GSN 200 v.2.1`, `GSN 64 2.0`), a model with other words (`EGI HydroCel 128`, `HydroCel GSN 128 v1.0`), and one written with a no-break space or full-width letters.
+A wrong guess is never made: a HydroCel recording whose sidecar names no cap model, such as the Healthy Brain Network (HBN) releases (whose `ManufacturersModelName` says `128-channel GSN 200 v.2.1`), draws no map from its names.
 
 ### Why nested nets are dismissed, and why a net needs coverage
 
@@ -197,7 +220,8 @@ a 32-channel EGI recording (`E1` to `E32` with `Cz` or `E33`), because the BioSe
 These wrong placements remain possible in version 1, and are accepted:
 
 - A recording that leaves banks of its cap unused is placed on the smallest net it fills, as above: A1 to A32 from a 64-channel cap lands on the 32-channel cap's positions.
-- A recording on an older EGI net (Geodesic Sensor Net 200, GSN 64 version 2.0) is placed on HydroCel positions, because its names are the HydroCel nets' names.
+- A recording whose cap model names a HydroCel net it was not recorded on is placed on that net's positions: the model is the writer's statement, and is not checked against anything else.
+  A model with no size names every HydroCel net, so with it a recording that left most of a larger net unused can land on a smaller net, as above.
 - The `POL ` prefix is dropped from untyped names too, so an untyped Nihon Kohden recording's intracranial strip or depth contacts named like scalp electrodes or bank labels (`POL C3`, `POL A1`) are read as EEG electrodes.
   A contact typed `SEEG` or `ECOG` is excluded by its type; an untyped set is refused only when the share, coverage or ambiguity rules refuse it.
 
@@ -224,7 +248,7 @@ A change to any step, list, threshold or alias, or to a montage's positions (inc
 
 ## Vectors
 
-Each case of the vectors file gives a recording's `channels` as `[name, type]` pairs (type null when absent) and the `result` above.
+Each case of the vectors file gives a recording's `channels` as `[name, type]` pairs (type null when absent), its `cap_model` (null when absent) and the `result` above.
 The vectors file lists the SHA-256 of each montage file it was computed with; an implementation checks its copies against them, then reproduces every result exactly.
-The cases cover the normalization steps (the fold table, and characters outside it whose normalization depends on the runtime's Unicode version: outlined letters and digits, a modifier capital, subscripts, a Roman numeral, mathematical letters, a superscript), the exclusions (the auxiliary names of a Neuroscan cap and of a clinical EDF export among them), each reference name and the common reference, bipolar names, each count, share and coverage threshold at and beside its boundary, each refusal, the family and montage aliases, every montage but `GSN-HydroCel-32` (its names are also the BioSemi 160 cap's E bank), the nested nets and the coincident Cz variants.
+The cases cover the normalization steps (the fold table, and characters outside it whose normalization depends on the runtime's Unicode version: outlined letters and digits, a modifier capital, subscripts, a Roman numeral, mathematical letters, a superscript), the exclusions (the auxiliary names of a Neuroscan cap and of a clinical EDF export among them), each reference name and the common reference, bipolar names, each count, share and coverage threshold at and beside its boundary, each refusal, the family and montage aliases, every montage but `GSN-HydroCel-32` (its names are also the BioSemi 160 cap's E bank), the nested nets, the coincident Cz variants, and the cap model: the HBN channels with and without a model, the older nets' names, case and whitespace, a model of another size, one the list does not hold, and a model beside names that are not an EGI net's.
 No two real montages place an electrode within 1e-9 m of each other without placing it at the same point, so `tests/test_sensor_labels.py` tests that tolerance on a montage derived from a real one.
