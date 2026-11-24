@@ -1,0 +1,259 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/views/kind.nemar.signal-window.v1.schema.json",
+  "title": "View Kind nemar.signal-window, Version 1",
+  "description": "A window of the recording as the serving copy holds it, opened in the signal viewer, a preset over nemar.lines version 1, applied on top of the envelope to a view declaration whose kind is nemar.signal-window and kind_version 1. The role signal is the recording's store; the window starts at parameters.start_s and lasts parameters.duration_s. The role channels (always) and the role badsegments (when the floor wrote it, parameters.bad_segment_table) are the floor's decisions, which a renderer marks over the window (bad channels and bad segments). Nothing is computed or stored: the view names a window of data the viewer already reads under the dataset's read rule. docs/views/presets.md is normative.",
+  "type": "object",
+  "required": [
+    "base",
+    "base_version",
+    "inputs",
+    "parameters"
+  ],
+  "properties": {
+    "base": {
+      "const": "nemar.lines",
+      "description": "The window is drawn as lines over time, one per channel."
+    },
+    "base_version": {
+      "const": 1,
+      "description": "nemar.lines version 1."
+    },
+    "data": {
+      "not": {},
+      "description": "The window is read from the serving copy; nothing is stored."
+    },
+    "transform": {
+      "not": {},
+      "description": "The window is drawn as the store holds it."
+    },
+    "inputs": {
+      "type": "array",
+      "description": "The roles signal and channels, once each, and badsegments exactly when parameters.bad_segment_table is true.",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "description": "The recording's store in the serving copy.",
+            "required": [
+              "role",
+              "store"
+            ],
+            "properties": {
+              "role": {
+                "const": "signal"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "A table of the floor's decisions: the channels (the floor's _channels.tsv, whose status column marks bad channels) or the bad segments (its _badsegments.tsv, onset and duration in seconds), each named by its suffix and written beside the recording (a renderer checks the directory and the shared stem).",
+            "required": [
+              "role",
+              "file"
+            ],
+            "properties": {
+              "role": {
+                "enum": [
+                  "channels",
+                  "badsegments"
+                ]
+              },
+              "file": {
+                "type": "object",
+                "properties": {
+                  "location": {
+                    "type": "string",
+                    "pattern": "\\.tsv$(?!\n)"
+                  }
+                }
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "const": "channels"
+                    }
+                  }
+                },
+                "then": {
+                  "type": "object",
+                  "properties": {
+                    "file": {
+                      "type": "object",
+                      "properties": {
+                        "location": {
+                          "type": "string",
+                          "pattern": "_channels\\.tsv$(?!\n)"
+                        }
+                      }
+                    }
+                  }
+                },
+                "else": {
+                  "type": "object",
+                  "properties": {
+                    "file": {
+                      "type": "object",
+                      "properties": {
+                        "location": {
+                          "type": "string",
+                          "pattern": "_badsegments\\.tsv$(?!\n)"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "const": "signal"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "const": "channels"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "minContains": 1,
+          "maxContains": 1,
+          "description": "The channels are required: the floor always writes _channels.tsv."
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "const": "badsegments"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1,
+          "description": "At most one badsegments input; whether there is one follows parameters.bad_segment_table (the root's rule)."
+        }
+      ]
+    },
+    "parameters": {
+      "type": "object",
+      "description": "The window.",
+      "required": [
+        "start_s",
+        "duration_s",
+        "bad_segment_table"
+      ],
+      "properties": {
+        "start_s": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The window's start, in seconds from the recording's first sample."
+        },
+        "duration_s": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 30,
+          "description": "The window's length, in seconds."
+        },
+        "bad_segment_table": {
+          "type": "boolean",
+          "description": "Whether the floor wrote _badsegments.tsv for the recording, as the record names it: true, and the view declares the badsegments input; false (its window step was skipped and ASR repaired nothing), and it declares none and a renderer says nothing is marked."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "bad_segment_table": {
+                "const": true
+              }
+            },
+            "required": [
+              "bad_segment_table"
+            ]
+          }
+        },
+        "required": [
+          "parameters"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": "array",
+            "contains": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "const": "badsegments"
+                }
+              },
+              "required": [
+                "role"
+              ]
+            }
+          }
+        },
+        "description": "A table the record names is declared."
+      },
+      "else": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": "array",
+            "not": {
+              "type": "array",
+              "contains": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "const": "badsegments"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              }
+            }
+          }
+        },
+        "description": "No table, no input."
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "dataCite.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/extensions/dataCite.schema.json",
   "title": "DataCite Extension",
   "description": "DataCite-specific metadata for DOI registration (kernel 4.6). Fields here are specific to the DataCite registration format and are not universally needed. Universal scholarly metadata (keywords, related_identifiers, contributors, dates, rights, language) has moved to the core dataset schema as of v0.3.0.",
   "type": "object",
@@ -19,6 +19,8 @@
     },
     "publication_year": {
       "type": ["integer", "null"],
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991,
       "description": "Year when the dataset was first published or made available."
     },
     "resource_type": {
@@ -130,6 +132,8 @@
           },
           "publication_year": {
             "type": ["integer", "null"],
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
             "description": "Publication year of the related item."
           },
           "volume": { "type": ["string", "null"] },

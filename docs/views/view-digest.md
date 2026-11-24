@@ -1,0 +1,58 @@
+# `nemar.view-digest.v1`
+
+The digest of a view declaration: the Secure Hash Algorithm 256 (SHA-256) of the declaration's canonical JavaScript Object Notation (JSON), written as 64 lowercase hexadecimal digits.
+The canonical form is the JSON Canonicalization Scheme (JCS) of Request for Comments (RFC) 8785.
+This page is normative; [`views/vectors/view-digest.v1.json`](../../views/vectors/view-digest.v1.json) holds the cases every implementation reproduces, and `neuroschema.views.view_digest` is the Python reference.
+
+## Input
+
+The input is one view declaration, a JSON object, exactly as written in the record (the signalJourney record's `extensions.nemar.views`, or the record-level `dataQuality` entry projected from it).
+A field that a reader adds, such as an address a route attaches, is not part of it: a reader digests the declaration before it adds anything.
+The declaration is Internet JSON (I-JSON, RFC 7493), under [the JSON grammar of docs/views.md](../views.md#json): its text is UTF-8 with no byte order mark, no object has two members with one name at any depth however the names are escaped, no string or member name holds a lone surrogate or a noncharacter, and nothing nests more than 64 deep.
+An implementation that reads the declaration from bytes refuses any other encoding, including UTF-16, UTF-32 and a UTF-8 byte order mark, which some parsers accept (Python's `json.loads` detects all three).
+An implementation that reads the declaration from text refuses a duplicate name while it parses, because a standard parser keeps the last member silently (Python's `json.loads` and JavaScript's `JSON.parse` both do), and it compares names after their escapes are decoded: Python passes an `object_pairs_hook` that refuses a repeated name (`neuroschema.views.parse_declaration`, which reads with `neuroschema.ijson`), and JavaScript needs a parser or a scan that reports one.
+It also refuses nesting deeper than 64 before it parses, so no parser recurses past it.
+Otherwise the declaration is parsed with a standard JSON parser, so each number is the Institute of Electrical and Electronics Engineers (IEEE) 754 binary64 value nearest its text, as JavaScript's `JSON.parse` reads it; an integer beyond 2^53 becomes the nearest binary64 (9007199254740993 reads as 9007199254740992).
+
+## Canonical form
+
+1. There is no whitespace between tokens.
+2. `null`, `true` and `false` are written as themselves.
+3. An array keeps its order.
+4. An object's members are sorted by name, comparing the names' UTF-16 code units (Unicode Transformation Format, 16-bit) as unsigned integers.
+   This is not code point order: U+1F600 (code units D83D DE00) sorts before U+FF61.
+5. A string is written between quotation marks with only these escapes:
+   `\"` for the quotation mark, `\\` for the reverse solidus, `\b`, `\t`, `\n`, `\f` and `\r` for U+0008, U+0009, U+000A, U+000C and U+000D, and `\u00xx` with lowercase hexadecimal digits for every other character from U+0000 to U+001F.
+   Every other character is written as itself, including `/`, U+007F, U+2028, U+2029 and every character above U+007F.
+6. A number is written as ECMAScript's `Number.prototype.toString` writes it: the shortest decimal that reads back as the same binary64, with no trailing `.0`, `-0` written as `0`, plain notation from 10^-6 up to below 10^21, and otherwise an exponent with an explicit sign (`1e+21`, `1e-7`).
+7. The text is encoded as UTF-8 (Unicode Transformation Format, 8-bit), and the digest is the SHA-256 of those bytes.
+
+In JavaScript, rules 2, 5 and 6 are what `JSON.stringify` does for a single value, and rule 4 is the default `Array.prototype.sort` of the names.
+A JavaScript implementation must still apply the [refusals](#refusals) itself, before it writes anything: it checks every string and every member name with `String.prototype.isWellFormed` and for the 66 noncharacters, every number with `Number.isFinite`, and the depth of every array and object, because `JSON.stringify` does not fail on any of them.
+It writes a lone surrogate as a `\u` escape and a non-finite number as `null`, which would give a digest where there must be none.
+In Python, `json.dumps` is not enough: it prints `100.0` and `1e-07`, sorts by code point, and escapes every character above U+007F by default.
+
+## Refusals
+
+A declaration has no digest, and an implementation raises an error rather than guess, when:
+
+- it is not a JSON object;
+- an object in it has two members with one name;
+- its text is not JSON, such as the `NaN` and `Infinity` literals Python's `json.loads` accepts;
+- a string or a member name holds a lone surrogate (a code unit from U+D800 to U+DFFF that is not part of a pair) or a noncharacter (U+FDD0 to U+FDEF, and U+FFFE and U+FFFF of each plane), written as itself or escaped;
+- arrays and objects in it nest more than 64 deep (the declaration object itself is 1 deep);
+- a number is not finite as a binary64: a JavaScript parser reads `1e400`, and an integer literal beyond binary64 range such as 1 followed by 400 zeros, as `Infinity`; Python reads that integer exactly, and refuses it when it makes it a binary64 (an integer literal of more than 4,300 digits Python refuses while it parses).
+
+## What the digest shows
+
+Two declarations with one digest are the same declaration, whatever the order of their members or the spelling of their numbers.
+The NEMAR backend computes the digest, the website recomputes it, and an export (an image or a file) embeds it with the kind, the kind version and a permalink, so an export names the exact declaration it was drawn from.
+The digest is not a signature: it shows that two copies agree, not who wrote them.
+
+## Vectors
+
+Each case of the vectors file gives a `declaration`, its `canonical` text and its `sha256`.
+An implementation parses the vectors file with its standard JSON parser, canonicalizes each declaration, and compares the UTF-8 bytes with `canonical` and their SHA-256 with `sha256`.
+Each refusal gives text in `json`, which the implementation parses with its duplicate-name check and must refuse, while parsing or while canonicalizing; the refusals hold escaped duplicate names, lone surrogates and noncharacters (escaped, raw and written as a surrogate pair) and nesting 65 deep, and a case nests exactly 64 deep.
+The cases cover member order (at every depth, and UTF-16 against code point order), number printing (the ECMAScript boundaries and the RFC 8785 Appendix B values), integers beyond binary64 precision, string escapes, and two declarations of the kind a recipe or plugin writes.
+The canonical texts were computed with ECMAScript's own `JSON.stringify` and checked against the Python reference.

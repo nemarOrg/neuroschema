@@ -1,0 +1,593 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/views/transform.nemar.ic-activity.v1.schema.json",
+  "title": "View Transform nemar.ic-activity, Version 1",
+  "description": "Applied on top of the envelope to a view declaration whose transform is nemar.ic-activity.v1 (docs/views/ic-activity.md), whatever its kind: component activations as one plain multiply, the browser's unmixing matrix times the serving copy's physical values of the decomposition's channels, with no preprocessing. It reads three inputs, each once, and the floor's bad segments (badsegments) exactly when its parameters name them (shaded.files not null): unmixing (a TSV file of the run's product: one column per channel, headed by its label, and one row per component), signal (the recording's store in the serving copy) and components (a TSV file whose column component names the rows of unmixing). The parameters are the record's browser_transform block: the matrix and its columns, how the columns find their store rows (match: store_row, by the rows the decomposition read, or label, by channel label), the unit the matrix takes, a caption, and the spans a view shades.",
+  "type": "object",
+  "required": [
+    "inputs",
+    "transform",
+    "parameters"
+  ],
+  "properties": {
+    "parameters": {
+      "type": "object",
+      "description": "The view parameters the transform's computation reads, whatever the view's kind: the display filter, the window cap and what the decomposition was given (its store is checked against the signal's).",
+      "required": [
+        "display_filter",
+        "max_window_s",
+        "decomposition_input"
+      ],
+      "properties": {
+        "display_filter": {
+          "$ref": "../views/kind.nemar.ic-activity.v1.schema.json#/properties/parameters/properties/display_filter"
+        },
+        "max_window_s": {
+          "$ref": "../views/kind.nemar.ic-activity.v1.schema.json#/properties/parameters/properties/max_window_s"
+        },
+        "decomposition_input": {
+          "$ref": "../views/kind.nemar.ic-activity.v1.schema.json#/$defs/decompositionInput"
+        }
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "description": "The roles unmixing, signal and components, each once, and badsegments exactly when shaded.files is not null.",
+      "items": {
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "enum": [
+                    "unmixing",
+                    "components"
+                  ]
+                }
+              },
+              "required": [
+                "role"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "file"
+              ],
+              "properties": {
+                "file": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "type": "string",
+                      "pattern": "\\.tsv$(?!\n)"
+                    }
+                  }
+                }
+              },
+              "description": "The matrix and the components table are TSV files of the run's product."
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "const": "badsegments"
+                }
+              },
+              "required": [
+                "role"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "file"
+              ],
+              "properties": {
+                "file": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "type": "string",
+                      "pattern": "_badsegments\\.tsv$(?!\n)"
+                    }
+                  }
+                }
+              },
+              "description": "The floor's bad segments are its _badsegments.tsv, a TSV file of the run's product."
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "const": "signal"
+                }
+              },
+              "required": [
+                "role"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "store"
+              ],
+              "description": "The signal is a store of the serving copy."
+            }
+          }
+        ]
+      },
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "const": "badsegments"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1,
+          "description": "At most one badsegments input, declared exactly when shaded.files is not null (the root's rule)."
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "const": "unmixing"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "const": "signal"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "const": "components"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "minContains": 1,
+          "maxContains": 1
+        }
+      ]
+    },
+    "transform": {
+      "type": "object",
+      "properties": {
+        "parameters": {
+          "type": "object",
+          "description": "The record's browser_transform block (extensions.nemar.ica.browser_transform), as nemar-process writes it: the browser's matrix, what it applies to, how its columns find their store rows, the unit it takes, the caption a view shows, and the spans the view shades.",
+          "required": [
+            "matrix",
+            "applies_to",
+            "note",
+            "match",
+            "rows",
+            "columns",
+            "unit",
+            "caption",
+            "shaded"
+          ],
+          "properties": {
+            "matrix": {
+              "$ref": "../definitions/processingTypes.schema.json#/$defs/relativeLocation",
+              "description": "The matrix's location in the run's product: the location of the input unmixing."
+            },
+            "applies_to": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500,
+              "description": "What the matrix is multiplied by, in words."
+            },
+            "note": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500,
+              "description": "What the activations are, in words (no preprocessing; they approximate the decomposition's input)."
+            },
+            "match": {
+              "enum": [
+                "store_row",
+                "label"
+              ],
+              "description": "store_row: column j of the matrix is store row rows[j], whose label must be the column's (a decomposition of the serving copy, which read those rows); label: each column is the one store row whose label is the column's (a decomposition of the archive, which read no store)."
+            },
+            "rows": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 1024,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "With match store_row, the 0-based store row of each column of the matrix, in column order; null with match label."
+            },
+            "columns": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1024,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "../definitions/view.schema.json#/$defs/columnName"
+              },
+              "description": "The matrix's columns, its header names: the decomposition's channels, in column order."
+            },
+            "unit": {
+              "enum": [
+                "V",
+                "mV",
+                "uV",
+                "µV",
+                "μV"
+              ],
+              "description": "The unit the matrix takes: the store's own unit for a decomposition of the serving copy (the factor to microvolts is folded into the matrix), microvolts for one of the archive. Microvolts may be spelled uV, with the micro sign U+00B5 or with the Greek small letter mu U+03BC."
+            },
+            "caption": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500,
+                  "description": "The caption."
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "A caption a view shows with the activations, or null: for a decomposition of the archive, that they were not checked against the decomposition's input."
+            },
+            "shaded": {
+              "type": "object",
+              "description": "The spans ASR repaired in the decomposition's input (flagged in the floor's tables, never removed), which a view shades over the whole recording: the rows whose label is label, in the floor's tables files.",
+              "required": [
+                "label",
+                "files"
+              ],
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]{0,63}$(?!\n)",
+                  "description": "The label of the shaded rows (burst)."
+                },
+                "files": {
+                  "anyOf": [
+                    {
+                      "type": "array",
+                      "minItems": 1,
+                      "maxItems": 1,
+                      "items": {
+                        "allOf": [
+                          {
+                            "$ref": "../definitions/processingTypes.schema.json#/$defs/relativeLocation"
+                          },
+                          {
+                            "type": "string",
+                            "pattern": "_badsegments\\.tsv$(?!\n)"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The table that holds those rows, the floor's _badsegments.tsv, alone, and the location of the badsegments input; or null when the floor wrote no table: its window step was skipped and ASR repaired nothing. _samplemask.tsv is never named: its sample indices are the grid the floor read, not the serving copy the view draws (nemarOrg/nemar-process#81)."
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "type": "object",
+                "properties": {
+                  "match": {
+                    "const": "store_row"
+                  }
+                },
+                "required": [
+                  "match"
+                ]
+              },
+              "then": {
+                "type": "object",
+                "properties": {
+                  "rows": {
+                    "type": "array"
+                  }
+                }
+              },
+              "else": {
+                "type": "object",
+                "properties": {
+                  "rows": {
+                    "type": "null",
+                    "description": "Columns matched by label name no rows."
+                  },
+                  "caption": {
+                    "type": "string",
+                    "description": "Columns matched by label were not checked against the decomposition's input, and the view says so: the caption is a string (for nemar-ica, not checked against the decomposition input)."
+                  }
+                }
+              }
+            }
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": "array",
+            "contains": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "const": "signal"
+                },
+                "store": {
+                  "type": "object",
+                  "properties": {
+                    "profile": {
+                      "const": "archive"
+                    }
+                  },
+                  "required": [
+                    "profile"
+                  ]
+                }
+              },
+              "required": [
+                "role",
+                "store"
+              ]
+            }
+          }
+        },
+        "required": [
+          "inputs"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "transform": {
+            "type": "object",
+            "properties": {
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "match": {
+                    "const": "label"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "A decomposition of the archive read no store, so its columns can only be matched by label."
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": "array",
+            "contains": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "const": "signal"
+                },
+                "store": {
+                  "type": "object",
+                  "properties": {
+                    "profile": {
+                      "const": "serving"
+                    }
+                  },
+                  "required": [
+                    "profile"
+                  ]
+                }
+              },
+              "required": [
+                "role",
+                "store"
+              ]
+            }
+          }
+        },
+        "required": [
+          "inputs"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "transform": {
+            "type": "object",
+            "properties": {
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "match": {
+                    "const": "store_row"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "A decomposition of the serving copy read the store's own rows, so its columns are matched by row: never by label, which could find a row the decomposition did not read."
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "transform": {
+            "type": "object",
+            "properties": {
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "shaded": {
+                    "type": "object",
+                    "properties": {
+                      "files": {
+                        "type": "array"
+                      }
+                    },
+                    "required": [
+                      "files"
+                    ]
+                  }
+                },
+                "required": [
+                  "shaded"
+                ]
+              }
+            },
+            "required": [
+              "parameters"
+            ]
+          }
+        },
+        "required": [
+          "transform"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": "array",
+            "contains": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "const": "badsegments"
+                }
+              },
+              "required": [
+                "role"
+              ]
+            }
+          }
+        },
+        "description": "The record names the floor's bad-segment table (shaded.files), so the view declares the badsegments input: a table never read is never drawn silently. The rule is the transform's, so it holds whatever the view's kind: a kind that reuses the transform cannot drop the table (probe p14)."
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "transform": {
+            "type": "object",
+            "properties": {
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "shaded": {
+                    "type": "object",
+                    "properties": {
+                      "files": {
+                        "type": "null"
+                      }
+                    },
+                    "required": [
+                      "files"
+                    ]
+                  }
+                },
+                "required": [
+                  "shaded"
+                ]
+              }
+            },
+            "required": [
+              "parameters"
+            ]
+          }
+        },
+        "required": [
+          "transform"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": "array",
+            "not": {
+              "contains": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "const": "badsegments"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              }
+            }
+          }
+        },
+        "description": "With shaded.files null the floor wrote no table, so the view declares none and a renderer says nothing is shaded."
+      }
+    }
+  ]
+}

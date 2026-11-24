@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "signalSummary.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/definitions/signalSummary.schema.json",
   "title": "Signal Summary",
   "description": "Summary of the recording signal properties. Keeps only aggregate info in core; per-channel details go in extensions. Signal properties that follow BIDS inheritance (sampling_frequency, reference, power_line_frequency) are in inheritable.schema.json instead.",
   "type": "object",
@@ -8,7 +8,8 @@
     "nchans": {
       "type": ["integer", "null"],
       "description": "Total number of channels.",
-      "minimum": 0
+      "minimum": 0,
+      "maximum": 9007199254740991
     },
     "ntimes": {
       "type": ["number", "null"],
@@ -23,7 +24,7 @@
     "channel_type_counts": {
       "type": ["object", "null"],
       "description": "Count of channels by type (e.g., {'EEG': 64, 'EOG': 2, 'ECG': 1}).",
-      "additionalProperties": { "type": "integer" }
+      "additionalProperties": { "type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991 }
     }
   },
   "additionalProperties": false

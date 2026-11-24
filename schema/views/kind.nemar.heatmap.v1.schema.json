@@ -1,0 +1,192 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/views/kind.nemar.heatmap.v1.schema.json",
+  "title": "View Kind nemar.heatmap, Version 1",
+  "description": "Generic heatmap, applied on top of the envelope to a view declaration whose kind is nemar.heatmap and kind_version 1. One stored TSV file is read as the role values: a matrix of numeric cells, drawn one flat cell per stored value with no interpolation. One dimension runs along the rows: its labels are a column of the file, or, for a preset over this kind, a column of another of the preset's roles. The other runs along the columns: each declared column other than the row-label column is one column of the matrix, and its label is the column name or comes from another role. A renderer builds the model in docs/views/generic-kinds.md. This is a generic kind, so it has no base, no inputs and no transform.",
+  "type": "object",
+  "required": [
+    "data"
+  ],
+  "properties": {
+    "base": {
+      "not": {},
+      "description": "A generic kind has no base."
+    },
+    "base_version": {
+      "not": {},
+      "description": "A generic kind has no base."
+    },
+    "inputs": {
+      "not": {},
+      "description": "A heatmap is stored data only."
+    },
+    "transform": {
+      "not": {},
+      "description": "A heatmap is stored data only."
+    },
+    "parameters": {
+      "type": "object",
+      "description": "How the colors are scaled.",
+      "properties": {
+        "limits": {
+          "enum": [
+            "minmax",
+            "absmax"
+          ],
+          "default": "minmax",
+          "description": "minmax spans the smallest to the largest cell with a sequential map; absmax spans minus to plus the largest absolute cell with a diverging map centered on zero."
+        }
+      },
+      "additionalProperties": false
+    },
+    "data": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "description": "Exactly one file, read as the role values.",
+      "items": {
+        "type": "object",
+        "description": "The role values: an optional row-label column and one numeric column per matrix column. A preset drawn over this kind meets this subschema with its own values entry (docs/views.md, the role contract).",
+        "required": [
+          "role",
+          "format",
+          "columns",
+          "dims"
+        ],
+        "properties": {
+          "role": {
+            "const": "values"
+          },
+          "format": {
+            "const": "tsv"
+          },
+          "columns": {
+            "type": "array",
+            "minItems": 1,
+            "description": "The row-label column, when the row labels are in this file, and the matrix columns, in declared order. Matrix columns are numeric; the model refuses a text one (value_type)."
+          },
+          "dims": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "description": "Exactly two dimensions with open names: the row dimension, with its labels in a column of this file or of another role, and the column dimension, with its labels in the header or in another role.",
+            "items": {
+              "type": "object",
+              "if": {
+                "type": "object",
+                "properties": {
+                  "coords": {
+                    "type": "object",
+                    "required": [
+                      "header"
+                    ]
+                  }
+                },
+                "required": [
+                  "coords"
+                ]
+              },
+              "then": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "string",
+                    "description": "Header names are text."
+                  }
+                }
+              }
+            },
+            "allOf": [
+              {
+                "contains": {
+                  "type": "object",
+                  "description": "The row dimension.",
+                  "required": [
+                    "axis",
+                    "coords"
+                  ],
+                  "properties": {
+                    "axis": {
+                      "const": "rows"
+                    },
+                    "coords": {
+                      "type": "object",
+                      "required": [
+                        "column"
+                      ]
+                    }
+                  }
+                },
+                "minContains": 1,
+                "maxContains": 1
+              },
+              {
+                "contains": {
+                  "type": "object",
+                  "description": "The column dimension.",
+                  "required": [
+                    "axis",
+                    "coords"
+                  ],
+                  "properties": {
+                    "axis": {
+                      "const": "columns"
+                    },
+                    "coords": {
+                      "type": "object",
+                      "anyOf": [
+                        {
+                          "required": [
+                            "header"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "role"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                },
+                "minContains": 1,
+                "maxContains": 1
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "description": "A view of this kind has only the role values, so none of its coordinates comes from another role. The rule sits at the root, outside data, so a preset drawn by this kind leaves it out of the role contract it meets, and may take coordinates from one of its own roles.",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "dims": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "coords": {
+                      "type": "object",
+                      "not": {
+                        "required": [
+                          "role"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "checkpointCounts.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/definitions/checkpointCounts.schema.json",
   "title": "Checkpoint Counts",
   "description": "Counts of recordings at one processing checkpoint. While a run reports live, passed + failed + skipped <= total; once reconciled, passed + failed + skipped = total. Every checkpoint of one run has the same total (a recording that failed or was skipped earlier counts as skipped later). The writer enforces these invariants; the schema cannot. nemar-cli's live progress object reuses this shape.",
   "type": "object",
@@ -14,21 +14,25 @@
     "passed": {
       "type": "integer",
       "minimum": 0,
+      "maximum": 9007199254740991,
       "description": "Recordings that passed this checkpoint."
     },
     "failed": {
       "type": "integer",
       "minimum": 0,
+      "maximum": 9007199254740991,
       "description": "Recordings that failed at this checkpoint."
     },
     "skipped": {
       "type": "integer",
       "minimum": 0,
+      "maximum": 9007199254740991,
       "description": "Recordings skipped at this checkpoint, including those that failed or were skipped at an earlier one."
     },
     "total": {
       "type": "integer",
       "minimum": 0,
+      "maximum": 9007199254740991,
       "description": "Recordings the run discovered."
     }
   },

@@ -1,0 +1,430 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/views/kind.nemar.ic-activity.v1.schema.json",
+  "title": "View Kind nemar.ic-activity, Version 1",
+  "description": "The activations of the independent components of one decomposition over a window of the recording, computed in the browser and never stored, a preset over nemar.lines version 1, applied on top of the envelope to a view declaration whose kind is nemar.ic-activity and kind_version 1. The transform nemar.ic-activity.v1 multiplies the serving copy's physical values of the decomposition's channels by the browser's unmixing matrix, with no preprocessing; its output is drawn as lines, time in seconds along x and one series per component. The parameters declare the display filter a renderer applies to what it draws (a zero-phase high-pass that is not part of the decomposition), the longest window it computes, and what the decomposition was given (decomposition_input), so the view can say how its activations differ from the decomposition's. docs/views/ic-activity.md is normative.",
+  "type": "object",
+  "required": [
+    "base",
+    "base_version",
+    "inputs",
+    "transform",
+    "parameters"
+  ],
+  "properties": {
+    "base": {
+      "const": "nemar.lines",
+      "description": "The transform's output is drawn as nemar.lines."
+    },
+    "base_version": {
+      "const": 1,
+      "description": "nemar.lines version 1."
+    },
+    "data": {
+      "not": {},
+      "description": "Activations are computed in the browser and never stored."
+    },
+    "transform": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "const": "nemar.ic-activity.v1",
+          "description": "The transform's schema checks the inputs it reads and its parameters."
+        }
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "description": "The roles unmixing, signal and components, each once (the transform's schema requires them), and badsegments exactly when the record names the floor's bad-segment table (shaded.files not null). No other role.",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "description": "A file of the run's product: the browser's unmixing matrix, the components table, or the bad segments a renderer shades.",
+            "required": [
+              "role",
+              "file"
+            ],
+            "properties": {
+              "role": {
+                "enum": [
+                  "unmixing",
+                  "components",
+                  "badsegments"
+                ]
+              },
+              "file": {
+                "type": "object",
+                "properties": {
+                  "location": {
+                    "type": "string",
+                    "pattern": "\\.tsv$(?!\n)"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "The recording's store in the serving copy.",
+            "required": [
+              "role",
+              "store"
+            ],
+            "properties": {
+              "role": {
+                "const": "signal"
+              }
+            }
+          }
+        ]
+      },
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "const": "badsegments"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1,
+          "description": "At most one badsegments input, declared exactly when the transform's shaded.files is not null (transform.nemar.ic-activity.v1's rule, which holds for every view that names the transform): the table is absent only when the floor's window step was skipped and ASR repaired nothing."
+        }
+      ]
+    },
+    "parameters": {
+      "type": "object",
+      "description": "How the activations are drawn, and what the decomposition was given.",
+      "required": [
+        "display_filter",
+        "max_window_s",
+        "decomposition_input"
+      ],
+      "properties": {
+        "display_filter": {
+          "type": "object",
+          "description": "The zero-phase high-pass a renderer applies to each component's activations before drawing them: over the window and up to a second of real context on each side, which it then discards, padded only at the recording's own ends (docs/views/ic-activity.md, the display filter). It is for display only and is not part of the decomposition.",
+          "required": [
+            "highpass_hz",
+            "order"
+          ],
+          "properties": {
+            "highpass_hz": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "The cutoff, in hertz, where each pass is 3 dB down, so the two passes together are 6 dB down there and 3 dB down at about 1.246 times it; below half the store's sampling rate."
+            },
+            "order": {
+              "const": 2,
+              "description": "A Butterworth of order 2, run forward and backward."
+            }
+          },
+          "additionalProperties": false
+        },
+        "max_window_s": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 30,
+          "description": "The longest window, in seconds, a renderer computes at once."
+        },
+        "decomposition_input": {
+          "$ref": "../views/kind.nemar.ic-activity.v1.schema.json#/$defs/decompositionInput",
+          "description": "What the decomposition was given, as the run's record states it."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "decomposition_input": {
+                "type": "object",
+                "properties": {
+                  "source": {
+                    "const": "archive"
+                  }
+                },
+                "required": [
+                  "source"
+                ]
+              }
+            },
+            "required": [
+              "decomposition_input"
+            ]
+          }
+        },
+        "required": [
+          "parameters"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": "array",
+            "items": {
+              "if": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "const": "signal"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "then": {
+                "type": "object",
+                "properties": {
+                  "store": {
+                    "type": "object",
+                    "properties": {
+                      "profile": {
+                        "const": "archive"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "A decomposition of the archive declares a signal store of profile archive."
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "decomposition_input": {
+                "type": "object",
+                "properties": {
+                  "source": {
+                    "const": "serving_copy"
+                  }
+                },
+                "required": [
+                  "source"
+                ]
+              }
+            },
+            "required": [
+              "decomposition_input"
+            ]
+          }
+        },
+        "required": [
+          "parameters"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": "array",
+            "items": {
+              "if": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "const": "signal"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "then": {
+                "type": "object",
+                "properties": {
+                  "store": {
+                    "type": "object",
+                    "properties": {
+                      "profile": {
+                        "const": "serving"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "A decomposition of the serving copy declares a signal store of profile serving."
+      }
+    }
+  ],
+  "$defs": {
+    "decompositionInput": {
+      "type": "object",
+      "description": "What the decomposition was given, as nemar-process writes it in the record's extensions.nemar.ica.decomposition_input: where its input came from (source), the steps that shaped it in the order they ran (preprocessing), its channels, the type of every row of the loaded recording (channel_types) with their digest, its reference and its unit, and, for an input read from the serving copy, that store. The activations this view draws apply none of the preprocessing, so they approximate the decomposition's input.",
+      "required": [
+        "source",
+        "preprocessing",
+        "channels",
+        "channel_types",
+        "channel_types_sha256",
+        "reference",
+        "unit"
+      ],
+      "properties": {
+        "source": {
+          "enum": [
+            "archive",
+            "serving_copy"
+          ],
+          "description": "archive: the dataset's own files (profile archive); serving_copy: NEMAR's Zarr serving copy (profile serving)."
+        },
+        "preprocessing": {
+          "type": "array",
+          "maxItems": 64,
+          "description": "The steps that changed the data the decomposition received, in the order they ran, each by its step id and the function it called; their parameters are those steps' in the record.",
+          "items": {
+            "type": "object",
+            "required": [
+              "step",
+              "function"
+            ],
+            "properties": {
+              "step": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]{0,63}$(?!\n)",
+                "description": "The step's id in the run's plan."
+              },
+              "function": {
+                "type": "string",
+                "maxLength": 128,
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*$(?!\n)",
+                "description": "The dotted name of the function the step called (for example eegprep.clean_asr)."
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "channels": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1024,
+          "uniqueItems": true,
+          "description": "The decomposition's channels, the columns of its unmixing, in the recording's order (on the serving copy, store row order).",
+          "items": {
+            "$ref": "../definitions/view.schema.json#/$defs/columnName"
+          }
+        },
+        "reference": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "description": "The reference the decomposition's input was in (average for NEMAR's recipes)."
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32,
+          "description": "The unit of the decomposition's input (uV for NEMAR's recipes)."
+        },
+        "store": {
+          "type": "object",
+          "description": "The store of the serving copy the decomposition read: its path, the channel group read and the group's nemar.store-content.v1 digest. Present exactly when source is serving_copy.",
+          "required": [
+            "path",
+            "group",
+            "content_sha256"
+          ],
+          "properties": {
+            "path": {
+              "$ref": "../definitions/processingTypes.schema.json#/$defs/relativeLocation"
+            },
+            "group": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$(?!\n)"
+            },
+            "content_sha256": {
+              "$ref": "../definitions/processingTypes.schema.json#/$defs/sha256"
+            }
+          },
+          "additionalProperties": false
+        },
+        "channel_types": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "description": "Every row of the loaded recording, in order, as [label, type], the type as the loader gave it for that row (null for an untyped row): what decided, row by row, which rows were signal channels.",
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "prefixItems": [
+              {
+                "type": "string",
+                "maxLength": 128
+              },
+              {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 32
+              }
+            ]
+          }
+        },
+        "channel_types_sha256": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/sha256",
+          "description": "The SHA-256, as 64 lowercase hexadecimal digits, of the RFC 8785 canonical JSON of {\"channel_types\": channel_types}, as UTF-8: the canonicalization of nemar.view-digest.v1 (keys sorted by UTF-16 code units, no whitespace, strings with only the escapes RFC 8785 requires, so a character outside ASCII is written as itself, and no final line feed)."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "const": "serving_copy"
+              }
+            },
+            "required": [
+              "source"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "required": [
+              "store"
+            ]
+          },
+          "else": {
+            "type": "object",
+            "properties": {
+              "store": {
+                "not": {},
+                "description": "An input read from the archive names no store."
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    }
+  }
+}

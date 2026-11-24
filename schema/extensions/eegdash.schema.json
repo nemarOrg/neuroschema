@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "eegdash.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/extensions/eegdash.schema.json",
   "title": "EEGDash Extension",
   "description": "EEGDash-specific metadata for visualization and streaming. Fields that support the EEGDash dashboard but are not part of the core neuroschema.",
   "type": "object",
@@ -51,9 +51,9 @@
       "type": ["object", "null"],
       "description": "Stats from git-based repository sources.",
       "properties": {
-        "stars": { "type": "integer" },
-        "forks": { "type": "integer" },
-        "watchers": { "type": "integer" }
+        "stars": { "type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991 },
+        "forks": { "type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991 },
+        "watchers": { "type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991 }
       },
       "additionalProperties": false
     },

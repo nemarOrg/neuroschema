@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "demographics.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/definitions/demographics.schema.json",
   "title": "Demographics",
   "description": "Subject demographics summary at the dataset level.",
   "type": "object",
@@ -8,7 +8,8 @@
     "subjects_count": {
       "type": "integer",
       "description": "Total number of subjects in the dataset.",
-      "minimum": 0
+      "minimum": 0,
+      "maximum": 9007199254740991
     },
     "age_min": {
       "type": ["number", "null"],
@@ -30,12 +31,12 @@
     "sex_distribution": {
       "type": ["object", "null"],
       "description": "Count of subjects by sex (e.g., {'m': 50, 'f': 45}).",
-      "additionalProperties": { "type": "integer" }
+      "additionalProperties": { "type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991 }
     },
     "handedness_distribution": {
       "type": ["object", "null"],
       "description": "Count of subjects by handedness (e.g., {'r': 80, 'l': 15}).",
-      "additionalProperties": { "type": "integer" }
+      "additionalProperties": { "type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991 }
     }
   },
   "additionalProperties": false

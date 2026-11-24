@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/views/transform.nemar.sensor-layout.v1.schema.json",
+  "title": "View Transform nemar.sensor-layout, Version 1",
+  "description": "Applied on top of the envelope to a view declaration whose transform is nemar.sensor-layout.v1 (docs/views/sensor-layout.md): three-dimensional sensor positions to a layout of theta and radius. The positions are either a stored data role positions, which names its own frame (coordinate_system, or n/a with a montage), so the transform takes no parameters; or the view's one input, the role positions, a TSV file of the run's product with the columns name, x, y and z, whose frame the transform's parameters name. The frame is declared once, never twice.",
+  "type": "object",
+  "required": [
+    "transform"
+  ],
+  "if": {
+    "type": "object",
+    "properties": {
+      "data": {
+        "type": "array",
+        "contains": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "const": "positions"
+            }
+          },
+          "required": [
+            "role"
+          ]
+        }
+      }
+    },
+    "required": [
+      "data"
+    ]
+  },
+  "then": {
+    "type": "object",
+    "description": "Stored positions: the role names the frame, and the view has no inputs.",
+    "properties": {
+      "inputs": {
+        "not": {},
+        "description": "Stored positions are not also an input."
+      },
+      "transform": {
+        "type": "object",
+        "properties": {
+          "parameters": {
+            "type": "object",
+            "maxProperties": 0,
+            "description": "The positions role names the frame."
+          }
+        }
+      }
+    }
+  },
+  "else": {
+    "type": "object",
+    "description": "Positions as an input: the parameters name the frame.",
+    "required": [
+      "inputs"
+    ],
+    "properties": {
+      "inputs": {
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 1,
+        "description": "The role positions, a TSV file of the run's product.",
+        "items": {
+          "type": "object",
+          "required": [
+            "role",
+            "file"
+          ],
+          "properties": {
+            "role": {
+              "const": "positions"
+            },
+            "file": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "string",
+                  "pattern": "\\.tsv$(?!\n)"
+                }
+              }
+            }
+          }
+        }
+      },
+      "transform": {
+        "type": "object",
+        "properties": {
+          "parameters": {
+            "type": "object",
+            "required": [
+              "coordinate_system"
+            ],
+            "properties": {
+              "coordinate_system": {
+                "type": "string",
+                "pattern": "^(n/a|[A-Za-z0-9][A-Za-z0-9_-]{0,63})$(?!\n)",
+                "description": "The Brain Imaging Data Structure (BIDS) name of the positions' coordinate system, or n/a for template positions that name their montage. Any name passes the schema; the transform refuses one whose orientation it does not know (frame_unknown), and a renderer then places the sensors by name."
+              },
+              "montage": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$(?!\n)",
+                "description": "For template positions: the montage of views/montages they were taken from (nemar.sensor-labels.v1). Every montage file is in a right-anterior-superior frame, in meters, so the coordinate system is then n/a."
+              }
+            },
+            "dependentSchemas": {
+              "montage": {
+                "type": "object",
+                "properties": {
+                  "coordinate_system": {
+                    "const": "n/a"
+                  }
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    }
+  }
+}

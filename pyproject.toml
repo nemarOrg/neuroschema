@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "neuroschema"
-version = "0.5.0"
+version = "0.6.0"
 description = "Extensible JSON Schema for FAIR neuroimaging metadata"
 readme = "README.md"
 license = "BSD-3-Clause"
@@ -20,6 +20,23 @@ dev = [
     "pytest-cov>=5.0",
     "ruff>=0.8",
     "coverage>=7.0",
+]
+# The Python reference renderers that need numpy (neuroschema.views.sensor_field,
+# sensor_layout and ic_activity); the rest of neuroschema.views is pure Python.
+views = [
+    "numpy>=1.26",
+]
+
+[dependency-groups]
+# Generators of reference data, run with `uv run --group vectors`; never a
+# runtime dependency. mne is pinned exactly: scripts/generate_montages.py
+# refuses any other version. eegprep, at the reference commit, is the reference
+# for scripts/generate_view_vectors.py, and needs Python 3.12 or later.
+vectors = [
+    "mne==1.13.2",
+    "eegprep @ git+https://github.com/sccn/eegprep@edf694c8344b9c4c68672eac3acf9a819f1462a8 ; python_full_version >= '3.12'",
+    "numpy>=2.1",
+    "scipy>=1.14.1",
 ]
 
 [tool.ruff]

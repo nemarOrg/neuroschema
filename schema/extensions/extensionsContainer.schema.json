@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "extensionsContainer.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/extensions/extensionsContainer.schema.json",
   "title": "Extensions Container",
   "description": "Container for domain-specific extensions using reserved namespaces. Each project or domain gets its own namespace. Adding new top-level namespaces requires a MINOR schema version bump. Follows the pattern established by signalJourney's extension system.",
   "type": "object",
@@ -18,7 +18,7 @@
       "$ref": "../extensions/nemar.schema.json"
     },
     "dataQuality": {
-      "description": "Namespace for quality results (metrics and figures) projected from the signalJourney records of NEMAR recipe runs, per recording and per dataset.",
+      "description": "Namespace for quality results (metrics and views) projected from the signalJourney records of NEMAR recipe runs, per recording and per dataset.",
       "$ref": "../extensions/dataQuality.schema.json"
     },
     "processing": {

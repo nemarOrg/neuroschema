@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/views/content.nemar.histogram.v1.schema.json",
+  "title": "Histogram Content, Version 1",
+  "description": "The content of the role histogram of a nemar.histogram view: counts per bin, with the bins given either as numeric edges, where bin i holds e_i <= v < e_(i+1) and the last bin also holds v equal to the last edge, or as named categories. Its shape is the shape of a dataQuality distribution's histogram, with an optional unit; either form may count the values that were missing or not a number (missing). The root is open: a preset over nemar.histogram may add members of its own, and a renderer that draws the preset by this base reads only the members below. docs/views/generic-kinds.md gives the model and the rules JSON Schema cannot state: edges strictly increasing, and one count per bin.",
+  "type": "object",
+  "properties": {
+    "edges": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 1025,
+      "items": {
+        "type": "number"
+      },
+      "description": "Bin edges, strictly increasing; one more than the counts. At most 1,024 bins (views/registry.json caps.entries_per_dim)."
+    },
+    "categories": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1024,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128,
+        "pattern": "^[^\\t\\r\\n]+$(?!\n)"
+      },
+      "description": "Bin names, in drawing order, with no TAB, CR or LF; as many as the counts."
+    },
+    "counts": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1024,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+      },
+      "description": "Count per bin, in bin order, at most 2^53 - 1 so that every JSON parser reads it exactly."
+    },
+    "underflow": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991,
+      "description": "Values below the first edge."
+    },
+    "overflow": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991,
+      "description": "Values above the last edge."
+    },
+    "unit": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32,
+      "description": "Unit of the binned values; edge bins only."
+    },
+    "missing": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991,
+      "description": "Values that were missing or not a number, so in no bin, counted apart (in either form); a renderer shows the count beside the bars, never as one."
+    }
+  },
+  "oneOf": [
+    {
+      "description": "Bins by numeric edges.",
+      "required": [
+        "edges",
+        "counts",
+        "underflow",
+        "overflow"
+      ],
+      "not": {
+        "required": [
+          "categories"
+        ]
+      }
+    },
+    {
+      "description": "Bins by category: no edges, no underflow or overflow, and no unit.",
+      "required": [
+        "categories",
+        "counts"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "edges"
+            ]
+          },
+          {
+            "required": [
+              "underflow"
+            ]
+          },
+          {
+            "required": [
+              "overflow"
+            ]
+          },
+          {
+            "required": [
+              "unit"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
