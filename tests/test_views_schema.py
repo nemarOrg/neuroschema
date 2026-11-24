@@ -67,6 +67,21 @@ def test_digest_refusals(refusal):
         view_digest(parse_declaration(refusal["json"]))
 
 
+STANDARD = [r for r in REFUSALS if "duplicate" not in r["name"]]
+
+
+@pytest.mark.parametrize("refusal", STANDARD, ids=[r["name"] for r in STANDARD])
+def test_the_digest_refuses_what_a_standard_parser_reads(refusal):
+    """A JavaScript implementation parses with JSON.parse and applies the
+    refusals while it canonicalizes, so the digest of what a standard parser
+    returns refuses every refusal but a duplicate name, which only the parse
+    can see: a lone surrogate, a noncharacter, a number that is not finite and
+    nesting deeper than 64 alike."""
+    value = json.loads(refusal["json"])
+    with pytest.raises(CanonicalizationError):
+        view_digest(value)
+
+
 @pytest.mark.parametrize("case", CASES, ids=[c["name"] for c in CASES])
 def test_digest_from_text_matches_the_vector(case):
     text = json.dumps(case["declaration"], indent=1)
@@ -143,7 +158,7 @@ def test_refusals_raised_while_parsing_keep_their_message(text, message):
 
 def test_an_integer_past_python_int_digits_is_refused():
     """json.loads raises a bare ValueError past int_max_str_digits (4,300)."""
-    with pytest.raises(CanonicalizationError, match="no digest"):
+    with pytest.raises(CanonicalizationError, match="integer literal too long"):
         parse_declaration('{"n":1' + "0" * 5000 + "}")
 
 

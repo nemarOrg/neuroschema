@@ -25,12 +25,9 @@ from typing import Any
 
 from jsonschema import Draft202012Validator
 
+from neuroschema import ijson
 from neuroschema.validate import load_schema
-from neuroschema.views.digest import (
-    CanonicalizationError,
-    canonicalize,
-    parse_declaration,
-)
+from neuroschema.views.digest import CanonicalizationError, canonicalize
 from neuroschema.views.registry import (
     REPO_ROOT,
     Drawing,
@@ -150,34 +147,17 @@ def cell_value(text: str, value_type: str) -> float | str:
 def read_json(data: bytes) -> Any:
     """Read a JSON file under the grammar of docs/views.md (``json_invalid``).
 
-    Strict UTF-8 with no byte order mark, no repeated member name, no ``NaN``
-    or ``Infinity`` literal, and every number finite as a binary64: ``1e400``
-    is not, and neither is an integer literal beyond binary64 range, which
-    Python reads exactly and JavaScript reads as ``Infinity``.
+    Internet JSON (``neuroschema.ijson``): strict UTF-8 with no byte order
+    mark, no repeated member name however it is escaped, no ``NaN`` or
+    ``Infinity`` literal, every number finite as a binary64 (``1e400`` is not,
+    and neither is an integer literal beyond binary64 range, which Python reads
+    exactly and JavaScript reads as ``Infinity``), no lone surrogate or
+    noncharacter in a string, and at most 64 levels of nesting.
     """
     try:
-        value = parse_declaration(data)
-    except CanonicalizationError as exc:
+        return ijson.parse(data)
+    except ijson.IJsonError as exc:
         raise KindRefused("json_invalid", str(exc)) from exc
-    if not _all_finite(value):
-        raise KindRefused("json_invalid", "a number is not finite")
-    return value
-
-
-def _all_finite(value: Any) -> bool:
-    if isinstance(value, int):  # a bool is an int, and converts
-        try:
-            float(value)
-        except OverflowError:
-            return False
-        return True
-    if isinstance(value, float):
-        return math.isfinite(value)
-    if isinstance(value, dict):
-        return all(_all_finite(v) for v in value.values())
-    if isinstance(value, list):
-        return all(_all_finite(v) for v in value)
-    return True
 
 
 # ── Readouts and bins ─────────────────────────────────────────────────────
@@ -603,8 +583,21 @@ def build_model(
         raise
 
 
+def declaration_valid(view: Mapping) -> bool:
+    """Whether a declaration is valid: it has a digest (``nemar.view-digest.v1``:
+    no lone surrogate or noncharacter in a string, every number finite, at most
+    64 levels deep) and, read as binary64 numbers (:func:`neuroschema.ijson.binary64`),
+    it meets ``view.schema.json#/$defs/view``."""
+    try:
+        canonicalize(view)
+        reading = ijson.binary64(view)
+    except (CanonicalizationError, ijson.IJsonError):
+        return False
+    return view_validator().is_valid(reading)
+
+
 def _build(view: Mapping, files: Mapping[str, bytes], registry: Mapping) -> dict:
-    if not view_validator().is_valid(view):
+    if not declaration_valid(view):
         raise ViewRefused("declaration_invalid")
     drawing = draw_as(view, registry)
     pair = (drawing.kind, drawing.kind_version)

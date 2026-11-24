@@ -61,10 +61,10 @@ The text is kept as well: a readout prints the stored text and never prints a nu
 
 ### JSON
 
-A JSON file is read as Internet JSON (I-JSON): UTF-8 with no byte order mark, no object with two members of one name, no `NaN` or `Infinity` literal, and every number finite as a binary64 (`json_invalid`).
-These are the rules for the [view digest's input](view-digest.md#input), plus the finite rule.
+A JSON file is read as Internet JSON (I-JSON), under [the JSON grammar of docs/views.md](../views.md#json) (`json_invalid`): UTF-8 with no byte order mark, no object with two members of one name however they are escaped, no `NaN` or `Infinity` literal, every number finite as a binary64, no lone surrogate or noncharacter in a string or member name, and at most 64 levels of nesting.
+These are the rules for the [view digest's input](view-digest.md#input).
 `1e400` is not finite, and neither is an integer literal beyond binary64 range, such as 1 followed by 400 zeros: JavaScript's `JSON.parse` reads it as `Infinity`, and Python reads it exactly but cannot make it a binary64.
-The rule covers every number in the file, members the kind does not read included.
+The rules cover the whole file, members the kind does not read included.
 
 ## Coordinates
 
@@ -338,7 +338,8 @@ A case or a refusal may carry `caps`, which take the place of the registry's cap
 Each refusal has a `name`, what it `covers`, a `view`, its `files`, the `word` and the `downloads` still offered: the view is refused and nothing is drawn.
 
 An implementation parses the file with its JSON parser, builds each case's model and compares it with `model`, texts exactly and numbers by binary64 equality that tells -0 from 0, as JavaScript's `Object.is` does.
-A model holds no negative zero: a cell or an edge of -0 reads as 0, and a label prints it as `0`.
+A model holds no negative zero, in any number it holds: a cell, an edge, a count, an underflow or overflow, a total, a limit or a value derived from them is 0 where its text or its arithmetic gives -0, and a label prints it as `0`.
+JavaScript's `JSON.parse` reads a count written `-0` or `-0.0` as -0, and a sum of -0 counts is -0, so a JavaScript renderer adds 0 to each such number (`x + 0` is 0 for -0); the vectors hold a histogram whose counts and an edge are written that way.
 
 ## The verdict corpus
 

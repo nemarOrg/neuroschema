@@ -180,7 +180,16 @@ The recipes' writer, which prints numbers with `.17g`, conforms.
 
 ### JSON
 
-UTF-8 JSON, with no duplicate member names and no `NaN` or `Infinity`.
+Internet JSON (I-JSON, RFC 7493), the rules for every JSON text neuroschema reads: a view's JSON file, a view declaration (the [view digest's input](views/view-digest.md#input)) and a document `neuroschema.validate` checks.
+
+- The text is UTF-8 with no byte order mark.
+- No object has two members of one name, however the names are escaped (`"a"` and `"\u0061"` are one name).
+- There is no `NaN` or `Infinity`, and every number is finite as a binary64: `1e400` is not.
+- No string or member name holds a lone surrogate (U+D800 to U+DFFF) or a noncharacter (U+FDD0 to U+FDEF, and the last two code points of each plane, U+FFFE, U+FFFF, U+1FFFE and so on to U+10FFFF: 66 code points), written as itself or escaped.
+- Arrays and objects nest at most 64 deep: `[[1]]` is 2 deep and a scalar 0.
+
+Each number is the binary64 nearest its text, as JavaScript's `JSON.parse` reads it, and a schema check applies to that reading: 9007199254740993 is checked as 9007199254740992.
+`neuroschema.ijson` is the Python reader; a JavaScript reader parses with `JSON.parse` after a scan that refuses a repeated name and nesting past 64, and checks every string with `String.prototype.isWellFormed` and for the noncharacters.
 
 ## Caps
 

@@ -11,9 +11,10 @@ implementation must reproduce.
 from __future__ import annotations
 
 import hashlib
-import json
 import math
 from collections.abc import Mapping
+
+from neuroschema import ijson
 
 VIEW_DIGEST_FORMAT = "nemar.view-digest.v1"
 
@@ -37,8 +38,11 @@ def canonicalize(value: object) -> bytes:
 
     Raises :class:`CanonicalizationError` for a value that is not JSON (a
     non-string key, a tuple key, a set), a number that is not finite or not
-    representable as a binary64, and a string holding a lone surrogate.
+    representable as a binary64, a string holding a lone surrogate or a
+    noncharacter, and arrays and objects nested more than 64 deep.
     """
+    if ijson.nesting(value) > ijson.MAX_DEPTH:
+        raise CanonicalizationError(f"nested more than {ijson.MAX_DEPTH} deep")
     parts: list[str] = []
     _write(value, parts)
     return "".join(parts).encode("utf-8")
@@ -53,45 +57,15 @@ def parse_declaration(text: str | bytes) -> object:
     :class:`CanonicalizationError`, any other input, text that is not JSON, a
     duplicate member name at any depth (``json.loads`` would keep the last one
     silently), the ``NaN``, ``Infinity`` and ``-Infinity`` literals Python
-    accepts and JSON does not, and an integer literal longer than Python's
-    ``int_max_str_digits``. Digest a declaration read from text through
-    this function.
+    accepts and JSON does not, a number that is not finite as a binary64, a lone
+    surrogate or a noncharacter in a string, and nesting deeper than 64
+    (``neuroschema.ijson``). Digest a declaration read from text through this
+    function.
     """
-    if isinstance(text, bytes | bytearray):
-        try:
-            text = bytes(text).decode("utf-8")
-        except UnicodeDecodeError as exc:
-            raise CanonicalizationError("declaration text is not UTF-8") from exc
-    elif not isinstance(text, str):
-        raise CanonicalizationError(
-            f"declaration text is str or UTF-8 bytes, not {type(text).__name__}"
-        )
     try:
-        return json.loads(
-            text, object_pairs_hook=_unique_members, parse_constant=_refuse_constant
-        )
-    except CanonicalizationError:
-        raise
-    except json.JSONDecodeError as exc:
-        # A byte order mark lands here too: json.loads refuses one in a str.
-        raise CanonicalizationError(f"declaration text is not JSON: {exc}") from exc
-    except ValueError as exc:
-        # An integer literal longer than Python's int_max_str_digits (4,300 by
-        # default): far beyond binary64, where JSON.parse reads Infinity.
-        raise CanonicalizationError(f"declaration text has no digest: {exc}") from exc
-
-
-def _unique_members(pairs: list[tuple[str, object]]) -> dict[str, object]:
-    obj: dict[str, object] = {}
-    for key, value in pairs:
-        if key in obj:
-            raise CanonicalizationError(f"duplicate member name {key!r}")
-        obj[key] = value
-    return obj
-
-
-def _refuse_constant(literal: str) -> object:
-    raise CanonicalizationError(f"{literal} is not a JSON number")
+        return ijson.parse(text)
+    except ijson.IJsonError as exc:
+        raise CanonicalizationError(str(exc)) from exc
 
 
 def view_digest(declaration: Mapping[str, object]) -> str:
@@ -152,8 +126,9 @@ def _string(text: str) -> str:
             out.append(_SHORT_ESCAPES[char])
         elif code < 0x20:
             out.append(f"\\u{code:04x}")
-        elif 0xD800 <= code <= 0xDFFF:
-            raise CanonicalizationError(f"lone surrogate U+{code:04X} in a string")
+        elif ijson.FORBIDDEN.match(char):
+            kind = "lone surrogate" if 0xD800 <= code <= 0xDFFF else "noncharacter"
+            raise CanonicalizationError(f"{kind} U+{code:04X} in a string")
         else:
             out.append(char)
     out.append('"')

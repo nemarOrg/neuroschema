@@ -5808,6 +5808,137 @@
       }
     },
     {
+      "name": "histogram_nested_64",
+      "covers": "A file nested exactly 64 deep, in a member this kind does not read: drawn.",
+      "view": {
+        "key": "hist",
+        "kind": "nemar.histogram",
+        "kind_version": 1,
+        "caption": "Recordings by share of good samples.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "format": "json",
+            "size": 170,
+            "sha256": "8fb580cd2a4c95a98612c507a3a70065801290f4c26dff2bf490b1babfed3f70"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json": {
+          "text": "{\"categories\": [\"a\"], \"counts\": [1], \"x\": [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "kind",
+          "kind": "nemar.histogram",
+          "kind_version": 1
+        },
+        "refused": null,
+        "downloads": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "size": 170,
+            "sha256": "8fb580cd2a4c95a98612c507a3a70065801290f4c26dff2bf490b1babfed3f70"
+          }
+        ],
+        "model": {
+          "type": "histogram",
+          "bins": "categories",
+          "unit": null,
+          "items": [
+            {
+              "label": "a",
+              "count": 1
+            }
+          ],
+          "underflow": null,
+          "overflow": null,
+          "total": 1,
+          "max_count": 1
+        }
+      }
+    },
+    {
+      "name": "histogram_negative_zero_counts",
+      "covers": "Counts and an edge written -0 and -0.0 read as 0: the model holds no negative zero, so the total and max_count are 0, not -0.",
+      "view": {
+        "key": "hist",
+        "kind": "nemar.histogram",
+        "kind_version": 1,
+        "caption": "Recordings by share of good samples.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "format": "json",
+            "size": 69,
+            "sha256": "79ccc21a871dca1b1abd7ac454989558d17bc1d24cb8ccc2a500c6d956b2863c"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json": {
+          "text": "{\"edges\": [-0, 1], \"counts\": [-0.0], \"underflow\": -0, \"overflow\": 0}\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "kind",
+          "kind": "nemar.histogram",
+          "kind_version": 1
+        },
+        "refused": null,
+        "downloads": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "size": 69,
+            "sha256": "79ccc21a871dca1b1abd7ac454989558d17bc1d24cb8ccc2a500c6d956b2863c"
+          }
+        ],
+        "model": {
+          "type": "histogram",
+          "bins": "edges",
+          "unit": null,
+          "items": [
+            {
+              "label": "[0, 1]",
+              "lower": 0.0,
+              "upper": 1.0,
+              "upper_closed": true,
+              "count": 0
+            }
+          ],
+          "underflow": {
+            "label": "< 0",
+            "count": 0
+          },
+          "overflow": {
+            "label": "> 1",
+            "count": 0
+          },
+          "total": 0,
+          "max_count": 0
+        }
+      }
+    },
+    {
       "name": "histogram_edges",
       "covers": "Bins [e_i, e_i+1), the last closed; underflow and overflow; labels and the bin of each located value.",
       "view": {
@@ -7016,6 +7147,384 @@
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
             "size": 167,
             "sha256": "f9c38c032c4ce393c5ad317fc82430ef8b77f384afe369489074f06cfb422f2f"
+          }
+        ],
+        "model": {
+          "type": "fallback",
+          "tables": []
+        }
+      }
+    },
+    {
+      "name": "histogram_escaped_duplicate_member",
+      "covers": "A member named twice, once escaped (counts and \\u0063ounts are one name): json_invalid.",
+      "view": {
+        "key": "hist",
+        "kind": "nemar.histogram",
+        "kind_version": 1,
+        "caption": "Recordings by share of good samples.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "format": "json",
+            "size": 57,
+            "sha256": "ecd0ed8d4b6aa8542e78efa782ca7e38e39eb5577e28ebff536cf28b347392b9"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json": {
+          "text": "{\"categories\": [\"a\"], \"counts\": [1], \"\\u0063ounts\": [2]}\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "table",
+          "kind": null,
+          "kind_version": null
+        },
+        "refused": {
+          "kind": "nemar.histogram",
+          "kind_version": 1,
+          "word": "json_invalid"
+        },
+        "downloads": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "size": 57,
+            "sha256": "ecd0ed8d4b6aa8542e78efa782ca7e38e39eb5577e28ebff536cf28b347392b9"
+          }
+        ],
+        "model": {
+          "type": "fallback",
+          "tables": []
+        }
+      }
+    },
+    {
+      "name": "histogram_lone_surrogate",
+      "covers": "A category holding an escaped lone surrogate: json_invalid.",
+      "view": {
+        "key": "hist",
+        "kind": "nemar.histogram",
+        "kind_version": 1,
+        "caption": "Recordings by share of good samples.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "format": "json",
+            "size": 42,
+            "sha256": "15bd168c40d7f3dc9ff5969c7bc392d59da4da14f26396be80349099dae925b6"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json": {
+          "text": "{\"categories\": [\"\\ud800\"], \"counts\": [1]}\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "table",
+          "kind": null,
+          "kind_version": null
+        },
+        "refused": {
+          "kind": "nemar.histogram",
+          "kind_version": 1,
+          "word": "json_invalid"
+        },
+        "downloads": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "size": 42,
+            "sha256": "15bd168c40d7f3dc9ff5969c7bc392d59da4da14f26396be80349099dae925b6"
+          }
+        ],
+        "model": {
+          "type": "fallback",
+          "tables": []
+        }
+      }
+    },
+    {
+      "name": "histogram_lone_surrogate_in_name",
+      "covers": "A member name holding a lone surrogate, in a member this kind does not read: json_invalid.",
+      "view": {
+        "key": "hist",
+        "kind": "nemar.histogram",
+        "kind_version": 1,
+        "caption": "Recordings by share of good samples.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "format": "json",
+            "size": 50,
+            "sha256": "26ac6bc5844ead8422ee5396703068629a48197c31a71a8c0564fc2e7c8f5a6b"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json": {
+          "text": "{\"categories\": [\"a\"], \"counts\": [1], \"\\udc00\": 1}\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "table",
+          "kind": null,
+          "kind_version": null
+        },
+        "refused": {
+          "kind": "nemar.histogram",
+          "kind_version": 1,
+          "word": "json_invalid"
+        },
+        "downloads": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "size": 50,
+            "sha256": "26ac6bc5844ead8422ee5396703068629a48197c31a71a8c0564fc2e7c8f5a6b"
+          }
+        ],
+        "model": {
+          "type": "fallback",
+          "tables": []
+        }
+      }
+    },
+    {
+      "name": "histogram_noncharacter",
+      "covers": "A category holding the noncharacter U+FDD0: json_invalid.",
+      "view": {
+        "key": "hist",
+        "kind": "nemar.histogram",
+        "kind_version": 1,
+        "caption": "Recordings by share of good samples.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "format": "json",
+            "size": 42,
+            "sha256": "cf6b7d92f9002e6b0b221154e9f30356869b364a36f2cf4b408a50cc707de65d"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json": {
+          "text": "{\"categories\": [\"\\ufdd0\"], \"counts\": [1]}\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "table",
+          "kind": null,
+          "kind_version": null
+        },
+        "refused": {
+          "kind": "nemar.histogram",
+          "kind_version": 1,
+          "word": "json_invalid"
+        },
+        "downloads": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "size": 42,
+            "sha256": "cf6b7d92f9002e6b0b221154e9f30356869b364a36f2cf4b408a50cc707de65d"
+          }
+        ],
+        "model": {
+          "type": "fallback",
+          "tables": []
+        }
+      }
+    },
+    {
+      "name": "histogram_noncharacter_raw",
+      "covers": "A category holding the noncharacter U+FFFF as UTF-8 bytes: json_invalid.",
+      "view": {
+        "key": "hist",
+        "kind": "nemar.histogram",
+        "kind_version": 1,
+        "caption": "Recordings by share of good samples.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "format": "json",
+            "size": 40,
+            "sha256": "1e0f66d11241b8c926d7d4691e198031863853986987ea732b1de24f8773bc19"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json": {
+          "text": "{\"categories\": [\"a\uffff\"], \"counts\": [1]}\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "table",
+          "kind": null,
+          "kind_version": null
+        },
+        "refused": {
+          "kind": "nemar.histogram",
+          "kind_version": 1,
+          "word": "json_invalid"
+        },
+        "downloads": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "size": 40,
+            "sha256": "1e0f66d11241b8c926d7d4691e198031863853986987ea732b1de24f8773bc19"
+          }
+        ],
+        "model": {
+          "type": "fallback",
+          "tables": []
+        }
+      }
+    },
+    {
+      "name": "histogram_noncharacter_astral",
+      "covers": "A category holding U+1FFFE, a noncharacter written as a surrogate pair: json_invalid.",
+      "view": {
+        "key": "hist",
+        "kind": "nemar.histogram",
+        "kind_version": 1,
+        "caption": "Recordings by share of good samples.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "format": "json",
+            "size": 48,
+            "sha256": "8ac0e5a868977bb4d0b150ff4a3954811b5d6630eba4033694a3fe712f0bed31"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json": {
+          "text": "{\"categories\": [\"\\ud83f\\udffe\"], \"counts\": [1]}\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "table",
+          "kind": null,
+          "kind_version": null
+        },
+        "refused": {
+          "kind": "nemar.histogram",
+          "kind_version": 1,
+          "word": "json_invalid"
+        },
+        "downloads": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "size": 48,
+            "sha256": "8ac0e5a868977bb4d0b150ff4a3954811b5d6630eba4033694a3fe712f0bed31"
+          }
+        ],
+        "model": {
+          "type": "fallback",
+          "tables": []
+        }
+      }
+    },
+    {
+      "name": "histogram_nested_65",
+      "covers": "A member this kind does not read, nested so the file is 65 deep: json_invalid.",
+      "view": {
+        "key": "hist",
+        "kind": "nemar.histogram",
+        "kind_version": 1,
+        "caption": "Recordings by share of good samples.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "format": "json",
+            "size": 172,
+            "sha256": "5efca0431dc18619e551b7e7941c66f3cb186ace5a1b9e9db426948ab89222cf"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json": {
+          "text": "{\"categories\": [\"a\"], \"counts\": [1], \"x\": [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "table",
+          "kind": null,
+          "kind_version": null
+        },
+        "refused": {
+          "kind": "nemar.histogram",
+          "kind_version": 1,
+          "word": "json_invalid"
+        },
+        "downloads": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "size": 172,
+            "sha256": "5efca0431dc18619e551b7e7941c66f3cb186ace5a1b9e9db426948ab89222cf"
           }
         ],
         "model": {
@@ -11288,6 +11797,152 @@
           "sha256": "12a03501c6ca2c77a554f56f9750c087b1a1e19e6b5528bd8f303a09de1fe552"
         }
       ]
+    },
+    {
+      "name": "refusal_caption_lone_surrogate",
+      "covers": "A caption holding a lone surrogate meets the schema but has no digest: declaration_invalid.",
+      "view": {
+        "key": "spectrum",
+        "kind": "nemar.lines",
+        "kind_version": 1,
+        "caption": "Spectrum \ud800",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
+            "format": "tsv",
+            "size": 105,
+            "sha256": "a610ecf3133b1999c8a92897989dcbe14fffaa624778d9455800a630f2a19ab7",
+            "columns": [
+              {
+                "name": "freq_hz",
+                "type": "number",
+                "unit": "Hz"
+              },
+              {
+                "name": "Fp1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fp2",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
+                "type": "number",
+                "unit": "dB"
+              }
+            ],
+            "dims": [
+              {
+                "name": "freq",
+                "axis": "rows",
+                "type": "number",
+                "unit": "Hz",
+                "coords": {
+                  "column": "freq_hz"
+                }
+              },
+              {
+                "name": "sensor",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv": {
+          "text": "freq_hz\tFp1\tFp2\tO1\tCz\n0\t12.5\t-3.25\t7\t1.25e1\n0.5\t8\t-2\t6\t0\n1\t4.75\t-1.5\t5\t-0\n1.5\t3\t0.125\t4\t-7E-1\n2\t1\t2\t3\t-1\n"
+        }
+      },
+      "word": "declaration_invalid",
+      "downloads": []
+    },
+    {
+      "name": "refusal_caption_noncharacter",
+      "covers": "A caption holding the noncharacter U+FFFE: declaration_invalid.",
+      "view": {
+        "key": "spectrum",
+        "kind": "nemar.lines",
+        "kind_version": 1,
+        "caption": "Spectrum \ufffe",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
+            "format": "tsv",
+            "size": 105,
+            "sha256": "a610ecf3133b1999c8a92897989dcbe14fffaa624778d9455800a630f2a19ab7",
+            "columns": [
+              {
+                "name": "freq_hz",
+                "type": "number",
+                "unit": "Hz"
+              },
+              {
+                "name": "Fp1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fp2",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
+                "type": "number",
+                "unit": "dB"
+              }
+            ],
+            "dims": [
+              {
+                "name": "freq",
+                "axis": "rows",
+                "type": "number",
+                "unit": "Hz",
+                "coords": {
+                  "column": "freq_hz"
+                }
+              },
+              {
+                "name": "sensor",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv": {
+          "text": "freq_hz\tFp1\tFp2\tO1\tCz\n0\t12.5\t-3.25\t7\t1.25e1\n0.5\t8\t-2\t6\t0\n1\t4.75\t-1.5\t5\t-0\n1.5\t3\t0.125\t4\t-7E-1\n2\t1\t2\t3\t-1\n"
+        }
+      },
+      "word": "declaration_invalid",
+      "downloads": []
     },
     {
       "name": "order_declaration_before_files",

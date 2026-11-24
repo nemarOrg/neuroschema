@@ -11,6 +11,13 @@ CLI usage::
     python -m neuroschema.validate examples/schema1.json \\
         --schema schema/core/record.schema.json
 
+A document is read as Internet JSON (``neuroschema.ijson``): strict UTF-8,
+whatever the platform's locale, with no duplicate member name, no ``NaN`` or
+``Infinity``, no lone surrogate or noncharacter, at most 64 levels deep, and
+each number as the binary64 JavaScript's ``JSON.parse`` reads. The schemas are
+read from ``schema/`` and resolved by their ``$id``; nothing is fetched over
+the network.
+
 Note: Currently uses the deprecated ``jsonschema.RefResolver`` for $ref
 resolution. Planned migration to the ``referencing`` library.
 """
@@ -22,6 +29,8 @@ import sys
 from pathlib import Path
 
 from jsonschema import Draft202012Validator, RefResolver, ValidationError
+
+from neuroschema import ijson
 
 SCHEMA_DIR = Path(__file__).resolve().parent.parent.parent / "schema"
 # Every schema's $id is this base plus its path under schema/: an absolute URI,
@@ -103,6 +112,10 @@ def validate_document(
 ) -> list[ValidationError]:
     """Validate a document against a neuroschema schema.
 
+    The document is checked as JavaScript reads it (:func:`neuroschema.ijson.binary64`):
+    an integer beyond 2^53 is checked as its binary64, so the verdict is the
+    one an engine that parses with ``JSON.parse`` gives.
+
     Args:
         document: The JSON document to validate.
         schema_path: Path to the schema file. Defaults to root schema.
@@ -113,7 +126,8 @@ def validate_document(
     """
     schema, resolver = load_schema(schema_path, schema_dir)
     validator = Draft202012Validator(schema, resolver=resolver)
-    return sorted(validator.iter_errors(document), key=lambda e: list(e.path))
+    errors = validator.iter_errors(ijson.binary64(document))
+    return sorted(errors, key=lambda e: list(e.path))
 
 
 def validate_file(
@@ -123,6 +137,9 @@ def validate_file(
 ) -> list[ValidationError]:
     """Validate a JSON file against a neuroschema schema.
 
+    The file is read as I-JSON (:func:`neuroschema.ijson.parse`); text that is
+    not raises :class:`neuroschema.ijson.IJsonError`.
+
     Args:
         file_path: Path to the JSON file.
         schema_path: Path to the schema file. Defaults to root schema.
@@ -131,8 +148,7 @@ def validate_file(
     Returns:
         List of validation errors (empty if valid).
     """
-    with open(file_path) as f:
-        document = json.load(f)
+    document = ijson.parse(Path(file_path).read_bytes())
     return validate_document(document, schema_path, schema_dir)
 
 
@@ -157,9 +173,13 @@ def main() -> int:
     except FileNotFoundError as exc:
         print(f"ERROR: File not found: {exc.filename or exc}", file=sys.stderr)
         return 2
+    except ijson.IJsonError as exc:
+        print(f"ERROR: Invalid JSON: {exc}", file=sys.stderr)
+        return 2
     except json.JSONDecodeError as exc:
         print(
-            f"ERROR: Invalid JSON (line {exc.lineno}, col {exc.colno}): {exc.msg}",
+            f"ERROR: Invalid schema JSON (line {exc.lineno}, col {exc.colno}): "
+            f"{exc.msg}",
             file=sys.stderr,
         )
         return 2

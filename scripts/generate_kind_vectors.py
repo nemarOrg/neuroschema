@@ -21,6 +21,7 @@ import json
 import sys
 from pathlib import Path
 
+from neuroschema.ijson import FORBIDDEN
 from neuroschema.views import load_registry
 from neuroschema.views.models import (
     MODELS_FORMAT,
@@ -819,7 +820,27 @@ def histogram_cases() -> list[Case]:
         summed_variance_pct=[80.5, 19.5],
         n_components=35,
     )
+    nested_64 = (
+        b'{"categories": ["a"], "counts": [1], "x": ' + b"[" * 63 + b"]" * 63 + b"}\n"
+    )
+    negative_zeros = (
+        b'{"edges": [-0, 1], "counts": [-0.0], "underflow": -0, "overflow": 0}\n'
+    )
     cases = [
+        Case(
+            "histogram_nested_64",
+            "A file nested exactly 64 deep, in a member this kind does not read: "
+            "drawn.",
+            histogram_view(nested_64),
+            {HIST_AT: nested_64},
+        ),
+        Case(
+            "histogram_negative_zero_counts",
+            "Counts and an edge written -0 and -0.0 read as 0: the model holds no "
+            "negative zero, so the total and max_count are 0, not -0.",
+            histogram_view(negative_zeros),
+            {HIST_AT: negative_zeros},
+        ),
         Case(
             "histogram_edges",
             "Bins [e_i, e_i+1), the last closed; underflow and overflow; labels "
@@ -932,6 +953,48 @@ def histogram_cases() -> list[Case]:
             "histogram_byte_order_mark",
             b"\xef\xbb\xbf" + ICLABEL,
             "A byte order mark: json_invalid.",
+        ),
+        (
+            "histogram_escaped_duplicate_member",
+            b'{"categories": ["a"], "counts": [1], "\\u0063ounts": [2]}\n',
+            "A member named twice, once escaped (counts and \\u0063ounts are one "
+            "name): json_invalid.",
+        ),
+        (
+            "histogram_lone_surrogate",
+            b'{"categories": ["\\ud800"], "counts": [1]}\n',
+            "A category holding an escaped lone surrogate: json_invalid.",
+        ),
+        (
+            "histogram_lone_surrogate_in_name",
+            b'{"categories": ["a"], "counts": [1], "\\udc00": 1}\n',
+            "A member name holding a lone surrogate, in a member this kind does "
+            "not read: json_invalid.",
+        ),
+        (
+            "histogram_noncharacter",
+            b'{"categories": ["\\ufdd0"], "counts": [1]}\n',
+            "A category holding the noncharacter U+FDD0: json_invalid.",
+        ),
+        (
+            "histogram_noncharacter_raw",
+            '{"categories": ["a\uffff"], "counts": [1]}\n'.encode(),
+            "A category holding the noncharacter U+FFFF as UTF-8 bytes: json_invalid.",
+        ),
+        (
+            "histogram_noncharacter_astral",
+            b'{"categories": ["\\ud83f\\udffe"], "counts": [1]}\n',
+            "A category holding U+1FFFE, a noncharacter written as a surrogate "
+            "pair: json_invalid.",
+        ),
+        (
+            "histogram_nested_65",
+            b'{"categories": ["a"], "counts": [1], "x": '
+            + b"[" * 64
+            + b"]" * 64
+            + b"}\n",
+            "A member this kind does not read, nested so the file is 65 deep: "
+            "json_invalid.",
         ),
     ]:
         cases.append(Case(name, covers, histogram_view(data), {HIST_AT: data}))
@@ -1413,6 +1476,19 @@ def refusals() -> list[Case]:
                 f"{PREFIX}_labels.tsv": bad_layout,
                 f"{PREFIX}_broken.tsv": CHANNELS + b"x\n",
             },
+        ),
+        (
+            "refusal_caption_lone_surrogate",
+            "A caption holding a lone surrogate meets the schema but has no "
+            "digest: declaration_invalid.",
+            lines_view() | {"caption": "Spectrum \ud800"},
+            {SPECTRUM_AT: SPECTRUM},
+        ),
+        (
+            "refusal_caption_noncharacter",
+            "A caption holding the noncharacter U+FFFE: declaration_invalid.",
+            lines_view() | {"caption": "Spectrum \ufffe"},
+            {SPECTRUM_AT: SPECTRUM},
         ),
         (
             "order_declaration_before_files",
@@ -2982,14 +3058,22 @@ def dump(value, depth: int = 0) -> str:
     pad, inner = "  " * depth, "  " * (depth + 1)
     if isinstance(value, dict) and value:
         members = [
-            f"{inner}{json.dumps(k, ensure_ascii=False)}: {dump(v, depth + 1)}"
-            for k, v in value.items()
+            f"{inner}{_scalars(k)}: {dump(v, depth + 1)}" for k, v in value.items()
         ]
         return "{\n" + ",\n".join(members) + f"\n{pad}}}"
     if isinstance(value, list) and any(isinstance(v, dict | list) for v in value):
         items = [f"{inner}{dump(v, depth + 1)}" for v in value]
         return "[\n" + ",\n".join(items) + f"\n{pad}]"
-    return json.dumps(value, ensure_ascii=False, separators=(", ", ": "))
+    return _scalars(value)
+
+
+def _scalars(value) -> str:
+    """A scalar or a flat array, as UTF-8 text; a string holding a lone
+    surrogate or a noncharacter is escaped, so the file stays I-JSON."""
+    text = json.dumps(value, ensure_ascii=False, separators=(", ", ": "))
+    if FORBIDDEN.search(text):
+        return json.dumps(value, ensure_ascii=True, separators=(", ", ": "))
+    return text
 
 
 def render() -> dict[Path, str]:
