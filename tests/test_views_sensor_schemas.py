@@ -122,6 +122,7 @@ def positions_entry() -> dict:
             {"name": "x", "type": "number", "unit": "cm"},
             {"name": "y", "type": "number", "unit": "cm"},
             {"name": "z", "type": "number", "unit": "cm"},
+            {"name": "sensor_type", "type": "string"},
         ],
         "dims": [
             {
@@ -383,7 +384,7 @@ class TestPositionsRole:
     def test_no_layout_columns(self):
         entry = positions_entry()
         entry["columns"].append({"name": "theta_deg", "type": "number", "unit": "deg"})
-        assert role_errors(entry, "positions") == {("enum", "columns/4/name")}
+        assert role_errors(entry, "positions") == {("enum", "columns/5/name")}
 
     @pytest.mark.parametrize(
         ("index", "change", "expected"),
@@ -507,10 +508,30 @@ class TestLayoutRole:
         entry["columns"] = [c for c in entry["columns"] if c["name"] != column]
         assert role_errors(entry, "layout") == {("contains", "columns")}
 
-    def test_sensor_type_is_optional(self):
+    def test_measured_layouts_carry_their_types(self):
+        """A scalp map draws measured rows typed EEG only, so a measured layout
+        that does not declare sensor_type is refused; a template one may omit it."""
         entry = layout_entry()
         entry["columns"] = entry["columns"][:3]
+        assert role_errors(entry, "layout") == {("contains", "columns")}
+        entry.update(
+            position_source="template", coordinate_system="n/a", montage="biosemi64"
+        )
         assert role_errors(entry, "layout") == set()
+
+    def test_measured_positions_carry_their_types(self):
+        entry = positions_entry()
+        entry["columns"] = entry["columns"][:4]
+        assert role_errors(entry, "positions") == {("contains", "columns")}
+        entry.update(
+            position_source="template", coordinate_system="n/a", montage="biosemi64"
+        )
+        assert role_errors(entry, "positions") == set()
+
+    def test_a_measured_view_without_types_is_invalid(self):
+        view = positioned()
+        view["data"][1]["columns"] = view["data"][1]["columns"][:4]
+        assert view_errors(view) == {("oneOf", "data/1")}
 
     def test_a_column_twice_fails(self):
         entry = layout_entry()

@@ -60,6 +60,8 @@ CHECK_SCALARS = 1e-12
 
 GRID = 67
 MERGE = 1e-3
+NEAR_FLAT = 1e-9  # a range at most this share of the magnitude is near flat
+FEWEST = 8  # a map needs 8 interpolated sensors, as sensor-labels needs 8 channels
 
 # The BIDS frame table, from the coordinate-systems appendix (BIDS_SPEC).
 ALS = ["CTF", "4DBti", "KitYokogawa", "EEGLAB", "EEGLAB-HJ"]
@@ -85,7 +87,7 @@ RAS = [
     "MNI152NLin2009bAsym",
     "MNI152NLin2009cAsym",
     "MNI152NLin6Sym",
-    "MNI152NLin6ASym",
+    "MNI152NLin6Asym",
     "MNI305",
     "NIHPD",
     "OASIS30AntsOASISAnts",
@@ -106,6 +108,34 @@ RAS = [
     "UNCInfant2V21",
     "UNCInfant2V22",
     "UNCInfant2V23",
+]
+# BIDS's schema enum (src/schema/objects/enums.yaml) spells MNI152NLin6Asym, its
+# appendix MNI152NLin6ASym; the spec reads the appendix's spelling as the enum's.
+ALIASES = {"MNI152NLin6ASym": "MNI152NLin6Asym"}
+BIDS_ENUMS = BIDS_SPEC.replace(
+    "src/appendices/coordinate-systems.md", "src/schema/objects/enums.yaml"
+)
+# The 19 electrodes of the 10-20 system as the presets example lays them out.
+TEN_TWENTY = [
+    ("Fp1", -18, 0.511),
+    ("Fp2", 18, 0.511),
+    ("F7", -54, 0.511),
+    ("F3", -39.9, 0.333),
+    ("Fz", 0, 0.256),
+    ("F4", 39.9, 0.333),
+    ("F8", 54, 0.511),
+    ("T7", -90, 0.511),
+    ("C3", -90, 0.256),
+    ("Cz", 0, 0),
+    ("C4", 90, 0.256),
+    ("T8", 90, 0.511),
+    ("P7", -126, 0.511),
+    ("P3", -140.1, 0.333),
+    ("Pz", 180, 0.256),
+    ("P4", 140.1, 0.333),
+    ("P8", 126, 0.511),
+    ("O1", -162, 0.511),
+    ("O2", 162, 0.511),
 ]
 UNKNOWN_FRAMES = ["Other", "n/a", "", "Pixels", "individual", "study", "scanner"]
 UNKNOWN_FRAMES += ["eeglab", "captrak", "MNI", "CapTrak "]
@@ -194,6 +224,36 @@ def eegprep_contours(z):
     return [float(v) for v in _contour_levels(low, high, 6)]
 
 
+def eeglab_head(plotrad):
+    """EEGLAB's cartoon head over a map, written as EEGLAB's topoplot.m writes
+    it (lines 1402 to 1410 of sccn/eeglab develop at 6c238f7): rmax = 0.5, the
+    head drawn at headrad = rmax, and the nose and ears scaled by sf =
+    headrad / plotrad. EEGLAB plots the layout's y across and x up, so each
+    point here is (x, y), x to the nose. eegprep draws another nose, so the
+    outline comes from EEGLAB's own numbers, not from eegprep."""
+    rmax = 0.5
+    headrad = rmax
+    base = rmax - 0.0046
+    basex = 0.18 * rmax
+    tip = 1.15 * rmax
+    tiphw = 0.04 * rmax
+    tipr = 0.01 * rmax
+    q = 0.04
+    ear_x = [0.497 - 0.005, 0.510, 0.518, 0.5299, 0.5419, 0.54, 0.547, 0.532, 0.510]
+    ear_x += [0.489 - 0.005]
+    ear_y = [q + 0.0555, q + 0.0775, q + 0.0783, q + 0.0746, q + 0.0555, -0.0055]
+    ear_y += [-0.0932, -0.1313, -0.1384, -0.1199]
+    sf = headrad / plotrad
+    across = [basex, tiphw, 0.0, -tiphw, -basex]
+    up = [base, tip - tipr, tip, tip - tipr, base]
+    return {
+        "radius": headrad * (rmax / plotrad),
+        "nose": [[u * sf, a * sf + 0.0] for a, u in zip(across, up, strict=True)],
+        "right_ear": [[u * sf, a * sf] for a, u in zip(ear_x, ear_y, strict=True)],
+        "left_ear": [[u * sf, -a * sf] for a, u in zip(ear_x, ear_y, strict=True)],
+    }
+
+
 def eegprep_cart2topo(points):
     """eegprep's convertlocs(..., 'cart2topo') on centered ALS points."""
     from eegprep.functions.sigprocfunc.convertlocs import convertlocs
@@ -221,6 +281,7 @@ def to_als(xyz, frame, montage=None):
     if montage is not None:
         orientation = "RAS" if frame == "n/a" and montage in MONTAGE_NAMES else None
     else:
+        frame = ALIASES.get(frame, frame)
         orientation = "ALS" if frame in ALS else "RAS" if frame in RAS else None
     if orientation == "ALS":
         return xyz.copy()
@@ -388,6 +449,16 @@ def planar(theta, radius):
     return np.cos(t) * r, np.sin(t) * r
 
 
+def deviation_center(values):
+    """The spec's mean: the first value plus the mean of the differences from
+    it, summed in order, so equal values give themselves exactly."""
+    first = float(values[0])
+    total = 0.0
+    for value in values:
+        total += float(value) - first
+    return first + total / len(values) + 0.0
+
+
 def merged_inputs(theta, radius, values):
     """Usable rows, merge groups (kept row first) and the kept sensors."""
     theta, radius, values = (
@@ -411,12 +482,10 @@ def merged_inputs(theta, radius, values):
         else:
             groups.append([i])
     kept = [g[0] for g in groups]
-    means = []
-    for group in groups:
-        total = 0.0
-        for i in group:
-            total += float(values[i])
-        means.append(total / len(group))
+    # A merged value is the members' mean as the spec computes a mean: the
+    # first plus the mean of the differences from it, so equal members give
+    # their value exactly and huge ones do not overflow.
+    means = [deviation_center([values[i] for i in group]) for group in groups]
     return usable, groups, kept, means
 
 
@@ -444,18 +513,41 @@ def field_case_from(name, description, sensors, extra=None):
     intrad = min(1.0, outer * 1.02)
     x, y = planar(np.nan_to_num(theta), np.nan_to_num(radius))
     interpolated = [k for k in kept if x[k] <= intrad and y[k] <= intrad]
-    if len(interpolated) < 3:
+    if len(interpolated) < FEWEST:
         case["refused"] = "too_few_sensors"
         return case
     outer_kept = max(radius[k] for k in kept)
     option = None if outer_kept == outer else plotrad_all
-    zi, plotrad, gx, gy = eegprep_topoplot(theta[kept], radius[kept], means, option)
+    # The spec interpolates the deviations from the mean m of the interpolated
+    # values and adds m back; eegprep is given the deviations.
+    m = deviation_center([means[kept.index(k)] for k in interpolated])
+    deviations = [mean - m for mean in means]
+    finite = math.isfinite(m) and all(map(math.isfinite, deviations))
+    # Near flat: the usable values' range at most 1e-9 of their magnitude.
+    # The spec draws the mean in every cell; eegprep is given zeros, for the
+    # grid alone.
+    spread = float(max(values[i] for i in usable)) - float(
+        min(values[i] for i in usable)
+    )
+    magnitude = float(max(abs(values[i]) for i in usable))
+    near_flat = 0 < spread <= NEAR_FLAT * magnitude
+    finite = finite and not near_flat
+    # Deviations that overflow make the weights and cells not finite; eegprep
+    # drops a value that is not finite, so it draws zeros, for the grid alone.
+    zi, plotrad, gx, gy = eegprep_topoplot(
+        theta[kept], radius[kept], deviations if finite else [0.0] * len(kept), option
+    )
+    if near_flat:
+        zi = np.where(np.isnan(zi), np.nan, m)
+    else:
+        zi = m + zi if finite else np.full_like(zi, np.nan)
     if plotrad != plotrad_all:
         sys.exit(f"{name}: eegprep's plotrad {plotrad!r} is not {plotrad_all!r}")
     inside_head = np.sqrt(gx[:, None] * gx[:, None] + gy[None, :] * gy[None, :]) <= 0.5
     if not inside_head.any():
         case["refused"] = "head_outside_grid"
         return case
+    flat = len({float(values[i]) for i in usable}) == 1
     if not np.isfinite(zi[inside_head]).all():
         case["refused"] = "interpolation_failed"
         return case
@@ -477,11 +569,16 @@ def field_case_from(name, description, sensors, extra=None):
         "limits": {"absmax": absmax, "minmax": [low, high]},
         "color_axis": {
             "absmax": eegprep_clim(zi) if top > 0 else [0.0, 0.0],
+            # eegprep leaves maxmin to matplotlib; the spec widens by the range.
             "minmax": [
-                v + math.copysign(0.05, v) * abs(v) if v else 0.0 for v in (low, high)
+                low - 0.05 * (high - low) + 0.0,
+                high + 0.05 * (high - low) + 0.0,
             ],
         },
         "contours": eegprep_contours(zi),
+        "head": eeglab_head(plotrad),
+        "notes": ["flat_field"] if flat else ["near_flat"] if near_flat else [],
+        "value_range": float(spread) + 0.0,
     }
     if extra:
         case["expected"].update(extra(theta, radius, values, zi))
@@ -743,8 +840,11 @@ def field_cases():
     cases.append(
         field_case(
             "constant_values",
-            "montage_32 with every value 2.5: the biharmonic interpolant of equal "
-            "values is not constant (it has no constant term), as in EEGLAB.",
+            "montage_32 with every value 2.5: a flat field. The biharmonic "
+            "interpolant of equal values is not constant (it has no constant "
+            "term) and ripples in EEGLAB and eegprep; with the mean removed, the "
+            "deviations are 0 and every cell is 2.5, with no contours and the "
+            "note flat_field.",
             labels,
             theta,
             radius,
@@ -754,43 +854,48 @@ def field_cases():
     cases.append(
         field_case(
             "zero_map",
-            "montage_32 with every value 0: a constant map, drawn in one color "
-            "with no contours.",
+            "montage_32 with every value 0: a flat field at 0, a constant map "
+            "drawn in the middle color with no contours and the note flat_field.",
             labels,
             theta,
             radius,
             np.zeros(32),
         )
     )
+    few_names = ["A", "B", "C", "D", "E", "F", "G", "H"]
+    few_theta = [-30.0, 45.0, 170.0, -120.0, 90.0, 0.0, -75.0, 135.0]
+    few_radius = [0.3, 0.25, 0.4, 0.35, 0.45, 0.1, 0.2, 0.15]
+    few_values = [1.0, -2.0, 0.5, 1.5, -1.0, 2.0, -0.5, 0.25]
     cases.append(
         field_case(
-            "three_sensors",
-            "Exactly three sensors: the fewest that draw a map.",
-            ["A", "B", "C"],
-            [-30.0, 45.0, 170.0],
-            [0.3, 0.25, 0.4],
-            [1.0, -2.0, 0.5],
+            "eight_sensors",
+            "Exactly eight sensors: the fewest that draw a map, as "
+            "nemar.sensor-labels.v1 needs eight channels to place sensors by name.",
+            few_names,
+            few_theta,
+            few_radius,
+            few_values,
         )
     )
     cases.append(
         field_case(
-            "two_sensors",
-            "Two sensors: refused.",
-            ["A", "B"],
-            [-30.0, 45.0],
-            [0.3, 0.25],
-            [1.0, -2.0],
+            "seven_sensors",
+            "Seven sensors: refused (too_few_sensors).",
+            few_names[:7],
+            few_theta[:7],
+            few_radius[:7],
+            few_values[:7],
         )
     )
     cases.append(
         field_case(
-            "merged_to_two",
-            "Three sensors, two at one position: two remain after the merge, "
-            "so the map is refused.",
-            ["A", "B", "B2"],
-            [-30.0, 45.0, 45.0],
-            [0.3, 0.25, 0.25],
-            [1.0, -2.0, 4.0],
+            "merged_to_seven",
+            "Eight sensors, two at one position: seven remain after the merge, "
+            "so the map is refused (too_few_sensors).",
+            [*few_names[:7], "B2"],
+            [*few_theta[:7], 45.0],
+            [*few_radius[:7], 0.25],
+            [*few_values[:7], 4.0],
         )
     )
     wide = base.copy()
@@ -855,6 +960,143 @@ def field_cases():
             [*theta, theta[outer]],
             [*radius, radius[outer] + 5e-4],
             [*base, base[outer] + 4.0],
+        )
+    )
+    for name, offset, sign in [
+        ("one_sign_positive_db", 25.0, "positive"),
+        ("one_sign_negative_db", -25.0, "negative"),
+    ]:
+        cases.append(
+            field_case(
+                name,
+                f"montage_32 with half its field plus {offset:g}: every value "
+                f"{sign}, as decibels are on a spectrum's map. Every cell lies "
+                "inside both color axes; minmax widens by 5% of the range, where "
+                "EEGLAB's magnitude rule would move the limit nearer zero inward "
+                "and clip the cells beside it.",
+                labels,
+                theta,
+                radius,
+                base * 0.5 + offset,
+            )
+        )
+    flat = np.full(32, 5.0)
+    for name, description, case_theta, case_radius, values, extra_rows in [
+        (
+            "flat_nan_value",
+            "montage_32 with every value 5 but row 3's, which is not finite: the "
+            "usable sensors are equal, so the map is 5 with the note flat_field.",
+            theta,
+            radius,
+            np.where(np.arange(32) == 3, np.nan, flat),
+            None,
+        ),
+        (
+            "flat_no_place",
+            "montage_32 with every value 5 but row 3's, 9, at a theta that is not "
+            "finite: row 3 is not usable, so the field is flat (note flat_field).",
+            np.where(np.arange(32) == 3, np.nan, theta),
+            radius,
+            np.where(np.arange(32) == 3, 9.0, flat),
+            None,
+        ),
+        (
+            "flat_not_interpolated",
+            "montage_32 at 5, and a sensor of 9 at theta 0 and radius 1.2, beyond "
+            "the interpolation square and plotrad: not every usable sensor is 5, "
+            "so there is no note, but every interpolated one is, so the map is 5 "
+            "in every cell, with no contours.",
+            theta,
+            radius,
+            flat,
+            ("FRONT", 0.0, 1.2, 9.0),
+        ),
+        (
+            "flat_merge_group",
+            "montage_32 at 0.1 and two more sensors at row 5's place: a merge "
+            "group of three whose mean, computed as the spec computes one, is "
+            "0.1 exactly (summed, then divided, it is not), so the map is 0.1 "
+            "in every cell, with the note flat_field.",
+            [*theta, theta[5], theta[5]],
+            [*radius, radius[5], radius[5]],
+            np.full(34, 0.1),
+            None,
+        ),
+        (
+            "flat_huge_duplicate_pair",
+            "montage_32 at 1.5e308 and a second sensor at row 4's place: the "
+            "pair's mean is 1.5e308 (summed, it would overflow), so the map is "
+            "1.5e308 in every cell, with the note flat_field.",
+            [*theta, theta[4]],
+            [*radius, radius[4]],
+            np.full(33, 1.5e308),
+            None,
+        ),
+        (
+            "flat_minus_zero",
+            "montage_32 at 0, row 0 at -0: equal values (-0 equals 0), so the note "
+            "flat_field, and every cell is 0, never -0.",
+            theta,
+            radius,
+            np.where(np.arange(32) == 0, -0.0, np.zeros(32)),
+            None,
+        ),
+        (
+            "near_flat_one_ulp",
+            "montage_32 at 30 and the next binary64 above 30, alternating: not "
+            "equal, but within 1e-9 of their magnitude, so near flat: one color "
+            "at the mean, no contours, the note near_flat.",
+            theta,
+            radius,
+            np.where(np.arange(32) % 2 == 0, np.nextafter(30.0, 31.0), 30.0),
+            None,
+        ),
+        (
+            "near_flat_above_threshold",
+            "montage_32 at 30 dB but row 0 at 30 + 4e-8: a range of 1.3e-9 of "
+            "the magnitude, above the near-flat bound 1e-9, so the map is drawn "
+            "as any other, with no note.",
+            theta,
+            radius,
+            np.where(np.arange(32) == 0, 30.0 + 4e-8, 30.0),
+            None,
+        ),
+        (
+            "near_flat_one_nano_db",
+            "montage_32 at 30 dB but row 0 at 30 + 1e-9: a range of 3.3e-11 of "
+            "the magnitude, near flat, so one color at the mean, with the note "
+            "near_flat.",
+            theta,
+            radius,
+            np.where(np.arange(32) == 0, 30.0 + 1e-9, 30.0),
+            None,
+        ),
+    ]:
+        labels_k = list(labels)
+        labels_k += [f"DUP{i + 1}" for i in range(len(case_theta) - len(labels_k))]
+        if extra_rows:
+            extra_name, extra_theta, extra_radius, extra_value = extra_rows
+            labels_k.append(extra_name)
+            case_theta = [*case_theta, extra_theta]
+            case_radius = [*case_radius, extra_radius]
+            values = [*values, extra_value]
+        cases.append(
+            field_case(name, description, labels_k, case_theta, case_radius, values)
+        )
+    ten_twenty = [(n, float(t), float(r)) for n, t, r in TEN_TWENTY]
+    at_10_hz = np.array([28 - 10 / 6 + 6 + (3 * k % 5) / 2 for k in range(19)])
+    shape = (at_10_hz - at_10_hz.min()) / (at_10_hz.max() - at_10_hz.min())
+    cases.append(
+        field_case(
+            "near_flat_minus_110_db",
+            "The 19 electrodes of the 10-20 system at -110 dB plus 0.05 dB of the "
+            "presets example's 10 Hz pattern: without the mean removed, the "
+            "spline's ripple of -110 would fill the color axis; with it, the map "
+            "is the pattern.",
+            [n for n, _t, _r in ten_twenty],
+            [t for _n, t, _r in ten_twenty],
+            [r for _n, _t, r in ten_twenty],
+            -110.0 + 0.05 * shape,
         )
     )
     labels, theta, radius = layouts[128]
@@ -1051,7 +1293,12 @@ def sensor_field_vectors(ref):
             "refused with. z[i][j] is the value at (x[i], y[j]); null is a masked "
             "cell. Sensor indices are input rows from 0; merged lists each merge "
             "group, the kept sensor first. The expected maps are eegprep's topoplot "
-            "of the merged, finite sensors. A case whose sensors give x, y and z "
+            "of the merged, finite sensors' deviations from their mean, plus the "
+            "mean; a flat field (every usable value equal) carries the note "
+            "flat_field, and a near-flat one (a range at most 1e-9 of the "
+            "magnitude) is its mean in every cell, with the note near_flat; "
+            "value_range is the usable values' max - min. "
+            "A case whose sensors give x, y and z "
             "instead of theta_deg and radius places them by 3D positions in the "
             "frame coordinate_system names (or n/a with a montage): "
             "nemar.sensor-layout.v1 projects them (expected.layout, compared as in "
@@ -1061,7 +1308,7 @@ def sensor_field_vectors(ref):
         "reference": ref,
         "tolerance": {
             "cells_relative_to_range": 1e-6,
-            "constant_map_cells": 1e-12,
+            "cells_relative_to_magnitude": 1e-12,
             "geometry_relative": 1e-12,
         },
         "grid_size": GRID,
@@ -1746,6 +1993,27 @@ def layout_cases():
                 montage=montage_name,
             )
         )
+    for alias, name in ALIASES.items():
+        cases.append(
+            layout_case(
+                f"alias_{alias}",
+                f"The coordinate-systems appendix's spelling {alias!r}, read as "
+                f"the schema enum's {name!r}: an RAS frame, so frame_ras's layout.",
+                small_labels,
+                small,
+                alias,
+            )
+        )
+        cases.append(
+            layout_case(
+                f"alias_{alias}_lowercase",
+                f"{alias.lower()!r}: names compare exactly, case included, and an "
+                "alias too, so it is refused (frame_unknown).",
+                small_labels,
+                small,
+                alias.lower(),
+            )
+        )
     cases += scalp_row_cases()
     cases += partial_cases()
     for number, frame in enumerate(UNKNOWN_FRAMES, start=1):
@@ -1812,7 +2080,9 @@ def sensor_layout_vectors(ref):
             "of the positions minus the center, with -180 written 180. frames lists "
             "the BIDS coordinate systems of each orientation: an implementation "
             "gives frame_als's layout for every ALS name and frame_ras's for every "
-            "RAS name. cart2topo gives centered ALS points and the theta and "
+            "RAS name; aliases maps another spelling BIDS uses to the name it "
+            "means, which an implementation reads in its place. cart2topo gives "
+            "centered ALS points and the theta and "
             "radius each converts to, with no fit (theta within "
             "tolerance.cart2topo_theta_deg degrees, with no wrapping, and radius "
             "within tolerance.radius). Tolerances for the cases: radius within "
@@ -1822,7 +2092,7 @@ def sensor_layout_vectors(ref):
             "tolerance.center_relative_to_scale times the largest distance of a "
             "finite position from their centroid."
         ),
-        "reference": ref | {"frames": BIDS_SPEC},
+        "reference": ref | {"frames": BIDS_SPEC, "frame_names": BIDS_ENUMS},
         "tolerance": {
             "planar": 1e-12,
             "radius": 1e-12,
@@ -1833,6 +2103,7 @@ def sensor_layout_vectors(ref):
         "frames": {
             "ALS": sorted(ALS),
             "RAS": sorted(RAS),
+            "aliases": ALIASES,
             "template": {"coordinate_system": "n/a", "orientation": "RAS"},
         },
         "cart2topo": cart2topo_cases(),
@@ -1938,7 +2209,10 @@ def differences(new, old, path="", scale=None, extent=None):
         local = scale
         if isinstance(grid, list) and grid and isinstance(grid[0], list):
             finite = [v for row in grid for v in row if v is not None]
-            local = max(finite) - min(finite) or 1.0
+            # The map's range, and a share of its magnitude: a near-flat map's
+            # cells are its mean plus a ripple a few ulps wide.
+            magnitude = max(abs(v) for v in finite)
+            local = max(finite) - min(finite) + 1e-3 * magnitude
         for key in new:
             if key in SCALED_KEYS or scale is not None:
                 tol = local

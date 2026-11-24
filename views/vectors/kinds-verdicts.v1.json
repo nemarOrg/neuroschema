@@ -3914,8 +3914,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
             "format": "tsv",
-            "size": 39876,
-            "sha256": "264bdfba72feedffa1a1643a69ce8a0b08da9dadc5f0551db2bcddb24510bd1f",
+            "size": 28751,
+            "sha256": "c8dd4ddaa56be273b4695f412217fe8954d1027559389ac6771ad8e00eaeacc6",
             "columns": [
               {
                 "name": "freq_hz",
@@ -3933,7 +3933,17 @@
                 "unit": "dB"
               },
               {
+                "name": "F7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -3943,7 +3953,22 @@
                 "unit": "dB"
               },
               {
+                "name": "F8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "T7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -3953,7 +3978,42 @@
                 "unit": "dB"
               },
               {
+                "name": "T8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Pz",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O2",
                 "type": "number",
                 "unit": "dB"
               }
@@ -3983,8 +4043,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -4053,8 +4113,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
             "format": "tsv",
-            "size": 39876,
-            "sha256": "264bdfba72feedffa1a1643a69ce8a0b08da9dadc5f0551db2bcddb24510bd1f",
+            "size": 28751,
+            "sha256": "c8dd4ddaa56be273b4695f412217fe8954d1027559389ac6771ad8e00eaeacc6",
             "columns": [
               {
                 "name": "freq_hz",
@@ -4072,7 +4132,17 @@
                 "unit": "dB"
               },
               {
+                "name": "F7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -4082,7 +4152,22 @@
                 "unit": "dB"
               },
               {
+                "name": "F8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "T7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -4092,7 +4177,42 @@
                 "unit": "dB"
               },
               {
+                "name": "T8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Pz",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O2",
                 "type": "number",
                 "unit": "dB"
               }
@@ -4153,8 +4273,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
             "format": "tsv",
-            "size": 39876,
-            "sha256": "264bdfba72feedffa1a1643a69ce8a0b08da9dadc5f0551db2bcddb24510bd1f",
+            "size": 28751,
+            "sha256": "c8dd4ddaa56be273b4695f412217fe8954d1027559389ac6771ad8e00eaeacc6",
             "columns": [
               {
                 "name": "freq_hz",
@@ -4172,7 +4292,17 @@
                 "unit": "dB"
               },
               {
+                "name": "F7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -4182,7 +4312,22 @@
                 "unit": "dB"
               },
               {
+                "name": "F8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "T7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -4192,7 +4337,42 @@
                 "unit": "dB"
               },
               {
+                "name": "T8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Pz",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O2",
                 "type": "number",
                 "unit": "dB"
               }
@@ -4222,8 +4402,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -4294,8 +4474,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
             "format": "tsv",
-            "size": 39876,
-            "sha256": "264bdfba72feedffa1a1643a69ce8a0b08da9dadc5f0551db2bcddb24510bd1f",
+            "size": 28751,
+            "sha256": "c8dd4ddaa56be273b4695f412217fe8954d1027559389ac6771ad8e00eaeacc6",
             "columns": [
               {
                 "name": "freq_hz",
@@ -4313,7 +4493,17 @@
                 "unit": "dB"
               },
               {
+                "name": "F7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -4323,7 +4513,22 @@
                 "unit": "dB"
               },
               {
+                "name": "F8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "T7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -4333,7 +4538,42 @@
                 "unit": "dB"
               },
               {
+                "name": "T8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Pz",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O2",
                 "type": "number",
                 "unit": "dB"
               }
@@ -4363,8 +4603,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -4435,8 +4675,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
             "format": "tsv",
-            "size": 39876,
-            "sha256": "264bdfba72feedffa1a1643a69ce8a0b08da9dadc5f0551db2bcddb24510bd1f",
+            "size": 28751,
+            "sha256": "c8dd4ddaa56be273b4695f412217fe8954d1027559389ac6771ad8e00eaeacc6",
             "columns": [
               {
                 "name": "freq_hz",
@@ -4454,7 +4694,17 @@
                 "unit": "dB"
               },
               {
+                "name": "F7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -4464,7 +4714,22 @@
                 "unit": "dB"
               },
               {
+                "name": "F8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "T7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -4474,7 +4739,42 @@
                 "unit": "dB"
               },
               {
+                "name": "T8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Pz",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O2",
                 "type": "number",
                 "unit": "dB"
               }
@@ -4504,8 +4804,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -4575,8 +4875,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
             "format": "tsv",
-            "size": 39876,
-            "sha256": "264bdfba72feedffa1a1643a69ce8a0b08da9dadc5f0551db2bcddb24510bd1f",
+            "size": 28751,
+            "sha256": "c8dd4ddaa56be273b4695f412217fe8954d1027559389ac6771ad8e00eaeacc6",
             "columns": [
               {
                 "name": "freq_hz",
@@ -4594,7 +4894,17 @@
                 "unit": "dB"
               },
               {
+                "name": "F7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -4604,7 +4914,22 @@
                 "unit": "dB"
               },
               {
+                "name": "F8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "T7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -4614,7 +4939,42 @@
                 "unit": "dB"
               },
               {
+                "name": "T8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Pz",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O2",
                 "type": "number",
                 "unit": "dB"
               }
@@ -4644,8 +5004,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -4715,8 +5075,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
             "format": "tsv",
-            "size": 39876,
-            "sha256": "264bdfba72feedffa1a1643a69ce8a0b08da9dadc5f0551db2bcddb24510bd1f",
+            "size": 28751,
+            "sha256": "c8dd4ddaa56be273b4695f412217fe8954d1027559389ac6771ad8e00eaeacc6",
             "columns": [
               {
                 "name": "freq_hz",
@@ -4734,7 +5094,17 @@
                 "unit": "dB"
               },
               {
+                "name": "F7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -4744,7 +5114,22 @@
                 "unit": "dB"
               },
               {
+                "name": "F8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "T7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -4754,7 +5139,42 @@
                 "unit": "dB"
               },
               {
+                "name": "T8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Pz",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O2",
                 "type": "number",
                 "unit": "dB"
               }
@@ -4784,8 +5204,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -4855,8 +5275,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
             "format": "tsv",
-            "size": 39876,
-            "sha256": "264bdfba72feedffa1a1643a69ce8a0b08da9dadc5f0551db2bcddb24510bd1f",
+            "size": 28751,
+            "sha256": "c8dd4ddaa56be273b4695f412217fe8954d1027559389ac6771ad8e00eaeacc6",
             "columns": [
               {
                 "name": "freq_hz",
@@ -4874,7 +5294,17 @@
                 "unit": "dB"
               },
               {
+                "name": "F7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -4884,7 +5314,22 @@
                 "unit": "dB"
               },
               {
+                "name": "F8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "T7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -4894,7 +5339,42 @@
                 "unit": "dB"
               },
               {
+                "name": "T8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Pz",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O2",
                 "type": "number",
                 "unit": "dB"
               }
@@ -4924,8 +5404,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -4995,8 +5475,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
             "format": "tsv",
-            "size": 39876,
-            "sha256": "264bdfba72feedffa1a1643a69ce8a0b08da9dadc5f0551db2bcddb24510bd1f",
+            "size": 28751,
+            "sha256": "c8dd4ddaa56be273b4695f412217fe8954d1027559389ac6771ad8e00eaeacc6",
             "columns": [
               {
                 "name": "freq_hz",
@@ -5014,7 +5494,17 @@
                 "unit": "dB"
               },
               {
+                "name": "F7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -5024,7 +5514,22 @@
                 "unit": "dB"
               },
               {
+                "name": "F8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "T7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -5034,7 +5539,42 @@
                 "unit": "dB"
               },
               {
+                "name": "T8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Pz",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O2",
                 "type": "number",
                 "unit": "dB"
               }
@@ -5064,8 +5604,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -5136,8 +5676,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
             "format": "tsv",
-            "size": 39876,
-            "sha256": "264bdfba72feedffa1a1643a69ce8a0b08da9dadc5f0551db2bcddb24510bd1f",
+            "size": 28751,
+            "sha256": "c8dd4ddaa56be273b4695f412217fe8954d1027559389ac6771ad8e00eaeacc6",
             "columns": [
               {
                 "name": "freq_hz",
@@ -5155,7 +5695,17 @@
                 "unit": "dB"
               },
               {
+                "name": "F7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -5165,7 +5715,22 @@
                 "unit": "dB"
               },
               {
+                "name": "F8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "T7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -5175,7 +5740,42 @@
                 "unit": "dB"
               },
               {
+                "name": "T8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Pz",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O2",
                 "type": "number",
                 "unit": "dB"
               }
@@ -5205,8 +5805,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -5277,8 +5877,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
             "format": "tsv",
-            "size": 39876,
-            "sha256": "264bdfba72feedffa1a1643a69ce8a0b08da9dadc5f0551db2bcddb24510bd1f",
+            "size": 28751,
+            "sha256": "c8dd4ddaa56be273b4695f412217fe8954d1027559389ac6771ad8e00eaeacc6",
             "columns": [
               {
                 "name": "freq_hz",
@@ -5296,7 +5896,17 @@
                 "unit": "dB"
               },
               {
+                "name": "F7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -5306,7 +5916,22 @@
                 "unit": "dB"
               },
               {
+                "name": "F8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "T7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -5316,7 +5941,42 @@
                 "unit": "dB"
               },
               {
+                "name": "T8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Pz",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O2",
                 "type": "number",
                 "unit": "dB"
               }
@@ -5346,8 +6006,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -5418,8 +6078,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
             "format": "tsv",
-            "size": 39876,
-            "sha256": "264bdfba72feedffa1a1643a69ce8a0b08da9dadc5f0551db2bcddb24510bd1f",
+            "size": 28751,
+            "sha256": "c8dd4ddaa56be273b4695f412217fe8954d1027559389ac6771ad8e00eaeacc6",
             "columns": [
               {
                 "name": "freq_hz",
@@ -5437,7 +6097,17 @@
                 "unit": "dB"
               },
               {
+                "name": "F7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -5447,7 +6117,22 @@
                 "unit": "dB"
               },
               {
+                "name": "F8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "T7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -5457,7 +6142,42 @@
                 "unit": "dB"
               },
               {
+                "name": "T8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Pz",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O2",
                 "type": "number",
                 "unit": "dB"
               }
@@ -5486,8 +6206,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -5558,8 +6278,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
             "format": "tsv",
-            "size": 39876,
-            "sha256": "264bdfba72feedffa1a1643a69ce8a0b08da9dadc5f0551db2bcddb24510bd1f",
+            "size": 28751,
+            "sha256": "c8dd4ddaa56be273b4695f412217fe8954d1027559389ac6771ad8e00eaeacc6",
             "columns": [
               {
                 "name": "freq_hz",
@@ -5577,7 +6297,17 @@
                 "unit": "dB"
               },
               {
+                "name": "F7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -5587,7 +6317,22 @@
                 "unit": "dB"
               },
               {
+                "name": "F8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "T7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -5597,7 +6342,42 @@
                 "unit": "dB"
               },
               {
+                "name": "T8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Pz",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O2",
                 "type": "number",
                 "unit": "dB"
               }
@@ -5661,8 +6441,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
             "format": "tsv",
-            "size": 39876,
-            "sha256": "264bdfba72feedffa1a1643a69ce8a0b08da9dadc5f0551db2bcddb24510bd1f",
+            "size": 28751,
+            "sha256": "c8dd4ddaa56be273b4695f412217fe8954d1027559389ac6771ad8e00eaeacc6",
             "columns": [
               {
                 "name": "freq_hz",
@@ -5680,7 +6460,17 @@
                 "unit": "dB"
               },
               {
+                "name": "F7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -5690,7 +6480,22 @@
                 "unit": "dB"
               },
               {
+                "name": "F8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "T7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -5700,7 +6505,42 @@
                 "unit": "dB"
               },
               {
+                "name": "T8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Pz",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O2",
                 "type": "number",
                 "unit": "dB"
               }
@@ -5731,8 +6571,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -5803,8 +6643,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
             "format": "tsv",
-            "size": 39876,
-            "sha256": "264bdfba72feedffa1a1643a69ce8a0b08da9dadc5f0551db2bcddb24510bd1f",
+            "size": 28751,
+            "sha256": "c8dd4ddaa56be273b4695f412217fe8954d1027559389ac6771ad8e00eaeacc6",
             "columns": [
               {
                 "name": "freq_hz",
@@ -5822,7 +6662,17 @@
                 "unit": "dB"
               },
               {
+                "name": "F7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -5832,7 +6682,22 @@
                 "unit": "dB"
               },
               {
+                "name": "F8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "T7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -5842,7 +6707,42 @@
                 "unit": "dB"
               },
               {
+                "name": "T8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Pz",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O2",
                 "type": "number",
                 "unit": "dB"
               }
@@ -5872,8 +6772,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -5942,8 +6842,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
             "format": "tsv",
-            "size": 39876,
-            "sha256": "264bdfba72feedffa1a1643a69ce8a0b08da9dadc5f0551db2bcddb24510bd1f",
+            "size": 28751,
+            "sha256": "c8dd4ddaa56be273b4695f412217fe8954d1027559389ac6771ad8e00eaeacc6",
             "columns": [
               {
                 "name": "freq_hz",
@@ -5961,7 +6861,17 @@
                 "unit": "dB"
               },
               {
+                "name": "F7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -5971,7 +6881,22 @@
                 "unit": "dB"
               },
               {
+                "name": "F8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "T7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -5981,7 +6906,42 @@
                 "unit": "dB"
               },
               {
+                "name": "T8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Pz",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O2",
                 "type": "number",
                 "unit": "dB"
               }
@@ -6011,8 +6971,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -6083,8 +7043,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
             "format": "tsv",
-            "size": 39876,
-            "sha256": "264bdfba72feedffa1a1643a69ce8a0b08da9dadc5f0551db2bcddb24510bd1f",
+            "size": 28751,
+            "sha256": "c8dd4ddaa56be273b4695f412217fe8954d1027559389ac6771ad8e00eaeacc6",
             "columns": [
               {
                 "name": "freq_hz",
@@ -6102,7 +7062,17 @@
                 "unit": "dB"
               },
               {
+                "name": "F7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -6112,7 +7082,22 @@
                 "unit": "dB"
               },
               {
+                "name": "F8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "T7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -6122,7 +7107,42 @@
                 "unit": "dB"
               },
               {
+                "name": "T8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Pz",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O2",
                 "type": "number",
                 "unit": "dB"
               }
@@ -6152,8 +7172,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
             "format": "tsv",
-            "size": 39876,
-            "sha256": "264bdfba72feedffa1a1643a69ce8a0b08da9dadc5f0551db2bcddb24510bd1f",
+            "size": 28751,
+            "sha256": "c8dd4ddaa56be273b4695f412217fe8954d1027559389ac6771ad8e00eaeacc6",
             "columns": [
               {
                 "name": "freq_hz",
@@ -6171,7 +7191,17 @@
                 "unit": "dB"
               },
               {
+                "name": "F7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "F3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -6181,7 +7211,22 @@
                 "unit": "dB"
               },
               {
+                "name": "F8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "T7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "C3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
                 "type": "number",
                 "unit": "dB"
               },
@@ -6191,7 +7236,42 @@
                 "unit": "dB"
               },
               {
+                "name": "T8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P7",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
                 "name": "P3",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Pz",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P4",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "P8",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "O2",
                 "type": "number",
                 "unit": "dB"
               }
@@ -6221,8 +7301,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -6284,8 +7364,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 1799,
+            "sha256": "2c154b01fdc257195de2a465a33a5be0fa901e27b2eff63ef27b2227afedc8ee",
             "columns": [
               {
                 "name": "IC001",
@@ -6309,6 +7389,54 @@
               },
               {
                 "name": "IC006",
+                "type": "number"
+              },
+              {
+                "name": "IC007",
+                "type": "number"
+              },
+              {
+                "name": "IC008",
+                "type": "number"
+              },
+              {
+                "name": "IC009",
+                "type": "number"
+              },
+              {
+                "name": "IC010",
+                "type": "number"
+              },
+              {
+                "name": "IC011",
+                "type": "number"
+              },
+              {
+                "name": "IC012",
+                "type": "number"
+              },
+              {
+                "name": "IC013",
+                "type": "number"
+              },
+              {
+                "name": "IC014",
+                "type": "number"
+              },
+              {
+                "name": "IC015",
+                "type": "number"
+              },
+              {
+                "name": "IC016",
+                "type": "number"
+              },
+              {
+                "name": "IC017",
+                "type": "number"
+              },
+              {
+                "name": "IC018",
                 "type": "number"
               }
             ],
@@ -6336,8 +7464,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -6374,8 +7502,8 @@
             "role": "components",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
             "format": "tsv",
-            "size": 512,
-            "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
+            "size": 896,
+            "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
             "columns": [
               {
                 "name": "component",
@@ -6453,8 +7581,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 1799,
+            "sha256": "2c154b01fdc257195de2a465a33a5be0fa901e27b2eff63ef27b2227afedc8ee",
             "columns": [
               {
                 "name": "IC001",
@@ -6478,6 +7606,54 @@
               },
               {
                 "name": "IC006",
+                "type": "number"
+              },
+              {
+                "name": "IC007",
+                "type": "number"
+              },
+              {
+                "name": "IC008",
+                "type": "number"
+              },
+              {
+                "name": "IC009",
+                "type": "number"
+              },
+              {
+                "name": "IC010",
+                "type": "number"
+              },
+              {
+                "name": "IC011",
+                "type": "number"
+              },
+              {
+                "name": "IC012",
+                "type": "number"
+              },
+              {
+                "name": "IC013",
+                "type": "number"
+              },
+              {
+                "name": "IC014",
+                "type": "number"
+              },
+              {
+                "name": "IC015",
+                "type": "number"
+              },
+              {
+                "name": "IC016",
+                "type": "number"
+              },
+              {
+                "name": "IC017",
+                "type": "number"
+              },
+              {
+                "name": "IC018",
                 "type": "number"
               }
             ],
@@ -6505,8 +7681,8 @@
             "role": "components",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
             "format": "tsv",
-            "size": 512,
-            "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
+            "size": 896,
+            "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
             "columns": [
               {
                 "name": "component",
@@ -6586,8 +7762,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 1799,
+            "sha256": "2c154b01fdc257195de2a465a33a5be0fa901e27b2eff63ef27b2227afedc8ee",
             "columns": [
               {
                 "name": "IC001",
@@ -6611,6 +7787,54 @@
               },
               {
                 "name": "IC006",
+                "type": "number"
+              },
+              {
+                "name": "IC007",
+                "type": "number"
+              },
+              {
+                "name": "IC008",
+                "type": "number"
+              },
+              {
+                "name": "IC009",
+                "type": "number"
+              },
+              {
+                "name": "IC010",
+                "type": "number"
+              },
+              {
+                "name": "IC011",
+                "type": "number"
+              },
+              {
+                "name": "IC012",
+                "type": "number"
+              },
+              {
+                "name": "IC013",
+                "type": "number"
+              },
+              {
+                "name": "IC014",
+                "type": "number"
+              },
+              {
+                "name": "IC015",
+                "type": "number"
+              },
+              {
+                "name": "IC016",
+                "type": "number"
+              },
+              {
+                "name": "IC017",
+                "type": "number"
+              },
+              {
+                "name": "IC018",
                 "type": "number"
               }
             ],
@@ -6638,8 +7862,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -6701,8 +7925,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 1799,
+            "sha256": "2c154b01fdc257195de2a465a33a5be0fa901e27b2eff63ef27b2227afedc8ee",
             "columns": [
               {
                 "name": "IC001",
@@ -6726,6 +7950,54 @@
               },
               {
                 "name": "IC006",
+                "type": "number"
+              },
+              {
+                "name": "IC007",
+                "type": "number"
+              },
+              {
+                "name": "IC008",
+                "type": "number"
+              },
+              {
+                "name": "IC009",
+                "type": "number"
+              },
+              {
+                "name": "IC010",
+                "type": "number"
+              },
+              {
+                "name": "IC011",
+                "type": "number"
+              },
+              {
+                "name": "IC012",
+                "type": "number"
+              },
+              {
+                "name": "IC013",
+                "type": "number"
+              },
+              {
+                "name": "IC014",
+                "type": "number"
+              },
+              {
+                "name": "IC015",
+                "type": "number"
+              },
+              {
+                "name": "IC016",
+                "type": "number"
+              },
+              {
+                "name": "IC017",
+                "type": "number"
+              },
+              {
+                "name": "IC018",
                 "type": "number"
               }
             ],
@@ -6752,8 +8024,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -6790,8 +8062,8 @@
             "role": "components",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
             "format": "tsv",
-            "size": 512,
-            "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
+            "size": 896,
+            "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
             "columns": [
               {
                 "name": "component",
@@ -6871,8 +8143,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 1799,
+            "sha256": "2c154b01fdc257195de2a465a33a5be0fa901e27b2eff63ef27b2227afedc8ee",
             "columns": [
               {
                 "name": "IC001",
@@ -6896,6 +8168,54 @@
               },
               {
                 "name": "IC006",
+                "type": "number"
+              },
+              {
+                "name": "IC007",
+                "type": "number"
+              },
+              {
+                "name": "IC008",
+                "type": "number"
+              },
+              {
+                "name": "IC009",
+                "type": "number"
+              },
+              {
+                "name": "IC010",
+                "type": "number"
+              },
+              {
+                "name": "IC011",
+                "type": "number"
+              },
+              {
+                "name": "IC012",
+                "type": "number"
+              },
+              {
+                "name": "IC013",
+                "type": "number"
+              },
+              {
+                "name": "IC014",
+                "type": "number"
+              },
+              {
+                "name": "IC015",
+                "type": "number"
+              },
+              {
+                "name": "IC016",
+                "type": "number"
+              },
+              {
+                "name": "IC017",
+                "type": "number"
+              },
+              {
+                "name": "IC018",
                 "type": "number"
               }
             ],
@@ -6924,8 +8244,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -6962,8 +8282,8 @@
             "role": "components",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
             "format": "tsv",
-            "size": 512,
-            "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
+            "size": 896,
+            "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
             "columns": [
               {
                 "name": "component",
@@ -7043,8 +8363,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 1799,
+            "sha256": "2c154b01fdc257195de2a465a33a5be0fa901e27b2eff63ef27b2227afedc8ee",
             "columns": [
               {
                 "name": "IC001",
@@ -7068,6 +8388,54 @@
               },
               {
                 "name": "IC006",
+                "type": "number"
+              },
+              {
+                "name": "IC007",
+                "type": "number"
+              },
+              {
+                "name": "IC008",
+                "type": "number"
+              },
+              {
+                "name": "IC009",
+                "type": "number"
+              },
+              {
+                "name": "IC010",
+                "type": "number"
+              },
+              {
+                "name": "IC011",
+                "type": "number"
+              },
+              {
+                "name": "IC012",
+                "type": "number"
+              },
+              {
+                "name": "IC013",
+                "type": "number"
+              },
+              {
+                "name": "IC014",
+                "type": "number"
+              },
+              {
+                "name": "IC015",
+                "type": "number"
+              },
+              {
+                "name": "IC016",
+                "type": "number"
+              },
+              {
+                "name": "IC017",
+                "type": "number"
+              },
+              {
+                "name": "IC018",
                 "type": "number"
               }
             ],
@@ -7095,8 +8463,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -7133,8 +8501,8 @@
             "role": "components",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
             "format": "tsv",
-            "size": 512,
-            "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
+            "size": 896,
+            "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
             "columns": [
               {
                 "name": "component",
@@ -7214,8 +8582,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 1799,
+            "sha256": "2c154b01fdc257195de2a465a33a5be0fa901e27b2eff63ef27b2227afedc8ee",
             "columns": [
               {
                 "name": "IC001",
@@ -7239,6 +8607,54 @@
               },
               {
                 "name": "IC006",
+                "type": "number"
+              },
+              {
+                "name": "IC007",
+                "type": "number"
+              },
+              {
+                "name": "IC008",
+                "type": "number"
+              },
+              {
+                "name": "IC009",
+                "type": "number"
+              },
+              {
+                "name": "IC010",
+                "type": "number"
+              },
+              {
+                "name": "IC011",
+                "type": "number"
+              },
+              {
+                "name": "IC012",
+                "type": "number"
+              },
+              {
+                "name": "IC013",
+                "type": "number"
+              },
+              {
+                "name": "IC014",
+                "type": "number"
+              },
+              {
+                "name": "IC015",
+                "type": "number"
+              },
+              {
+                "name": "IC016",
+                "type": "number"
+              },
+              {
+                "name": "IC017",
+                "type": "number"
+              },
+              {
+                "name": "IC018",
                 "type": "number"
               }
             ],
@@ -7266,8 +8682,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -7304,8 +8720,8 @@
             "role": "components",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
             "format": "tsv",
-            "size": 512,
-            "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
+            "size": 896,
+            "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
             "columns": [
               {
                 "name": "variance_pct",
@@ -7381,8 +8797,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 1799,
+            "sha256": "2c154b01fdc257195de2a465a33a5be0fa901e27b2eff63ef27b2227afedc8ee",
             "columns": [
               {
                 "name": "IC001",
@@ -7406,6 +8822,54 @@
               },
               {
                 "name": "IC006",
+                "type": "number"
+              },
+              {
+                "name": "IC007",
+                "type": "number"
+              },
+              {
+                "name": "IC008",
+                "type": "number"
+              },
+              {
+                "name": "IC009",
+                "type": "number"
+              },
+              {
+                "name": "IC010",
+                "type": "number"
+              },
+              {
+                "name": "IC011",
+                "type": "number"
+              },
+              {
+                "name": "IC012",
+                "type": "number"
+              },
+              {
+                "name": "IC013",
+                "type": "number"
+              },
+              {
+                "name": "IC014",
+                "type": "number"
+              },
+              {
+                "name": "IC015",
+                "type": "number"
+              },
+              {
+                "name": "IC016",
+                "type": "number"
+              },
+              {
+                "name": "IC017",
+                "type": "number"
+              },
+              {
+                "name": "IC018",
                 "type": "number"
               }
             ],
@@ -7433,8 +8897,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -7471,8 +8935,8 @@
             "role": "components",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
             "format": "tsv",
-            "size": 512,
-            "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
+            "size": 896,
+            "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
             "columns": [
               {
                 "name": "component",
@@ -7555,8 +9019,8 @@
             "role": "histogram",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.json",
             "format": "json",
-            "size": 281,
-            "sha256": "2689c3eddbe60817d96415e02ca9e0ce9524d8ffd9902649e7079662bec4c94e"
+            "size": 346,
+            "sha256": "8bcc3c2a856ab48c31a9d7b8d2a9c892da945eacaaa455155929145cd4452a61"
           }
         ]
       },
@@ -7585,8 +9049,8 @@
             "role": "histogram",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.tsv",
             "format": "tsv",
-            "size": 281,
-            "sha256": "2689c3eddbe60817d96415e02ca9e0ce9524d8ffd9902649e7079662bec4c94e"
+            "size": 346,
+            "sha256": "8bcc3c2a856ab48c31a9d7b8d2a9c892da945eacaaa455155929145cd4452a61"
           }
         ]
       },
@@ -7617,8 +9081,8 @@
             "role": "histogram",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.json",
             "format": "json",
-            "size": 281,
-            "sha256": "2689c3eddbe60817d96415e02ca9e0ce9524d8ffd9902649e7079662bec4c94e"
+            "size": 346,
+            "sha256": "8bcc3c2a856ab48c31a9d7b8d2a9c892da945eacaaa455155929145cd4452a61"
           }
         ],
         "parameters": {
@@ -7652,8 +9116,8 @@
             "role": "histogram",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.json",
             "format": "json",
-            "size": 281,
-            "sha256": "2689c3eddbe60817d96415e02ca9e0ce9524d8ffd9902649e7079662bec4c94e"
+            "size": 346,
+            "sha256": "8bcc3c2a856ab48c31a9d7b8d2a9c892da945eacaaa455155929145cd4452a61"
           }
         ]
       },
@@ -7684,8 +9148,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -7702,8 +9166,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -7722,8 +9186,8 @@
             "applies_to": "serving_copy channels listed, physical unit",
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
-            "rows": [0, 1, 2, 3, 4, 5, 6],
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "rows": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "µV",
             "caption": null,
             "shaded": {
@@ -7771,19 +9235,30 @@
               "group": "eeg",
               "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
             },
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -7814,8 +9289,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -7832,8 +9307,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -7853,7 +9328,7 @@
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "label",
             "rows": null,
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "uV",
             "caption": "not checked against the decomposition input",
             "shaded": {
@@ -7896,19 +9371,30 @@
                 "function": "eegprep.pop_reref"
               }
             ],
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -7939,8 +9425,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -7957,8 +9443,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -8009,19 +9495,30 @@
               "group": "eeg",
               "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
             },
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -8054,8 +9551,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -8072,8 +9569,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -8128,19 +9625,30 @@
               "group": "eeg",
               "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
             },
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -8180,8 +9688,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -8198,8 +9706,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -8218,8 +9726,8 @@
             "applies_to": "serving_copy channels listed, physical unit",
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
-            "rows": [0, 1, 2, 3, 4, 5, 6],
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "rows": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "µV",
             "caption": null,
             "shaded": {
@@ -8267,19 +9775,30 @@
               "group": "eeg",
               "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
             },
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -8289,8 +9808,8 @@
             "role": "histogram",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.json",
             "format": "json",
-            "size": 281,
-            "sha256": "2689c3eddbe60817d96415e02ca9e0ce9524d8ffd9902649e7079662bec4c94e"
+            "size": 346,
+            "sha256": "8bcc3c2a856ab48c31a9d7b8d2a9c892da945eacaaa455155929145cd4452a61"
           }
         ]
       },
@@ -8321,8 +9840,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -8351,8 +9870,8 @@
             "applies_to": "serving_copy channels listed, physical unit",
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
-            "rows": [0, 1, 2, 3, 4, 5, 6],
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "rows": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "µV",
             "caption": null,
             "shaded": {
@@ -8400,19 +9919,30 @@
               "group": "eeg",
               "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
             },
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -8445,24 +9975,24 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
             "role": "signal",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -8481,8 +10011,8 @@
             "applies_to": "serving_copy channels listed, physical unit",
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
-            "rows": [0, 1, 2, 3, 4, 5, 6],
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "rows": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "µV",
             "caption": null,
             "shaded": {
@@ -8530,19 +10060,30 @@
               "group": "eeg",
               "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
             },
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -8576,8 +10117,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -8594,8 +10135,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -8615,7 +10156,7 @@
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
             "rows": null,
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "µV",
             "caption": null,
             "shaded": {
@@ -8663,19 +10204,30 @@
               "group": "eeg",
               "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
             },
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -8708,8 +10260,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -8726,8 +10278,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -8747,7 +10299,7 @@
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "label",
             "rows": [0, 1],
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "uV",
             "caption": "not checked against the decomposition input",
             "shaded": {
@@ -8790,19 +10342,30 @@
                 "function": "eegprep.pop_reref"
               }
             ],
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -8835,8 +10398,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -8853,8 +10416,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -8874,7 +10437,7 @@
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
             "rows": [0],
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "uV",
             "caption": "not checked against the decomposition input",
             "shaded": {
@@ -8917,19 +10480,30 @@
                 "function": "eegprep.pop_reref"
               }
             ],
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -8962,8 +10536,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -8980,8 +10554,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -9000,8 +10574,8 @@
             "applies_to": "serving_copy channels listed, physical unit",
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
-            "rows": [0, 1, 2, 3, 4, 5, 6],
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "rows": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "nV",
             "caption": null,
             "shaded": {
@@ -9049,19 +10623,30 @@
               "group": "eeg",
               "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
             },
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -9094,8 +10679,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -9112,8 +10697,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -9132,8 +10717,8 @@
             "applies_to": "serving_copy channels listed, physical unit",
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
-            "rows": [0, 1, 2, 3, 4, 5, 6],
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "rows": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "µV",
             "caption": null,
             "shaded": {
@@ -9177,19 +10762,30 @@
               "group": "eeg",
               "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
             },
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -9222,8 +10818,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -9240,8 +10836,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -9260,8 +10856,8 @@
             "applies_to": "serving_copy channels listed, physical unit",
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
-            "rows": [0, 1, 2, 3, 4, 5, 6],
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "rows": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "µV",
             "caption": null,
             "shaded": {
@@ -9309,19 +10905,30 @@
               "group": "eeg",
               "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
             },
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -9354,8 +10961,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -9372,8 +10979,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -9392,8 +10999,8 @@
             "applies_to": "serving_copy channels listed, physical unit",
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
-            "rows": [0, 1, 2, 3, 4, 5, 6],
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "rows": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "µV",
             "caption": null,
             "shaded": {
@@ -9441,19 +11048,30 @@
               "group": "eeg",
               "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
             },
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -9486,8 +11104,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -9504,8 +11122,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -9524,8 +11142,8 @@
             "applies_to": "serving_copy channels listed, physical unit",
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
-            "rows": [0, 1, 2, 3, 4, 5, 6],
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "rows": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "µV",
             "caption": null,
             "shaded": {
@@ -9569,8 +11187,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -9587,8 +11205,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -9607,8 +11225,8 @@
             "applies_to": "serving_copy channels listed, physical unit",
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
-            "rows": [0, 1, 2, 3, 4, 5, 6],
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "rows": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "µV",
             "caption": null,
             "shaded": {
@@ -9651,19 +11269,30 @@
                 "function": "eegprep.pop_reref"
               }
             ],
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -9696,8 +11325,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -9714,8 +11343,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -9735,7 +11364,7 @@
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "label",
             "rows": null,
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "uV",
             "caption": "not checked against the decomposition input",
             "shaded": {
@@ -9778,19 +11407,30 @@
                 "function": "eegprep.pop_reref"
               }
             ],
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -9828,8 +11468,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -9846,8 +11486,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -9867,7 +11507,7 @@
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "label",
             "rows": null,
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "uV",
             "caption": "not checked against the decomposition input",
             "shaded": {
@@ -9910,19 +11550,30 @@
                 "function": "eegprep.pop_reref"
               }
             ],
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -9955,8 +11606,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -9973,8 +11624,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -9993,8 +11644,8 @@
             "applies_to": "serving_copy channels listed, physical unit",
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
-            "rows": [0, 1, 2, 3, 4, 5, 6],
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "rows": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "µV",
             "caption": null,
             "shaded": {
@@ -10042,16 +11693,27 @@
               "group": "eeg",
               "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
             },
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
             "reference": "average",
@@ -10086,8 +11748,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -10104,8 +11766,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -10124,8 +11786,8 @@
             "applies_to": "serving_copy channels listed, physical unit",
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
-            "rows": [0, 1, 2, 3, 4, 5, 6],
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "rows": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "µV",
             "caption": null,
             "shaded": {
@@ -10173,8 +11835,8 @@
               "group": "eeg",
               "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
             },
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -10207,8 +11869,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -10225,8 +11887,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -10245,8 +11907,8 @@
             "applies_to": "serving_copy channels listed, physical unit",
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
-            "rows": [0, 1, 2, 3, 4, 5, 6],
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "rows": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "µV",
             "caption": null
           }
@@ -10290,19 +11952,30 @@
               "group": "eeg",
               "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
             },
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -10335,8 +12008,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -10353,8 +12026,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -10373,7 +12046,7 @@
             "applies_to": "serving_copy channels listed, physical unit",
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
-            "rows": [0, 1, 2, 3, 4, 5, 6],
+            "rows": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
             "unit": "µV",
             "caption": null,
             "shaded": {
@@ -10421,19 +12094,30 @@
               "group": "eeg",
               "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
             },
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -10466,8 +12150,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -10484,8 +12168,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -10504,8 +12188,8 @@
             "applies_to": "serving_copy channels listed, physical unit",
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
-            "rows": [0, 1, 2, 3, 4, 5, 6],
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "rows": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "µV",
             "caption": "",
             "shaded": {
@@ -10553,19 +12237,30 @@
               "group": "eeg",
               "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
             },
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -10598,8 +12293,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -10616,8 +12311,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -10636,8 +12331,8 @@
             "applies_to": "serving_copy channels listed, physical unit",
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
-            "rows": [0, 1, 2, 3, 4, 5, 6],
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "rows": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "µV",
             "caption": null,
             "shaded": {
@@ -10686,19 +12381,30 @@
               "group": "eeg",
               "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
             },
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -10731,8 +12437,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -10749,8 +12455,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           }
         ],
@@ -10761,8 +12467,8 @@
             "applies_to": "serving_copy channels listed, physical unit",
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
-            "rows": [0, 1, 2, 3, 4, 5, 6],
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "rows": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "µV",
             "caption": null,
             "shaded": {
@@ -10810,19 +12516,30 @@
               "group": "eeg",
               "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
             },
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -10853,8 +12570,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -10871,8 +12588,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           }
         ],
@@ -10883,8 +12600,8 @@
             "applies_to": "serving_copy channels listed, physical unit",
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
-            "rows": [0, 1, 2, 3, 4, 5, 6],
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "rows": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "µV",
             "caption": null,
             "shaded": {
@@ -10932,19 +12649,30 @@
               "group": "eeg",
               "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
             },
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -10977,8 +12705,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -10995,8 +12723,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -11015,8 +12743,8 @@
             "applies_to": "serving_copy channels listed, physical unit",
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
-            "rows": [0, 1, 2, 3, 4, 5, 6],
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "rows": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "µV",
             "caption": null,
             "shaded": {
@@ -11064,19 +12792,30 @@
               "group": "eeg",
               "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
             },
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -11109,8 +12848,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           },
           {
@@ -11127,8 +12866,8 @@
             "role": "components",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
-              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
-              "size": 512
+              "sha256": "43e3f64443d5b7483c86a08ae12d6c0f7e7204815f4d866d7e1bf3d621394685",
+              "size": 896
             }
           },
           {
@@ -11147,8 +12886,8 @@
             "applies_to": "serving_copy channels listed, physical unit",
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
-            "rows": [0, 1, 2, 3, 4, 5, 6],
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "rows": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "µV",
             "caption": null,
             "shaded": {
@@ -11199,19 +12938,30 @@
               "group": "eeg",
               "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
             },
-            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channels": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "channel_types": [
               ["Fp1", "EEG"],
               ["Fp2", "EEG"],
+              ["F7", "EEG"],
               ["F3", "EEG"],
+              ["Fz", "EEG"],
               ["F4", "EEG"],
+              ["F8", "EEG"],
+              ["T7", "EEG"],
               ["C3", "EEG"],
+              ["Cz", "EEG"],
               ["C4", "EEG"],
+              ["T8", "EEG"],
+              ["P7", "EEG"],
               ["P3", "EEG"],
+              ["Pz", "EEG"],
               ["P4", "EEG"],
+              ["P8", "EEG"],
+              ["O1", "EEG"],
+              ["O2", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "5f4c1f1bf92c627e2ffca4b9700396da85d33132d293feafa359ad50f0ab10d5",
+            "channel_types_sha256": "6ec1aa54279b4c6676822a6f68b7e4c944ac92f661aa871860a4ea0f51dc6ed3",
             "reference": "average",
             "unit": "uV"
           }
@@ -11698,8 +13448,8 @@
             "applies_to": "serving_copy channels listed, physical unit",
             "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
-            "rows": [0, 1, 2, 3, 4, 5, 6],
-            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "rows": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+            "columns": ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "T7", "C3", "Cz", "C4", "T8", "P7", "P3", "Pz", "P4", "P8", "O1", "O2"],
             "unit": "µV",
             "caption": null,
             "shaded": {
@@ -11809,8 +13559,8 @@
             "role": "unmixing",
             "file": {
               "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
-              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
-              "size": 768
+              "sha256": "6fe8ac33c979303849a332bfaca110cb5e2bbcf2e40b9d4ac2d6595d44e00b03",
+              "size": 1749
             }
           }
         ],
@@ -11824,6 +13574,526 @@
       "errors": [
         ["oneOf", "inputs/3"]
       ]
+    },
+    {
+      "name": "sensor_field_measured_layout_typed",
+      "covers": "A measured layout that declares sensor_type.",
+      "schema": "view",
+      "instance": {
+        "key": "maps",
+        "kind": "nemar.sensor-field",
+        "kind_version": 1,
+        "caption": "Scalp maps.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv",
+            "format": "tsv",
+            "size": 302,
+            "sha256": "03f9fe4ae2c800af783a26a819c2eec48efbd3e4b8b204e1569e6a386df7ca91",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC002",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC003",
+                "type": "number",
+                "unit": "uV"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              },
+              {
+                "name": "sensor_type",
+                "type": "string"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured"
+          }
+        ]
+      },
+      "valid": true,
+      "errors": []
+    },
+    {
+      "name": "sensor_field_measured_layout_untyped",
+      "covers": "A measured layout without sensor_type: refused, since a scalp map draws a measured row only when it is typed EEG.",
+      "schema": "view",
+      "instance": {
+        "key": "maps",
+        "kind": "nemar.sensor-field",
+        "kind_version": 1,
+        "caption": "Scalp maps.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv",
+            "format": "tsv",
+            "size": 302,
+            "sha256": "03f9fe4ae2c800af783a26a819c2eec48efbd3e4b8b204e1569e6a386df7ca91",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC002",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC003",
+                "type": "number",
+                "unit": "uV"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 269,
+            "sha256": "3f87ee297645a210111149bac07b627032791daf831fa73245976793671a3c5c",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured"
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["oneOf", "data/1"]
+      ]
+    },
+    {
+      "name": "sensor_field_template_layout_untyped",
+      "covers": "A template layout without sensor_type: valid.",
+      "schema": "view",
+      "instance": {
+        "key": "maps",
+        "kind": "nemar.sensor-field",
+        "kind_version": 1,
+        "caption": "Scalp maps.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv",
+            "format": "tsv",
+            "size": 302,
+            "sha256": "03f9fe4ae2c800af783a26a819c2eec48efbd3e4b8b204e1569e6a386df7ca91",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC002",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC003",
+                "type": "number",
+                "unit": "uV"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 269,
+            "sha256": "3f87ee297645a210111149bac07b627032791daf831fa73245976793671a3c5c",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "n/a",
+            "position_source": "template",
+            "montage": "standard_1005"
+          }
+        ]
+      },
+      "valid": true,
+      "errors": []
+    },
+    {
+      "name": "sensor_field_measured_positions_untyped",
+      "covers": "Measured positions without sensor_type: refused.",
+      "schema": "view",
+      "instance": {
+        "key": "maps",
+        "kind": "nemar.sensor-field",
+        "kind_version": 1,
+        "caption": "Scalp maps.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0"
+          }
+        },
+        "transform": {
+          "name": "nemar.sensor-layout.v1",
+          "parameters": {}
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv",
+            "format": "tsv",
+            "size": 302,
+            "sha256": "03f9fe4ae2c800af783a26a819c2eec48efbd3e4b8b204e1569e6a386df7ca91",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC002",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC003",
+                "type": "number",
+                "unit": "uV"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "positions",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "positions",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_electrodes.tsv",
+            "format": "tsv",
+            "size": 632,
+            "sha256": "5bcc504e7335c5fde70a150b2022cf283372ba8ca4def006bbba596bc0091430",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "x",
+                "type": "number",
+                "unit": "m"
+              },
+              {
+                "name": "y",
+                "type": "number",
+                "unit": "m"
+              },
+              {
+                "name": "z",
+                "type": "number",
+                "unit": "m"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured"
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["oneOf", "data/1"]
+      ]
+    },
+    {
+      "name": "sensor_field_template_positions_untyped",
+      "covers": "Template positions without sensor_type: valid.",
+      "schema": "view",
+      "instance": {
+        "key": "maps",
+        "kind": "nemar.sensor-field",
+        "kind_version": 1,
+        "caption": "Scalp maps.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0"
+          }
+        },
+        "transform": {
+          "name": "nemar.sensor-layout.v1",
+          "parameters": {}
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv",
+            "format": "tsv",
+            "size": 302,
+            "sha256": "03f9fe4ae2c800af783a26a819c2eec48efbd3e4b8b204e1569e6a386df7ca91",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC002",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC003",
+                "type": "number",
+                "unit": "uV"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "positions",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "positions",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_electrodes.tsv",
+            "format": "tsv",
+            "size": 632,
+            "sha256": "5bcc504e7335c5fde70a150b2022cf283372ba8ca4def006bbba596bc0091430",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "x",
+                "type": "number",
+                "unit": "m"
+              },
+              {
+                "name": "y",
+                "type": "number",
+                "unit": "m"
+              },
+              {
+                "name": "z",
+                "type": "number",
+                "unit": "m"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "n/a",
+            "position_source": "template",
+            "montage": "standard_1005"
+          }
+        ]
+      },
+      "valid": true,
+      "errors": []
     },
     {
       "name": "content_edges",
