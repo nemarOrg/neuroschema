@@ -16,7 +16,8 @@ checks run, in the stated order, and the first that fails gives the word:
   the window, which must hold a sample of the recording (``window_outside``).
 
 A word of ``nemar.ic-maps`` or ``nemar.ic-classes`` draws the view by its base
-and keeps the word; a word of ``nemar.signal-window`` draws nothing.
+and keeps the word; a word of ``nemar.signal-window`` draws nothing. Both run
+after their base's model, and a base that refuses the files comes first.
 ``views/vectors/preset-checks.v1.json`` holds the cases; this module is the
 Python reference. ``nemar.spectrum`` has no checks of its own, and
 ``nemar.ic-activity``'s are its transform's (``neuroschema.views.ic_activity``).
@@ -245,8 +246,9 @@ def check_preset(
     ``{"word": None}`` when they pass (with, for a ``nemar.signal-window``, its
     state, the window's ``first`` sample and ``count``, its ``bad_channels``,
     its ``segments`` and its ``notes``); ``{"word", "outcome"}`` when one fails, the
-    outcome ``base`` or ``nothing``; and, for ``nemar.ic-classes`` when its base
-    refuses its file first, the base's word with the outcome ``fallback``.
+    outcome ``base`` or ``nothing``; and, for ``nemar.ic-maps`` and
+    ``nemar.ic-classes`` when the base's model refuses the files first, the
+    base's word with the outcome ``fallback``.
     ``store`` holds a signal window's store ``labels``, ``samples``, ``rate``
     and ``published_sha256``. A file that is not the one recorded gives the
     generic kinds' word with the outcome ``nothing``.
@@ -270,8 +272,9 @@ def check_preset(
                 return {"word": base["refused"]["word"], "outcome": "fallback"}
             check_ic_classes(view, files, registry["caps"])
         elif kind == "nemar.ic-maps":
-            # The base's map has its own reference and vectors
-            # (neuroschema.views.sensor_field); this checks the preset's file.
+            base = build_model(view, files, _base_only(registry))
+            if base["refused"] is not None:
+                return {"word": base["refused"]["word"], "outcome": "fallback"}
             check_ic_maps(view, files, registry["caps"])
     except PresetRefused as exc:
         return {"word": exc.word, "outcome": exc.outcome}

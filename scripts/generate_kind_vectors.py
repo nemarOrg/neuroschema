@@ -3285,7 +3285,6 @@ def ic_maps_files(components: bytes, layout: bytes | None = None) -> tuple:
 
 
 def ic_maps_check_cases() -> list[Case]:
-    maps = preset_views()["icmaps"]
     out = []
     for name, covers, data in [
         (
@@ -3324,16 +3323,31 @@ def ic_maps_check_cases() -> list[Case]:
             components_table(IC_COMPONENTS) + b"IC007\t1\n",
         ),
     ]:
-        view = _with_file(maps, "components", data)
-        out.append(Case(name, covers, view, {_location(view, "components"): data}))
-    view = _with_file(maps, "components", components_table(IC_COMPONENTS))
+        out.append(Case(name, covers, *ic_maps_files(data)))
+    view, files = ic_maps_files(components_table(IC_COMPONENTS))
     tampered = components_table(IC_COMPONENTS).replace(b"0.9", b"0.8", 1)
+    files[_location(view, "components")] = tampered
     out.append(
         Case(
             "ic_maps_digest",
             "The components file is not the one recorded.",
             view,
-            {_location(view, "components"): tampered},
+            files,
+        )
+    )
+    short = chanlocs(TEN_TWENTY[:18], types=["EEG"] * 18)
+    out.append(
+        Case(
+            "ic_maps_base_refuses",
+            "The layout a row short of the mixing matrix, and the components out "
+            "of order: the base refuses first (coords_length) and the view falls "
+            "back, so the preset's check never runs.",
+            *ic_maps_files(
+                components_table(
+                    [IC_COMPONENTS[1], IC_COMPONENTS[0], *IC_COMPONENTS[2:]]
+                ),
+                short,
+            ),
         )
     )
     return out

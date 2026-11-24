@@ -29,11 +29,13 @@ from neuroschema.views import (  # noqa: E402
     sensor_labels,
 )
 from neuroschema.views import sensor_field as sf  # noqa: E402
+from neuroschema.views.presets import check_preset  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = ROOT / "docs" / "views" / "sensor-field.md"
 VECTORS = ROOT / "views" / "vectors"
 MODELS = json.loads((VECTORS / "kinds-models.v1.json").read_text(encoding="utf-8"))
+CHECKS = json.loads((VECTORS / "preset-checks.v1.json").read_text(encoding="utf-8"))
 FIELD = json.loads((VECTORS / "sensor-field.v1.json").read_text(encoding="utf-8"))
 REGISTRY = load_registry()
 KIND = "nemar.sensor-field"
@@ -374,3 +376,23 @@ def test_the_vectors_catch_the_wrong_minimum(monkeypatch):
 def test_a_preset_drawn_by_its_base_uses_absmax():
     """A preset drawn by its base uses the base's default limits."""
     assert BY_NAME["ic_maps_by_base"]["model"]["model"]["limits"] == "absmax"
+
+
+def test_ic_maps_checks_run_on_their_base():
+    """The preset-check vectors carry the files the base reads, and the base's
+    refusal comes before the preset's own check."""
+    for case in CHECKS["cases"]:
+        if case["view"]["kind"] == "nemar.ic-maps":
+            roles = {e["role"] for e in case["view"]["data"]}
+            located = {e["location"] for e in case["view"]["data"]}
+            assert roles == {"values", "layout", "components"}
+            assert located == set(case["files"]), case["name"]
+    case = next(c for c in CHECKS["cases"] if c["name"] == "ic_maps_base_refuses")
+    assert case["expected"] == {"word": "coords_length", "outcome": "fallback"}
+    files = {k: v["text"].encode() for k, v in case["files"].items()}
+    values = next(e for e in case["view"]["data"] if e["role"] == "values")
+    del files[values["location"]]
+    assert check_preset(case["view"], files, REGISTRY) == {
+        "word": "file_missing",
+        "outcome": "nothing",
+    }

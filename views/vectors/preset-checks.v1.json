@@ -24,8 +24,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 600,
+            "sha256": "7d6b9d0c6862c726653d60a7d2f6ee06af8ba1a53f1e4623ad2bc4dfcf396c4c",
             "columns": [
               {
                 "name": "IC001",
@@ -76,8 +76,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -169,6 +169,12 @@
         ]
       },
       "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv": {
+          "text": "IC001\tIC002\tIC003\tIC004\tIC005\tIC006\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\n-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\n0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\n-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\n0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\n1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\n-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\n1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\n-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\n0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\n2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\n-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\n1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-18\t0.511\tEEG\nFp2\t18\t0.511\tEEG\nF7\t-54\t0.511\tEEG\nF3\t-39.9\t0.333\tEEG\nFz\t0\t0.256\tEEG\nF4\t39.9\t0.333\tEEG\nF8\t54\t0.511\tEEG\nT7\t-90\t0.511\tEEG\nC3\t-90\t0.256\tEEG\nCz\t0\t0\tEEG\nC4\t90\t0.256\tEEG\nT8\t90\t0.511\tEEG\nP7\t-126\t0.511\tEEG\nP3\t-140.1\t0.333\tEEG\nPz\t180\t0.256\tEEG\nP4\t140.1\t0.333\tEEG\nP8\t126\t0.511\tEEG\nO1\t-162\t0.511\tEEG\nO2\t162\t0.511\tEEG\n"
+        },
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
           "text": "component\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.9\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\n"
         }
@@ -198,8 +204,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 600,
+            "sha256": "7d6b9d0c6862c726653d60a7d2f6ee06af8ba1a53f1e4623ad2bc4dfcf396c4c",
             "columns": [
               {
                 "name": "IC001",
@@ -250,8 +256,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -343,6 +349,12 @@
         ]
       },
       "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv": {
+          "text": "IC001\tIC002\tIC003\tIC004\tIC005\tIC006\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\n-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\n0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\n-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\n0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\n1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\n-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\n1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\n-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\n0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\n2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\n-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\n1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-18\t0.511\tEEG\nFp2\t18\t0.511\tEEG\nF7\t-54\t0.511\tEEG\nF3\t-39.9\t0.333\tEEG\nFz\t0\t0.256\tEEG\nF4\t39.9\t0.333\tEEG\nF8\t54\t0.511\tEEG\nT7\t-90\t0.511\tEEG\nC3\t-90\t0.256\tEEG\nCz\t0\t0\tEEG\nC4\t90\t0.256\tEEG\nT8\t90\t0.511\tEEG\nP7\t-126\t0.511\tEEG\nP3\t-140.1\t0.333\tEEG\nPz\t180\t0.256\tEEG\nP4\t140.1\t0.333\tEEG\nP8\t126\t0.511\tEEG\nO1\t-162\t0.511\tEEG\nO2\t162\t0.511\tEEG\n"
+        },
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
           "text": "component\tvariance_pct\tbrain\tother\nIC002\t30.0000\t0.9\t0.1\nIC001\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\n"
         }
@@ -373,8 +385,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 600,
+            "sha256": "7d6b9d0c6862c726653d60a7d2f6ee06af8ba1a53f1e4623ad2bc4dfcf396c4c",
             "columns": [
               {
                 "name": "IC001",
@@ -425,8 +437,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -518,6 +530,12 @@
         ]
       },
       "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv": {
+          "text": "IC001\tIC002\tIC003\tIC004\tIC005\tIC006\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\n-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\n0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\n-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\n0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\n1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\n-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\n1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\n-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\n0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\n2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\n-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\n1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-18\t0.511\tEEG\nFp2\t18\t0.511\tEEG\nF7\t-54\t0.511\tEEG\nF3\t-39.9\t0.333\tEEG\nFz\t0\t0.256\tEEG\nF4\t39.9\t0.333\tEEG\nF8\t54\t0.511\tEEG\nT7\t-90\t0.511\tEEG\nC3\t-90\t0.256\tEEG\nCz\t0\t0\tEEG\nC4\t90\t0.256\tEEG\nT8\t90\t0.511\tEEG\nP7\t-126\t0.511\tEEG\nP3\t-140.1\t0.333\tEEG\nPz\t180\t0.256\tEEG\nP4\t140.1\t0.333\tEEG\nP8\t126\t0.511\tEEG\nO1\t-162\t0.511\tEEG\nO2\t162\t0.511\tEEG\n"
+        },
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
           "text": "component\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.9\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\n"
         }
@@ -548,8 +566,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 600,
+            "sha256": "7d6b9d0c6862c726653d60a7d2f6ee06af8ba1a53f1e4623ad2bc4dfcf396c4c",
             "columns": [
               {
                 "name": "IC001",
@@ -600,8 +618,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -693,6 +711,12 @@
         ]
       },
       "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv": {
+          "text": "IC001\tIC002\tIC003\tIC004\tIC005\tIC006\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\n-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\n0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\n-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\n0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\n1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\n-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\n1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\n-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\n0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\n2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\n-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\n1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-18\t0.511\tEEG\nFp2\t18\t0.511\tEEG\nF7\t-54\t0.511\tEEG\nF3\t-39.9\t0.333\tEEG\nFz\t0\t0.256\tEEG\nF4\t39.9\t0.333\tEEG\nF8\t54\t0.511\tEEG\nT7\t-90\t0.511\tEEG\nC3\t-90\t0.256\tEEG\nCz\t0\t0\tEEG\nC4\t90\t0.256\tEEG\nT8\t90\t0.511\tEEG\nP7\t-126\t0.511\tEEG\nP3\t-140.1\t0.333\tEEG\nPz\t180\t0.256\tEEG\nP4\t140.1\t0.333\tEEG\nP8\t126\t0.511\tEEG\nO1\t-162\t0.511\tEEG\nO2\t162\t0.511\tEEG\n"
+        },
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
           "text": "component\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.9\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\nIC007\t4.2857\t0.9\t0.1\n"
         }
@@ -723,8 +747,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 600,
+            "sha256": "7d6b9d0c6862c726653d60a7d2f6ee06af8ba1a53f1e4623ad2bc4dfcf396c4c",
             "columns": [
               {
                 "name": "IC001",
@@ -775,8 +799,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -868,6 +892,12 @@
         ]
       },
       "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv": {
+          "text": "IC001\tIC002\tIC003\tIC004\tIC005\tIC006\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\n-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\n0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\n-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\n0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\n1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\n-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\n1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\n-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\n0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\n2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\n-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\n1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-18\t0.511\tEEG\nFp2\t18\t0.511\tEEG\nF7\t-54\t0.511\tEEG\nF3\t-39.9\t0.333\tEEG\nFz\t0\t0.256\tEEG\nF4\t39.9\t0.333\tEEG\nF8\t54\t0.511\tEEG\nT7\t-90\t0.511\tEEG\nC3\t-90\t0.256\tEEG\nCz\t0\t0\tEEG\nC4\t90\t0.256\tEEG\nT8\t90\t0.511\tEEG\nP7\t-126\t0.511\tEEG\nP3\t-140.1\t0.333\tEEG\nPz\t180\t0.256\tEEG\nP4\t140.1\t0.333\tEEG\nP8\t126\t0.511\tEEG\nO1\t-162\t0.511\tEEG\nO2\t162\t0.511\tEEG\n"
+        },
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
           "text": "component\tvariance_pct\tbrain\tother\nIC1\t30.0000\t0.9\t0.1\nIC2\t15.0000\t0.9\t0.1\nIC3\t10.0000\t0.9\t0.1\nIC4\t7.5000\t0.9\t0.1\nIC5\t6.0000\t0.9\t0.1\nIC6\t5.0000\t0.9\t0.1\n"
         }
@@ -898,8 +928,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 600,
+            "sha256": "7d6b9d0c6862c726653d60a7d2f6ee06af8ba1a53f1e4623ad2bc4dfcf396c4c",
             "columns": [
               {
                 "name": "IC001",
@@ -950,8 +980,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -1043,6 +1073,12 @@
         ]
       },
       "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv": {
+          "text": "IC001\tIC002\tIC003\tIC004\tIC005\tIC006\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\n-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\n0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\n-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\n0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\n1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\n-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\n1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\n-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\n0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\n2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\n-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\n1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-18\t0.511\tEEG\nFp2\t18\t0.511\tEEG\nF7\t-54\t0.511\tEEG\nF3\t-39.9\t0.333\tEEG\nFz\t0\t0.256\tEEG\nF4\t39.9\t0.333\tEEG\nF8\t54\t0.511\tEEG\nT7\t-90\t0.511\tEEG\nC3\t-90\t0.256\tEEG\nCz\t0\t0\tEEG\nC4\t90\t0.256\tEEG\nT8\t90\t0.511\tEEG\nP7\t-126\t0.511\tEEG\nP3\t-140.1\t0.333\tEEG\nPz\t180\t0.256\tEEG\nP4\t140.1\t0.333\tEEG\nP8\t126\t0.511\tEEG\nO1\t-162\t0.511\tEEG\nO2\t162\t0.511\tEEG\n"
+        },
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
           "text": "name\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.9\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\n"
         }
@@ -1073,8 +1109,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 600,
+            "sha256": "7d6b9d0c6862c726653d60a7d2f6ee06af8ba1a53f1e4623ad2bc4dfcf396c4c",
             "columns": [
               {
                 "name": "IC001",
@@ -1125,8 +1161,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -1218,6 +1254,12 @@
         ]
       },
       "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv": {
+          "text": "IC001\tIC002\tIC003\tIC004\tIC005\tIC006\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\n-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\n0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\n-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\n0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\n1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\n-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\n1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\n-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\n0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\n2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\n-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\n1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-18\t0.511\tEEG\nFp2\t18\t0.511\tEEG\nF7\t-54\t0.511\tEEG\nF3\t-39.9\t0.333\tEEG\nFz\t0\t0.256\tEEG\nF4\t39.9\t0.333\tEEG\nF8\t54\t0.511\tEEG\nT7\t-90\t0.511\tEEG\nC3\t-90\t0.256\tEEG\nCz\t0\t0\tEEG\nC4\t90\t0.256\tEEG\nT8\t90\t0.511\tEEG\nP7\t-126\t0.511\tEEG\nP3\t-140.1\t0.333\tEEG\nPz\t180\t0.256\tEEG\nP4\t140.1\t0.333\tEEG\nP8\t126\t0.511\tEEG\nO1\t-162\t0.511\tEEG\nO2\t162\t0.511\tEEG\n"
+        },
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
           "text": "component\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.9\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\nIC007\t1\n"
         }
@@ -1248,8 +1290,8 @@
             "role": "values",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
             "format": "tsv",
-            "size": 836,
-            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "size": 600,
+            "sha256": "7d6b9d0c6862c726653d60a7d2f6ee06af8ba1a53f1e4623ad2bc4dfcf396c4c",
             "columns": [
               {
                 "name": "IC001",
@@ -1300,8 +1342,8 @@
             "role": "layout",
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
             "format": "tsv",
-            "size": 1094,
-            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
             "columns": [
               {
                 "name": "name",
@@ -1393,6 +1435,12 @@
         ]
       },
       "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv": {
+          "text": "IC001\tIC002\tIC003\tIC004\tIC005\tIC006\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\n-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\n0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\n-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\n0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\n1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\n-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\n1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\n-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\n0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\n2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\n-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\n1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-18\t0.511\tEEG\nFp2\t18\t0.511\tEEG\nF7\t-54\t0.511\tEEG\nF3\t-39.9\t0.333\tEEG\nFz\t0\t0.256\tEEG\nF4\t39.9\t0.333\tEEG\nF8\t54\t0.511\tEEG\nT7\t-90\t0.511\tEEG\nC3\t-90\t0.256\tEEG\nCz\t0\t0\tEEG\nC4\t90\t0.256\tEEG\nT8\t90\t0.511\tEEG\nP7\t-126\t0.511\tEEG\nP3\t-140.1\t0.333\tEEG\nPz\t180\t0.256\tEEG\nP4\t140.1\t0.333\tEEG\nP8\t126\t0.511\tEEG\nO1\t-162\t0.511\tEEG\nO2\t162\t0.511\tEEG\n"
+        },
         "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
           "text": "component\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.8\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\n"
         }
@@ -1400,6 +1448,187 @@
       "expected": {
         "word": "file_digest_mismatch",
         "outcome": "nothing"
+      }
+    },
+    {
+      "name": "ic_maps_base_refuses",
+      "covers": "The layout a row short of the mixing matrix, and the components out of order: the base refuses first (coords_length) and the view falls back, so the preset's check never runs.",
+      "view": {
+        "key": "icmaps",
+        "kind": "nemar.ic-maps",
+        "kind_version": 1,
+        "base": "nemar.sensor-field",
+        "base_version": 1,
+        "caption": "Scalp maps of the independent components, each with its share of the variance and its ICLabel probabilities.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
+            "format": "tsv",
+            "size": 600,
+            "sha256": "7d6b9d0c6862c726653d60a7d2f6ee06af8ba1a53f1e4623ad2bc4dfcf396c4c",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number"
+              },
+              {
+                "name": "IC002",
+                "type": "number"
+              },
+              {
+                "name": "IC003",
+                "type": "number"
+              },
+              {
+                "name": "IC004",
+                "type": "number"
+              },
+              {
+                "name": "IC005",
+                "type": "number"
+              },
+              {
+                "name": "IC006",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 340,
+            "sha256": "2c539a2e1d12683c693c2e4150fce0ece158bf208a5f4dcec7eabf976e10a5cd",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              },
+              {
+                "name": "sensor_type",
+                "type": "string"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured"
+          },
+          {
+            "role": "components",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
+            "format": "tsv",
+            "size": 164,
+            "sha256": "57ce487254ebcca323cc6951066498544d572358e522df0cf23ab55d8e1df352",
+            "columns": [
+              {
+                "name": "component",
+                "type": "string"
+              },
+              {
+                "name": "variance_pct",
+                "type": "number",
+                "unit": "%"
+              },
+              {
+                "name": "brain",
+                "type": "number"
+              },
+              {
+                "name": "muscle",
+                "type": "number"
+              },
+              {
+                "name": "eye",
+                "type": "number"
+              },
+              {
+                "name": "heart",
+                "type": "number"
+              },
+              {
+                "name": "line_noise",
+                "type": "number"
+              },
+              {
+                "name": "channel_noise",
+                "type": "number"
+              },
+              {
+                "name": "other",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "component",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "component"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv": {
+          "text": "IC001\tIC002\tIC003\tIC004\tIC005\tIC006\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n1.5\t0.0\t-1.5\t1.25\t-0.25\t-1.75\n-1.0\t1.75\t0.25\t-1.25\t1.5\t0.0\n0.75\t-0.75\t2.0\t0.5\t-1.0\t1.75\n-1.75\t1.0\t-0.5\t-2.0\t0.75\t-0.75\n0.0\t-1.5\t1.25\t-0.25\t-1.75\t1.0\n1.75\t0.25\t-1.25\t1.5\t0.0\t-1.5\n-0.75\t2.0\t0.5\t-1.0\t1.75\t0.25\n1.0\t-0.5\t-2.0\t0.75\t-0.75\t2.0\n-1.5\t1.25\t-0.25\t-1.75\t1.0\t-0.5\n0.25\t-1.25\t1.5\t0.0\t-1.5\t1.25\n2.0\t0.5\t-1.0\t1.75\t0.25\t-1.25\n-0.5\t-2.0\t0.75\t-0.75\t2.0\t0.5\n1.25\t-0.25\t-1.75\t1.0\t-0.5\t-2.0\n-1.25\t1.5\t0.0\t-1.5\t1.25\t-0.25\n0.5\t-1.0\t1.75\t0.25\t-1.25\t1.5\n-2.0\t0.75\t-0.75\t2.0\t0.5\t-1.0\n-0.25\t-1.75\t1.0\t-0.5\t-2.0\t0.75\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv": {
+          "text": "name\ttheta_deg\tradius\tsensor_type\nFp1\t-18\t0.511\tEEG\nFp2\t18\t0.511\tEEG\nF7\t-54\t0.511\tEEG\nF3\t-39.9\t0.333\tEEG\nFz\t0\t0.256\tEEG\nF4\t39.9\t0.333\tEEG\nF8\t54\t0.511\tEEG\nT7\t-90\t0.511\tEEG\nC3\t-90\t0.256\tEEG\nCz\t0\t0\tEEG\nC4\t90\t0.256\tEEG\nT8\t90\t0.511\tEEG\nP7\t-126\t0.511\tEEG\nP3\t-140.1\t0.333\tEEG\nPz\t180\t0.256\tEEG\nP4\t140.1\t0.333\tEEG\nP8\t126\t0.511\tEEG\nO1\t-162\t0.511\tEEG\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
+          "text": "component\tvariance_pct\tbrain\tother\nIC002\t30.0000\t0.9\t0.1\nIC001\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\n"
+        }
+      },
+      "expected": {
+        "word": "coords_length",
+        "outcome": "fallback"
       }
     },
     {

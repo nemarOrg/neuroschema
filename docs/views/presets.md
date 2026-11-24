@@ -25,7 +25,8 @@ A renderer that does not know a computed preset offers its file inputs for downl
 
 However a preset is drawn, every file it names, in `data` or as a `file` input, is drawn or offered for download.
 
-A renderer that knows a preset first builds its base's model; when the base refuses the files, the view falls back as the base's rules say.
+A renderer that knows a preset with stored data first builds its base's model, as [generic-kinds.md](generic-kinds.md#building-a-model) says for `nemar.lines` and `nemar.histogram` and [sensor-field.md](sensor-field.md#the-model) for `nemar.sensor-field`.
+When the base refuses the files, the view shows as tables with the base's word, the fallback of the base's rules, and the preset's own checks do not run; the vectors give that the outcome `fallback`.
 When the base draws, the preset's own checks run in the order this page gives, and the first that fails gives the word: the renderer draws the view by its base and keeps the word, so the page can say why the preset's extras are missing, or, for `nemar.signal-window`, draws nothing.
 `neuroschema.views.presets.check_preset` is the Python reference of these checks, and [`views/vectors/preset-checks.v1.json`](../../views/vectors/preset-checks.v1.json) (`nemar.preset-checks.v1`) holds the cases every renderer reproduces.
 
@@ -86,7 +87,8 @@ The scalp maps of the independent components of one decomposition, over `nemar.s
 - **`components`** is the components table (`_components.tsv`): one row per component, with the dimension `component` along the rows, named by its column `component` (a `string`); its other declared columns, such as `variance_pct` and the class probabilities, make the component's text row.
 
 There are no parameters.
-A renderer that knows this kind draws one map per component with `nemar.sensor-field.v1` and `absmax` limits, because a component's polarity is arbitrary, and prints each component's text row beside its map: the cells of its row of `components`, each with its column's name and unit, as stored text.
+A renderer that knows this kind first builds the `nemar.sensor-field` model of the values and the layout ([sensor-field.md](sensor-field.md#the-model)); when that refuses the files, the view falls back to its tables and no text row is checked.
+Otherwise it draws one map per component with `nemar.sensor-field.v1` and `absmax` limits, because a component's polarity is arbitrary, and prints each component's text row beside its map: the cells of its row of `components`, each with its column's name and unit, as stored text.
 The text row of the component labeled L is the row of `components` whose `component` cell is L.
 The renderer reads the components table under the TSV grammar ([generic-kinds.md](generic-kinds.md#tsv), with its words), checks it has the column `component` (`column_missing`), and checks that its `component` cells, top to bottom, are the values' declared column names in declared order, compared as text (`components_mismatch`): one row per map, in the maps' order.
 When any of these fails, it draws the maps by the base, without text rows, and keeps the word.
@@ -176,7 +178,7 @@ The words of a preset's base, of `nemar.sensor-field.v1` and of `nemar.ic-activi
 ## The preset-check vectors
 
 `preset-checks.v1.json` has `format`, `spec`, `description` and `cases`.
-Each case has a `name`, what it `covers`, a `view` (built from the [example](../../examples/views/dataquality-record-nemar-ica.json)), its `files` (each location's UTF-8 text), for a signal window the `store` (its row `labels`, `samples`, `rate` and the digest the serving copy publishes, or null), optionally `caps` in place of the registry's caps of the same names, and the `expected` outcome: `word` null when the checks pass, with, for a signal window, the `state`, the window's `first` sample and `count`, its `bad_channels`, its `segments` and its `notes`; otherwise the `word` and its `outcome`, `base`, `nothing` or `fallback` (the base refused the file first, with its own word).
+Each case has a `name`, what it `covers`, a `view` (built from the [example](../../examples/views/dataquality-record-nemar-ica.json)), its `files` (each location's UTF-8 text: for `nemar.ic-maps`, the mixing matrix and the layout its base reads as well as the components table), for a signal window the `store` (its row `labels`, `samples`, `rate` and the digest the serving copy publishes, or null), optionally `caps` in place of the registry's caps of the same names, and the `expected` outcome: `word` null when the checks pass, with, for a signal window, the `state`, the window's `first` sample and `count`, its `bad_channels`, its `segments` and its `notes`; otherwise the `word` and its `outcome`, `base`, `nothing` or `fallback` (the base refused the file first, with its own word).
 The cases cover every word of this page, each pair of neighboring checks with two faults, and a window at 500/7 Hz where the times rule and a rounded product disagree.
 `scripts/generate_kind_vectors.py` writes them with the Python reference.
 
