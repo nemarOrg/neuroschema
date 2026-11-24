@@ -1470,15 +1470,6 @@ def test_null_dataset_version_and_range_min_are_allowed():
 # ── Every anchored pattern in extensions and definitions closes the gap ───
 
 
-# Older patterns with a bare $, tracked in nemarOrg/neuroschema#20.
-NEWLINE_GAP_ALLOWLIST = {
-    ("dataset.schema.json", "^[a-z]{2}[0-9]+$"),
-    ("record.schema.json", "^[a-z]{2}[0-9]+$"),
-    ("neuroschema.schema.json", "^[0-9]+\\.[0-9]+\\.[0-9]+$"),
-}
-# Patterns with a token whose meaning differs between Python's re and
-# JavaScript's RegExp with the u flag, tracked in nemarOrg/neuroschema#20.
-TOKEN_ALLOWLIST: set[tuple[str, str]] = set()
 # A bare . (JavaScript's stops at a line terminator; Python's at a line feed
 # only), and the classes \s, \S, \d, \D, \w, \W, \b, \B (Unicode in Python,
 # narrower or other sets in JavaScript). The class [\s\S] means any character
@@ -1526,14 +1517,9 @@ def anchor_problems(paths) -> list[str]:
     problems = []
     for path in paths:
         for pattern in _patterns(json.loads(path.read_text())):
-            key = (path.name, pattern)
-            if (
-                key not in NEWLINE_GAP_ALLOWLIST
-                and "$" in pattern
-                and not pattern.endswith("$(?!\n)")
-            ):
+            if "$" in pattern and not pattern.endswith("$(?!\n)"):
                 problems.append(f"{path.name}: {pattern!r}")
-            if key not in TOKEN_ALLOWLIST and divergent_tokens(pattern):
+            if divergent_tokens(pattern):
                 problems.append(f"{path.name}: {pattern!r} {divergent_tokens(pattern)}")
     return problems
 

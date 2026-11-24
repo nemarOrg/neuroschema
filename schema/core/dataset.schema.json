@@ -17,7 +17,7 @@
     "dataset_id": {
       "type": "string",
       "description": "Unique dataset identifier (e.g., 'ds003645' for OpenNeuro, 'nm000108' for NEMAR).",
-      "pattern": "^[a-z]{2}[0-9]+$"
+      "pattern": "^[a-z]{2}[0-9]+$(?!\n)"
     },
     "name": {
       "type": "string",
