@@ -397,6 +397,21 @@ def test_sensor_layout_vector_file():
     assert "147b46d7" in LAYOUT["reference"]["frames"]
 
 
+LAYOUT_SPEC = (ROOT / "docs" / "views" / "sensor-layout.md").read_text(encoding="utf-8")
+
+
+def test_spec_names_every_frame_and_bound():
+    """The normative page lists every frame by its full name (no ranges), the
+    words, and each bound."""
+    for frame in sorted(sl.ALS_FRAMES | sl.RAS_FRAMES):
+        assert f"`{frame}`" in LAYOUT_SPEC, frame
+    for word in ("frame_unknown", "positions_flat"):
+        assert f"`{word}`" in LAYOUT_SPEC, word
+    for phrase in ("`\u03c33 < 0.05 * \u03c31`", "`rho > 3`"):
+        assert phrase in LAYOUT_SPEC, phrase
+    assert (sl.FLAT_RATIO, sl.RADIUS_RATIO) == (0.05, 3.0)
+
+
 def test_frame_table_is_the_vectors():
     assert set(LAYOUT["frames"]["ALS"]) == sl.ALS_FRAMES
     assert set(LAYOUT["frames"]["RAS"]) == sl.RAS_FRAMES

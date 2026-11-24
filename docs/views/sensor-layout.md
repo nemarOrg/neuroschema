@@ -74,7 +74,7 @@ The table is BIDS's own, from the coordinate-systems appendix of the BIDS specif
 | Orientation | Coordinate systems |
 |---|---|
 | ALS | `CTF`, `4DBti`, `KitYokogawa`, `EEGLAB`, `EEGLAB-HJ` |
-| RAS | `NeuromagElektaMEGIN`, `ElektaNeuromag` (deprecated), `ChietiItab`, `CapTrak`, `ACPC`, `ScanRAS`, and the standard template identifiers: `ICBM452AirSpace`, `ICBM452Warp5Space`, `IXI549Space`, `fsaverage`, `fsaverageSym`, `fsLR`, `MNIColin27`, `MNI152Lin`, `MNI152NLin2009aSym`, `MNI152NLin2009bSym`, `MNI152NLin2009cSym`, `MNI152NLin2009aAsym`, `MNI152NLin2009bAsym`, `MNI152NLin2009cAsym`, `MNI152NLin6Sym`, `MNI152NLin6ASym`, `MNI305`, `NIHPD`, `OASIS30AntsOASISAnts`, `OASIS30Atropos`, `Talairach`, `UNCInfant`, and the deprecated `fsaverage3`, `fsaverage4`, `fsaverage5`, `fsaverage6`, `fsaveragesym` and `UNCInfant0V21` to `UNCInfant2V23` |
+| RAS | `NeuromagElektaMEGIN`, `ElektaNeuromag` (deprecated), `ChietiItab`, `CapTrak`, `ACPC`, `ScanRAS`, and the standard template identifiers: `ICBM452AirSpace`, `ICBM452Warp5Space`, `IXI549Space`, `fsaverage`, `fsaverageSym`, `fsLR`, `MNIColin27`, `MNI152Lin`, `MNI152NLin2009aSym`, `MNI152NLin2009bSym`, `MNI152NLin2009cSym`, `MNI152NLin2009aAsym`, `MNI152NLin2009bAsym`, `MNI152NLin2009cAsym`, `MNI152NLin6Sym`, `MNI152NLin6ASym`, `MNI305`, `NIHPD`, `OASIS30AntsOASISAnts`, `OASIS30Atropos`, `Talairach`, `UNCInfant`, and the deprecated `fsaverage3`, `fsaverage4`, `fsaverage5`, `fsaverage6`, `fsaveragesym`, `UNCInfant0V21`, `UNCInfant1V21`, `UNCInfant2V21`, `UNCInfant0V22`, `UNCInfant1V22`, `UNCInfant2V22`, `UNCInfant0V23`, `UNCInfant1V23` and `UNCInfant2V23` |
 
 Names are compared exactly, case included.
 Template positions, `n/a` with a montage, are RAS.
