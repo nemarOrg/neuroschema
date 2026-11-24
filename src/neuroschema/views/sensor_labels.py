@@ -1,7 +1,7 @@
 """``nemar.sensor-labels.v1``: sensor positions inferred from channel names.
 
 Given a recording's channels (name and BIDS type, in recording order) and,
-optionally, its cap model, the algorithm
+optionally, the cap and system models its sidecar names, the algorithm
 normalizes each name, matches the names against a fixed set of standard
 montages, and either places the channels on the one montage the names identify
 or refuses with a reason. It never falls back to a default: when no montage is
@@ -395,6 +395,37 @@ def fold_cap_model(model: str) -> str:
     return ascii_lower(_WHITESPACE_RUN.sub(" ", model.strip(_WHITESPACE)))
 
 
+def recording_cap_model(
+    cap_model: str | None, manufacturers_model: str | None = None
+) -> str | None:
+    """The model a recording names its cap by: its sidecar's
+    ``CapManufacturersModelName`` when that is given, else its
+    ``ManufacturersModelName`` (where the Healthy Brain Network names its net).
+
+    A field is given when it is a string that, folded, is neither empty nor
+    ``n/a``; the cap field wins whenever it is given, whatever it says.
+    """
+    for model in (cap_model, manufacturers_model):
+        if isinstance(model, str) and fold_cap_model(model) not in ("", "n/a"):
+            return model
+    return None
+
+
+def sidecar_models(sidecar: Mapping) -> dict[str, str | None]:
+    """The keyword arguments :func:`infer_positions` takes from a recording's
+    ``eeg.json``: its ``CapManufacturersModelName`` and
+    ``ManufacturersModelName``, each None unless a string."""
+
+    def text(key: str) -> str | None:
+        value = sidecar.get(key)
+        return value if isinstance(value, str) else None
+
+    return {
+        "cap_model": text("CapManufacturersModelName"),
+        "manufacturers_model": text("ManufacturersModelName"),
+    }
+
+
 def cap_model_nets(model: str | None) -> tuple[str, ...]:
     """The EGI montages a cap model names (none for no model, or for any
     string not in :data:`CAP_MODELS`)."""
@@ -516,14 +547,17 @@ def infer_positions(
     montages: Sequence[Montage] | None = None,
     *,
     cap_model: str | None = None,
+    manufacturers_model: str | None = None,
 ) -> Inference:
     """Apply ``nemar.sensor-labels.v1`` to a recording's channels.
 
     ``channels`` is (name, BIDS type or None) per channel, in recording order;
-    ``montages`` defaults to :func:`load_montages`; ``cap_model`` is the
-    recording's BIDS ``CapManufacturersModelName``, if it has one, which a
-    placement on an EGI net needs to name that net (:data:`CAP_MODELS`). See
-    ``docs/views/sensor-labels.md`` for each rule.
+    ``montages`` defaults to :func:`load_montages`. ``cap_model`` and
+    ``manufacturers_model`` are the recording's ``eeg.json``
+    ``CapManufacturersModelName`` and ``ManufacturersModelName``
+    (:func:`sidecar_models` reads both): a placement on an EGI net needs the
+    model they give (:func:`recording_cap_model`) to name that net
+    (:data:`CAP_MODELS`). See ``docs/views/sensor-labels.md`` for each rule.
     """
     montages = load_montages() if montages is None else tuple(montages)
     channels = [(name, channel_type) for name, channel_type in channels]
@@ -550,7 +584,7 @@ def infer_positions(
 
     num, den = CONTENDER_SHARE
     contenders = [m for m in montages if len(hits[m.name]) * den >= best * num]
-    named = cap_model_nets(cap_model)
+    named = cap_model_nets(recording_cap_model(cap_model, manufacturers_model))
     kept = [m for m in contenders if m.family not in EGI_FAMILIES or m.name in named]
     if not any(len(hits[m.name]) == best for m in kept):
         names = [m.name for m in contenders]

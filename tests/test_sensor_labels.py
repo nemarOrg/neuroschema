@@ -52,6 +52,8 @@ from neuroschema.views.sensor_labels import (
     label_key,
     load_montages,
     montage_from_json,
+    recording_cap_model,
+    sidecar_models,
 )
 from tests.helpers import failures
 
@@ -227,7 +229,12 @@ def keys(names, kind="EEG"):
 @pytest.mark.parametrize("case", CASES, ids=[c["name"] for c in CASES])
 def test_vectors_replay(case):
     channels = [(name, kind) for name, kind in case["channels"]]
-    result = infer_positions(channels, MONTAGES, cap_model=case["cap_model"])
+    result = infer_positions(
+        channels,
+        MONTAGES,
+        cap_model=case["cap_model"],
+        manufacturers_model=case["manufacturers_model"],
+    )
     assert result.to_json() == case["result"]
 
 
@@ -793,11 +800,12 @@ EVERY_EGI_CONTENDER = (
     ],
 )
 def test_any_other_cap_model_refuses_an_egi_placement(model):
-    names = [(f"E{i}", "EEG") for i in range(1, 129)] + [("Cz", "EEG")]
-    result = infer_positions(names, MONTAGES, cap_model=model)
-    assert (result.outcome, result.reason) == ("refused", "cap_model_unknown")
-    assert result.contenders == EVERY_EGI_CONTENDER
-    assert all(c.electrode is None for c in result.channels)
+    for field in ("cap_model", "manufacturers_model"):
+        names = [(f"E{i}", "EEG") for i in range(1, 129)] + [("Cz", "EEG")]
+        result = infer_positions(names, MONTAGES, **{field: model})
+        assert (result.outcome, result.reason) == ("refused", "cap_model_unknown")
+        assert result.contenders == EVERY_EGI_CONTENDER
+        assert all(c.electrode is None for c in result.channels)
 
 
 @pytest.mark.parametrize(
@@ -811,6 +819,43 @@ def test_any_other_cap_model_refuses_an_egi_placement(model):
 )
 def test_a_cap_model_is_trimmed_collapsed_and_folded_only(model, folded):
     assert fold_cap_model(model) == folded
+
+
+@pytest.mark.parametrize(
+    ("cap", "system", "model"),
+    [
+        (None, None, None),
+        (None, "GSN 200 v2.1", "GSN 200 v2.1"),
+        ("HydroCel GSN", "GSN 200 v2.1", "HydroCel GSN"),
+        ("actiCAP", "GSN 200 v2.1", "actiCAP"),  # the cap field wins as given
+        ("", "GSN 200 v2.1", "GSN 200 v2.1"),
+        (" \t", "GSN 200 v2.1", "GSN 200 v2.1"),
+        ("N/A", "GSN 200 v2.1", "GSN 200 v2.1"),
+        ("n/a", "n/a", None),
+        (128, "GSN 200 v2.1", "GSN 200 v2.1"),  # not a string: not given
+    ],
+)
+def test_the_cap_field_wins_when_given(cap, system, model):
+    assert recording_cap_model(cap, system) == model
+
+
+def test_sidecar_models_reads_both_fields_as_strings_only():
+    sidecar = {
+        "CapManufacturersModelName": "HydroCel GSN 128 1.0",
+        "ManufacturersModelName": "128-channel GSN 200 v.2.1",
+        "CapManufacturer": "EGI",
+    }
+    assert sidecar_models(sidecar) == {
+        "cap_model": "HydroCel GSN 128 1.0",
+        "manufacturers_model": "128-channel GSN 200 v.2.1",
+    }
+    assert sidecar_models({"CapManufacturersModelName": 5}) == {
+        "cap_model": None,
+        "manufacturers_model": None,
+    }
+    names = [(f"E{i}", "EEG") for i in range(1, 129)] + [("Cz", "EEG")]
+    hbn = {"ManufacturersModelName": "128-channel GSN 200 v.2.1"}
+    assert infer_positions(names, MONTAGES, **sidecar_models(hbn)).montage == "GSN129"
 
 
 def test_the_cap_model_gates_egi_placements_only():

@@ -1,6 +1,6 @@
 # `nemar.sensor-labels.v1`
 
-Sensor positions inferred from channel names: given a recording's channels (and, for an EGI net, its cap model), the algorithm either places them on the one standard montage their names identify, or refuses and says why.
+Sensor positions inferred from channel names: given a recording's channels (and, for an EGI net, the cap model its sidecar names), the algorithm either places them on the one standard montage their names identify, or refuses and says why.
 It never assumes a default.
 When the names do not identify one montage with confidence, nothing is placed, and the reason is shown instead of a map.
 
@@ -23,8 +23,9 @@ The pipeline does not use this algorithm: a recipe that needs positions (ICLabel
 ## Input
 
 - The recording's channels in recording order, each a name (a string) and a Brain Imaging Data Structure (BIDS) channel type (a string, or absent), as in `channels.tsv`.
-- Optionally, the recording's cap model: the BIDS `CapManufacturersModelName` of its `eeg.json` (a string, or absent).
-  Only a placement on an EGI net reads it ([The cap model](#the-cap-model)).
+- Optionally, two fields of the recording's `eeg.json`: `CapManufacturersModelName` and `ManufacturersModelName` (each a string, or absent; any other value is absent).
+  They give the recording's cap model ([The cap model](#the-cap-model)), which only a placement on an EGI net reads.
+  `ManufacturersModelName` describes the recording system, but some datasets, the Healthy Brain Network (HBN) releases among them, name their EGI net there.
 
 ## Montages
 
@@ -198,6 +199,8 @@ Every comparison of a share is between integers, so every implementation decides
 ### The cap model
 
 An EGI placement needs the recording's cap model to name the net, because the names alone are a HydroCel net's and an older net's alike.
+The cap model is `CapManufacturersModelName` when it is given, and otherwise `ManufacturersModelName`: a field is given when it is a string that, folded as below, is neither empty nor `n/a`.
+When `CapManufacturersModelName` is given it wins, whatever it says, even a model that names no net.
 The model is trimmed of the step-2 whitespace at both ends, each run of that whitespace inside it becomes one space, and its letters A to Z are folded to a to z; nothing else is folded.
 It names the nets of the one row of this table it then equals exactly, and no net when it equals none:
 
@@ -208,7 +211,7 @@ It names the nets of the one row of this table it then equals exactly, and no ne
 | `hydrocel geodesic sensor net 64`, `hydrocel gsn 64`, `hydrocel gsn 64 1.0`, `gsn-hydrocel-64_1.0`, `gsn-hydrocel-65_1.0` | `GSN-HydroCel-64_1.0`, `GSN-HydroCel-65_1.0` |
 | `hydrocel geodesic sensor net 128`, `hydrocel gsn 128`, `hydrocel gsn 128 1.0`, `gsn-hydrocel-128`, `gsn-hydrocel-129` | `GSN-HydroCel-128`, `GSN-HydroCel-129` |
 | `hydrocel geodesic sensor net 256`, `hydrocel gsn 256`, `hydrocel gsn 256 1.0`, `gsn-hydrocel-256`, `gsn-hydrocel-257` | `GSN-HydroCel-256`, `GSN-HydroCel-257` |
-| `128-channel gsn 200 v.2.1` (as the Healthy Brain Network (HBN) releases name their net), `128-channel gsn 200 v2.1`, `gsn 200 v.2.1`, `gsn 200 v2.1`, `gsn 128 v2`, `gsn 128 v2.0`, `gsn128`, `gsn129` | `GSN128`, `GSN129` |
+| `128-channel gsn 200 v.2.1` (the HBN releases' `ManufacturersModelName`), `128-channel gsn 200 v2.1`, `gsn 200 v.2.1`, `gsn 200 v2.1`, `gsn 128 v2`, `gsn 128 v2.0`, `gsn128`, `gsn129` | `GSN128`, `GSN129` |
 | `gsn 64 v2.0`, `gsn 64 v2`, `gsn 64 2.0`, `geodesic sensor net 64 2.0`, `geodesic sensor net 64 v2.0`, `gsn64v2_0`, `gsn65v2_0` | `GSN64v2_0`, `GSN65v2_0` |
 | `gsn256`, `gsn257` | `GSN256`, `GSN257` |
 
@@ -269,7 +272,7 @@ A change to any step, list, threshold or alias, or to a montage's positions (inc
 
 ## Vectors
 
-Each case of the vectors file gives a recording's `channels` as `[name, type]` pairs (type null when absent), its `cap_model` (null when absent) and the `result` above.
+Each case of the vectors file gives a recording's `channels` as `[name, type]` pairs (type null when absent), its sidecar's `cap_model` (`CapManufacturersModelName`) and `manufacturers_model` (`ManufacturersModelName`), each null when absent, and the `result` above.
 The vectors file lists the SHA-256 of each montage file it was computed with; an implementation checks its copies against them, then reproduces every result exactly.
-The cases cover the normalization steps (the fold table, and characters outside it whose normalization depends on the runtime's Unicode version: outlined letters and digits, a modifier capital, subscripts, a Roman numeral, mathematical letters, a superscript), the exclusions (the auxiliary names of a Neuroscan cap and of a clinical EDF export among them), each reference name and the common reference, bipolar names, each count, share and coverage threshold at and beside its boundary, each refusal, the family and montage aliases, every montage but `GSN-HydroCel-32` (its names are also the BioSemi 160 cap's E bank), the nested nets, the coincident Cz variants, and the cap model: the HBN channels with no model and with a HydroCel model, each older net, a GSN 200 model beside 64 and 256 names, case and whitespace, a model of another size, one the list does not hold, and a model beside names that are not an EGI net's.
+The cases cover the normalization steps (the fold table, and characters outside it whose normalization depends on the runtime's Unicode version: outlined letters and digits, a modifier capital, subscripts, a Roman numeral, mathematical letters, a superscript), the exclusions (the auxiliary names of a Neuroscan cap and of a clinical EDF export among them), each reference name and the common reference, bipolar names, each count, share and coverage threshold at and beside its boundary, each refusal, the family and montage aliases, every montage but `GSN-HydroCel-32` (its names are also the BioSemi 160 cap's E bank), the nested nets, the coincident Cz variants, and the cap model: the HBN channels with no model, as released (`ManufacturersModelName` only, placed on `GSN129`) and with a HydroCel model, the cap field winning over the system field (also when it names no net, and not when it is `n/a`), each older net, a GSN 200 model beside 64 and 256 names, case and whitespace, a model of another size, one the list does not hold, and a model beside names that are not an EGI net's.
 No two real montages place an electrode within 1e-9 m of each other without placing it at the same point, so `tests/test_sensor_labels.py` tests that tolerance on a montage derived from a real one.

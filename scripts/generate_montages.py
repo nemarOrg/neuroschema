@@ -1300,8 +1300,8 @@ CASES = [
     ),
     (
         "hbn_without_cap_model",
-        "The Healthy Brain Network (HBN) channels, E1 to E128 and Cz, with no "
-        "cap model: the names "
+        "The Healthy Brain Network (HBN) channels, E1 to E128 and Cz, with "
+        "neither CapManufacturersModelName nor ManufacturersModelName: the names "
         "are numbered alike on the HydroCel nets and on the older nets, on "
         "positions 20% to 40% of the head radius apart, so the names alone do "
         "not place the recording.",
@@ -1309,11 +1309,50 @@ CASES = [
         ("refused", "cap_model_unknown", None),
     ),
     (
+        "hbn_as_released",
+        "The HBN channels as the releases on OpenNeuro describe them (E1 to E128 "
+        "and Cz typed EEG, as in ds005505; no CapManufacturersModelName, and "
+        "ManufacturersModelName 128-channel GSN 200 v.2.1 in each of ds005505 to "
+        "ds005512 and ds005514 to ds005516). The system field names the net, so the "
+        "recording is placed on the GSN 200 128-channel net with Cz (EEGLAB's "
+        "GSN129).",
+        egi(128, ["Cz"]),
+        ("placed", None, "GSN129"),
+        None,
+        "128-channel GSN 200 v.2.1",
+    ),
+    (
         "hbn_with_cap_model",
         "The same channels with the cap model HydroCel GSN 128 1.0.",
         egi(128, ["Cz"]),
         ("placed", None, "GSN-HydroCel-129"),
         "HydroCel GSN 128 1.0",
+    ),
+    (
+        "cap_field_wins",
+        "The HBN channels with a cap model, HydroCel GSN 128 1.0, and a system "
+        "model, 128-channel GSN 200 v.2.1: the cap field wins.",
+        egi(128, ["Cz"]),
+        ("placed", None, "GSN-HydroCel-129"),
+        "HydroCel GSN 128 1.0",
+        "128-channel GSN 200 v.2.1",
+    ),
+    (
+        "cap_field_wins_when_it_names_no_net",
+        "A cap model that names no net (actiCAP 128) beside a system model that "
+        "names one: the cap field wins, so no net is named.",
+        egi(128, ["Cz"]),
+        ("refused", "cap_model_unknown", None),
+        "actiCAP 128",
+        "128-channel GSN 200 v.2.1",
+    ),
+    (
+        "cap_field_n_a",
+        "A cap model of n/a is not given, so the system model names the net.",
+        egi(128, ["Cz"]),
+        ("placed", None, "GSN129"),
+        " N/A ",
+        "128-channel GSN 200 v.2.1",
     ),
     (
         "older_egi_net_gsn_200",
@@ -1629,10 +1668,13 @@ CASES = [
 
 def build_vectors(montages: tuple, sha: dict[str, str]) -> str:
     cases = []
-    for name, description, channels, expected, *model in CASES:
-        cap_model = model[0] if model else None
+    for name, description, channels, expected, *models in CASES:
+        cap_model, manufacturers_model = (*models, None, None)[:2]
         result = infer_positions(
-            [tuple(c) for c in channels], montages, cap_model=cap_model
+            [tuple(c) for c in channels],
+            montages,
+            cap_model=cap_model,
+            manufacturers_model=manufacturers_model,
         ).to_json()
         got = (result["outcome"], result["reason"], result["montage"])
         if got != expected:
@@ -1643,6 +1685,7 @@ def build_vectors(montages: tuple, sha: dict[str, str]) -> str:
                 "description": description,
                 "channels": channels,
                 "cap_model": cap_model,
+                "manufacturers_model": manufacturers_model,
                 "result": result,
             }
         )
@@ -1652,8 +1695,9 @@ def build_vectors(montages: tuple, sha: dict[str, str]) -> str:
         "description": (
             "Cases every implementation of nemar.sensor-labels.v1 reproduces. Each "
             "case lists a recording's channels as [name, BIDS type or null] in "
-            "recording order and its cap_model (BIDS CapManufacturersModelName, or "
-            "null), and the result: the outcome, the refusal reason, the "
+            "recording order, its sidecar's cap_model and manufacturers_model "
+            "(BIDS CapManufacturersModelName and ManufacturersModelName, each "
+            "null when absent), and the result: the outcome, the refusal reason, the "
             "montage, the counts, the contending montages, the duplicated "
             "electrodes, and per channel its status, its normalized key and the "
             "montage electrode it is placed on. The montages are views/montages "
