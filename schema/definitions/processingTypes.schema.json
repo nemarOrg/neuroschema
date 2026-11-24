@@ -44,7 +44,7 @@
     },
     "metricName": {
       "type": "string",
-      "description": "Name of a quality metric, safe as a document key (no . or $): a recipe's metric by a bare name, or a plugin's by <plugin>:<name>, one colon and a name after it that starts with a letter. In a recording's dataQuality metrics each name is paired with its producer (dataQuality.schema.json, recordRecipeResults.metrics: a bare name requires recipe, a prefixed one plugin); that the prefix is the producing plugin's name is the writer's rule.",
+      "description": "Name of a quality metric, safe as a document key (no . or $): a recipe's metric by a bare name, or a plugin's by <plugin>:<name>, one colon and a name after it that starts with a letter. The prefix has the plugin name's grammar (plugin.name), so every plugin can name its metrics. In a recording's dataQuality metrics each name is paired with its producer (dataQuality.schema.json, recordRecipeResults.metrics: a bare name requires recipe, a prefixed one plugin); that the prefix is the producing plugin's name is the writer's rule.",
       "maxLength": 128,
       "pattern": "^[A-Za-z][A-Za-z0-9_-]*(:[A-Za-z][A-Za-z0-9_-]*)?$(?!\n)"
     },
@@ -153,8 +153,8 @@
       "properties": {
         "name": {
           "type": "string",
-          "description": "Plugin name as declared in its manifest.",
-          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$(?!\n)"
+          "description": "Plugin name as declared in its manifest: a letter, then letters, digits, _ and -, at most 64 characters. The grammar of a metricName prefix, so <plugin>:<name> can name every plugin's metric and stays a safe document key (no . or $).",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$(?!\n)"
         },
         "version": {
           "$ref": "../definitions/processingTypes.schema.json#/$defs/version",

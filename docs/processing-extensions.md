@@ -20,6 +20,7 @@ Each `dataQuality` entry records its `input_kind` (`bids` or `zarr`) and `profil
 
 The schema checks types, closed objects, identifier patterns, the view declarations ([views.md](views.md)), a metric's single producer (a plugin or a recipe), and the status rules (a passed checkpoint has no code; a completed link has a location, digest and signalJourney version).
 In a recording's `metrics`, it also pairs each name with its producer: a bare name is a recipe's metric, with the producer `recipe`, and `<plugin>:<name>` is a plugin's, with the producer `plugin`, one colon and then a letter followed by letters, digits, `_` or `-`.
+A plugin's name has the prefix's grammar (a letter, then letters, digits, `_` and `-`, at most 64 characters), so every plugin can name its metrics and each name stays a safe document key.
 JSON Schema cannot compare one value with another, so the writer enforces:
 
 - every checkpoint's counts satisfy passed + failed + skipped = total once reconciled (at most total while a run reports live);

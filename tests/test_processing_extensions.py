@@ -1061,6 +1061,29 @@ def test_plugin_name_rejects_trailing_newline():
     ]
 
 
+@pytest.mark.parametrize(
+    ("name", "valid"),
+    [
+        ("nemar-quality", True),
+        ("Nemar_Quality2", True),
+        ("p" * 64, True),
+        ("p" * 65, False),
+        ("org.nemar.quality", False),
+        ("1plugin", False),
+        ("-plugin", False),
+        ("nemar quality", False),
+    ],
+)
+def test_plugin_names_take_the_metric_prefix_grammar(name, valid):
+    """Every plugin name can prefix its metrics: a plugin named with a dot
+    could not (probe p11, L5), so no plugin name has one."""
+    assert (_def_errors("plugin", PLUGIN | {"name": name}) == []) is valid
+    if valid:
+        metric = f"{name}:{'m' * 63}"
+        assert len(metric) <= 128
+        assert _def_errors("metricName", metric) == []
+
+
 def test_sj_version_rejects_trailing_newline():
     doc = sj_links()
     doc["recipes"]["nemar-floor"]["sj_version"] = "0.1.0\n"
