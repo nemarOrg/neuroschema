@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "transform.nemar.ic-activity.v1.schema.json",
   "title": "View Transform nemar.ic-activity, Version 1",
-  "description": "Applied on top of the envelope to a view declaration whose transform is nemar.ic-activity.v1 (docs/views/ic-activity.md): component activations as one plain multiply, the browser's unmixing matrix times the serving copy's physical values of the decomposition's channels, with no preprocessing. It reads three inputs, each once: unmixing (a TSV file of the run's product: one column per channel, headed by its label, and one row per component), signal (the recording's store in the serving copy) and components (a TSV file whose column component names the rows of unmixing). The parameters say how the matrix's columns find their store rows (match: store_row, by the rows the decomposition read, or label, by channel label) and the unit the matrix takes (unit).",
+  "description": "Applied on top of the envelope to a view declaration whose transform is nemar.ic-activity.v1 (docs/views/ic-activity.md): component activations as one plain multiply, the browser's unmixing matrix times the serving copy's physical values of the decomposition's channels, with no preprocessing. It reads three inputs, each once: unmixing (a TSV file of the run's product: one column per channel, headed by its label, and one row per component), signal (the recording's store in the serving copy) and components (a TSV file whose column component names the rows of unmixing). The parameters are the record's browser_transform block: the matrix and its columns, how the columns find their store rows (match: store_row, by the rows the decomposition read, or label, by channel label), the unit the matrix takes, a caption, and the spans a view shades.",
   "type": "object",
   "required": [
     "inputs",
@@ -123,11 +123,35 @@
       "properties": {
         "parameters": {
           "type": "object",
+          "description": "The record's browser_transform block (extensions.nemar.ica.browser_transform), as nemar-process writes it: the browser's matrix, what it applies to, how its columns find their store rows, the unit it takes, the caption a view shows, and the spans the view shades.",
           "required": [
+            "matrix",
+            "applies_to",
+            "note",
             "match",
-            "unit"
+            "rows",
+            "columns",
+            "unit",
+            "caption",
+            "shaded"
           ],
           "properties": {
+            "matrix": {
+              "$ref": "../definitions/processingTypes.schema.json#/$defs/relativeLocation",
+              "description": "The matrix's location in the run's product: the location of the input unmixing."
+            },
+            "applies_to": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500,
+              "description": "What the matrix is multiplied by, in words."
+            },
+            "note": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500,
+              "description": "What the activations are, in words (no preprocessing; they approximate the decomposition's input)."
+            },
             "match": {
               "enum": [
                 "store_row",
@@ -136,15 +160,32 @@
               "description": "store_row: column j of the matrix is store row rows[j], whose label must be the column's (a decomposition of the serving copy, which read those rows); label: each column is the one store row whose label is the column's (a decomposition of the archive, which read no store)."
             },
             "rows": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 1024,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "With match store_row, the 0-based store row of each column of the matrix, in column order; null with match label."
+            },
+            "columns": {
               "type": "array",
               "minItems": 1,
               "maxItems": 1024,
               "uniqueItems": true,
               "items": {
-                "type": "integer",
-                "minimum": 0
+                "$ref": "../definitions/view.schema.json#/$defs/columnName"
               },
-              "description": "With match store_row, the 0-based store row of each column of the matrix, in column order; absent with match label."
+              "description": "The matrix's columns, its header names: the decomposition's channels, in column order."
             },
             "unit": {
               "enum": [
@@ -155,6 +196,46 @@
                 "μV"
               ],
               "description": "The unit the matrix takes: the store's own unit for a decomposition of the serving copy (the factor to microvolts is folded into the matrix), microvolts for one of the archive. Microvolts may be spelled uV, with the micro sign U+00B5 or with the Greek small letter mu U+03BC."
+            },
+            "caption": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500,
+                  "description": "The caption."
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "A caption a view shows with the activations, or null: for a decomposition of the archive, that they were not checked against the decomposition's input."
+            },
+            "shaded": {
+              "type": "object",
+              "description": "The spans cut from the decomposition's input, which a view shades over the whole recording: the rows whose label is label, in the floor's tables files.",
+              "required": [
+                "label",
+                "files"
+              ],
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]{0,63}$(?!\n)",
+                  "description": "The label of the shaded rows (burst)."
+                },
+                "files": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 8,
+                  "uniqueItems": true,
+                  "items": {
+                    "$ref": "../definitions/processingTypes.schema.json#/$defs/relativeLocation"
+                  },
+                  "description": "The tables that hold those rows (the floor's _badsegments.tsv and _samplemask.tsv)."
+                }
+              },
+              "additionalProperties": false
             }
           },
           "allOf": [
@@ -172,15 +253,17 @@
               },
               "then": {
                 "type": "object",
-                "required": [
-                  "rows"
-                ]
+                "properties": {
+                  "rows": {
+                    "type": "array"
+                  }
+                }
               },
               "else": {
                 "type": "object",
                 "properties": {
                   "rows": {
-                    "not": {},
+                    "type": "null",
                     "description": "Columns matched by label name no rows."
                   }
                 }

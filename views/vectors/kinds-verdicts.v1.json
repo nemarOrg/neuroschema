@@ -7718,9 +7718,18 @@
         "transform": {
           "name": "nemar.ic-activity.v1",
           "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels listed, physical unit",
+            "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
             "rows": [0, 1, 2, 3, 4, 5, 6],
-            "unit": "µV"
+            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "unit": "µV",
+            "caption": null,
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
           }
         },
         "parameters": {
@@ -7761,6 +7770,11 @@
                 "function": "eegprep.pop_reref"
               }
             ],
+            "store": {
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+            },
             "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
             "channel_types": [
               ["Fp1", "EEG"],
@@ -7773,14 +7787,9 @@
               ["P4", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "c4ea5ba818ba63d17da9da5d7346954069a39e9ffc5ea268fa7c3ee2cf14f396",
+            "channel_types_sha256": "58b931b1be999926941c7dfd765e9cba12aa81f578cceb84f0bfac4cf197e535",
             "reference": "average",
-            "unit": "uV",
-            "store": {
-              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
-              "group": "eeg",
-              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
-            }
+            "unit": "uV"
           }
         }
       },
@@ -7843,8 +7852,18 @@
         "transform": {
           "name": "nemar.ic-activity.v1",
           "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels matched by label, in microvolts: the view converts by the store's unit field and refuses an unknown unit or any channel it cannot match",
+            "note": "no preprocessing; activations approximate the decomposition input",
             "match": "label",
-            "unit": "uV"
+            "rows": null,
+            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "unit": "uV",
+            "caption": "not checked against the decomposition input",
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
           }
         },
         "parameters": {
@@ -7897,7 +7916,7 @@
               ["P4", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "c4ea5ba818ba63d17da9da5d7346954069a39e9ffc5ea268fa7c3ee2cf14f396",
+            "channel_types_sha256": "58b931b1be999926941c7dfd765e9cba12aa81f578cceb84f0bfac4cf197e535",
             "reference": "average",
             "unit": "uV"
           }
@@ -7997,6 +8016,11 @@
                 "function": "eegprep.pop_reref"
               }
             ],
+            "store": {
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+            },
             "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
             "channel_types": [
               ["Fp1", "EEG"],
@@ -8009,14 +8033,9 @@
               ["P4", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "c4ea5ba818ba63d17da9da5d7346954069a39e9ffc5ea268fa7c3ee2cf14f396",
+            "channel_types_sha256": "58b931b1be999926941c7dfd765e9cba12aa81f578cceb84f0bfac4cf197e535",
             "reference": "average",
-            "unit": "uV",
-            "store": {
-              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
-              "group": "eeg",
-              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
-            }
+            "unit": "uV"
           }
         }
       },
@@ -8120,6 +8139,11 @@
                 "function": "eegprep.pop_reref"
               }
             ],
+            "store": {
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+            },
             "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
             "channel_types": [
               ["Fp1", "EEG"],
@@ -8132,14 +8156,9 @@
               ["P4", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "c4ea5ba818ba63d17da9da5d7346954069a39e9ffc5ea268fa7c3ee2cf14f396",
+            "channel_types_sha256": "58b931b1be999926941c7dfd765e9cba12aa81f578cceb84f0bfac4cf197e535",
             "reference": "average",
-            "unit": "uV",
-            "store": {
-              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
-              "group": "eeg",
-              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
-            }
+            "unit": "uV"
           }
         }
       },
@@ -8211,9 +8230,18 @@
         "transform": {
           "name": "nemar.ic-activity.v1",
           "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels listed, physical unit",
+            "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
             "rows": [0, 1, 2, 3, 4, 5, 6],
-            "unit": "µV"
+            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "unit": "µV",
+            "caption": null,
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
           }
         },
         "parameters": {
@@ -8254,6 +8282,11 @@
                 "function": "eegprep.pop_reref"
               }
             ],
+            "store": {
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+            },
             "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
             "channel_types": [
               ["Fp1", "EEG"],
@@ -8266,14 +8299,9 @@
               ["P4", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "c4ea5ba818ba63d17da9da5d7346954069a39e9ffc5ea268fa7c3ee2cf14f396",
+            "channel_types_sha256": "58b931b1be999926941c7dfd765e9cba12aa81f578cceb84f0bfac4cf197e535",
             "reference": "average",
-            "unit": "uV",
-            "store": {
-              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
-              "group": "eeg",
-              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
-            }
+            "unit": "uV"
           }
         },
         "data": [
@@ -8339,9 +8367,18 @@
         "transform": {
           "name": "nemar.ic-activity.v1",
           "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels listed, physical unit",
+            "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
             "rows": [0, 1, 2, 3, 4, 5, 6],
-            "unit": "µV"
+            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "unit": "µV",
+            "caption": null,
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
           }
         },
         "parameters": {
@@ -8382,6 +8419,11 @@
                 "function": "eegprep.pop_reref"
               }
             ],
+            "store": {
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+            },
             "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
             "channel_types": [
               ["Fp1", "EEG"],
@@ -8394,14 +8436,9 @@
               ["P4", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "c4ea5ba818ba63d17da9da5d7346954069a39e9ffc5ea268fa7c3ee2cf14f396",
+            "channel_types_sha256": "58b931b1be999926941c7dfd765e9cba12aa81f578cceb84f0bfac4cf197e535",
             "reference": "average",
-            "unit": "uV",
-            "store": {
-              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
-              "group": "eeg",
-              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
-            }
+            "unit": "uV"
           }
         }
       },
@@ -8464,9 +8501,18 @@
         "transform": {
           "name": "nemar.ic-activity.v1",
           "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels listed, physical unit",
+            "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
             "rows": [0, 1, 2, 3, 4, 5, 6],
-            "unit": "µV"
+            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "unit": "µV",
+            "caption": null,
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
           }
         },
         "parameters": {
@@ -8507,6 +8553,11 @@
                 "function": "eegprep.pop_reref"
               }
             ],
+            "store": {
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+            },
             "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
             "channel_types": [
               ["Fp1", "EEG"],
@@ -8519,14 +8570,9 @@
               ["P4", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "c4ea5ba818ba63d17da9da5d7346954069a39e9ffc5ea268fa7c3ee2cf14f396",
+            "channel_types_sha256": "58b931b1be999926941c7dfd765e9cba12aa81f578cceb84f0bfac4cf197e535",
             "reference": "average",
-            "unit": "uV",
-            "store": {
-              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
-              "group": "eeg",
-              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
-            }
+            "unit": "uV"
           }
         }
       },
@@ -8592,8 +8638,18 @@
         "transform": {
           "name": "nemar.ic-activity.v1",
           "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels listed, physical unit",
+            "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
-            "unit": "µV"
+            "rows": null,
+            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "unit": "µV",
+            "caption": null,
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
           }
         },
         "parameters": {
@@ -8634,6 +8690,11 @@
                 "function": "eegprep.pop_reref"
               }
             ],
+            "store": {
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+            },
             "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
             "channel_types": [
               ["Fp1", "EEG"],
@@ -8646,20 +8707,15 @@
               ["P4", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "c4ea5ba818ba63d17da9da5d7346954069a39e9ffc5ea268fa7c3ee2cf14f396",
+            "channel_types_sha256": "58b931b1be999926941c7dfd765e9cba12aa81f578cceb84f0bfac4cf197e535",
             "reference": "average",
-            "unit": "uV",
-            "store": {
-              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
-              "group": "eeg",
-              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
-            }
+            "unit": "uV"
           }
         }
       },
       "valid": false,
       "errors": [
-        ["required", "transform/parameters"]
+        ["type", "transform/parameters/rows"]
       ]
     },
     {
@@ -8718,9 +8774,18 @@
         "transform": {
           "name": "nemar.ic-activity.v1",
           "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels matched by label, in microvolts: the view converts by the store's unit field and refuses an unknown unit or any channel it cannot match",
+            "note": "no preprocessing; activations approximate the decomposition input",
             "match": "label",
+            "rows": [0, 1],
+            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
             "unit": "uV",
-            "rows": [0, 1]
+            "caption": "not checked against the decomposition input",
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
           }
         },
         "parameters": {
@@ -8773,7 +8838,7 @@
               ["P4", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "c4ea5ba818ba63d17da9da5d7346954069a39e9ffc5ea268fa7c3ee2cf14f396",
+            "channel_types_sha256": "58b931b1be999926941c7dfd765e9cba12aa81f578cceb84f0bfac4cf197e535",
             "reference": "average",
             "unit": "uV"
           }
@@ -8781,7 +8846,7 @@
       },
       "valid": false,
       "errors": [
-        ["not", "transform/parameters/rows"]
+        ["type", "transform/parameters/rows"]
       ]
     },
     {
@@ -8840,9 +8905,18 @@
         "transform": {
           "name": "nemar.ic-activity.v1",
           "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels matched by label, in microvolts: the view converts by the store's unit field and refuses an unknown unit or any channel it cannot match",
+            "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
             "rows": [0],
-            "unit": "uV"
+            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "unit": "uV",
+            "caption": "not checked against the decomposition input",
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
           }
         },
         "parameters": {
@@ -8895,7 +8969,7 @@
               ["P4", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "c4ea5ba818ba63d17da9da5d7346954069a39e9ffc5ea268fa7c3ee2cf14f396",
+            "channel_types_sha256": "58b931b1be999926941c7dfd765e9cba12aa81f578cceb84f0bfac4cf197e535",
             "reference": "average",
             "unit": "uV"
           }
@@ -8962,9 +9036,18 @@
         "transform": {
           "name": "nemar.ic-activity.v1",
           "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels listed, physical unit",
+            "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
             "rows": [0, 1, 2, 3, 4, 5, 6],
-            "unit": "nV"
+            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "unit": "nV",
+            "caption": null,
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
           }
         },
         "parameters": {
@@ -9005,6 +9088,11 @@
                 "function": "eegprep.pop_reref"
               }
             ],
+            "store": {
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+            },
             "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
             "channel_types": [
               ["Fp1", "EEG"],
@@ -9017,14 +9105,9 @@
               ["P4", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "c4ea5ba818ba63d17da9da5d7346954069a39e9ffc5ea268fa7c3ee2cf14f396",
+            "channel_types_sha256": "58b931b1be999926941c7dfd765e9cba12aa81f578cceb84f0bfac4cf197e535",
             "reference": "average",
-            "unit": "uV",
-            "store": {
-              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
-              "group": "eeg",
-              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
-            }
+            "unit": "uV"
           }
         }
       },
@@ -9089,9 +9172,18 @@
         "transform": {
           "name": "nemar.ic-activity.v1",
           "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels listed, physical unit",
+            "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
             "rows": [0, 1, 2, 3, 4, 5, 6],
-            "unit": "µV"
+            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "unit": "µV",
+            "caption": null,
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
           }
         },
         "parameters": {
@@ -9128,6 +9220,11 @@
                 "function": "eegprep.pop_reref"
               }
             ],
+            "store": {
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+            },
             "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
             "channel_types": [
               ["Fp1", "EEG"],
@@ -9140,14 +9237,9 @@
               ["P4", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "c4ea5ba818ba63d17da9da5d7346954069a39e9ffc5ea268fa7c3ee2cf14f396",
+            "channel_types_sha256": "58b931b1be999926941c7dfd765e9cba12aa81f578cceb84f0bfac4cf197e535",
             "reference": "average",
-            "unit": "uV",
-            "store": {
-              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
-              "group": "eeg",
-              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
-            }
+            "unit": "uV"
           }
         }
       },
@@ -9212,9 +9304,18 @@
         "transform": {
           "name": "nemar.ic-activity.v1",
           "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels listed, physical unit",
+            "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
             "rows": [0, 1, 2, 3, 4, 5, 6],
-            "unit": "µV"
+            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "unit": "µV",
+            "caption": null,
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
           }
         },
         "parameters": {
@@ -9255,6 +9356,11 @@
                 "function": "eegprep.pop_reref"
               }
             ],
+            "store": {
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+            },
             "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
             "channel_types": [
               ["Fp1", "EEG"],
@@ -9267,14 +9373,9 @@
               ["P4", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "c4ea5ba818ba63d17da9da5d7346954069a39e9ffc5ea268fa7c3ee2cf14f396",
+            "channel_types_sha256": "58b931b1be999926941c7dfd765e9cba12aa81f578cceb84f0bfac4cf197e535",
             "reference": "average",
-            "unit": "uV",
-            "store": {
-              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
-              "group": "eeg",
-              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
-            }
+            "unit": "uV"
           }
         }
       },
@@ -9339,9 +9440,18 @@
         "transform": {
           "name": "nemar.ic-activity.v1",
           "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels listed, physical unit",
+            "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
             "rows": [0, 1, 2, 3, 4, 5, 6],
-            "unit": "µV"
+            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "unit": "µV",
+            "caption": null,
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
           }
         },
         "parameters": {
@@ -9382,6 +9492,11 @@
                 "function": "eegprep.pop_reref"
               }
             ],
+            "store": {
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+            },
             "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
             "channel_types": [
               ["Fp1", "EEG"],
@@ -9394,14 +9509,9 @@
               ["P4", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "c4ea5ba818ba63d17da9da5d7346954069a39e9ffc5ea268fa7c3ee2cf14f396",
+            "channel_types_sha256": "58b931b1be999926941c7dfd765e9cba12aa81f578cceb84f0bfac4cf197e535",
             "reference": "average",
-            "unit": "uV",
-            "store": {
-              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
-              "group": "eeg",
-              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
-            }
+            "unit": "uV"
           }
         }
       },
@@ -9466,9 +9576,18 @@
         "transform": {
           "name": "nemar.ic-activity.v1",
           "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels listed, physical unit",
+            "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
             "rows": [0, 1, 2, 3, 4, 5, 6],
-            "unit": "µV"
+            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "unit": "µV",
+            "caption": null,
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
           }
         },
         "parameters": {
@@ -9540,9 +9659,18 @@
         "transform": {
           "name": "nemar.ic-activity.v1",
           "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels listed, physical unit",
+            "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
             "rows": [0, 1, 2, 3, 4, 5, 6],
-            "unit": "µV"
+            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "unit": "µV",
+            "caption": null,
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
           }
         },
         "parameters": {
@@ -9595,7 +9723,7 @@
               ["P4", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "c4ea5ba818ba63d17da9da5d7346954069a39e9ffc5ea268fa7c3ee2cf14f396",
+            "channel_types_sha256": "58b931b1be999926941c7dfd765e9cba12aa81f578cceb84f0bfac4cf197e535",
             "reference": "average",
             "unit": "uV"
           }
@@ -9662,8 +9790,18 @@
         "transform": {
           "name": "nemar.ic-activity.v1",
           "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels matched by label, in microvolts: the view converts by the store's unit field and refuses an unknown unit or any channel it cannot match",
+            "note": "no preprocessing; activations approximate the decomposition input",
             "match": "label",
-            "unit": "uV"
+            "rows": null,
+            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "unit": "uV",
+            "caption": "not checked against the decomposition input",
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
           }
         },
         "parameters": {
@@ -9716,7 +9854,7 @@
               ["P4", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "c4ea5ba818ba63d17da9da5d7346954069a39e9ffc5ea268fa7c3ee2cf14f396",
+            "channel_types_sha256": "58b931b1be999926941c7dfd765e9cba12aa81f578cceb84f0bfac4cf197e535",
             "reference": "average",
             "unit": "uV",
             "store": {
@@ -9788,8 +9926,18 @@
         "transform": {
           "name": "nemar.ic-activity.v1",
           "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels matched by label, in microvolts: the view converts by the store's unit field and refuses an unknown unit or any channel it cannot match",
+            "note": "no preprocessing; activations approximate the decomposition input",
             "match": "label",
-            "unit": "uV"
+            "rows": null,
+            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "unit": "uV",
+            "caption": "not checked against the decomposition input",
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
           }
         },
         "parameters": {
@@ -9842,7 +9990,7 @@
               ["P4", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "c4ea5ba818ba63d17da9da5d7346954069a39e9ffc5ea268fa7c3ee2cf14f396",
+            "channel_types_sha256": "58b931b1be999926941c7dfd765e9cba12aa81f578cceb84f0bfac4cf197e535",
             "reference": "average",
             "unit": "uV"
           }
@@ -9909,9 +10057,18 @@
         "transform": {
           "name": "nemar.ic-activity.v1",
           "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels listed, physical unit",
+            "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
             "rows": [0, 1, 2, 3, 4, 5, 6],
-            "unit": "µV"
+            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "unit": "µV",
+            "caption": null,
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
           }
         },
         "parameters": {
@@ -9952,6 +10109,11 @@
                 "function": "eegprep.pop_reref"
               }
             ],
+            "store": {
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+            },
             "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
             "channel_types": [
               ["Fp1", "EEG"],
@@ -9965,18 +10127,678 @@
               ["ECG", "ECG"]
             ],
             "reference": "average",
-            "unit": "uV",
-            "store": {
-              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
-              "group": "eeg",
-              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
-            }
+            "unit": "uV"
           }
         }
       },
       "valid": false,
       "errors": [
-        ["dependentRequired", "parameters/decomposition_input"]
+        ["required", "parameters/decomposition_input"]
+      ]
+    },
+    {
+      "name": "ic_activity_no_channel_types",
+      "covers": "The record states every row's type.",
+      "schema": "view",
+      "instance": {
+        "key": "icactivity",
+        "kind": "nemar.ic-activity",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Component activations computed in your browser from the serving copy, with no preprocessing; they approximate the decomposition's input, which was filtered and cleaned with artifact subspace reconstruction.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "unmixing",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
+              "size": 768
+            }
+          },
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "components",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
+              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
+              "size": 512
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "b68fb64a6db637af549087fb5cf77cf44b46f088042c31ea214d6069b2c0502a",
+              "size": 214
+            }
+          }
+        ],
+        "transform": {
+          "name": "nemar.ic-activity.v1",
+          "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels listed, physical unit",
+            "note": "no preprocessing; activations approximate the decomposition input",
+            "match": "store_row",
+            "rows": [0, 1, 2, 3, 4, 5, 6],
+            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "unit": "µV",
+            "caption": null,
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
+          }
+        },
+        "parameters": {
+          "display_filter": {
+            "highpass_hz": 1,
+            "order": 2
+          },
+          "max_window_s": 30,
+          "decomposition_input": {
+            "source": "serving_copy",
+            "preprocessing": [
+              {
+                "step": "select",
+                "function": "eegprep.pop_select"
+              },
+              {
+                "step": "flatline",
+                "function": "eegprep.clean_flatlines"
+              },
+              {
+                "step": "drift",
+                "function": "eegprep.pop_eegfiltnew"
+              },
+              {
+                "step": "bad_channels",
+                "function": "eegprep.clean_channels"
+              },
+              {
+                "step": "asr",
+                "function": "eegprep.clean_asr"
+              },
+              {
+                "step": "asr",
+                "function": "eegprep.clean_artifacts"
+              },
+              {
+                "step": "reref",
+                "function": "eegprep.pop_reref"
+              }
+            ],
+            "store": {
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+            },
+            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channel_types_sha256": "58b931b1be999926941c7dfd765e9cba12aa81f578cceb84f0bfac4cf197e535",
+            "reference": "average",
+            "unit": "uV"
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        ["required", "parameters/decomposition_input"]
+      ]
+    },
+    {
+      "name": "ic_activity_no_shaded",
+      "covers": "The browser_transform block names the shaded spans.",
+      "schema": "view",
+      "instance": {
+        "key": "icactivity",
+        "kind": "nemar.ic-activity",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Component activations computed in your browser from the serving copy, with no preprocessing; they approximate the decomposition's input, which was filtered and cleaned with artifact subspace reconstruction.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "unmixing",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
+              "size": 768
+            }
+          },
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "components",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
+              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
+              "size": 512
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "b68fb64a6db637af549087fb5cf77cf44b46f088042c31ea214d6069b2c0502a",
+              "size": 214
+            }
+          }
+        ],
+        "transform": {
+          "name": "nemar.ic-activity.v1",
+          "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels listed, physical unit",
+            "note": "no preprocessing; activations approximate the decomposition input",
+            "match": "store_row",
+            "rows": [0, 1, 2, 3, 4, 5, 6],
+            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "unit": "µV",
+            "caption": null
+          }
+        },
+        "parameters": {
+          "display_filter": {
+            "highpass_hz": 1,
+            "order": 2
+          },
+          "max_window_s": 30,
+          "decomposition_input": {
+            "source": "serving_copy",
+            "preprocessing": [
+              {
+                "step": "select",
+                "function": "eegprep.pop_select"
+              },
+              {
+                "step": "flatline",
+                "function": "eegprep.clean_flatlines"
+              },
+              {
+                "step": "drift",
+                "function": "eegprep.pop_eegfiltnew"
+              },
+              {
+                "step": "bad_channels",
+                "function": "eegprep.clean_channels"
+              },
+              {
+                "step": "asr",
+                "function": "eegprep.clean_asr"
+              },
+              {
+                "step": "asr",
+                "function": "eegprep.clean_artifacts"
+              },
+              {
+                "step": "reref",
+                "function": "eegprep.pop_reref"
+              }
+            ],
+            "store": {
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+            },
+            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channel_types": [
+              ["Fp1", "EEG"],
+              ["Fp2", "EEG"],
+              ["F3", "EEG"],
+              ["F4", "EEG"],
+              ["C3", "EEG"],
+              ["C4", "EEG"],
+              ["P3", "EEG"],
+              ["P4", "EEG"],
+              ["ECG", "ECG"]
+            ],
+            "channel_types_sha256": "58b931b1be999926941c7dfd765e9cba12aa81f578cceb84f0bfac4cf197e535",
+            "reference": "average",
+            "unit": "uV"
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        ["required", "transform/parameters"]
+      ]
+    },
+    {
+      "name": "ic_activity_no_columns",
+      "covers": "The browser_transform block names the matrix's columns.",
+      "schema": "view",
+      "instance": {
+        "key": "icactivity",
+        "kind": "nemar.ic-activity",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Component activations computed in your browser from the serving copy, with no preprocessing; they approximate the decomposition's input, which was filtered and cleaned with artifact subspace reconstruction.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "unmixing",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
+              "size": 768
+            }
+          },
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "components",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
+              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
+              "size": 512
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "b68fb64a6db637af549087fb5cf77cf44b46f088042c31ea214d6069b2c0502a",
+              "size": 214
+            }
+          }
+        ],
+        "transform": {
+          "name": "nemar.ic-activity.v1",
+          "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels listed, physical unit",
+            "note": "no preprocessing; activations approximate the decomposition input",
+            "match": "store_row",
+            "rows": [0, 1, 2, 3, 4, 5, 6],
+            "unit": "µV",
+            "caption": null,
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
+          }
+        },
+        "parameters": {
+          "display_filter": {
+            "highpass_hz": 1,
+            "order": 2
+          },
+          "max_window_s": 30,
+          "decomposition_input": {
+            "source": "serving_copy",
+            "preprocessing": [
+              {
+                "step": "select",
+                "function": "eegprep.pop_select"
+              },
+              {
+                "step": "flatline",
+                "function": "eegprep.clean_flatlines"
+              },
+              {
+                "step": "drift",
+                "function": "eegprep.pop_eegfiltnew"
+              },
+              {
+                "step": "bad_channels",
+                "function": "eegprep.clean_channels"
+              },
+              {
+                "step": "asr",
+                "function": "eegprep.clean_asr"
+              },
+              {
+                "step": "asr",
+                "function": "eegprep.clean_artifacts"
+              },
+              {
+                "step": "reref",
+                "function": "eegprep.pop_reref"
+              }
+            ],
+            "store": {
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+            },
+            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channel_types": [
+              ["Fp1", "EEG"],
+              ["Fp2", "EEG"],
+              ["F3", "EEG"],
+              ["F4", "EEG"],
+              ["C3", "EEG"],
+              ["C4", "EEG"],
+              ["P3", "EEG"],
+              ["P4", "EEG"],
+              ["ECG", "ECG"]
+            ],
+            "channel_types_sha256": "58b931b1be999926941c7dfd765e9cba12aa81f578cceb84f0bfac4cf197e535",
+            "reference": "average",
+            "unit": "uV"
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        ["required", "transform/parameters"]
+      ]
+    },
+    {
+      "name": "ic_activity_caption_empty",
+      "covers": "A caption is text or null.",
+      "schema": "view",
+      "instance": {
+        "key": "icactivity",
+        "kind": "nemar.ic-activity",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Component activations computed in your browser from the serving copy, with no preprocessing; they approximate the decomposition's input, which was filtered and cleaned with artifact subspace reconstruction.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "unmixing",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
+              "size": 768
+            }
+          },
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "components",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
+              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
+              "size": 512
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "b68fb64a6db637af549087fb5cf77cf44b46f088042c31ea214d6069b2c0502a",
+              "size": 214
+            }
+          }
+        ],
+        "transform": {
+          "name": "nemar.ic-activity.v1",
+          "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels listed, physical unit",
+            "note": "no preprocessing; activations approximate the decomposition input",
+            "match": "store_row",
+            "rows": [0, 1, 2, 3, 4, 5, 6],
+            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "unit": "µV",
+            "caption": "",
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
+          }
+        },
+        "parameters": {
+          "display_filter": {
+            "highpass_hz": 1,
+            "order": 2
+          },
+          "max_window_s": 30,
+          "decomposition_input": {
+            "source": "serving_copy",
+            "preprocessing": [
+              {
+                "step": "select",
+                "function": "eegprep.pop_select"
+              },
+              {
+                "step": "flatline",
+                "function": "eegprep.clean_flatlines"
+              },
+              {
+                "step": "drift",
+                "function": "eegprep.pop_eegfiltnew"
+              },
+              {
+                "step": "bad_channels",
+                "function": "eegprep.clean_channels"
+              },
+              {
+                "step": "asr",
+                "function": "eegprep.clean_asr"
+              },
+              {
+                "step": "asr",
+                "function": "eegprep.clean_artifacts"
+              },
+              {
+                "step": "reref",
+                "function": "eegprep.pop_reref"
+              }
+            ],
+            "store": {
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+            },
+            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channel_types": [
+              ["Fp1", "EEG"],
+              ["Fp2", "EEG"],
+              ["F3", "EEG"],
+              ["F4", "EEG"],
+              ["C3", "EEG"],
+              ["C4", "EEG"],
+              ["P3", "EEG"],
+              ["P4", "EEG"],
+              ["ECG", "ECG"]
+            ],
+            "channel_types_sha256": "58b931b1be999926941c7dfd765e9cba12aa81f578cceb84f0bfac4cf197e535",
+            "reference": "average",
+            "unit": "uV"
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        ["anyOf", "transform/parameters/caption"]
+      ]
+    },
+    {
+      "name": "ic_activity_shaded_closed",
+      "covers": "The shaded spans are {label, files}.",
+      "schema": "view",
+      "instance": {
+        "key": "icactivity",
+        "kind": "nemar.ic-activity",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Component activations computed in your browser from the serving copy, with no preprocessing; they approximate the decomposition's input, which was filtered and cleaned with artifact subspace reconstruction.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "unmixing",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+              "sha256": "386e45f315f6558ea2ce30a139af1811111a786f77e90906fc29d53e1063c83e",
+              "size": 768
+            }
+          },
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "components",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
+              "sha256": "0d16c37f4898607ebf374df2a75fe9c442559aa90867cb46a91155fdc31f3fe6",
+              "size": 512
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "b68fb64a6db637af549087fb5cf77cf44b46f088042c31ea214d6069b2c0502a",
+              "size": 214
+            }
+          }
+        ],
+        "transform": {
+          "name": "nemar.ic-activity.v1",
+          "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels listed, physical unit",
+            "note": "no preprocessing; activations approximate the decomposition input",
+            "match": "store_row",
+            "rows": [0, 1, 2, 3, 4, 5, 6],
+            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "unit": "µV",
+            "caption": null,
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"],
+              "reason": "asr_burst_rejection"
+            }
+          }
+        },
+        "parameters": {
+          "display_filter": {
+            "highpass_hz": 1,
+            "order": 2
+          },
+          "max_window_s": 30,
+          "decomposition_input": {
+            "source": "serving_copy",
+            "preprocessing": [
+              {
+                "step": "select",
+                "function": "eegprep.pop_select"
+              },
+              {
+                "step": "flatline",
+                "function": "eegprep.clean_flatlines"
+              },
+              {
+                "step": "drift",
+                "function": "eegprep.pop_eegfiltnew"
+              },
+              {
+                "step": "bad_channels",
+                "function": "eegprep.clean_channels"
+              },
+              {
+                "step": "asr",
+                "function": "eegprep.clean_asr"
+              },
+              {
+                "step": "asr",
+                "function": "eegprep.clean_artifacts"
+              },
+              {
+                "step": "reref",
+                "function": "eegprep.pop_reref"
+              }
+            ],
+            "store": {
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+            },
+            "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "channel_types": [
+              ["Fp1", "EEG"],
+              ["Fp2", "EEG"],
+              ["F3", "EEG"],
+              ["F4", "EEG"],
+              ["C3", "EEG"],
+              ["C4", "EEG"],
+              ["P3", "EEG"],
+              ["P4", "EEG"],
+              ["ECG", "ECG"]
+            ],
+            "channel_types_sha256": "58b931b1be999926941c7dfd765e9cba12aa81f578cceb84f0bfac4cf197e535",
+            "reference": "average",
+            "unit": "uV"
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        ["additionalProperties", "transform/parameters/shaded"]
       ]
     },
     {
@@ -10035,9 +10857,18 @@
         "transform": {
           "name": "nemar.ic-activity.v1",
           "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels listed, physical unit",
+            "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
             "rows": [0, 1, 2, 3, 4, 5, 6],
-            "unit": "µV"
+            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "unit": "µV",
+            "caption": null,
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
           }
         },
         "parameters": {
@@ -10081,6 +10912,11 @@
                 "function": "eegprep.pop_reref"
               }
             ],
+            "store": {
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+            },
             "channels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
             "channel_types": [
               ["Fp1", "EEG"],
@@ -10093,14 +10929,9 @@
               ["P4", "EEG"],
               ["ECG", "ECG"]
             ],
-            "channel_types_sha256": "c4ea5ba818ba63d17da9da5d7346954069a39e9ffc5ea268fa7c3ee2cf14f396",
+            "channel_types_sha256": "58b931b1be999926941c7dfd765e9cba12aa81f578cceb84f0bfac4cf197e535",
             "reference": "average",
-            "unit": "uV",
-            "store": {
-              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
-              "group": "eeg",
-              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
-            }
+            "unit": "uV"
           }
         }
       },
@@ -10360,9 +11191,18 @@
         "transform": {
           "name": "nemar.ic-activity.v1",
           "parameters": {
+            "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+            "applies_to": "serving_copy channels listed, physical unit",
+            "note": "no preprocessing; activations approximate the decomposition input",
             "match": "store_row",
             "rows": [0, 1, 2, 3, 4, 5, 6],
-            "unit": "µV"
+            "columns": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3"],
+            "unit": "µV",
+            "caption": null,
+            "shaded": {
+              "label": "burst",
+              "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]
+            }
           }
         }
       },

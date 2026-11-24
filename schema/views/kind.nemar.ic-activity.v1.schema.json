@@ -277,11 +277,13 @@
   "$defs": {
     "decompositionInput": {
       "type": "object",
-      "description": "What the decomposition was given: where its input came from (source), the steps that shaped it in the order they ran (preprocessing), its channels, its reference and its unit, and, for an input read from the serving copy, that store; optionally the type of every row of the loaded recording (channel_types) with its digest. The activations this view draws apply none of the preprocessing, so they approximate the decomposition's input.",
+      "description": "What the decomposition was given, as nemar-process writes it in the record's extensions.nemar.ica.decomposition_input: where its input came from (source), the steps that shaped it in the order they ran (preprocessing), its channels, the type of every row of the loaded recording (channel_types) with their digest, its reference and its unit, and, for an input read from the serving copy, that store. The activations this view draws apply none of the preprocessing, so they approximate the decomposition's input.",
       "required": [
         "source",
         "preprocessing",
         "channels",
+        "channel_types",
+        "channel_types_sha256",
         "reference",
         "unit"
       ],
@@ -367,7 +369,7 @@
           "type": "array",
           "minItems": 1,
           "maxItems": 4096,
-          "description": "Every row of the loaded recording as [label, type], the type as the loader gave it for that row (null for an untyped row); given with channel_types_sha256.",
+          "description": "Every row of the loaded recording, in order, as [label, type], the type as the loader gave it for that row (null for an untyped row): what decided, row by row, which rows were signal channels.",
           "items": {
             "type": "array",
             "minItems": 2,
@@ -389,16 +391,8 @@
         },
         "channel_types_sha256": {
           "$ref": "../definitions/processingTypes.schema.json#/$defs/sha256",
-          "description": "The digest of channel_types, as the run's record states it; given with channel_types."
+          "description": "The SHA-256, as 64 lowercase hexadecimal digits, of the UTF-8 bytes of the JSON text of {\"channel_types\": channel_types} with sorted keys, no spaces (separators , and :), every character outside ASCII escaped as \\uXXXX in lowercase hexadecimal, and one final line feed: Python's json.dumps(document, sort_keys=True, separators=(\",\", \":\"), ensure_ascii=True) plus \"\\n\", as nemar-process computes it."
         }
-      },
-      "dependentRequired": {
-        "channel_types": [
-          "channel_types_sha256"
-        ],
-        "channel_types_sha256": [
-          "channel_types"
-        ]
       },
       "allOf": [
         {

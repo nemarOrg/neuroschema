@@ -338,6 +338,19 @@ class TestIcMaps:
 # ── nemar.ic-classes and its content ───────────────────────────────────────
 
 
+# The browser_transform members a decomposition of the archive writes.
+LABEL_MATCH = {
+    "applies_to": (
+        "serving_copy channels matched by label, in microvolts: the view converts "
+        "by the store's unit field and refuses an unknown unit or any channel it "
+        "cannot match"
+    ),
+    "match": "label",
+    "rows": None,
+    "unit": "uV",
+    "caption": "not checked against the decomposition input",
+}
+
 CONTENT = {
     "categories": [
         "Brain",
@@ -428,6 +441,51 @@ class TestComputedPresets:
         ]
         assert view_errors(instance) == set()
 
+    @pytest.mark.parametrize(
+        "member", ["channel_types", "channel_types_sha256", "channels", "reference"]
+    )
+    def test_the_decomposition_input_states_what_the_record_does(self, member):
+        instance = view("icactivity")
+        del instance["parameters"]["decomposition_input"][member]
+        assert view_errors(instance) == {("required", "parameters/decomposition_input")}
+
+    @pytest.mark.parametrize(
+        "member",
+        ["matrix", "applies_to", "note", "columns", "caption", "shaded", "unit"],
+    )
+    def test_the_browser_transform_block_is_whole(self, member):
+        instance = view("icactivity")
+        del instance["transform"]["parameters"][member]
+        assert view_errors(instance) == {("required", "transform/parameters")}
+
+    @pytest.mark.parametrize(
+        ("row", "validator"),
+        [(["Fp1"], "minItems"), (["Fp1", "EEG", "extra"], "maxItems")],
+    )
+    def test_each_channel_type_row_is_a_pair(self, row, validator):
+        instance = view("icactivity")
+        instance["parameters"]["decomposition_input"]["channel_types"][0] = row
+        assert view_errors(instance) == {
+            (validator, "parameters/decomposition_input/channel_types/0")
+        }
+
+    def test_label_matching_names_null_rows(self):
+        instance = view("icactivity")
+        signal = instance["inputs"][1]["store"]
+        signal.update(profile="archive", content_sha256=None)
+        given = instance["parameters"]["decomposition_input"]
+        given["source"] = "archive"
+        del given["store"]
+        instance["transform"]["parameters"] |= LABEL_MATCH | {"rows": [0, 1]}
+        assert view_errors(instance) == {("type", "transform/parameters/rows")}
+
+    def test_the_shaded_spans_are_closed(self):
+        instance = view("icactivity")
+        instance["transform"]["parameters"]["shaded"]["reason"] = "asr_burst_rejection"
+        assert view_errors(instance) == {
+            ("additionalProperties", "transform/parameters/shaded")
+        }
+
     def test_rows_go_with_store_row(self):
         instance = view("icactivity")
         del instance["transform"]["parameters"]["rows"]
@@ -441,7 +499,7 @@ class TestComputedPresets:
         given["source"] = "archive"
         del given["store"]
         assert view_errors(instance) == {("const", "transform/parameters/match")}
-        instance["transform"]["parameters"] = {"match": "label", "unit": "uV"}
+        instance["transform"]["parameters"] |= LABEL_MATCH
         assert view_errors(instance) == set()
 
     def test_the_decomposition_and_the_signal_name_one_profile(self):
@@ -501,7 +559,7 @@ class TestComputedPresets:
     def test_a_serving_decomposition_reads_a_serving_store(self):
         instance = view("icactivity")
         instance["inputs"][1]["store"]["profile"] = "archive"
-        instance["transform"]["parameters"] = {"match": "label", "unit": "uV"}
+        instance["transform"]["parameters"] |= LABEL_MATCH
         assert view_errors(instance) == {("const", "inputs/1/store/profile")}
 
 
@@ -540,15 +598,27 @@ class TestTransform:
         assert view_errors(instance) == {("required", "inputs/1")}
 
     def test_the_match_is_required(self):
+        """Without match, rows must be null (the label branch), so the error
+        that names the missing match is the required one."""
         instance = transform_view()
         del instance["transform"]["parameters"]["match"]
-        del instance["transform"]["parameters"]["rows"]
+        instance["transform"]["parameters"]["rows"] = None
         assert view_errors(instance) == {("required", "transform/parameters")}
 
     def test_rows_are_distinct(self):
         instance = transform_view()
         instance["transform"]["parameters"]["rows"] = [0, 0, 1, 2, 3, 4, 5]
-        assert view_errors(instance) == {("uniqueItems", "transform/parameters/rows")}
+        assert view_errors(instance) == {("anyOf", "transform/parameters/rows")}
+        instance["transform"]["parameters"]["rows"] = [0, 1, 2, 3, 4, 5, 6]
+        assert view_errors(instance) == set()
+
+    def test_columns_are_distinct(self):
+        instance = transform_view()
+        columns = instance["transform"]["parameters"]["columns"]
+        instance["transform"]["parameters"]["columns"] = [columns[0], *columns[:-1]]
+        assert view_errors(instance) == {
+            ("uniqueItems", "transform/parameters/columns")
+        }
 
     def test_the_parameters_are_closed(self):
         instance = transform_view()

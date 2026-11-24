@@ -42,7 +42,14 @@ That filter is not part of the decomposition and not part of the transform.
     {"role": "components", "file": {"location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv", "sha256": "…", "size": 1980}},
     {"role": "badsegments", "file": {"location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sha256": "…", "size": 120}}
   ],
-  "transform": {"name": "nemar.ic-activity.v1", "parameters": {"match": "store_row", "rows": [0, 1, 2, 3, 5], "unit": "µV"}},
+  "transform": {"name": "nemar.ic-activity.v1", "parameters": {
+    "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+    "applies_to": "serving_copy channels listed, physical unit",
+    "note": "no preprocessing; activations approximate the decomposition input",
+    "match": "store_row", "rows": [0, 1, 2, 3, 5], "columns": ["Fp1", "Fp2", "Cz", "Pz", "O2"], "unit": "µV",
+    "caption": null,
+    "shaded": {"label": "burst", "files": ["sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv", "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"]}
+  }},
   "parameters": {
     "display_filter": {"highpass_hz": 1, "order": 2},
     "max_window_s": 30,
@@ -50,6 +57,8 @@ That filter is not part of the decomposition and not part of the transform.
       "source": "serving_copy",
       "preprocessing": [{"step": "drift", "function": "eegprep.pop_eegfiltnew"}, {"step": "asr", "function": "eegprep.clean_asr"}, {"step": "reref", "function": "eegprep.pop_reref"}],
       "channels": ["Fp1", "Fp2", "Cz", "Pz", "O2"],
+      "channel_types": [["Fp1", "EEG"], ["Fp2", "EEG"], ["Cz", "EEG"], ["Pz", "EEG"], ["O1", "EEG"], ["O2", "EEG"], ["ECG", "ECG"]],
+      "channel_types_sha256": "…",
       "reference": "average",
       "unit": "uV",
       "store": {"path": "sub-01/eeg/sub-01_task-rest_eeg.zarr", "group": "eeg", "content_sha256": "…"}
@@ -65,13 +74,18 @@ That filter is not part of the decomposition and not part of the transform.
 | `components` | a TSV file | One row per component, in the matrix's row order; its column `component` labels the components (the recipe's `_components.tsv`). |
 | `badsegments` | a TSV file, optional | The floor's bad segments (`onset` and `duration` in seconds, `label`), which a renderer shades. |
 
-The transform's parameters say how the matrix's columns find their store rows and which unit the matrix takes:
+The transform's parameters are the record's `browser_transform` block (`extensions.nemar.ica.browser_transform`), exactly as nemar-process writes it (nemarOrg/nemar-process#81), every member required:
 
 | Parameter | Meaning |
 |---|---|
+| `matrix` | The matrix's location in the run's product, the location of the input `unmixing`. |
+| `applies_to`, `note` | What the matrix is multiplied by, and what the activations are, in words. |
 | `match` | `store_row`: column j is store row `rows[j]` (a decomposition of the serving copy, which read those rows). `label`: column j is the one store row whose label is column j's (a decomposition of the archive, which read no store). |
-| `rows` | With `store_row`, the 0-based store row of each column, in column order; absent with `label`. |
+| `rows` | With `store_row`, the 0-based store row of each column, in column order; `null` with `label`. |
+| `columns` | The matrix's columns: its header names, in column order. |
 | `unit` | The unit the matrix takes: the store's own unit for a decomposition of the serving copy (its factor to microvolts is folded into the matrix), `uV` for one of the archive. Microvolts may be spelled `uV`, `µV` (U+00B5) or `μV` (U+03BC). |
+| `caption` | A caption the view shows with the activations, or `null`: for a decomposition of the archive, "not checked against the decomposition input". |
+| `shaded` | `{label, files}`: the spans cut from the decomposition's input, the rows labeled `label` (`burst`) of the floor's tables `files`. |
 
 The kind's parameters:
 
@@ -79,10 +93,13 @@ The kind's parameters:
 |---|---|
 | `display_filter` | `{highpass_hz, order}`: the [display filter](#the-display-filter)'s cutoff in hertz, and its order, 2. |
 | `max_window_s` | The longest window, in seconds, a renderer computes at once; at most 30. |
-| `decomposition_input` | What the decomposition was given: `source` (`archive` or `serving_copy`), `preprocessing` (the steps that changed its input, in the order they ran, each `{step, function}`), `channels` (its channels, the matrix's columns, in the recording's order), `reference`, `unit`, and, for `serving_copy` only, `store` (`{path, group, content_sha256}`). It may also carry `channel_types`, every row of the loaded recording as `[label, type]` (the type null for an untyped row), with their digest `channel_types_sha256`. |
+| `decomposition_input` | What the decomposition was given, the record's block of that name exactly as nemar-process writes it, closed: `source` (`archive` or `serving_copy`), `preprocessing` (the steps that changed its input, in the order they ran, each `{step, function}`), `channels` (its channels, the matrix's columns, in the recording's order), `channel_types` (every row of the loaded recording as `[label, type]`, the type null for an untyped row), `channel_types_sha256`, `reference`, `unit`, and, for `serving_copy` only, `store` (`{path, group, content_sha256}`). |
+
+`channel_types_sha256` is the SHA-256, in lowercase hexadecimal, of the UTF-8 bytes of `{"channel_types": channel_types}` as JSON with sorted keys, no spaces, every character outside ASCII escaped as `\uXXXX` (lowercase), and one final line feed: Python's `json.dumps(document, sort_keys=True, separators=(",", ":"), ensure_ascii=True) + "\n"`, nemar-process's `canonical_text`.
+`neuroschema.views.ic_activity.channel_types_sha256` computes it; a renderer does not need it to draw.
 
 The schema checks that a decomposition of the archive declares a store of profile `archive` and matches by `label`, and that one of the serving copy declares a store of profile `serving`, whose `content_sha256` is then a digest.
-The writer also makes sure that `rows` has one entry per column, that the matrix's header is `decomposition_input.channels`, that the components table has one row per matrix row, and, for the serving copy, that `decomposition_input.store` names the `signal` store and its digest.
+The writer also makes sure that `matrix` is the `unmixing` input's location, that `rows` has one entry per column, that the matrix's header is `columns` and `decomposition_input.channels`, that the components table has one row per matrix row, that the first of `shaded.files` is the `badsegments` input's location when there is one, and, for the serving copy, that `decomposition_input.store` names the `signal` store and its digest.
 
 ## The transform `nemar.ic-activity.v1`
 
@@ -104,6 +121,7 @@ A renderer runs these checks in this order, and the first that fails gives the w
    The `unmixing` file, then the `components` file: each is present (`file_missing`), its length is the declared `size` (`file_size_mismatch`), its SHA-256 is the declared `sha256` (`file_digest_mismatch`), and it holds at most `caps.bytes_per_role` bytes (`cap_exceeded`).
 2. **The store digest.**
    When the view declares a digest (`content_sha256` is not null) and the serving copy publishes one for that group, the two are equal (`store_digest_mismatch`).
+   Where the serving copy publishes each group's digest is nemarOrg/nemar-cli#2343's (the converter writes it at commit); until it does, no store publishes one and every view is `not_checked`.
    When either is absent, the activations are drawn and the state is `not_checked`; when both are present and equal, the state is `matches`.
 3. **The matrix.**
    The `unmixing` file meets the TSV grammar, with its words, in their order ([generic-kinds.md](generic-kinds.md#tsv)); its header names are the channel labels, and the grammar already refuses a name twice (`tsv_header_repeated`).
@@ -113,6 +131,7 @@ A renderer runs these checks in this order, and the first that fails gives the w
    The `components` file meets the TSV grammar, holds at most `caps.cells_per_role` cells counting every header column (`cap_exceeded`), has the column `component` (`column_missing`), and has one data row per matrix row (`coords_length`).
    Its `component` cells, in order, label the matrix's rows.
 5. **The channel match.**
+   The matrix's header is the transform's `columns`, in order (`channel_set_mismatch`).
    With `store_row`, `rows` has one entry per column, each a row of the store, and the label of row `rows[j]` is column j's label (`channel_set_mismatch`).
    With `label`, each column's label is the label of exactly one store row (`channel_set_mismatch` when none is, or two are).
    Labels are compared as exact strings: `FP1` is not `Fp1`.
@@ -195,13 +214,14 @@ The filter's transient at each end of a window is part of the display: the same 
 ### Drawing
 
 A renderer draws the filtered activations as `nemar.lines` draws a `values` role: one series per component, against time in seconds, with the readout snapping to a stored sample ([generic-kinds.md](generic-kinds.md#nemarlines-version-1)).
-It shades each row of the `badsegments` input over `[onset, onset + duration)` seconds that meets the window, labeled by its `label` cell.
+It shades each row of the `badsegments` input whose `label` cell is `shaded.label` over `[onset, onset + duration)` seconds, where that meets the window: the spans cut from the decomposition's input.
+It may mark the table's other rows (the floor's bad windows) apart from them.
 With the view's caption it states:
 
 - that the activations were computed in the browser from the serving copy with no preprocessing, so they approximate the decomposition's input, which `decomposition_input` describes;
 - the display filter, a high-pass at `highpass_hz` hertz;
 - the store digest's state: the serving copy "matches the digest NEMAR recorded" (`matches`), or "not checked" (`not_checked`);
-- with `match` `label`, that the channels were matched by label and not checked against the decomposition's input.
+- the transform's `caption` when it is not null (with `match` `label`, that the channels were matched by label and not checked against the decomposition's input).
 
 A refused view draws no activations: it shows the word and offers every file input for download.
 A renderer that knows `nemar.lines` and this transform but not this kind may draw the transform's output as lines; one that knows neither offers the files for download.
@@ -227,7 +247,7 @@ A filter case matches when every value is within 1e-6 times the largest magnitud
 | `empty` | The matrix has no data row. |
 | `column_missing` | The components table has no column `component`. |
 | `coords_length` | The components table does not have one row per matrix row. |
-| `channel_set_mismatch` | A column of the matrix does not find exactly one store row with its label (by `rows` or by label). |
+| `channel_set_mismatch` | The matrix's header is not `columns`, or a column does not find exactly one store row with its label (by `rows` or by label). |
 | `unit_unknown` | A matched store row's unit is not in the table, or is absent. |
 | `filter_out_of_range` | The display filter's cutoff is not below half the store's rate. |
 

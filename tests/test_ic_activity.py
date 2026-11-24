@@ -15,6 +15,7 @@ Needs numpy, the ``views`` extra: ``uv run --extra views pytest``.
 from __future__ import annotations
 
 import copy
+import hashlib
 import importlib.util
 import json
 import math
@@ -466,6 +467,7 @@ def _step_match(case, state):
         case["store"]["labels"],
         transform["match"],
         transform.get("rows"),
+        transform.get("columns"),
     )
 
 
@@ -548,6 +550,39 @@ def test_the_matrix_reads_numbers_only():
     with pytest.raises(ia.IcActivityRefusal) as raised:
         ia.read_unmixing(b"Fp1\tFp2\n1\tn/a\n")
     assert raised.value.word == "cell_not_number"
+
+
+def test_the_channel_types_digest_is_nemar_process_canonical_text():
+    """SHA-256 of json.dumps({"channel_types": ...}, sort_keys, compact,
+    ensure_ascii) plus a line feed, as nemarOrg/nemar-process#81 computes it."""
+    typed = [["Fp1", "EEG"], ["\u00b5", None], ["ECG", "ECG"]]
+    text = '{"channel_types":[["Fp1","EEG"],["\\u00b5",null],["ECG","ECG"]]}\n'
+    assert ia.channel_types_sha256(typed) == hashlib.sha256(text.encode()).hexdigest()
+    for case in [*CASES, *REFUSALS]:
+        given = case["view"]["parameters"]["decomposition_input"]
+        assert (
+            ia.channel_types_sha256(given["channel_types"])
+            == (given["channel_types_sha256"])
+        )
+    example = json.loads(
+        (ROOT / "examples" / "views" / "dataquality-record-nemar-ica.json").read_text()
+    )
+    view = next(
+        v for v in example["recipes"]["nemar-ica"]["views"] if v["key"] == "icactivity"
+    )
+    given = view["parameters"]["decomposition_input"]
+    assert (
+        ia.channel_types_sha256(given["channel_types"])
+        == (given["channel_types_sha256"])
+    )
+
+
+def test_the_matrix_header_is_the_records_columns():
+    header = ["Fp1", "Fp2"]
+    assert ia.match_rows(header, header, "label", None, header) == [0, 1]
+    with pytest.raises(ia.IcActivityRefusal) as raised:
+        ia.match_rows(header, header, "label", None, header[::-1])
+    assert raised.value.word == "channel_set_mismatch"
 
 
 # ── The generator's --check ───────────────────────────────────────────────

@@ -20,6 +20,7 @@ optional extra ``views``.
 from __future__ import annotations
 
 import hashlib
+import json
 import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -165,13 +166,17 @@ def match_rows(
     labels: Sequence[str | None],
     match: str,
     rows: Sequence[int] | None = None,
+    columns: Sequence[str] | None = None,
 ) -> list[int]:
     """The store row of each column of the matrix, or ``channel_set_mismatch``.
 
-    ``store_row``: column j is store row ``rows[j]``, whose label must equal the
-    column's. ``label``: column j is the one store row whose label equals the
-    column's; none, or two, refuse. Labels compare as exact strings.
+    The matrix's header must be ``columns``, the record's list of them, when
+    given. ``store_row``: column j is store row ``rows[j]``, whose label must
+    equal the column's. ``label``: column j is the one store row whose label
+    equals the column's; none, or two, refuse. Labels compare as exact strings.
     """
+    if columns is not None and list(columns) != list(header):
+        raise IcActivityRefusal("channel_set_mismatch", "header is not columns")
     if match == "store_row":
         if rows is None or len(rows) != len(header):
             raise IcActivityRefusal("channel_set_mismatch", "rows and columns differ")
@@ -200,6 +205,20 @@ def unit_factors(
             raise IcActivityRefusal("unit_unknown", f"row {row}: {units[row]!r}")
         factors.append(MICROVOLTS_PER[units[row]] / MICROVOLTS_PER[unit])
     return factors
+
+
+def channel_types_sha256(channel_types: Sequence[Sequence[str | None]]) -> str:
+    """The digest ``decomposition_input.channel_types_sha256`` states, as
+    nemar-process computes it: SHA-256 of ``{"channel_types": [...]}`` as JSON
+    with sorted keys, no spaces, non-ASCII escaped, and one final line feed."""
+    text = json.dumps(
+        {"channel_types": [list(row) for row in channel_types]},
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+        ensure_ascii=True,
+    )
+    return hashlib.sha256((text + "\n").encode("utf-8")).hexdigest()
 
 
 # ── The multiply ──────────────────────────────────────────────────────────
@@ -343,7 +362,13 @@ def ic_activity(
     state = store_check(signal.get("content_sha256"), store.published_sha256)
     header, weights = read_unmixing(unmixing_bytes, caps)
     labels = read_components(components_bytes, weights.shape[0], caps)
-    rows = match_rows(header, store.labels, transform["match"], transform.get("rows"))
+    rows = match_rows(
+        header,
+        store.labels,
+        transform["match"],
+        transform.get("rows"),
+        transform.get("columns"),
+    )
     factors = unit_factors(store.units, rows, transform["unit"])
     cutoff = parameters["display_filter"]["highpass_hz"]
     highpass_coefficients(cutoff, store.rate)  # refuses before any multiply

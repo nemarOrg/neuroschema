@@ -1879,7 +1879,17 @@ def _archive_activity(activity: dict) -> dict:
     out = copy.deepcopy(activity)
     signal = next(i for i in out["inputs"] if i["role"] == "signal")
     signal["store"].update(profile="archive", content_sha256=None)
-    out["transform"]["parameters"] = {"match": "label", "unit": "uV"}
+    out["transform"]["parameters"] |= {
+        "applies_to": (
+            "serving_copy channels matched by label, in microvolts: the view converts "
+            "by the store's unit field and refuses an unknown unit or any channel it "
+            "cannot match"
+        ),
+        "match": "label",
+        "rows": None,
+        "unit": "uV",
+        "caption": "not checked against the decomposition input",
+    }
     given = out["parameters"]["decomposition_input"]
     given["source"] = "archive"
     del given["store"]
@@ -2100,7 +2110,7 @@ def preset_verdicts() -> list[tuple[str, str, dict]]:
         (
             "ic_activity_store_row_without_rows",
             "Matching by row names the rows.",
-            _set(activity, "transform/parameters/rows", DROP),
+            _set(activity, "transform/parameters/rows", None),
         ),
         (
             "ic_activity_label_with_rows",
@@ -2111,9 +2121,9 @@ def preset_verdicts() -> list[tuple[str, str, dict]]:
             "ic_activity_archive_by_row",
             "A decomposition of the archive read no store rows.",
             _set(
-                archive,
-                "transform/parameters",
-                {"match": "store_row", "rows": [0], "unit": "uV"},
+                _set(archive, "transform/parameters/match", "store_row"),
+                "transform/parameters/rows",
+                [0],
             ),
         ),
         (
@@ -2158,16 +2168,37 @@ def preset_verdicts() -> list[tuple[str, str, dict]]:
         (
             "ic_activity_source_and_profile",
             "A decomposition of the archive with a store of profile serving.",
-            _set(
-                _set(archive, f"inputs/{signal}", activity["inputs"][signal]),
-                "transform/parameters",
-                {"match": "label", "unit": "uV"},
-            ),
+            _set(archive, f"inputs/{signal}", activity["inputs"][signal]),
         ),
         (
             "ic_activity_types_without_digest",
             "channel_types comes with its digest.",
             _set(activity, "parameters/decomposition_input/channel_types_sha256", DROP),
+        ),
+        (
+            "ic_activity_no_channel_types",
+            "The record states every row's type.",
+            _set(activity, "parameters/decomposition_input/channel_types", DROP),
+        ),
+        (
+            "ic_activity_no_shaded",
+            "The browser_transform block names the shaded spans.",
+            _set(activity, "transform/parameters/shaded", DROP),
+        ),
+        (
+            "ic_activity_no_columns",
+            "The browser_transform block names the matrix's columns.",
+            _set(activity, "transform/parameters/columns", DROP),
+        ),
+        (
+            "ic_activity_caption_empty",
+            "A caption is text or null.",
+            _set(activity, "transform/parameters/caption", ""),
+        ),
+        (
+            "ic_activity_shaded_closed",
+            "The shaded spans are {label, files}.",
+            _set(activity, "transform/parameters/shaded/reason", "asr_burst_rejection"),
         ),
         (
             "ic_activity_preprocessing_closed",
@@ -2392,7 +2423,10 @@ def render() -> dict[Path, str]:
     """The text of each vectors file."""
     return {
         path: dump(document) + "\n"
-        for path, document in ((MODELS_PATH, models()), (VERDICTS_PATH, verdicts()))
+        for path, document in (
+            (MODELS_PATH, models()),
+            (VERDICTS_PATH, verdicts()),
+        )
     }
 
 

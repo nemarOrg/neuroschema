@@ -79,6 +79,16 @@ STORE_PATH = "sub-01/eeg/sub-01_task-rest_eeg.zarr"
 UNMIXING_AT = f"{PREFIX}_servingunmixing.tsv"
 COMPONENTS_AT = f"{PREFIX}_components.tsv"
 SEGMENTS_AT = f"{PREFIX}_badsegments.tsv"
+SAMPLEMASK_AT = f"{PREFIX}_samplemask.tsv"
+# The sentences nemar-process writes in browser_transform (nemar_ica/steps.py,
+# nemarOrg/nemar-process#81), mirrored so the declarations are the ones P5 writes.
+APPLIES_TO = "serving_copy channels listed, physical unit"
+APPLIES_TO_LABELS = (
+    "serving_copy channels matched by label, in microvolts: the view converts by the "
+    "store's unit field and refuses an unknown unit or any channel it cannot match"
+)
+NOTE = "no preprocessing; activations approximate the decomposition input"
+CAPTION_UNCHECKED = "not checked against the decomposition input"
 CLASSES = ["brain", "muscle", "eye", "heart", "line_noise", "channel_noise", "other"]
 PREPROCESSING = [
     {"step": "select", "function": "eegprep.pop_select"},
@@ -169,8 +179,10 @@ def declaration(
     segments: bool = False,
     unmixing: bytes | None = None,
     components: bytes | None = None,
+    columns: list[str] | None = None,
 ) -> tuple[dict, dict]:
-    """A nemar.ic-activity view as nemar-ica declares it, and its files."""
+    """A nemar.ic-activity view as nemar-ica declares it, and its files: the
+    transform's parameters are the record's browser_transform block."""
     unmixing = matrix_text(header, weights) if unmixing is None else unmixing
     components = components_text(count) if components is None else components
     files = {UNMIXING_AT: unmixing, COMPONENTS_AT: components}
@@ -191,14 +203,25 @@ def declaration(
     if segments:
         files[SEGMENTS_AT] = SEGMENTS
         inputs.append(file_input("badsegments", SEGMENTS_AT, SEGMENTS))
-    transform = {"match": match, "unit": unit}
-    if rows is not None:
-        transform["rows"] = list(rows)
     serving = profile == "serving"
+    transform = {
+        "matrix": UNMIXING_AT,
+        "applies_to": APPLIES_TO if match == "store_row" else APPLIES_TO_LABELS,
+        "note": NOTE,
+        "match": match,
+        "rows": None if rows is None else list(rows),
+        "columns": list(header) if columns is None else columns,
+        "unit": unit,
+        "caption": None if match == "store_row" else CAPTION_UNCHECKED,
+        "shaded": {"label": "burst", "files": [SEGMENTS_AT, SAMPLEMASK_AT]},
+    }
+    typed = [[label, "EEG"] for label in header]
     decomposition = {
         "source": "serving_copy" if serving else "archive",
         "preprocessing": PREPROCESSING,
         "channels": list(header),
+        "channel_types": typed,
+        "channel_types_sha256": ia.channel_types_sha256(typed),
         "reference": "average",
         "unit": "uV",
     }
@@ -773,6 +796,20 @@ def refusals() -> list[Case]:
         rows_view([0, 1, 2, 3, 4, 6]),
     )
     refused("store_row_count", "Five rows for six columns.", rows_view([0, 1, 2, 3, 4]))
+    refused(
+        "columns_differ",
+        "The record's columns name the matrix's channels in another order.",
+        declaration(
+            SMALL,
+            weights,
+            4,
+            match="store_row",
+            unit="uV",
+            rows=list(range(6)),
+            declared=digest("small"),
+            columns=[*SMALL[1:], SMALL[0]],
+        ),
+    )
     refused(
         "label_unmatched",
         "A column whose label no store row has.",

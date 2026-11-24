@@ -245,6 +245,9 @@
           "transform": {
             "name": "nemar.ic-activity.v1",
             "parameters": {
+              "matrix": "sub-01/eeg/sub-01_task-rest_desc-nemarica_servingunmixing.tsv",
+              "applies_to": "serving_copy channels listed, physical unit",
+              "note": "no preprocessing; activations approximate the decomposition input",
               "match": "store_row",
               "rows": [
                 0,
@@ -255,7 +258,24 @@
                 5,
                 6
               ],
-              "unit": "µV"
+              "columns": [
+                "Fp1",
+                "Fp2",
+                "F3",
+                "F4",
+                "C3",
+                "C4",
+                "P3"
+              ],
+              "unit": "µV",
+              "caption": null,
+              "shaded": {
+                "label": "burst",
+                "files": [
+                  "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+                  "sub-01/eeg/sub-01_task-rest_desc-nemarica_samplemask.tsv"
+                ]
+              }
             }
           },
           "parameters": {
@@ -296,6 +316,11 @@
                   "function": "eegprep.pop_reref"
                 }
               ],
+              "store": {
+                "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+                "group": "eeg",
+                "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+              },
               "channels": [
                 "Fp1",
                 "Fp2",
@@ -343,14 +368,9 @@
                   "ECG"
                 ]
               ],
-              "channel_types_sha256": "c4ea5ba818ba63d17da9da5d7346954069a39e9ffc5ea268fa7c3ee2cf14f396",
+              "channel_types_sha256": "58b931b1be999926941c7dfd765e9cba12aa81f578cceb84f0bfac4cf197e535",
               "reference": "average",
-              "unit": "uV",
-              "store": {
-                "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
-                "group": "eeg",
-                "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
-              }
+              "unit": "uV"
             }
           }
         },
