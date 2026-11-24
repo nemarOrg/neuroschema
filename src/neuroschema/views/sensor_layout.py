@@ -110,6 +110,17 @@ PARTIAL_SHIFT = 0.12
 out any one of them moves the fitted center by more than this share of the
 fitted radius (:func:`stability`); see ``docs/views/sensor-layout.md``."""
 
+COVERAGE_ELEVATION = 38.0
+"""Measured positions do not cover the whole head when some quadrant about the
+fitted center, front, left, back or right, has no position at most this many
+degrees above the equator (:func:`coverage`); see
+``docs/views/sensor-layout.md``, step 3."""
+
+GAP_AZIMUTH = 120.0
+"""Measured positions do not go all around the head when two neighbors, in
+azimuth about the vertical through the fitted center, are more than this many
+degrees apart (:func:`azimuth_gap`)."""
+
 RAD = 180 / np.pi
 """Radians to degrees: 180 divided by the binary64 nearest pi."""
 
@@ -119,7 +130,7 @@ class SensorLayoutRefusal(ValueError):
 
     A ``positions_flat`` or ``positions_partial`` refusal also carries the
     measures it reached (``singular_ratio``, ``radius_ratio``, ``dilution``,
-    ``stability``, None where not reached).
+    ``stability``, ``coverage``, ``gap``, None where not reached).
     """
 
     def __init__(
@@ -130,6 +141,8 @@ class SensorLayoutRefusal(ValueError):
         radius_ratio: float | None = None,
         dilution: float | None = None,
         stability: float | None = None,
+        coverage: float | None = None,
+        gap: float | None = None,
     ) -> None:
         super().__init__(f"{word}: {detail}")
         self.word = word
@@ -137,6 +150,8 @@ class SensorLayoutRefusal(ValueError):
         self.radius_ratio = radius_ratio
         self.dilution = dilution
         self.stability = stability
+        self.coverage = coverage
+        self.gap = gap
 
 
 @dataclass(frozen=True)
@@ -148,9 +163,9 @@ class SensorLayout:
     and ``center_method`` says how it was found: ``montage`` (template
     positions: the montage's own center) or ``sphere`` (measured positions:
     the sphere fitted to the scalp rows). For measured positions,
-    ``singular_ratio``, ``radius_ratio``, ``dilution`` and ``stability`` are
-    the four measures :func:`sphere_center` bounds; all are None for template
-    positions.
+    ``singular_ratio``, ``radius_ratio``, ``dilution``, ``stability``,
+    ``coverage`` and ``gap`` are the six measures :func:`sphere_center`
+    bounds; all are None for template positions.
     """
 
     theta_deg: np.ndarray
@@ -161,6 +176,8 @@ class SensorLayout:
     radius_ratio: float | None
     dilution: float | None
     stability: float | None
+    coverage: float | None
+    gap: float | None
 
 
 def orientation(coordinate_system: str, montage: str | None = None) -> str:
@@ -309,15 +326,81 @@ def stability(
     return float(np.max(moves))
 
 
+def quadrants(spokes: np.ndarray) -> np.ndarray:
+    """The quadrant of each unit vector from the fitted center (ALS): 0 front,
+    1 left, 2 back, 3 right, or -1 for a vector on the vertical axis.
+
+    With ``x`` anterior and ``y`` left, front is ``x > |y|``, back ``-x > |y|``,
+    left ``y >= |x|`` with ``y > 0`` and right ``-y >= |x|`` with ``y < 0``: in
+    azimuth from the anterior axis toward the left, front is (-45, 45) degrees,
+    left [45, 135], back (135, 225) and right [225, 315], so a vector on a
+    diagonal is a side's.
+    """
+    x, y = spokes[:, 0], spokes[:, 1]
+    out = np.full(len(spokes), -1)
+    out[(y >= np.abs(x)) & (y > 0)] = 1
+    out[(-y >= np.abs(x)) & (y < 0)] = 3
+    out[x > np.abs(y)] = 0
+    out[-x > np.abs(y)] = 2
+    return out
+
+
+def elevations(spokes: np.ndarray) -> np.ndarray:
+    """Degrees above the plane through the fitted center normal to the frame's
+    superior axis: ``atan2(z, hypot(x, y))`` of each unit vector."""
+    return np.arctan2(spokes[:, 2], np.hypot(spokes[:, 0], spokes[:, 1])) * RAD
+
+
+def coverage(spokes: np.ndarray) -> float:
+    """How low the positions reach on every side of the head, in degrees.
+
+    For each quadrant (:func:`quadrants`), the lowest elevation
+    (:func:`elevations`) of its unit vectors, 90 when it has none; the
+    coverage is the largest of the four. Positions above the equator in
+    every quadrant, reaching at most ``c`` degrees above it on each side (or
+    below it), have coverage ``c``; a set that covers only the top of the
+    head, or misses a side, has a large one. It depends on the frame's
+    anterior and superior axes and, unlike the other measures, changes when
+    the positions are turned about the vertical axis.
+    """
+    quadrant = quadrants(spokes)
+    height = elevations(spokes)
+    lowest = [
+        float(height[quadrant == k].min()) if (quadrant == k).any() else 90.0
+        for k in range(4)
+    ]
+    return max(lowest)
+
+
+def azimuth_gap(spokes: np.ndarray) -> float:
+    """The widest azimuth between neighboring positions about the vertical
+    axis through the fitted center, in degrees.
+
+    Each unit vector off the vertical axis has the azimuth
+    ``atan2(y, x)`` (ALS, degrees); sorted, the gaps are the differences of
+    neighbors and 360 minus the last less the first. With fewer than two
+    azimuths the gap is 360. It is unchanged by any turn about the vertical
+    axis.
+    """
+    off_axis = np.hypot(spokes[:, 0], spokes[:, 1]) > 0
+    azimuth = np.sort(np.arctan2(spokes[off_axis, 1], spokes[off_axis, 0]) * RAD)
+    if len(azimuth) < 2:
+        return 360.0
+    gaps = np.diff(azimuth)
+    return float(max(gaps.max(), 360.0 - (azimuth[-1] - azimuth[0])))
+
+
 @dataclass(frozen=True)
 class Fit:
-    """A sphere fitted to measured positions, with its four measures."""
+    """A sphere fitted to measured positions, with its six measures."""
 
     center: np.ndarray
     singular_ratio: float
     radius_ratio: float
     dilution: float
     stability: float
+    coverage: float
+    gap: float
 
 
 def sphere_center(points: np.ndarray) -> Fit:
@@ -339,9 +422,13 @@ def sphere_center(points: np.ndarray) -> Fit:
     about 1e-5 and 16 to 1500, so the bounds refuse what fixes no head.
     Last, they cover too little of the head, and raise ``positions_partial``,
     when the :func:`dilution` of the center (from the unit vectors
-    ``u - (a, b, c)``, normalized) is above :data:`PARTIAL_DILUTION`, or when
+    ``u - (a, b, c)``, normalized) is above :data:`PARTIAL_DILUTION`, when
     leaving out one of them moves the center by more than
-    :data:`PARTIAL_SHIFT` of the radius (:func:`stability`).
+    :data:`PARTIAL_SHIFT` of the radius (:func:`stability`), when some
+    quadrant has no position within :data:`COVERAGE_ELEVATION` degrees of
+    the equator (:func:`coverage`), or when two neighbors in azimuth are more
+    than :data:`GAP_AZIMUTH` degrees apart (:func:`azimuth_gap`): the whole
+    head, all around and low on every side.
     """
     n = len(points)
     centroid = points.sum(axis=0) / max(n, 1)
@@ -394,12 +481,40 @@ def sphere_center(points: np.ndarray) -> Fit:
             spread,
             shift,
         )
+    reach = coverage(spokes)
+    if not reach <= COVERAGE_ELEVATION:
+        raise SensorLayoutRefusal(
+            "positions_partial",
+            f"the positions do not cover the whole head: some quadrant's lowest "
+            f"position is {reach:.3g} degrees above the equator, above "
+            f"{COVERAGE_ELEVATION}",
+            singular_ratio,
+            radius_ratio,
+            spread,
+            shift,
+            reach,
+        )
+    widest = azimuth_gap(spokes)
+    if not widest <= GAP_AZIMUTH:
+        raise SensorLayoutRefusal(
+            "positions_partial",
+            f"the positions do not go around the head: two neighbors are "
+            f"{widest:.3g} degrees apart in azimuth, above {GAP_AZIMUTH}",
+            singular_ratio,
+            radius_ratio,
+            spread,
+            shift,
+            reach,
+            widest,
+        )
     return Fit(
         centroid + scale * np.array([a, b, c]),
         singular_ratio,
         radius_ratio,
         spread,
         shift,
+        reach,
+        widest,
     )
 
 
@@ -496,4 +611,6 @@ def sensor_layout(
         None if fit is None else fit.radius_ratio,
         None if fit is None else fit.dilution,
         None if fit is None else fit.stability,
+        None if fit is None else fit.coverage,
+        None if fit is None else fit.gap,
     )

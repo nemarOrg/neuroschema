@@ -294,23 +294,30 @@ FLAT_RATIO = 0.05
 RADIUS_RATIO = 3.0
 PARTIAL_DILUTION = 4.5
 PARTIAL_SHIFT = 0.12
+COVERAGE_ELEVATION = 38.0
+GAP_AZIMUTH = 120.0
 # Every vector keeps its measures this far from a bound (singular ratio,
-# radius ratio, dilution, stability).
-BOUND_MARGIN = (0.002, 0.05, 0.05, 0.005)
+# radius ratio, dilution, stability, coverage and gap, the last two degrees),
+# and no position within BOUNDARY_MARGIN degrees of a quadrant's edge.
+BOUND_MARGIN = (0.002, 0.05, 0.05, 0.005, 0.5, 0.5)
+BOUNDARY_MARGIN = 1e-6
 NO_BOUNDS = {
     "singular_ratio": None,
     "radius_ratio": None,
     "dilution": None,
     "stability": None,
+    "coverage": None,
+    "gap": None,
 }
 
 
-def fit_center(points):
+def fit_center(points, edges_checked=True):
     """Measured positions: (center, bounds, None), or (None, bounds, word) when
     the spec refuses them as flat or partial. Computed by SVD, least squares
-    and a matrix inverse (the spec uses the eigenvalues of u.T u and LU); the
-    vectors keep every measure at least BOUND_MARGIN from its bound, so the two
-    cannot disagree."""
+    and a matrix inverse (the spec uses the eigenvalues of u.T u and LU), and
+    the angles by arcsin rather than atan2; the vectors keep every measure at
+    least BOUND_MARGIN from its bound, and, with ``edges_checked``, no
+    position on a quadrant's edge, so the two cannot disagree."""
     n = len(points)
     if n == 0:
         return None, dict(NO_BOUNDS), "positions_flat"
@@ -350,15 +357,59 @@ def fit_center(points):
     bounds["stability"] = float(max(moves))
     if bounds["stability"] > PARTIAL_SHIFT:
         return None, bounds, "positions_partial"
+    # The coverage: per quadrant of azimuth from the anterior axis (front
+    # (-45, 45), left [45, 135], back beyond 135, right [-135, -45]), the
+    # lowest elevation, 90 when empty; the largest of the four.
+    azimuth = np.degrees(np.arctan2(spokes[:, 1], spokes[:, 0]))
+    elevation = np.degrees(np.arcsin(np.clip(spokes[:, 2], -1, 1)))
+    off_axis = np.hypot(spokes[:, 0], spokes[:, 1]) > 0
+
+    def reach(tilt):
+        """The coverage with the quadrants' edges turned by ``tilt`` degrees."""
+        turned = azimuth - tilt
+        sides = [
+            off_axis & (np.abs(turned) < 45),
+            off_axis & (turned >= 45) & (turned <= 135),
+            off_axis & (np.abs(turned) > 135),
+            off_axis & (turned <= -45) & (turned >= -135),
+        ]
+        return max(
+            float(elevation[side].min()) if side.any() else 90.0 for side in sides
+        )
+
+    bounds["coverage"] = reach(0.0)
+    # A position on a quadrant's edge may fall on either side in another
+    # implementation: the vectors only hold cases where that changes nothing.
+    edge = off_axis & (np.abs((np.abs(azimuth) % 90) - 45) < BOUNDARY_MARGIN)
+    if edges_checked and edge.any():
+        for tilt in (-BOUNDARY_MARGIN, BOUNDARY_MARGIN):
+            if reach(tilt) != bounds["coverage"]:
+                raise SystemExit(
+                    f"{len(points)} positions: one on a quadrant's edge, at "
+                    f"azimuth {azimuth[edge][0]}, decides the coverage"
+                )
+    if bounds["coverage"] > COVERAGE_ELEVATION:
+        return None, bounds, "positions_partial"
+    # The gap: the widest azimuth between neighbors around the vertical axis.
+    around = np.sort(azimuth[off_axis])
+    bounds["gap"] = (
+        float(np.diff(np.append(around, around[0] + 360)).max())
+        if len(around) > 1
+        else 360.0
+    )
+    if bounds["gap"] > GAP_AZIMUTH:
+        return None, bounds, "positions_partial"
     return centroid + scale * np.array([a, b, c]), bounds, None
 
 
 def check_bounds(name, bounds):
-    ratio, radius, spread, shift = (
+    ratio, radius, spread, shift, reach, widest = (
         bounds["singular_ratio"],
         bounds["radius_ratio"],
         bounds["dilution"],
         bounds["stability"],
+        bounds["coverage"],
+        bounds["gap"],
     )
     if ratio is not None and 0 < abs(ratio - FLAT_RATIO) < BOUND_MARGIN[0]:
         raise SystemExit(f"{name}: singular ratio {ratio} too near {FLAT_RATIO}")
@@ -368,6 +419,10 @@ def check_bounds(name, bounds):
         raise SystemExit(f"{name}: dilution {spread} too near {PARTIAL_DILUTION}")
     if shift is not None and abs(shift - PARTIAL_SHIFT) < BOUND_MARGIN[3]:
         raise SystemExit(f"{name}: stability {shift} too near {PARTIAL_SHIFT}")
+    if reach is not None and abs(reach - COVERAGE_ELEVATION) < BOUND_MARGIN[4]:
+        raise SystemExit(f"{name}: coverage {reach} too near {COVERAGE_ELEVATION}")
+    if widest is not None and abs(widest - GAP_AZIMUTH) < BOUND_MARGIN[5]:
+        raise SystemExit(f"{name}: gap {widest} too near {GAP_AZIMUTH}")
 
 
 def has_position(xyz):
@@ -411,7 +466,7 @@ def montage_center(name):
     document = montage_document(name)
     stored = np.array(document["center"], dtype=float)
     electrodes = np.array([e[1:4] for e in document["electrodes"]], dtype=float)
-    center, _bounds, _word = fit_center(electrodes)
+    center, _bounds, _word = fit_center(electrodes, edges_checked=False)
     if center is None or np.abs(center - stored).max() > 2e-9:
         sys.exit(f"{name}: the stored center {stored} is not the fit {center}")
     return stored
@@ -1613,6 +1668,27 @@ REGIONAL_SETS = [
 ]
 
 
+def sphere_cover(count, lowest):
+    """``count`` positions evenly over a 9 cm sphere above ``lowest`` degrees
+    of elevation (a Fibonacci spiral, ALS)."""
+    k = np.arange(count) + 0.5
+    floor = math.sin(math.radians(lowest))
+    z = floor + (1 - floor) * k / count
+    turn = np.radians(137.50776405003785) * k
+    ring = np.sqrt(1 - z * z)
+    return np.column_stack([ring * np.cos(turn), ring * np.sin(turn), z]) * 0.09
+
+
+def on_sphere(azimuth, elevation):
+    """One position on the 9 cm sphere (ALS), at degrees of azimuth from the
+    anterior axis toward the left and of elevation."""
+    a, e = math.radians(azimuth), math.radians(elevation)
+    return (
+        np.array([[math.cos(e) * math.cos(a), math.cos(e) * math.sin(a), math.sin(e)]])
+        * 0.09
+    )
+
+
 def partial_cases():
     """The coverage bound, from both sides: regional sets of a real head, and
     spherical caps just inside and outside the bound."""
@@ -1667,6 +1743,112 @@ def partial_cases():
             "MNIColin27",
         )
     )
+    for name, keys, seed, millimeters, what in [
+        (
+            "mi_16_noisy_low_coverage",
+            [
+                *("FC3", "FCz", "FC4", "C5", "C3", "C1", "Cz", "C2", "C4", "C6"),
+                *("CP3", "CP1", "CPz", "CP2", "CP4", "Pz"),
+            ],
+            6,
+            8,
+            "16 motor-imagery electrodes measured with 8 mm of noise: the noise "
+            "bends them onto a smaller sphere, so the dilution (4.20) and "
+            "stability (0.07) pass, but the front's lowest position is 39.7 "
+            "degrees above the fitted equator; refused (positions_partial, "
+            "coverage)",
+        ),
+        (
+            "p300_8_noisy_gap",
+            ["Fz", "Cz", "Pz", "P3", "P4", "PO7", "PO8", "Oz"],
+            151,
+            5,
+            "the P300 set measured with 5 mm of noise: the dilution, stability "
+            "and coverage pass, but nothing lies between Fz and the parietal "
+            "row, 125 degrees apart in azimuth; refused (positions_partial, gap)",
+        ),
+    ]:
+        noise = np.random.default_rng(seed).normal(
+            0, millimeters / 1000, (len(keys), 3)
+        )
+        cases.append(
+            layout_case(
+                name,
+                f"Measured positions of the Colin27 head (MNIColin27): {what}.",
+                keys,
+                np.array([by_name[k] for k in keys]) + noise,
+                "MNIColin27",
+            )
+        )
+    for name, keys, what in [
+        (
+            "measured_psg_8",
+            ["F3", "F4", "C3", "C4", "O1", "O2", "M1", "M2"],
+            "a sleep montage, F3 F4 C3 C4 O1 O2 with the mastoids M1 and M2: "
+            "the front's lowest positions, F3 and F4, are 33 degrees above the "
+            "fitted equator and every other side reaches below it; drawn",
+        ),
+        (
+            "measured_openbci_8",
+            ["Fp1", "Fp2", "C3", "C4", "P7", "P8", "O1", "O2"],
+            "the OpenBCI 8 set, Fp1 Fp2 C3 C4 P7 P8 O1 O2: low on every side; drawn",
+        ),
+    ]:
+        cases.append(
+            layout_case(
+                name,
+                f"Measured positions of the Colin27 head (MNIColin27): {what}.",
+                keys,
+                [by_name[k] for k in keys],
+                "MNIColin27",
+            )
+        )
+    base = sphere_cover(64, -25.0)
+    elevation = np.degrees(np.arcsin(base[:, 2] / 0.09))
+    azimuth = np.degrees(np.arctan2(base[:, 1], base[:, 0]))
+    for name, lowest, verdict in [
+        ("coverage_inside", 37.0, "drawn"),
+        ("coverage_outside", 39.0, "refused (positions_partial)"),
+    ]:
+        kept = ~((np.abs(azimuth) < 45) & (elevation < lowest + 3))
+        rows = np.vstack([base[kept], on_sphere(0.0, lowest)])
+        cases.append(
+            layout_case(
+                name,
+                "Positions evenly over a 9 cm sphere down to 25 degrees below "
+                "its equator, with the front quadrant emptied below "
+                f"{lowest + 3:g} degrees and one position straight ahead at "
+                f"{lowest:g}: every other side reaches below the equator, so the "
+                f"coverage is {lowest:g}, against the bound 38; {verdict}.",
+                [f"S{i}" for i in range(len(rows))],
+                rows,
+                "EEGLAB",
+            )
+        )
+    for name, width, verdict in [
+        ("gap_inside", 119.0, "drawn"),
+        ("gap_outside", 121.0, "refused (positions_partial)"),
+    ]:
+        start = 135 - width / 2
+        turned = (azimuth - start) % 360
+        kept = (turned > width + 1) & (turned < 359)
+        rows = np.vstack(
+            [base[kept], on_sphere(start, -5.0), on_sphere(start + width, -5.0)]
+        )
+        cases.append(
+            layout_case(
+                name,
+                "The same cover with every position emptied from a wedge of "
+                f"azimuth {start:g} to {start + width:g} degrees, across the "
+                "left and back quadrants, and one position at each of its edges, "
+                f"5 degrees below the equator: two neighbors {width:g} degrees "
+                f"apart, against the bound 120, while every quadrant still "
+                f"reaches below the equator; {verdict}.",
+                [f"S{i}" for i in range(len(rows))],
+                rows,
+                "EEGLAB",
+            )
+        )
     fiducials = [ten_05["fiducials"][k] for k in ("nasion", "lpa", "rpa")]
     for name, keys, fiducial_names in [
         (
@@ -1913,6 +2095,20 @@ def layout_cases():
             frame,
         )
     )
+    sides = ["Fp1", "Fp2", "C3", "C4", "O1", "O2"]
+    cases.append(
+        layout_case(
+            "measured_sides_at_c3_c4",
+            "Six measured positions of eegprep's 10-5 template, Fp1 Fp2 C3 C4 "
+            "O1 O2, with no midline: the dilution and stability pass, and the "
+            "front and back reach the equator, but on the left and right the "
+            "lowest positions are C3 and C4, 42 degrees above it; refused "
+            "(positions_partial, coverage).",
+            sides,
+            [ten_five[k] for k in sides],
+            frame,
+        )
+    )
     cases.append(
         layout_case(
             "measured_midline_9",
@@ -2089,10 +2285,10 @@ def sensor_layout_vectors(ref):
             "scalp row or has no position: not finite, or exactly 0, 0, 0) or the "
             "word it is refused with. Template positions are centered on the "
             "montage's own center, its file's center; measured positions carry "
-            "bounds, their singular_ratio, radius_ratio, dilution and stability "
-            "(null when not reached), which decide positions_flat against 0.05 and "
-            "3 and positions_partial against 4.5 and 0.12, within "
-            "tolerance.bounds_absolute. The "
+            "bounds, their singular_ratio, radius_ratio, dilution, stability, "
+            "coverage and gap (null when not reached), which decide positions_flat "
+            "against 0.05 and 3 and positions_partial against 4.5, 0.12, 38 "
+            "degrees and 120 degrees, within tolerance.bounds_absolute. The "
             "expected theta and radius are eegprep's convertlocs(..., 'cart2topo') "
             "of the positions minus the center, with -180 written 180. frames lists "
             "the BIDS coordinate systems of each orientation: an implementation "

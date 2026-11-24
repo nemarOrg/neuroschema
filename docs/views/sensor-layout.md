@@ -62,6 +62,15 @@ A view declares the transform in one of two forms (`schema/views/transform.nemar
      For each position `k`, solve the normal equations without its row, `(AᵀA - a_k a_kᵀ) w_k = Aᵀb - a_k b_k`, by LU decomposition with partial pivoting, as above.
      `L` is the largest Euclidean length of the first three entries of `w_k - (a, b, c, d)`, over the positions, divided by `rho`: the largest move of the center, as a share of the fitted radius, when one position is left out.
      The positions are refused with `positions_partial` when `L > 0.12`, or when `L` is not finite (a set whose equations are singular without one row).
+     **The whole-head bounds.**
+     Up is the frame's superior axis and front its anterior axis, both fixed by the frame of step 1: in ALS, `+z` and `+x`, with `+y` to the left (an RAS frame's `+z` and `+y`, rotated into ALS).
+     The equator is the plane through the fitted center normal to up.
+     With `k` as in step 4, a position's elevation is `atan2(ez, hypot(ex, ey)) * k`, in degrees above the equator, and, when `ex` and `ey` are not both zero, its azimuth is `atan2(ey, ex) * k`, in degrees from front toward the left.
+     Its quadrant is front when `ex > |ey|`, back when `-ex > |ey|`, left when `ey ≥ |ex|` and `ey > 0`, and right when `-ey ≥ |ex|` and `ey < 0`: in azimuth, front is (-45, 45), left [45, 135], back (135, 225) and right [225, 315], a position on a diagonal is a side's, and one straight above or below the center is in none.
+     The coverage `C` is the largest, over the four quadrants, of the lowest elevation among the quadrant's positions, 90 for a quadrant with none.
+     The positions are refused with `positions_partial` when `C > 38`: some side of the head has no position within 38° above the equator, or below it.
+     The gap `G` is the widest azimuth between neighbors around up: with the azimuths sorted, the largest of each one's difference from the next and of 360 minus the last plus the first, and 360 when fewer than two positions have an azimuth.
+     The positions are refused with `positions_partial` when `G > 120`.
      Otherwise the center is `c0 + s * (a, b, c)`.
    The flatness bounds are scale-invariant, and they separate with margin what lies near one plane or on a shallow patch from what does not: whole caps and the subsets a recording uses measure `σ3 / σ1` of 0.12 or more and `rho` of 1.6 or less (F3, F4, C3, C4, P3 and P4 alone: 0.15 and 1.1), while a midline, a coronal row or a flat layout measured with noise measures `σ3 / σ1` near 1e-5 to 2e-3 and, when fitted anyway, `rho` from 16 to 1500.
    The coverage bound refuses what passes them and still fixes the center badly: a set that covers one region of the head.
@@ -100,8 +109,47 @@ A view declares the transform in one of two forms (`schema/views/transform.nemar
    | Emotiv 14, frontal 6, F3 F4 C3 C4 O1 O2, occipital 8 | 0% | 0% | 0% | 0% to 0.1% |
    | Fp1, Fp2, C3, C4, P7, P8, O1, O2 (OpenBCI 8) | 100% | 96.7% | 74.8% | 43.5% |
 
-   The threshold 0.12 keeps every whole-head cap drawn without noise and at 3 mm, in at least 99.9% of draws at 5 mm and 97.5% at 8 mm; no threshold of the leave-one-out move refuses every noisy draw of the central, P300 and motor-imagery sets while keeping the caps (their drawn draws at 5 and 8 mm leave the center nearly in place: they fit the noise consistently), so those draws remain, with median fit errors of 17% to 43% of the head radius (the whole-head caps measure 12% to 22% at 5 and 8 mm, most of it the noise itself).
-   Each vector case of measured positions records its four measures (`bounds`), and the cases pin each bound from both sides.
+   The threshold 0.12 keeps every whole-head cap drawn without noise and at 3 mm, in at least 99.9% of draws at 5 mm and 97.5% at 8 mm; no threshold of the leave-one-out move refuses every noisy draw of the central, P300 and motor-imagery sets while keeping the caps (their drawn draws at 5 and 8 mm leave the center nearly in place: they fit the noise consistently).
+   The whole-head bounds refuse most of the rest: the measured positions must reach low on the head on every side, front, back, left and right, about the fitted center, and go all around it.
+   Read literally, positions above the equator in each quadrant would not be enough: the central 9 set has one in every quadrant; the noisy draws of the central and motor-imagery sets that pass `D` and `L` are fitted by a smaller sphere whose center sits 30 to 50 mm high, so their positions spread down toward its equator; and the 10-20 system's lowest positions on the sides (Fp1, Fp2, F7, F8, T7, T8, P7, P8) lie 5° to 10° below the fitted equator of the Colin27 head.
+   So a quadrant counts as covered when its lowest position is low enough, above the equator or below it.
+   The bound 38 lies between the highest side of the sparse whole-head sets (F3 and F4 of the sleep montage, 33.4° up) and the lowest side of a set that ends at the 10-20 system's inner ring (C3 and C4 of g.tec 16, 41.3°; the central and motor-imagery sets reach only 54° to 72° on their front or back); the gap bound 120 lies between the sparse whole-head sets (72°) and the P300 set's empty sector between Fz and the parietal row (125° to 138°).
+   Without noise:
+
+   | Measured positions | `D` | `L` | `C` | `G` | |
+   |---|---|---|---|---|---|
+   | the whole-head caps of 16 to 32 sensors above | 3.25 to 3.88 | 0.012 to 0.055 | -0.4 to 6.6 | 20.8 to 50.0 | drawn |
+   | OpenBCI 8 | 4.19 | 0.048 | 10.7 | 71.6 | drawn |
+   | F3, F4, C3, C4, O1, O2, M1, M2 (a sleep montage, PSG 8) | 3.42 | 0.006 | 33.4 | 72.5 | drawn |
+   | Fp1, Fp2, C3, C4, T7, T8, O1, O2, Cz (a neonatal montage) | 3.36 | 0.080 | 4.7 | 72.6 | drawn |
+   | F3, Fz, F4, FC1, FC2, C3, Cz, C4, CP1, CP2, P3, Pz, P4, PO7, Oz, PO8 (g.tec 16, no Fp) | 4.45 | 0.017 | 41.3 | 45.9 | refused |
+   | motor imagery 16 | 5.19 | 0.025 | 53.8 | 58.7 | refused |
+   | central 9 | 5.99 | 0.031 | 71.5 | 70.2 | refused |
+   | P300 8 | 4.86 | 0.062 | 90 | 138.3 | refused |
+   | the Emotiv 14, a ring with no top | 5.96 | 0.047 | 5.1 | 40.3 | refused (`D` only) |
+
+   With independent noise on each position (1000 draws per set and level, of `standard_1005` as measured positions, each coordinate with the standard deviation given), the share of draws each set is drawn in under all six bounds:
+
+   | Measured positions | No noise | 3 mm | 5 mm | 8 mm |
+   |---|---|---|---|---|
+   | 10-20 (19), actiCAP 32, BioSemi 32, Quik-Cap 32, Smarting 24, Enobio 20 | 100% | 100% | 100% | 100% |
+   | 10-20 with A1 and A2, eego 32 | 100% | 100% | 100% | 99.6%, 99.9% |
+   | g.Nautilus 16, OpenBCI 16, LiveAmp 16, a clinical 16 (10-20 with Oz, no F7, F8, P7, P8) | 100% | 100% | 100%, 100%, 100%, 99.9% | 98.9%, 98.8%, 97.5%, 97.9% |
+   | OpenBCI 8 | 100% | 96.0% | 65.9% | 31.3% |
+   | PSG 8 | 100% | 99.3% | 93.6% | 68.7% |
+   | the neonatal 9 | 100% | 98.3% | 83.7% | 57.2% |
+   | g.tec 16, no Fp | 0% | 7.1% | 23.8% | 34.6% |
+   | central 9 | 0% | 0% | 0% | 0% |
+   | P300 8 | 0% | 0% | 0% | 0.1% |
+   | motor imagery 16 | 0% | 0% | 0% | 1.3% |
+   | Emotiv 14, frontal 6, F3 F4 C3 C4 O1 O2, occipital 8 | 0% | 0% | 0% | 0% |
+
+   The regional sets are refused in every draw to 5 mm; at 8 mm on each axis, 1 draw in 1000 of the P300 set and 13 of the motor-imagery set remain, with median fit errors of 26% and 38% of the head radius.
+   These are fits whose sphere is smaller than the head, so in angle they are a whole small head: of 2000 such motor-imagery draws, 11 that pass `D`, `L` and `G` reach lower on every side than the sleep montage's front does without noise (the lowest, 27.1° up), so no bound on `C` refuses them and draws the sleep montage.
+   The sparse whole-head sets lose draws to noise through `D`, `L` and `C`; the caps of 16 to 32 sensors keep theirs.
+   The gap is unchanged by a turn of the positions about up; the coverage is not, since its quadrants are fixed by the frame's anterior axis.
+   Turned about up through the montage's center, without noise, the whole-head caps, PSG 8 and the neonatal set are drawn at every angle to 45° either way; OpenBCI 8 is drawn within 5° and refused from 10° to 25° either way, where P7 or P8 (130° of azimuth) crosses into the back quadrant and leaves C3 or C4, 48° up, the side's lowest; and g.tec 16 without Fp is refused within 10° and drawn from 15°.
+   Each vector case of measured positions records its six measures (`bounds`), and the cases pin each bound from both sides.
 4. **Topoplot coordinates.**
    For each scalp row with a position, `(X, Y, Z)` is the position minus the center, and, with `k` 180/π computed in binary64 (57.29577951308232):
    `theta = -(atan2(Y, X) * k)`, written 180 where this gives -180, so theta lies in (-180, 180];
@@ -116,7 +164,7 @@ The output is one layout row per input row, in input order: the name, theta in d
 |---|---|
 | `frame_unknown` | The coordinate system is not in the [frame table](#frames), and the positions are not template positions (`n/a` with a montage). |
 | `positions_flat` | Measured positions do not fix a center: no scalp row with a position, all at one point, too close to one plane (singular ratio below 0.05), or on a sphere more than 3 times their scale (step 3). |
-| `positions_partial` | Measured positions cover too little of the head to fix its center: the dilution of their center is above 4.5, as for a frontal, central or occipital set, or a ring with no top, or leaving one position out moves the center by more than 0.12 of the radius (step 3). |
+| `positions_partial` | Measured positions cover too little of the head to fix its center: the dilution of their center is above 4.5, as for a frontal, central or occipital set, or a ring with no top; leaving one position out moves the center by more than 0.12 of the radius; some quadrant, front, back, left or right, has no position within 38° above the equator; or two neighbors in azimuth are more than 120° apart (step 3). |
 
 When the layout is refused, a renderer places the sensors by their names with `nemar.sensor-labels.v1`, a separate algorithm specified beside this one, and says why, only when every row the map draws is typed EEG; otherwise the refusal's word takes every map's place ([sensor-field.md](sensor-field.md#sensors)).
 After `frame_unknown`, it says that the positions' coordinate system is not one whose orientation is known, or names it inconsistently.
@@ -146,7 +194,7 @@ An implementation matches a vector case when:
 - it refuses the cases the vector refuses, with the same word, and gives a layout for the others, with no layout for the same rows;
 - its center is within `1e-9 * s` of the vector's (with `s` the scale of step 3), and its center method (`montage` or `sphere`) is the vector's;
 - it gives a layout to the same rows: the scalp rows with a position;
-- for measured positions, its four measures of step 3 (`bounds`: `singular_ratio`, and `radius_ratio`, `dilution` and `stability` when reached) are each within `1e-6` of the vector's, refused cases included; every vector keeps them at least 0.002, 0.05, 0.05 and 0.005 from their bounds, so an implementation that computes them as accurately decides as the vector does;
+- for measured positions, its six measures of step 3 (`bounds`: `singular_ratio`, and `radius_ratio`, `dilution`, `stability`, `coverage` and `gap` when reached) are each within `1e-6` of the vector's, refused cases included; every vector keeps them at least 0.002, 0.05, 0.05, 0.005, 0.5° and 0.5° from their bounds, and holds no position on a quadrant's edge whose side decides the coverage, so an implementation that computes them as accurately decides as the vector does;
 - each radius is within `1e-12` of the vector's;
 - each sensor's planar point `(cos(theta) * radius, sin(theta) * radius)` is within `1e-12` of the vector's.
 
@@ -173,13 +221,13 @@ Each `cart2topo` entry gives a centered ALS point and the theta and radius it co
 ## Vectors
 
 [`views/vectors/sensor-layout.v1.json`](../../views/vectors/sensor-layout.v1.json) has the reference (eegprep's commit, the numpy and scipy versions, and the BIDS specification the frames come from), the tolerances above, `frames` (the ALS and RAS names, the `aliases` with the name each is read as, and the orientation of template positions), `cart2topo` (centered points straight to theta and radius, including the axes, the poles and points straight behind with Y = +0 and Y = -0), and the cases.
-Each case gives `coordinate_system`, `montage` for template positions, `positions` (`name`, `x`, `y`, `z`, with `null` for a number that is not finite, and `sensor_type` when the case has that column), `bounds` for measured positions (the four measures of step 3), and either `refused` (the word) or `expected`: `center` (in ALS), `center_method` (`montage` or `sphere`), and `theta_deg` and `radius` per row (`null` for a row with no layout).
+Each case gives `coordinate_system`, `montage` for template positions, `positions` (`name`, `x`, `y`, `z`, with `null` for a number that is not finite, and `sensor_type` when the case has that column), `bounds` for measured positions (the six measures of step 3), and either `refused` (the word) or `expected`: `center` (in ALS), `center_method` (`montage` or `sphere`), and `theta_deg` and `radius` per row (`null` for a row with no layout).
 An implementation gives the case `frame_als`'s layout for every ALS name and the case `frame_ras`'s for every RAS name.
 The cases cover:
 
 - drawn caps: a 128-sensor cap in millimeters (RAS), a 339-position 10-5 template in meters (ALS), a 32-sensor cap moved off center, the frame cases, and rows without a position;
-- the bounds, each from both sides: a whole sphere squashed to singular ratios 0.055 (`squashed_sphere_not_flat`: it passes the flatness bounds and the dilution refuses it, since no set this flat covers a head) and 0.045 (refused as flat), spherical caps with sphere radii 2.8 (`cap_not_flat`, likewise refused as partial) and 3.1 (refused as flat) times their scale, spherical caps of dilution 4.36 (drawn) and 4.62 (refused as partial), and the 10-20 electrodes with Cz digitized 28.75% (stability 0.114, drawn) and 31% (0.125, refused as partial) too far out;
-- measured sets: the 10-20 electrodes of the Colin27 head, and OpenBCI 8 of eegprep's 10-5 template, which has no midline (drawn); the Emotiv 14, six frontal and nine central electrodes of the Colin27 head (refused as partial), the P300 set measured with 5 mm of noise (dilution 4.28 passes, stability 0.19 refuses), F3, F4, C3, C4, P3 and P4 alone (`measured_band_six`, refused as partial), and the nine midline positions Fpz to Oz (refused as flat);
+- the bounds, each from both sides: a whole sphere squashed to singular ratios 0.055 (`squashed_sphere_not_flat`: it passes the flatness bounds and the dilution refuses it, since no set this flat covers a head) and 0.045 (refused as flat), spherical caps with sphere radii 2.8 (`cap_not_flat`, likewise refused as partial) and 3.1 (refused as flat) times their scale, spherical caps of dilution 4.36 (drawn) and 4.62 (refused as partial), the 10-20 electrodes with Cz digitized 28.75% (stability 0.114, drawn) and 31% (0.125, refused as partial) too far out, a sphere cover whose front reaches 37° (drawn) and 39° (refused) above the equator, and one with a wedge 119° (drawn) and 121° (refused) wide;
+- measured sets: the 10-20 electrodes of the Colin27 head, OpenBCI 8 and the sleep montage PSG 8 of that head, and OpenBCI 8 of eegprep's 10-5 template, which has no midline (drawn); the Emotiv 14, six frontal and nine central electrodes of the Colin27 head (refused as partial), the P300 set measured with 5 mm of noise (dilution 4.28 passes, stability 0.19 refuses), the motor-imagery set measured with 8 mm of noise (dilution and stability pass, coverage 39.7 refuses), the P300 set with another 5 mm of noise (coverage passes, gap 124.7 refuses), Fp1, Fp2, C3, C4, O1 and O2 of the 10-5 template (coverage 42.0 refuses), F3, F4, C3, C4, P3 and P4 alone (`measured_band_six`, refused as partial), and the nine midline positions Fpz to Oz (refused as flat);
 - the rows fitted: three rows at (0, 0, 0) with either sign of zero, eye and neck rows beside a cap (typed, and untyped with non-EEG names), fiducial rows beside the 10-20 electrodes (typed and untyped), each of which gets no layout and leaves the center the cap's, a flat layout with fiducials at their true heights (refused as flat), and the central 9 and P300 sets with fiducial rows named FidNz, FidT9, FidT10 and Nasion, LeftEar, RightEar (refused as partial);
 - flat sets, each refused (`positions_flat`): a ring, a flat disk, a disk measured with noise, five collinear positions and five a hair off one line, three positions and four coincident ones;
 - template positions: the whole GSN-HydroCel-32 and standard_1005 montages, and the standard_1005 midline (Fpz to Oz) and coronal row (T7 to T8), drawn where the whole montage puts them; and a montage beside a named coordinate system, a montage named in another case and the montage `PROVENANCE` (each refused, `frame_unknown`);

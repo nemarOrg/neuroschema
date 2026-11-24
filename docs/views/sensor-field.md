@@ -117,7 +117,7 @@ When every row the map draws is typed EEG, the sensors are placed by name instea
 |---|---|---|
 | `frame_unknown` | `nemar.sensor-layout.v1` | The view's positions name a frame whose orientation is not known, or name it inconsistently, so they cannot be projected; sensors typed EEG are placed by name instead, and the map says so. |
 | `positions_flat` | `nemar.sensor-layout.v1` | The view's measured positions are too flat, or too few, to locate the head's center (singular ratio below 0.05, or a sphere more than 3 times their scale), so they cannot be projected; sensors typed EEG are placed by name instead, and the map says so. |
-| `positions_partial` | `nemar.sensor-layout.v1` | The view's measured positions cover too little of the head, or fix it too unstably, to locate its center (a frontal, central or occipital set, or a ring with no top: the dilution of their center is above 4.5; or leaving one position out moves the center by more than 0.12 of the radius), so they cannot be projected; sensors typed EEG are placed by name instead, and the map says so. |
+| `positions_partial` | `nemar.sensor-layout.v1` | The view's measured positions cover too little of the head, or fix it too unstably, to locate its center (a frontal, central or occipital set, or a ring with no top: the dilution of their center is above 4.5; leaving one position out moves the center by more than 0.12 of the radius; a side of the head, front, back, left or right, has no position within 38° of the equator; or two neighbors around the head are more than 120° apart), so they cannot be projected; sensors typed EEG are placed by name instead, and the map says so. |
 
 A note is shown with a drawn map, in its caption, and says what the map alone cannot.
 

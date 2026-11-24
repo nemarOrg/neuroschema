@@ -606,7 +606,13 @@ def layout_mismatches(case: dict, frame: str | None = None) -> list[str]:
         if case.get("refused") != exc.word:
             return [f"refused {exc.word}"]
         return bounds_mismatches(
-            case, exc.singular_ratio, exc.radius_ratio, exc.dilution, exc.stability
+            case,
+            exc.singular_ratio,
+            exc.radius_ratio,
+            exc.dilution,
+            exc.stability,
+            exc.coverage,
+            exc.gap,
         )
     if "refused" in case:
         return [f"gave a layout; the vector refuses it ({case['refused']})"]
@@ -618,6 +624,8 @@ def layout_mismatches(case: dict, frame: str | None = None) -> list[str]:
         layout.radius_ratio,
         layout.dilution,
         layout.stability,
+        layout.coverage,
+        layout.gap,
     )
     if not np.array_equal(np.isnan(layout.radius), np.isnan(radius)):
         return ["rows without a position"]
@@ -648,13 +656,13 @@ def layout_mismatches(case: dict, frame: str | None = None) -> list[str]:
 
 
 def bounds_mismatches(
-    case, singular_ratio, radius_ratio, dilution, stability
+    case, singular_ratio, radius_ratio, dilution, stability, coverage, gap
 ) -> list[str]:
-    """A measured case's four measures, within tolerance.bounds_absolute (a
+    """A measured case's six measures, within tolerance.bounds_absolute (a
     template case has none)."""
     bounds = case.get("bounds")
     if bounds is None:
-        reached = (singular_ratio, radius_ratio, dilution, stability)
+        reached = (singular_ratio, radius_ratio, dilution, stability, coverage, gap)
         return [] if all(v is None for v in reached) else ["bounds"]
     problems = []
     for name, got in (
@@ -662,6 +670,8 @@ def bounds_mismatches(
         ("radius_ratio", radius_ratio),
         ("dilution", dilution),
         ("stability", stability),
+        ("coverage", coverage),
+        ("gap", gap),
     ):
         want = bounds[name]
         if (want is None) != (got is None) or (
@@ -693,10 +703,12 @@ def test_spec_names_every_frame_and_bound():
     for word in ("frame_unknown", "positions_flat", "positions_partial"):
         assert f"`{word}`" in LAYOUT_SPEC, word
     phrases = ("`\u03c33 < 0.05 * \u03c31`", "`rho > 3`", "`D > 4.5`", "`L > 0.12`")
+    phrases += ("`C > 38`", "`G > 120`")
     for phrase in (*phrases, "(0, 0, 0)"):
         assert phrase in LAYOUT_SPEC, phrase
     assert (sl.FLAT_RATIO, sl.RADIUS_RATIO) == (0.05, 3.0)
     assert (sl.PARTIAL_DILUTION, sl.PARTIAL_SHIFT) == (4.5, 0.12)
+    assert (sl.COVERAGE_ELEVATION, sl.GAP_AZIMUTH) == (38.0, 120.0)
 
 
 def test_frame_table_is_the_vectors():
@@ -799,7 +811,7 @@ def _template_any_frame(coordinate_system, montage=None):
 
 def _always_centroid(points):
     centroid = points.sum(axis=0) / len(points)
-    return sl.Fit(centroid, 1.0, 1.0, 3.0, 0.0)
+    return sl.Fit(centroid, 1.0, 1.0, 3.0, 0.0, 0.0, 60.0)
 
 
 def _no_wrap(xyz):
@@ -836,6 +848,25 @@ def _fiducials_kept(count, names=None, sensor_types=None):
 
 
 _scalp_rows = sl.scalp_rows
+
+
+def _coverage_above_the_equator(spokes):
+    """The owner's words read literally: only positions above the equator
+    count, so a side reached only by a position below it is uncovered."""
+    above = sl.elevations(spokes) > 0
+    return _coverage(spokes[above]) if above.any() else 90.0
+
+
+_coverage = sl.coverage
+
+
+def _quadrants_turned(spokes):
+    """Quadrants centered on the diagonals instead of on the axes."""
+    turn = np.array([[1, 1, 0], [-1, 1, 0], [0, 0, np.sqrt(2)]]) / np.sqrt(2)
+    return _quadrants(spokes @ turn.T)
+
+
+_quadrants = sl.quadrants
 
 
 def _montage_from_the_file_system(coordinate_system, montage=None):
@@ -882,6 +913,16 @@ LAYOUT_MUTATIONS = {
     "dilution bound 4.5 -> 4.3": ("PARTIAL_DILUTION", 4.3),
     "stability bound 0.12 -> 0.13": ("PARTIAL_SHIFT", 0.13),
     "stability bound 0.12 -> 0.11": ("PARTIAL_SHIFT", 0.11),
+    "coverage bound 38 -> 39": ("COVERAGE_ELEVATION", 39.0),
+    "coverage bound 38 -> 37": ("COVERAGE_ELEVATION", 37.0),
+    "coverage counts positions above the equator only": (
+        "coverage",
+        _coverage_above_the_equator,
+    ),
+    "quadrants about the diagonals": ("quadrants", _quadrants_turned),
+    "gap bound 120 -> 121": ("GAP_AZIMUTH", 121.0),
+    "gap bound 120 -> 119": ("GAP_AZIMUTH", 119.0),
+    "no gap bound": ("azimuth_gap", lambda spokes: 0.0),
     "rows at (0, 0, 0) kept": ("has_position", _zeros_kept),
     "every row fitted": ("scalp_rows", _every_row_fitted),
     "sensor types ignored": ("scalp_rows", _types_ignored),
@@ -1095,6 +1136,7 @@ def test_partial_positions_carry_their_measures():
         assert abs(got - want) <= LTOL["bounds_absolute"], measure
     assert refusal.dilution <= sl.PARTIAL_DILUTION  # passed, so stability refused
     assert refusal.stability > sl.PARTIAL_SHIFT
+    assert refusal.coverage is None and refusal.gap is None
 
 
 def test_stability_is_the_largest_move_of_a_refit_without_one_position():
@@ -1120,6 +1162,33 @@ def test_stability_is_the_largest_move_of_a_refit_without_one_position():
         assert abs(case["bounds"]["stability"] - max(moves)) < 1e-9
 
 
+def test_the_quadrants_put_a_diagonal_on_a_side():
+    """Front (-45, 45), left [45, 135], back (135, 225), right [225, 315] in
+    azimuth; a vector on the vertical axis is in no quadrant. The vectors hold
+    no case a diagonal decides, so this pins the edges."""
+    r = 1 / math.sqrt(2)
+    spokes = np.array(
+        [
+            [1, 0, 0],
+            [0, 1, 0],
+            [-1, 0, 0],
+            [0, -1, 0],
+            [r, r, 0],
+            [-r, r, 0],
+            [-r, -r, 0],
+            [r, -r, 0],
+            [0, 0, 1],
+            [0, 0, -1],
+        ]
+    )
+    assert sl.quadrants(spokes).tolist() == [0, 1, 2, 3, 1, 1, 3, 3, -1, -1]
+    assert sl.elevations(np.array([[r, 0, r], [0, 0, -1]])).tolist() == [45.0, -90.0]
+    ring = np.array([[1, 0, 0], [0, 1, 0], [-1, 0, 0]])
+    assert sl.coverage(ring) == 90.0  # no right quadrant
+    assert sl.azimuth_gap(ring) == 180.0
+    assert sl.azimuth_gap(np.array([[0, 0, 1], [1, 0, 0]])) == 360.0
+
+
 def test_the_flatness_cases_test_what_their_names_say():
     """The cases inside the flatness bounds pass them and are refused only as
     partial; a set with no midline that spans the head is drawn."""
@@ -1136,16 +1205,31 @@ def test_the_flatness_cases_test_what_their_names_say():
     assert not any(n.lower().endswith("z") for n in eight["positions"]["name"])
 
 
-def test_the_stability_bound_is_pinned_from_both_sides():
-    inside, outside = (
-        LAYOUT_CASES["stability_inside"],
-        LAYOUT_CASES["stability_outside"],
-    )
+@pytest.mark.parametrize(
+    ("measure", "bound", "inside", "outside", "within"),
+    [
+        ("stability", sl.PARTIAL_SHIFT, "stability_inside", "stability_outside", 0.006),
+        (
+            "coverage",
+            sl.COVERAGE_ELEVATION,
+            "coverage_inside",
+            "coverage_outside",
+            1.01,
+        ),
+        ("gap", sl.GAP_AZIMUTH, "gap_inside", "gap_outside", 1.01),
+    ],
+)
+def test_each_partial_bound_is_pinned_from_both_sides(
+    measure, bound, inside, outside, within
+):
+    """A pair of cases on either side of the bound, each no further from it
+    than ``within``, which its last bound alone decides."""
+    inside, outside = LAYOUT_CASES[inside], LAYOUT_CASES[outside]
     assert "expected" in inside and outside["refused"] == "positions_partial"
-    got = inside["bounds"]["stability"], outside["bounds"]["stability"]
-    assert sl.PARTIAL_SHIFT - 0.006 < got[0] < sl.PARTIAL_SHIFT < got[1] < 0.126
+    got = inside["bounds"][measure], outside["bounds"][measure]
+    assert bound - within < got[0] < bound < got[1] < bound + within
     for case in (inside, outside):
-        assert case["bounds"]["dilution"] < sl.PARTIAL_DILUTION - 1.0
+        assert case["bounds"]["dilution"] < sl.PARTIAL_DILUTION - 0.8
 
 
 @pytest.mark.parametrize(
@@ -1424,16 +1508,25 @@ def test_check_still_catches_changes_where_linux_rounds():
 
 
 def test_generator_keeps_every_measure_off_its_bound():
-    """Each vector's measures stay 0.002, 0.05 and 0.05 from the bounds, so an
-    implementation's rounding cannot flip a case."""
+    """Each vector's measures stay 0.002, 0.05, 0.05, 0.005, 0.5 and 0.5 from
+    the bounds, so an implementation's rounding cannot flip a case."""
     gen = _generator()
 
-    def bounds(singular_ratio, radius_ratio=None, dilution=None, stability=None):
+    def bounds(
+        singular_ratio,
+        radius_ratio=None,
+        dilution=None,
+        stability=None,
+        coverage=None,
+        gap=None,
+    ):
         return {
             "singular_ratio": singular_ratio,
             "radius_ratio": radius_ratio,
             "dilution": dilution,
             "stability": stability,
+            "coverage": coverage,
+            "gap": gap,
         }
 
     gen.check_bounds("clear", bounds(0.06, 2.9, 4.44))
@@ -1453,6 +1546,20 @@ def test_generator_keeps_every_measure_off_its_bound():
         gen.check_bounds("near", bounds(0.2, 1.0, 3.0, 0.118))
     with pytest.raises(SystemExit, match="stability"):
         gen.check_bounds("near", bounds(0.2, 1.0, 3.0, 0.122))
+    gen.check_bounds("clear", bounds(0.2, 1.0, 3.0, 0.05, 37.4, 119.4))
+    gen.check_bounds("clear", bounds(0.2, 1.0, 3.0, 0.05, 38.6, None))
+    with pytest.raises(SystemExit, match="coverage"):
+        gen.check_bounds("near", bounds(0.2, 1.0, 3.0, 0.05, 37.6))
+    with pytest.raises(SystemExit, match="coverage"):
+        gen.check_bounds("near", bounds(0.2, 1.0, 3.0, 0.05, 38.4))
+    with pytest.raises(SystemExit, match="gap"):
+        gen.check_bounds("near", bounds(0.2, 1.0, 3.0, 0.05, 10.0, 119.6))
+    with pytest.raises(SystemExit, match="gap"):
+        gen.check_bounds("near", bounds(0.2, 1.0, 3.0, 0.05, 10.0, 120.4))
+    assert (gen.COVERAGE_ELEVATION, gen.GAP_AZIMUTH) == (
+        sl.COVERAGE_ELEVATION,
+        sl.GAP_AZIMUTH,
+    )
     assert gen.PARTIAL_DILUTION == sl.PARTIAL_DILUTION
     assert gen.PARTIAL_SHIFT == sl.PARTIAL_SHIFT
 
