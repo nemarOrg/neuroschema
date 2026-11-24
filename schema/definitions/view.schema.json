@@ -31,7 +31,16 @@
         },
         "base": {
           "$ref": "../definitions/processingTypes.schema.json#/$defs/kindName",
-          "description": "The generic kind a preset draws over. Required for a preset, absent for a generic kind (each kind's schema says which); always given with base_version."
+          "not": {
+            "enum": [
+              "nemar.spectrum",
+              "nemar.ic-maps",
+              "nemar.ic-classes",
+              "nemar.ic-activity",
+              "nemar.signal-window"
+            ]
+          },
+          "description": "The generic kind a preset draws over. Required for a preset, absent for a generic kind (each kind's schema says which); always given with base_version. Never one of the presets views/registry.json lists: a preset is drawn over a generic kind and is no base itself."
         },
         "base_version": {
           "type": "integer",

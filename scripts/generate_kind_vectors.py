@@ -1538,6 +1538,14 @@ def refusals() -> list[Case]:
             {SPECTRUM_AT: SPECTRUM},
         ),
         (
+            "refusal_preset_as_base",
+            "An unknown kind over the preset nemar.spectrum: a preset is no base, "
+            "so declaration_invalid (probe p2).",
+            lines_view()
+            | {"kind": "acme.spectrum2", "base": "nemar.spectrum", "base_version": 1},
+            {SPECTRUM_AT: SPECTRUM},
+        ),
+        (
             "order_declaration_before_files",
             "An invalid declaration and no files: declaration_invalid, and no "
             "file is offered, since the declaration that names them is not valid.",
@@ -1637,6 +1645,11 @@ def view_verdicts() -> list[tuple[str, str, dict]]:
             "envelope_json_extension_other_format",
             "A file named .JSON declared as csv.",
             _set(_set(unknown, "data/0/format", "csv"), "data/0/location", "x/a.JSON"),
+        ),
+        (
+            "envelope_base_is_a_preset",
+            "An unknown kind over the preset nemar.ic-classes: a preset is no base.",
+            unknown | {"base": "nemar.ic-classes", "base_version": 1},
         ),
         (
             "envelope_unregistered_format",

@@ -749,6 +749,14 @@ class TestRegistry:
                 assert entry["base_version"] is None
             else:
                 assert (entry["base"], entry["base_version"]) in kinds
+                assert kinds[(entry["base"], entry["base_version"])]["base"] is None
+
+    def test_the_envelope_refuses_every_preset_as_a_base(self):
+        """The envelope's list of names no base may take is the registry's presets."""
+        envelope = json.loads(VIEW_SCHEMA.read_text())["$defs"]["view"]
+        refused = envelope["properties"]["base"]["not"]["enum"]
+        presets = [e["kind"] for e in REGISTRY["kinds"] if e["base"] is not None]
+        assert sorted(refused) == sorted(presets)
 
     def test_roles_name_registered_formats(self):
         """Every kind has roles, except a computed kind, which has inputs."""
@@ -933,6 +941,33 @@ class TestRendererRule:
         view = self._preset(table())
         view["data"].append(unknown_kind()["data"][0])
         assert draw_as(view, REGISTRY) == Drawing("base", "nemar.table", 1)
+
+    @pytest.mark.parametrize("preset", ["nemar.spectrum", "nemar.ic-classes"])
+    def test_a_preset_is_no_base(self, preset):
+        """An unknown kind that names a preset as its base (probe p2: the
+        reference raised LookupError) is invalid, and draws as a table."""
+        view = self._preset(table()) | {"base": preset, "base_version": 1}
+        assert view_errors(view) == {("not", "base")}
+        assert draw_as(view, REGISTRY) == Drawing("table", None, None)
+
+    def test_no_view_draws_over_a_preset(self):
+        """A spectrum's own data meet nemar.spectrum's role contract, yet an
+        unknown kind naming nemar.spectrum as its base draws as a table: only a
+        generic kind is a base."""
+        example = json.loads(
+            (
+                ROOT / "examples" / "views" / "dataquality-record-nemar-ica.json"
+            ).read_text()
+        )
+        spectrum = next(
+            v
+            for v in example["recipes"]["nemar-ica"]["views"]
+            if v["kind"] == "nemar.spectrum"
+        )
+        entry = known_kinds(REGISTRY)[("nemar.spectrum", 1)]
+        assert meets_role_contract(spectrum, entry)
+        view = spectrum | {"kind": "acme.spectrum2", "base": "nemar.spectrum"}
+        assert draw_as(view, REGISTRY) == Drawing("table", None, None)
 
     def test_unknown_kind_missing_its_base_contract_draws_as_a_table(self):
         """Role frames, format npy, no columns: nothing a table renderer reads."""

@@ -16,7 +16,7 @@ In the signalJourney record a run writes, the same declarations sit in `extensio
 |---|---|---|
 | `key` | yes | The view's key, unique within its recipe entry (`^[a-z][a-z0-9_]{0,63}$`). |
 | `kind`, `kind_version` | yes | The kind, namespaced (`nemar.table`), and its version (1 to 999). |
-| `base`, `base_version` | for a preset | The generic kind a preset draws over; always given together. |
+| `base`, `base_version` | for a preset | The generic kind a preset draws over; always given together. A preset is never a base: the envelope refuses a `base` that names one. |
 | `caption` | yes | Shown with the view (1 to 500 characters). |
 | `source` | yes | `{"plugin": {name, version}}` or `{"recipe": {name, version}}`, exactly one. |
 | `scope` | no | `recording` when absent; see [Scope](#scope). |
@@ -42,7 +42,7 @@ Any other kind or version passes on the envelope alone: an unknown kind is never
 A renderer applies this rule:
 
 1. If it knows the view's kind and version, it draws the view with that kind's renderer.
-2. Otherwise, if it knows the base and base version and the view's data meet the base's role contract, it draws the view with the generic renderer for the base, and offers every other file in the view's `data` for download.
+2. Otherwise, if it knows the base and base version as a generic kind and the view's data meet the base's role contract, it draws the view with the generic renderer for the base, and offers every other file in the view's `data` for download. A preset is never a base, so a view that names one shows as a table (and the envelope refuses it).
 3. Otherwise it shows the data as a table, with a download of each file.
 
 No view hides data: however a view is drawn, every file in its `data` is either drawn or offered for download.

@@ -609,6 +609,55 @@
       ]
     },
     {
+      "name": "envelope_base_is_a_preset",
+      "covers": "An unknown kind over the preset nemar.ic-classes: a preset is no base.",
+      "schema": "view",
+      "instance": {
+        "key": "movie",
+        "kind": "acme.scalp-movie",
+        "kind_version": 1,
+        "caption": "A kind no renderer knows.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "parameters": {
+          "fps": 30
+        },
+        "data": [
+          {
+            "role": "frames",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_frames.npy",
+            "format": "npy",
+            "size": 8,
+            "sha256": "21eaac327f0aecbb787b9a1ce54d68aa855cfc59ae5c9f4f6924cd61028bcd90"
+          },
+          {
+            "role": "labels",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_labels.tsv",
+            "format": "tsv",
+            "size": 78,
+            "sha256": "af77dc802bf58662721f76a369e4e6859dd95f46d07b854597ed1055e0f839e7"
+          },
+          {
+            "role": "broken",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_broken.tsv",
+            "format": "tsv",
+            "size": 88,
+            "sha256": "12a03501c6ca2c77a554f56f9750c087b1a1e19e6b5528bd8f303a09de1fe552"
+          }
+        ],
+        "base": "nemar.ic-classes",
+        "base_version": 1
+      },
+      "valid": false,
+      "errors": [
+        ["not", "base"]
+      ]
+    },
+    {
       "name": "envelope_unregistered_format",
       "covers": "A format the registry does not list, under its own extension, is valid: a renderer offers it for download only.",
       "schema": "view",

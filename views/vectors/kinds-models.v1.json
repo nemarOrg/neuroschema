@@ -12321,6 +12321,81 @@
       "downloads": []
     },
     {
+      "name": "refusal_preset_as_base",
+      "covers": "An unknown kind over the preset nemar.spectrum: a preset is no base, so declaration_invalid (probe p2).",
+      "view": {
+        "key": "spectrum",
+        "kind": "acme.spectrum2",
+        "kind_version": 1,
+        "caption": "Power spectral density per sensor.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv",
+            "format": "tsv",
+            "size": 105,
+            "sha256": "a610ecf3133b1999c8a92897989dcbe14fffaa624778d9455800a630f2a19ab7",
+            "columns": [
+              {
+                "name": "freq_hz",
+                "type": "number",
+                "unit": "Hz"
+              },
+              {
+                "name": "Fp1",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Fp2",
+                "type": "number",
+                "unit": "dB"
+              },
+              {
+                "name": "Cz",
+                "type": "number",
+                "unit": "dB"
+              }
+            ],
+            "dims": [
+              {
+                "name": "freq",
+                "axis": "rows",
+                "type": "number",
+                "unit": "Hz",
+                "coords": {
+                  "column": "freq_hz"
+                }
+              },
+              {
+                "name": "sensor",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          }
+        ],
+        "base": "nemar.spectrum",
+        "base_version": 1
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_spectrum.tsv": {
+          "text": "freq_hz\tFp1\tFp2\tO1\tCz\n0\t12.5\t-3.25\t7\t1.25e1\n0.5\t8\t-2\t6\t0\n1\t4.75\t-1.5\t5\t-0\n1.5\t3\t0.125\t4\t-7E-1\n2\t1\t2\t3\t-1\n"
+        }
+      },
+      "word": "declaration_invalid",
+      "downloads": []
+    },
+    {
       "name": "order_declaration_before_files",
       "covers": "An invalid declaration and no files: declaration_invalid, and no file is offered, since the declaration that names them is not valid.",
       "view": {
