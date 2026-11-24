@@ -41,12 +41,34 @@ Quality views replace figures: a view is data a browser draws, declared with a n
 
 ### Changed (breaking)
 
+- From the adversarial release review (S6c, security and grammar): every schema's `$id` is an absolute URI (`https://raw.githubusercontent.com/nemarOrg/neuroschema/main/schema/` plus its path), so the relative `$ref`s resolve by RFC 3986 in every engine; `neuroschema.validate` resolves them from `schema/` and fetches nothing.
+- `processingTypes.relativeLocation` refuses `%`, `?`, `#`, a `.` or empty segment, a trailing `/`, a leading or trailing space, DEL, C1 controls and bidirectional controls, so a location means one file under every URL resolution; `docs/views.md` states how a renderer builds a URL from one.
+- Every `integer` in every schema is capped at 2^53 - 1 in magnitude, and verdicts are on the binary64 reading of a document (an integer past 2^53 is checked as `JSON.parse` reads it).
+- `viewData.size` and `fileInput.size` are at most 4,194,304 (`caps.bytes_per_role`), and a renderer checks the declared size before it fetches a file; a declared size over the cap now gives `cap_exceeded` before `file_missing` or a digest is computed.
+- A location ending in `.tsv` or `.json`, in any case, must declare that format (the extension and the format name each other in both directions).
+- `dataQuality` is closed at its root and in `$defs/record` and `$defs/dataset`; in a record entry, each view's store inputs carry the entry's `profile`.
+- `processingTypes.plugin.name` takes the grammar of a metric name's prefix (a letter, then letters, digits, `_` and `-`, at most 64 characters).
+- `content.nemar.ic-classes.v1`: the classifier and every category are printable ASCII, and `I`, `l`, `1` and `|` standing in for letters of `ICLabel` are held to its spelling.
+- A view's `base` never names one of the registered presets.
+- `transform.nemar.ic-activity.v1` holds the rule that `badsegments` is declared exactly when `shaded.files` is not null, whatever the view's kind; `shaded.files` names one `_badsegments.tsv` (never `_samplemask.tsv`); a serving-copy store is matched by `store_row`, never by `label`; and `match` `label` requires a caption string.
+- `nemar.signal-window`: the `channels` input ends in `_channels.tsv` and `badsegments` in `_badsegments.tsv`.
+
 - `dataQuality` record level: `figures` is replaced by the required `views` (at most 32 view declarations), and `$defs/figure` is removed.
 - `dataQuality` dataset level: each distribution requires `unit` and may carry `description`.
 - `processingTypes.metricName`, the key of every `dataQuality` metric, distribution and observed range, is a bare name or `<plugin>:<name>`: one colon at most, and a name after it that starts with a letter. At record level a metric's name is paired with its producer: a bare name requires the producer `recipe`, `<plugin>:<name>` the producer `plugin`.
 
 ### Changed
 
+- Every JSON text neuroschema reads (a document `neuroschema.validate` checks, a declaration `nemar.view-digest.v1` digests, a view's JSON file) is read as I-JSON by `neuroschema.ijson`: strict UTF-8 whatever the locale, no duplicate member name however it is escaped, no `NaN` or `Infinity`, no lone surrogate or noncharacter, and at most 64 levels of nesting. The digest refuses noncharacters and nesting past 64 too, and `build_model` refuses a declaration with no digest (`declaration_invalid`).
+- The reference renderers refuse with a word where they raised: a deep JSON file (`json_invalid`), a preset named as a base (a table), a store rate that is not above 0 (`rate_invalid`), a window outside the store or longer than `max_window_s` (`window_outside_store`, `window_too_long`), and store rows written as floats (read as the integers they are).
+- `nemar.ic-activity.v1` checks, in order, the declaration (`declaration_invalid`), the inputs' locations against `matrix` and `shaded.files[0]` (`table_location_mismatch`), and `decomposition_input.store` against the signal store (`store_mismatch`); a bad-segment table with no row labeled `shaded.label` refuses the view when the record says ASR repaired a span (`label_unmatched`) and otherwise draws with the note `no_shaded_rows`.
+- The floor's tables: a channel status other than `good`, `bad` or `n/a` (`channel_status_unknown`) and a segment duration not above 0 (`duration_not_positive`) are refused; a `nemar.signal-window`'s tables lie beside the recording under one stem (`table_location_mismatch`).
+- `nemar.spectrum` gains a check of its own: with a layout, the values' sensor columns are the layout's names (`sensors_mismatch`, shown as the fallback).
+- Each data entry is verified against its own size and digest, even when two share a location; a coordinate role and the `nemar.ic-maps` components table are held to the cap on cells; `locate_bin` refuses NaN; `neuroschema.views.ic_activity.CAPS` is the registry's.
+- One table words every note and digest state (`docs/views/presets.md`, Notes and states).
+- A model holds no negative zero in any number (counts, totals, limits), and the vectors hold counts written `-0`.
+- CI: a job `ajv` compiles every schema with ajv 8 in strict mode and replays the verdict corpus (`scripts/ajv/check.ts`).
+- Vectors: escaped duplicate names, lone surrogates and noncharacters, nesting 64 and 65 deep, integers past 2^53, URL-escaping locations, names that imitate ICLabel, and a vector for every new word and each new pair of neighboring checks.
 - `qualityMetric`: the producer is exactly one of `plugin` and `recipe`, so a recipe's own metric names its recipe.
 - `processingTypes`: `figures` leaves the `checkpointName` examples.
 - CI and the typo check run on pull requests into `feature/**` branches.

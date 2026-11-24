@@ -362,7 +362,7 @@ def test_data_quality_root_refuses_a_stray_member(member, builder):
     ("input_kind", "profile", "store"),
     [("bids", "archive", "serving"), ("zarr", "serving", "archive")],
 )
-def test_a_views_stores_name_the_entrys_copy(input_kind, profile, store):
+def test_each_view_store_names_the_copy_its_entry_read(input_kind, profile, store):
     """Each store input of an entry's views names the copy the entry's run read
     (probe p11: a record of the archive whose views declare serving stores)."""
     doc = json.loads(
