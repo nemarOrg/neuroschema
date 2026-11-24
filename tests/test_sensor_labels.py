@@ -153,7 +153,19 @@ SPEC_REFERENCES = [
     "m2",
     "m12",
 ]
-SPEC_FIDUCIALS = ["nz", "lpa", "rpa", "nas", "inion"]
+SPEC_FIDUCIALS = [
+    "nz",
+    "lpa",
+    "rpa",
+    "nas",
+    "inion",
+    "fidnz",
+    "fidt9",
+    "fidt10",
+    "nasion",
+    "leftear",
+    "rightear",
+]
 TEN_TWENTY = [
     "Fp1",
     "Fp2",

@@ -786,6 +786,26 @@ def test_partial_positions_carry_their_measures():
     assert refusal.radius_ratio is not None and refusal.singular_ratio is not None
 
 
+@pytest.mark.parametrize(
+    "name", ["central_9_with_egi_fiducials", "p300_8_with_eeglab_fiducials"]
+)
+def test_a_regional_set_with_fiducial_rows_is_still_partial(name):
+    """FidNz, FidT9, FidT10, Nasion, LeftEar and RightEar are fiducials: left
+    out of the fit, so they cannot lend a regional set the coverage it lacks."""
+    case = LAYOUT_CASES[name]
+    assert case["refused"] == "positions_partial"
+    xyz = np.column_stack([numbers(case["positions"][a]) for a in "xyz"])
+    names = case["positions"]["name"]
+    fitted = sl.scalp_rows(len(names), names)
+    assert fitted.tolist() == [True] * (len(names) - 3) + [False] * 3
+    # Fitted with them, the fiducials would lend the set a passing dilution.
+    try:
+        spread = sl.sphere_center(sl.to_als(xyz, case["coordinate_system"])).dilution
+    except sl.SensorLayoutRefusal as refusal:
+        spread = refusal.dilution
+    assert spread is not None and spread <= sl.PARTIAL_DILUTION
+
+
 def test_the_coverage_bound_separates_the_reviewers_sets():
     """Frontal 6, central 9 and the Emotiv 14 are refused; the 10-20 set is
     drawn, each well clear of the bound."""

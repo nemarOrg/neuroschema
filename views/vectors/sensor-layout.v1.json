@@ -765,6 +765,40 @@
       "refused": "positions_partial"
     },
     {
+      "name": "central_9_with_egi_fiducials",
+      "description": "A regional set of the Colin27 head with the nasion and preauricular points as rows named FidNz, FidT9, FidT10: fiducials are not scalp rows, so the set alone is fitted and refused (positions_partial); counted, the fiducials would let it pass.",
+      "coordinate_system": "MNIColin27",
+      "positions": {
+        "name": ["FC3", "FCz", "FC4", "C3", "Cz", "C4", "CP3", "CPz", "CP4", "FidNz", "FidT9", "FidT10"],
+        "x": [-0.0601819, 0.0003761, 0.0622931, -0.0653581, 0.0004009, 0.0671179, -0.0635562, 0.0003858, 0.0666118, 0.00146763, -0.080616117, 0.08436285],
+        "y": [0.0227162, 0.02739, 0.0237228, -0.0116317, -0.009167, -0.0109003, -0.0470088, -0.047318, -0.0466372, 0.085067153, -0.029088752, -0.028502764],
+        "z": [0.055544, 0.088668, 0.05563, 0.064358, 0.100244, 0.06358, 0.065624, 0.099432, 0.06558, -0.034836113, -0.041310769, -0.041277435]
+      },
+      "bounds": {
+        "singular_ratio": 0.31073078947848776,
+        "radius_ratio": 1.0956346125526906,
+        "dilution": 5.986664769821539
+      },
+      "refused": "positions_partial"
+    },
+    {
+      "name": "p300_8_with_eeglab_fiducials",
+      "description": "A regional set of the Colin27 head with the nasion and preauricular points as rows named Nasion, LeftEar, RightEar: fiducials are not scalp rows, so the set alone is fitted and refused (positions_partial); counted, the fiducials would let it pass.",
+      "coordinate_system": "MNIColin27",
+      "positions": {
+        "name": ["Fz", "Cz", "Pz", "P3", "P4", "PO7", "PO8", "Oz", "Nasion", "LeftEar", "RightEar"],
+        "x": [0.0003122, 0.0004009, 0.0003247, -0.0530073, 0.0556667, -0.0548404, 0.0556666, 0.0001076, 0.00146763, -0.080616117, 0.08436285],
+        "y": [0.058512, -0.009167, -0.081115, -0.0787878, -0.0785602, -0.0975279, -0.0976251, -0.114892, 0.085067153, -0.029088752, -0.028502764],
+        "z": [0.066462, 0.100244, 0.082615, 0.05594, 0.056561, 0.002792, 0.00273, 0.014657, -0.034836113, -0.041310769, -0.041277435]
+      },
+      "bounds": {
+        "singular_ratio": 0.429901979205955,
+        "radius_ratio": 0.7920825440461291,
+        "dilution": 4.855073986473355
+      },
+      "refused": "positions_partial"
+    },
+    {
       "name": "cap_partial_inside",
       "description": "Positions on a 9 cm sphere within 88.0 degrees of its top, an even cover of a little more than a hemisphere: dilution 4.36, against the bound 4.5; drawn.",
       "coordinate_system": "EEGLAB",

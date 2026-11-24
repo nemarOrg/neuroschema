@@ -1786,6 +1786,54 @@
       }
     },
     {
+      "name": "fiducial_names_of_egi_and_eeglab",
+      "description": "EGI's and EEGLAB's names for the nasion and the preauricular points (FidNz, FidT9, FidT10, Nasion, LeftEar, RightEar) are fiducials too.",
+      "channels": [
+        ["Fp1", "EEG"],
+        ["Fp2", "EEG"],
+        ["F7", "EEG"],
+        ["F3", "EEG"],
+        ["Fz", "EEG"],
+        ["F4", "EEG"],
+        ["F8", "EEG"],
+        ["T7", "EEG"],
+        ["FidNz", "EEG"],
+        ["FidT9", "EEG"],
+        ["FidT10", "EEG"],
+        ["Nasion", "EEG"],
+        ["LeftEar", "EEG"],
+        ["RightEar", "EEG"]
+      ],
+      "cap_model": null,
+      "eeg_reference": null,
+      "result": {
+        "outcome": "placed",
+        "reason": null,
+        "montage": "standard_1005",
+        "candidates": 8,
+        "matched": 8,
+        "contenders": ["standard_1005"],
+        "duplicates": [],
+        "reference": null,
+        "channels": [
+          {"status": "candidate", "key": "fp1", "electrode": "Fp1"},
+          {"status": "candidate", "key": "fp2", "electrode": "Fp2"},
+          {"status": "candidate", "key": "f7", "electrode": "F7"},
+          {"status": "candidate", "key": "f3", "electrode": "F3"},
+          {"status": "candidate", "key": "fz", "electrode": "Fz"},
+          {"status": "candidate", "key": "f4", "electrode": "F4"},
+          {"status": "candidate", "key": "f8", "electrode": "F8"},
+          {"status": "candidate", "key": "t7", "electrode": "T7"},
+          {"status": "fiducial", "key": "fidnz", "electrode": null},
+          {"status": "fiducial", "key": "fidt9", "electrode": null},
+          {"status": "fiducial", "key": "fidt10", "electrode": null},
+          {"status": "fiducial", "key": "nasion", "electrode": null},
+          {"status": "fiducial", "key": "leftear", "electrode": null},
+          {"status": "fiducial", "key": "rightear", "electrode": null}
+        ]
+      }
+    },
+    {
       "name": "vref_outside_egi_nets",
       "description": "VREF is Cz only on an EGI net, so on the 10-05 montage it stays unplaced.",
       "channels": [

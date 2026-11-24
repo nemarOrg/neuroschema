@@ -1364,6 +1364,33 @@ def partial_cases():
                 "MNIColin27",
             )
         )
+    p300 = ["Fz", "Cz", "Pz", "P3", "P4", "PO7", "PO8", "Oz"]
+    fiducials = [ten_05["fiducials"][k] for k in ("nasion", "lpa", "rpa")]
+    for name, keys, fiducial_names in [
+        (
+            "central_9_with_egi_fiducials",
+            ["FC3", "FCz", "FC4", "C3", "Cz", "C4", "CP3", "CPz", "CP4"],
+            ["FidNz", "FidT9", "FidT10"],
+        ),
+        (
+            "p300_8_with_eeglab_fiducials",
+            p300,
+            ["Nasion", "LeftEar", "RightEar"],
+        ),
+    ]:
+        cases.append(
+            layout_case(
+                name,
+                f"A regional set of the Colin27 head with the nasion and "
+                f"preauricular points as rows named {', '.join(fiducial_names)}: "
+                "fiducials are not scalp rows, so the set alone is fitted and "
+                "refused (positions_partial); counted, the fiducials would let it "
+                "pass.",
+                [*keys, *fiducial_names],
+                [*(by_name[k] for k in keys), *fiducials],
+                "MNIColin27",
+            )
+        )
     for name, angle, dilution, verdict in [
         ("cap_partial_inside", 88.0, 4.36, "drawn"),
         ("cap_partial_outside", 84.0, 4.62, "refused (positions_partial)"),

@@ -1201,6 +1201,14 @@ CASES = [
         ("placed", None, "standard_1005"),
     ),
     (
+        "fiducial_names_of_egi_and_eeglab",
+        "EGI's and EEGLAB's names for the nasion and the preauricular points "
+        "(FidNz, FidT9, FidT10, Nasion, LeftEar, RightEar) are fiducials too.",
+        eeg([*TEN_TWENTY[:8], "FidNz", "FidT9", "FidT10", "Nasion", "LeftEar"])
+        + eeg(["RightEar"]),
+        ("placed", None, "standard_1005"),
+    ),
+    (
         "vref_outside_egi_nets",
         "VREF is Cz only on an EGI net, so on the 10-05 montage it stays unplaced.",
         eeg([n for n in TEN_TWENTY if n != "Cz"] + ["VREF"]),

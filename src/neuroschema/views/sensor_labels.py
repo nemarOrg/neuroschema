@@ -99,7 +99,22 @@ NON_EEG_PREFIXES = (
     "bursts",
     "suppr",
 )
-FIDUCIALS = frozenset({"nz", "lpa", "rpa", "nas", "inion"})
+FIDUCIALS = frozenset(
+    {
+        "nz",
+        "lpa",
+        "rpa",
+        "nas",
+        "inion",
+        # EGI's and EEGLAB's names for the nasion and the preauricular points.
+        "fidnz",
+        "fidt9",
+        "fidt10",
+        "nasion",
+        "leftear",
+        "rightear",
+    }
+)
 # A right part (after the last hyphen) naming a reference, not an electrode.
 REFERENCES = frozenset(
     {
