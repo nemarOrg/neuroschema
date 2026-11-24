@@ -17,6 +17,8 @@
     },
     "year": {
       "type": ["integer", "null"],
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991,
       "description": "Publication year. Null when unknown."
     },
     "venue": {

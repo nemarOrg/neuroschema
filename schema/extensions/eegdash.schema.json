@@ -51,9 +51,9 @@
       "type": ["object", "null"],
       "description": "Stats from git-based repository sources.",
       "properties": {
-        "stars": { "type": "integer" },
-        "forks": { "type": "integer" },
-        "watchers": { "type": "integer" }
+        "stars": { "type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991 },
+        "forks": { "type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991 },
+        "watchers": { "type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991 }
       },
       "additionalProperties": false
     },

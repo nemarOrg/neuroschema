@@ -8,12 +8,14 @@
     "total_files": {
       "type": ["integer", "null"],
       "description": "Total number of files in the dataset.",
-      "minimum": 0
+      "minimum": 0,
+      "maximum": 9007199254740991
     },
     "size_bytes": {
       "type": ["integer", "null"],
       "description": "Total dataset size in bytes.",
-      "minimum": 0
+      "minimum": 0,
+      "maximum": 9007199254740991
     },
     "size_human": {
       "type": ["string", "null"],
@@ -22,12 +24,14 @@
     "recording_count": {
       "type": ["integer", "null"],
       "description": "Total number of recordings (data files) in the dataset.",
-      "minimum": 0
+      "minimum": 0,
+      "maximum": 9007199254740991
     },
     "recordings_unavailable": {
       "type": ["integer", "null"],
       "description": "Number of recordings in the dataset that could not be summarised (truncated, corrupt, in an unsupported format, or otherwise unreadable). recording_count counts all recordings in the dataset, so recording_count minus recordings_unavailable gives the number of recordings with usable summaries.",
-      "minimum": 0
+      "minimum": 0,
+      "maximum": 9007199254740991
     },
     "total_recording_duration": {
       "type": ["number", "null"],
@@ -38,15 +42,15 @@
       "type": ["object", "null"],
       "description": "Range of channel counts across recordings in this dataset.",
       "properties": {
-        "min": { "type": "integer", "minimum": 0 },
-        "max": { "type": "integer", "minimum": 0 }
+        "min": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "max": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
       },
       "additionalProperties": false
     },
     "channel_type_summary": {
       "type": ["object", "null"],
       "description": "Summary counts of channel types across the dataset (e.g., {'EEG': 64, 'EOG': 2, 'ECG': 1}).",
-      "additionalProperties": { "type": "integer" }
+      "additionalProperties": { "type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991 }
     },
     "sampling_frequency_range": {
       "type": ["object", "null"],

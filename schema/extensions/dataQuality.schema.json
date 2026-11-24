@@ -250,6 +250,7 @@
         "not_processed_truncated": {
           "type": "integer",
           "minimum": 0,
+          "maximum": 9007199254740991,
           "description": "Number of not-processed recordings left out of not_processed by its cap."
         }
       },
@@ -275,6 +276,7 @@
         "n": {
           "type": "integer",
           "minimum": 0,
+          "maximum": 9007199254740991,
           "description": "Number of values summarized."
         },
         "unit": {
@@ -333,18 +335,21 @@
               "minItems": 1,
               "items": {
                 "type": "integer",
-                "minimum": 0
+                "minimum": 0,
+                "maximum": 9007199254740991
               },
               "description": "Count per bin; one fewer than the edges."
             },
             "underflow": {
               "type": "integer",
               "minimum": 0,
+              "maximum": 9007199254740991,
               "description": "Values below the first edge."
             },
             "overflow": {
               "type": "integer",
               "minimum": 0,
+              "maximum": 9007199254740991,
               "description": "Values above the last edge."
             }
           },

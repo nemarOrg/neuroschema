@@ -154,6 +154,33 @@ def test_id_is_the_base_and_the_path(path):
     )
 
 
+SAFE = 2**53 - 1
+
+
+def _integers(node, path=""):
+    if isinstance(node, dict):
+        kind = node.get("type")
+        if kind == "integer" or (isinstance(kind, list) and "integer" in kind):
+            yield path, node
+        for key, value in node.items():
+            yield from _integers(value, f"{path}/{key}")
+    elif isinstance(node, list):
+        for index, value in enumerate(node):
+            yield from _integers(value, f"{path}/{index}")
+
+
+@pytest.mark.parametrize("path", ALL_SCHEMAS, ids=lambda p: p.name)
+def test_every_integer_is_within_2_53(path):
+    """An integer past 2^53 - 1 has two readings (exact in Python, the nearest
+    binary64 in JSON.parse), and so two verdicts (probe p9); every integer the
+    schemas take is capped at 2^53 - 1 in magnitude."""
+    for where, node in _integers(json.loads(path.read_text(encoding="utf-8"))):
+        low = node.get("minimum", node.get("exclusiveMinimum"))
+        high = node.get("maximum", node.get("exclusiveMaximum"))
+        assert low is not None and low >= -SAFE, f"{path.name}{where}"
+        assert high is not None and high <= SAFE, f"{path.name}{where}"
+
+
 def test_the_ajv_check_uses_the_same_ids():
     """scripts/ajv/check.ts (CI job ajv) checks each $id against the same base."""
     check = (ROOT / "scripts" / "ajv" / "check.ts").read_text(encoding="utf-8")

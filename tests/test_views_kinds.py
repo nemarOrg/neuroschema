@@ -21,6 +21,7 @@ from pathlib import Path
 import pytest
 from jsonschema import Draft202012Validator
 
+from neuroschema.ijson import binary64
 from neuroschema.views import (
     MODELS_FORMAT,
     Drawing,
@@ -289,7 +290,7 @@ def test_verdicts_replay(case):
     errors = sorted(
         {
             (e.validator, "/".join(str(p) for p in e.absolute_path))
-            for e in validator.iter_errors(case["instance"])
+            for e in validator.iter_errors(binary64(case["instance"]))
         }
     )
     assert [list(e) for e in errors] == case["errors"]

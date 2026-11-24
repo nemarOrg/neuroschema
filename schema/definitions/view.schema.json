@@ -472,6 +472,7 @@
         "size": {
           "type": "integer",
           "minimum": 1,
+          "maximum": 9007199254740991,
           "description": "Size of the file in bytes."
         },
         "sha256": {
@@ -799,6 +800,7 @@
         "size": {
           "type": "integer",
           "minimum": 1,
+          "maximum": 9007199254740991,
           "description": "Size of the file in bytes."
         }
       },

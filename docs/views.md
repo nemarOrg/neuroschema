@@ -219,6 +219,7 @@ Two declarations with one digest are the same declaration; the digest is not a s
 ## What the schema checks and what the writer must check
 
 The schema checks the envelope, each registered kind and transform, identifier patterns, the extension of a `tsv` or `json` file, the unit of `time`, a store digest for a serving run, and the scope rule.
+Every integer it takes is at most 2^53 - 1 in magnitude, and every verdict is on the binary64 reading of the declaration ([JSON](#json)), so jsonschema and ajv agree on it.
 JSON Schema cannot compare one value with another, so the writer enforces:
 
 - view keys are unique within a recipe entry, and roles are unique within a view;

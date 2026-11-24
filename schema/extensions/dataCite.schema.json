@@ -19,6 +19,8 @@
     },
     "publication_year": {
       "type": ["integer", "null"],
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991,
       "description": "Year when the dataset was first published or made available."
     },
     "resource_type": {
@@ -130,6 +132,8 @@
           },
           "publication_year": {
             "type": ["integer", "null"],
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
             "description": "Publication year of the related item."
           },
           "volume": { "type": ["string", "null"] },

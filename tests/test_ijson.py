@@ -212,3 +212,17 @@ def test_binary64_refuses_what_has_no_binary64():
 
 def test_a_bool_is_not_a_number():
     assert ijson.binary64([True, False, None]) == [True, False, None]
+
+
+def test_validate_document_checks_the_binary64_reading():
+    """Two frequencies an exact reader holds distinct and JSON.parse reads as one
+    binary64: the document is checked as JSON.parse reads it (probe p9)."""
+    document = ijson.parse(TEXT)
+    spectrum = next(
+        v
+        for v in document["recipes"]["nemar-ica"]["views"]
+        if v["kind"] == "nemar.spectrum"
+    )
+    spectrum["parameters"]["initial_maps_hz"] = [9007199254740993, 9007199254740992]
+    errors = validate_document(document, DATA_QUALITY)
+    assert {e.validator for e in errors} == {"uniqueItems"}

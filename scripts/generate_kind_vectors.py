@@ -21,7 +21,7 @@ import json
 import sys
 from pathlib import Path
 
-from neuroschema.ijson import FORBIDDEN
+from neuroschema.ijson import FORBIDDEN, binary64
 from neuroschema.views import load_registry
 from neuroschema.views.models import (
     MODELS_FORMAT,
@@ -1914,6 +1914,16 @@ def content_verdicts() -> list[tuple[str, str, object]]:
     edges = json.loads(EDGES)
     cats = json.loads(ICLABEL)
     return [
+        (
+            "content_count_2_53_minus_1",
+            "A count of 2^53 - 1, the largest every parser reads exactly.",
+            cats | {"counts": [9007199254740991, *cats["counts"][1:]]},
+        ),
+        (
+            "content_count_2_53_plus_1",
+            "A count of 2^53 + 1, read as 2^53: over the cap.",
+            cats | {"counts": [9007199254740993, *cats["counts"][1:]]},
+        ),
         ("content_edges", "Bins by edges.", edges),
         (
             "content_edges_no_unit",
@@ -2065,6 +2075,17 @@ def preset_verdicts() -> list[tuple[str, str, dict]]:
             "spectrum_without_layout",
             "Without a layout the sensors are the header names.",
             bare,
+        ),
+        (
+            "spectrum_initial_maps_beyond_2_53",
+            "Two frequencies, 9007199254740993 and 9007199254740992, which an exact "
+            "reader holds distinct and JSON.parse reads as one binary64: on the "
+            "binary64 reading they repeat (uniqueItems).",
+            _set(
+                spectrum,
+                "parameters/initial_maps_hz",
+                [9007199254740993, 9007199254740992],
+            ),
         ),
         (
             "spectrum_freq_unit",
@@ -2249,6 +2270,16 @@ def preset_verdicts() -> list[tuple[str, str, dict]]:
                 activity,
                 f"inputs/{signal}",
                 {"role": "signal", "file": activity["inputs"][0]["file"]},
+            ),
+        ),
+        (
+            "ic_activity_rows_beyond_2_53",
+            "Store rows of 2^53 + 1 and 2^53: over the cap on integers, and one "
+            "binary64 twice (probe p9).",
+            _set(
+                activity,
+                "transform/parameters/rows",
+                [9007199254740993, 9007199254740992, *range(2, 7)],
             ),
         ),
         (
@@ -2995,9 +3026,11 @@ def preset_checks() -> dict:
 
 
 def _errors(validator, instance) -> list[list[str]]:
+    """jsonschema's errors on the binary64 reading of the instance: what an
+    engine that parses the vectors file with JSON.parse checks."""
     pairs = {
         (e.validator, "/".join(str(p) for p in e.absolute_path))
-        for e in validator.iter_errors(instance)
+        for e in validator.iter_errors(binary64(instance))
     }
     return [list(pair) for pair in sorted(pairs)]
 
@@ -3030,7 +3063,9 @@ def verdicts() -> dict:
         "spec": SPEC,
         "description": (
             "Declarations and contents with jsonschema's verdicts, for a renderer "
-            "that checks them without a JSON Schema engine. schema view means "
+            "that checks them without a JSON Schema engine. Each verdict is on the "
+            "binary64 reading of the instance, as JSON.parse reads it, so an integer "
+            "beyond 2^53 is checked as the nearest binary64. schema view means "
             "schema/definitions/view.schema.json#/$defs/view; any other schema is "
             "a file in schema/views/. Only valid binds an implementation; errors "
             "list each failing keyword and instance path jsonschema reports."
