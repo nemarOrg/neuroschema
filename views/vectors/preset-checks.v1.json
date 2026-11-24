@@ -1806,7 +1806,8 @@
         ],
         "parameters": {
           "start_s": 151.5,
-          "duration_s": 2
+          "duration_s": 2,
+          "bad_segment_table": true
         }
       },
       "files": {
@@ -1818,6 +1819,7 @@
         }
       },
       "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
         "samples": 75000,
         "rate": 250.0,
         "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
@@ -1839,7 +1841,8 @@
             "duration": 0.05,
             "label": "burst"
           }
-        ]
+        ],
+        "notes": []
       }
     },
     {
@@ -1888,7 +1891,8 @@
         ],
         "parameters": {
           "start_s": 151.5,
-          "duration_s": 2
+          "duration_s": 2,
+          "bad_segment_table": true
         }
       },
       "files": {
@@ -1900,6 +1904,7 @@
         }
       },
       "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
         "samples": 75000,
         "rate": 250.0,
         "published_sha256": null
@@ -1921,12 +1926,13 @@
             "duration": 0.05,
             "label": "burst"
           }
-        ]
+        ],
+        "notes": []
       }
     },
     {
-      "name": "signal_window_without_tables",
-      "covers": "No floor tables: nothing to mark.",
+      "name": "signal_window_no_bad_segment_table",
+      "covers": "The floor wrote no bad segments: drawn, the bad channel marked, and the note that nothing is marked as a bad segment.",
       "view": {
         "key": "midsegment",
         "kind": "nemar.signal-window",
@@ -1950,15 +1956,29 @@
               "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
               "profile": "serving"
             }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
           }
         ],
         "parameters": {
           "start_s": 151.5,
-          "duration_s": 2
+          "duration_s": 2,
+          "bad_segment_table": false
         }
       },
-      "files": {},
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        }
+      },
       "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
         "samples": 75000,
         "rate": 250.0,
         "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
@@ -1968,8 +1988,508 @@
         "state": "matches",
         "first": 37875,
         "count": 500,
-        "bad_channels": [],
-        "segments": []
+        "bad_channels": ["P4"],
+        "segments": [],
+        "notes": ["no_bad_segment_table"]
+      }
+    },
+    {
+      "name": "signal_window_columns_reordered",
+      "covers": "Both tables' columns in another order: found by name.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "258d2190d42e1568faf02526eaa07bd72c4a2dd60397e06916fba97ca31c25c8",
+              "size": 53
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "5c35ecbfc3b69cc3a2413c452081f00efa062fe47e125c9612a7d54871fd40e7",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "status\tname\ttype\ngood\tFp1\tEEG\nbad\tP4\tEEG\nn/a\tECG\tECG\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "label\tonset\tduration\tnemar_reason\nbad_window\t151.700000\t0.300000\tclean_windows\nburst\t152.100000\t0.050000\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": null,
+        "state": "matches",
+        "first": 37875,
+        "count": 500,
+        "bad_channels": ["P4"],
+        "segments": [
+          {
+            "onset": 151.7,
+            "duration": 0.3,
+            "label": "bad_window"
+          },
+          {
+            "onset": 152.1,
+            "duration": 0.05,
+            "label": "burst"
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "signal_window_bad_channel_unknown",
+      "covers": "A bad channel named p4 where the store has P4: names compare as exact strings, and an unknown bad channel refuses the view.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "2a3c77cc23ab06b841776a098884fa248fe74f8ff9512b40dcf8e248c8242235",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\np4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "bad_channel_unknown",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_order_channels_file_before_segments_file",
+      "covers": "A channels file of the wrong size and bad segments of the wrong digest: the channels file is checked first.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\nF4\tEEG\tgood\tn/a\tn/a\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.310000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "file_size_mismatch",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_order_channels_before_segments",
+      "covers": "Channels with no status and an onset that is no number: the channels are read first.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "4a278c7c5656b6ea44411133b03572ed0c1ff41a5685fcdbabb195e2fc9a86af",
+              "size": 18
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "6f5e8e6d6f5ee8eacc929f186eadf0d190c683bca650501d2c49cc93306fcad0",
+              "size": 45
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\nFp1\tEEG\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\nn/a\t0.300000\tbad_window\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "column_missing",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_onset_before_duration",
+      "covers": "An onset that is no number and a duration beyond binary64: the onset column is read first.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "65e3db5a29c381e517b4910337072768fc1ae302f3b548096725678d3fddf523",
+              "size": 37
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\nn/a\t1e400\tburst\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "cell_not_number",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_order_tables_before_bad_channels",
+      "covers": "Bad segments with no label and an unknown bad channel: the tables come first.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "2a3c77cc23ab06b841776a098884fa248fe74f8ff9512b40dcf8e248c8242235",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "56dfd8671cd3b65271a765970e8de40ef07e7ba40ee06943a70bdffdef5addd6",
+              "size": 62
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\np4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tnemar_reason\n151.700000\t0.300000\tclean_windows\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "column_missing",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_order_bad_channels_before_window",
+      "covers": "An unknown bad channel and a window outside the recording: the bad channels come first.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "2a3c77cc23ab06b841776a098884fa248fe74f8ff9512b40dcf8e248c8242235",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 300,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\np4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "bad_channel_unknown",
+        "outcome": "nothing"
       }
     },
     {
@@ -2018,7 +2538,8 @@
         ],
         "parameters": {
           "start_s": 151.5,
-          "duration_s": 2
+          "duration_s": 2,
+          "bad_segment_table": true
         }
       },
       "files": {
@@ -2030,6 +2551,7 @@
         }
       },
       "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
         "samples": 75000,
         "rate": 250.0,
         "published_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
@@ -2085,7 +2607,8 @@
         ],
         "parameters": {
           "start_s": 151.5,
-          "duration_s": 2
+          "duration_s": 2,
+          "bad_segment_table": true
         }
       },
       "files": {
@@ -2097,6 +2620,7 @@
         }
       },
       "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
         "samples": 75000,
         "rate": 250.0,
         "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
@@ -2152,7 +2676,8 @@
         ],
         "parameters": {
           "start_s": 151.5,
-          "duration_s": 2
+          "duration_s": 2,
+          "bad_segment_table": true
         }
       },
       "files": {
@@ -2164,6 +2689,7 @@
         }
       },
       "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
         "samples": 75000,
         "rate": 250.0,
         "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
@@ -2219,7 +2745,8 @@
         ],
         "parameters": {
           "start_s": 151.5,
-          "duration_s": 2
+          "duration_s": 2,
+          "bad_segment_table": true
         }
       },
       "files": {
@@ -2231,6 +2758,7 @@
         }
       },
       "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
         "samples": 75000,
         "rate": 250.0,
         "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
@@ -2286,7 +2814,8 @@
         ],
         "parameters": {
           "start_s": 151.5,
-          "duration_s": 2
+          "duration_s": 2,
+          "bad_segment_table": true
         }
       },
       "files": {
@@ -2298,6 +2827,7 @@
         }
       },
       "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
         "samples": 75000,
         "rate": 250.0,
         "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
@@ -2353,7 +2883,8 @@
         ],
         "parameters": {
           "start_s": 151.5,
-          "duration_s": 2
+          "duration_s": 2,
+          "bad_segment_table": true
         }
       },
       "files": {
@@ -2365,6 +2896,7 @@
         }
       },
       "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
         "samples": 75000,
         "rate": 250.0,
         "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
@@ -2420,7 +2952,8 @@
         ],
         "parameters": {
           "start_s": 151.5,
-          "duration_s": 2
+          "duration_s": 2,
+          "bad_segment_table": true
         }
       },
       "files": {
@@ -2432,6 +2965,7 @@
         }
       },
       "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
         "samples": 75000,
         "rate": 250.0,
         "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
@@ -2490,7 +3024,8 @@
         ],
         "parameters": {
           "start_s": 151.5,
-          "duration_s": 2
+          "duration_s": 2,
+          "bad_segment_table": true
         }
       },
       "files": {
@@ -2502,6 +3037,7 @@
         }
       },
       "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
         "samples": 75000,
         "rate": 250.0,
         "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
@@ -2560,7 +3096,8 @@
         ],
         "parameters": {
           "start_s": 151.5,
-          "duration_s": 2
+          "duration_s": 2,
+          "bad_segment_table": true
         }
       },
       "files": {
@@ -2572,6 +3109,7 @@
         }
       },
       "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
         "samples": 75000,
         "rate": 250.0,
         "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
@@ -2627,7 +3165,8 @@
         ],
         "parameters": {
           "start_s": 299.5,
-          "duration_s": 2
+          "duration_s": 2,
+          "bad_segment_table": true
         }
       },
       "files": {
@@ -2639,6 +3178,7 @@
         }
       },
       "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
         "samples": 75000,
         "rate": 250.0,
         "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
@@ -2660,7 +3200,8 @@
             "duration": 0.05,
             "label": "burst"
           }
-        ]
+        ],
+        "notes": []
       }
     },
     {
@@ -2709,7 +3250,8 @@
         ],
         "parameters": {
           "start_s": 300,
-          "duration_s": 2
+          "duration_s": 2,
+          "bad_segment_table": true
         }
       },
       "files": {
@@ -2721,6 +3263,7 @@
         }
       },
       "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
         "samples": 75000,
         "rate": 250.0,
         "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
@@ -2776,7 +3319,8 @@
         ],
         "parameters": {
           "start_s": 0.001,
-          "duration_s": 0.002
+          "duration_s": 0.002,
+          "bad_segment_table": true
         }
       },
       "files": {
@@ -2788,6 +3332,7 @@
         }
       },
       "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
         "samples": 75000,
         "rate": 250.0,
         "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
@@ -2843,7 +3388,8 @@
         ],
         "parameters": {
           "start_s": 0.098,
-          "duration_s": 0.364
+          "duration_s": 0.364,
+          "bad_segment_table": true
         }
       },
       "files": {
@@ -2855,6 +3401,7 @@
         }
       },
       "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
         "samples": 100,
         "rate": 71.42857142857143,
         "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
@@ -2876,7 +3423,8 @@
             "duration": 0.05,
             "label": "burst"
           }
-        ]
+        ],
+        "notes": []
       }
     },
     {
@@ -2925,7 +3473,8 @@
         ],
         "parameters": {
           "start_s": 151.5,
-          "duration_s": 2
+          "duration_s": 2,
+          "bad_segment_table": true
         }
       },
       "files": {
@@ -2937,6 +3486,7 @@
         }
       },
       "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
         "samples": 75000,
         "rate": 250.0,
         "published_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
@@ -2992,7 +3542,8 @@
         ],
         "parameters": {
           "start_s": 151.5,
-          "duration_s": 2
+          "duration_s": 2,
+          "bad_segment_table": true
         }
       },
       "files": {
@@ -3004,6 +3555,7 @@
         }
       },
       "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
         "samples": 75000,
         "rate": 250.0,
         "published_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
@@ -3059,7 +3611,8 @@
         ],
         "parameters": {
           "start_s": 300,
-          "duration_s": 2
+          "duration_s": 2,
+          "bad_segment_table": true
         }
       },
       "files": {
@@ -3071,6 +3624,7 @@
         }
       },
       "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
         "samples": 75000,
         "rate": 250.0,
         "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
@@ -3126,7 +3680,8 @@
         ],
         "parameters": {
           "start_s": 300,
-          "duration_s": 2
+          "duration_s": 2,
+          "bad_segment_table": true
         }
       },
       "files": {
@@ -3138,6 +3693,7 @@
         }
       },
       "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
         "samples": 75000,
         "rate": 250.0,
         "published_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"

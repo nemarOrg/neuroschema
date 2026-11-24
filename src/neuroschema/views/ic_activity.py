@@ -28,7 +28,7 @@ import numpy as np
 
 from neuroschema.views.digest import canonicalize
 from neuroschema.views.models import Refusal, Tsv, cell_value, read_tsv
-from neuroschema.views.presets import read_segments
+from neuroschema.views.presets import NO_BAD_SEGMENT_TABLE, read_segments
 
 IC_ACTIVITY = "nemar.ic-activity.v1"
 ORDER = 2
@@ -76,7 +76,9 @@ class Activations:
     column's values were multiplied by. ``activations`` and ``filtered`` are
     components by samples. ``shaded`` lists, in file order, the bad segments
     whose label is the transform's ``shaded.label``, as ``{onset, duration}``
-    in seconds: the spans a renderer shades.
+    in seconds: the spans a renderer shades. ``notes`` holds
+    ``no_bad_segment_table`` when the view declares no bad segments, which the
+    renderer states ("no bad-segment table; nothing is shaded").
     """
 
     state: str
@@ -88,6 +90,7 @@ class Activations:
     activations: np.ndarray
     filtered: np.ndarray
     shaded: list[dict]
+    notes: list[str]
 
 
 # ── The checks, in the specification's order ──────────────────────────────
@@ -411,4 +414,5 @@ def ic_activity(
         activations=raw,
         filtered=display_filter(raw, store.rate, cutoff),
         shaded=shaded,
+        notes=[NO_BAD_SEGMENT_TABLE] if segments_bytes is None else [],
     )

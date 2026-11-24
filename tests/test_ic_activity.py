@@ -95,6 +95,7 @@ def test_cases_replay(case):
     assert result.rows == expected["rows"]
     assert result.factors == expected["factors"]
     assert result.shaded == expected["shaded"]
+    assert result.notes == expected["notes"]
     assert [float(t) for t in result.time_s] == expected["time_s"]
     scale = scales(expected["activations"])
     assert within(result.activations, expected["activations"], scale, 1e-12)
@@ -190,6 +191,27 @@ def test_only_the_shaded_label_is_shaded():
         {"onset": 0.1, "duration": 0.04},
         {"onset": 0.36, "duration": 0.2},
     ]
+
+
+def test_no_table_is_said_never_silent():
+    """A view whose record names no bad-segment table shades nothing and says
+    so; one that declares a table carries no note."""
+    for case in CASES:
+        declared = any(i["role"] == "badsegments" for i in case["view"]["inputs"])
+        files = case["view"]["transform"]["parameters"]["shaded"]["files"]
+        assert declared is (files is not None), case["name"]
+        assert case["expected"]["notes"] == (
+            [] if declared else ["no_bad_segment_table"]
+        )
+    assert any(c["name"] == "no_bad_segment_table" for c in CASES)
+
+
+def test_in_step_orders_have_two_fault_vectors():
+    """The components file before the bad segments file, and the onset column
+    before the duration column, each with two faults of different words."""
+    words = {r["name"]: r["word"] for r in REFUSALS}
+    assert words["order_components_file_before_segments_file"] == "file_size_mismatch"
+    assert words["badsegments_onset_before_duration"] == "cell_not_number"
 
 
 def ia_location(case: dict, role: str) -> str:

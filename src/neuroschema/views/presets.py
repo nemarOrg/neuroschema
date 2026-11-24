@@ -11,9 +11,9 @@ checks run, in the stated order, and the first that fails gives the word:
   (``variance_length``), and counts that sum to ``n_components``
   (``components_total``);
 - ``nemar.signal-window``: the floor's tables it marks (the files recorded, the
-  TSV grammar and their columns), the store digest (``store_digest_mismatch``)
-  and the window, which must hold a sample of the recording
-  (``window_outside``).
+  TSV grammar and their columns), the store digest (``store_digest_mismatch``),
+  each bad channel's name, a store row's label (``bad_channel_unknown``), and
+  the window, which must hold a sample of the recording (``window_outside``).
 
 A word of ``nemar.ic-maps`` or ``nemar.ic-classes`` draws the view by its base
 and keeps the word; a word of ``nemar.signal-window`` draws nothing.
@@ -41,6 +41,9 @@ from neuroschema.views.models import (
 from neuroschema.views.registry import load_registry
 
 PRESET_CHECKS_FORMAT = "nemar.preset-checks.v1"
+# The note a view carries when it legitimately has no bad-segment table, so that
+# drawing nothing shaded or marked is said, never silent.
+NO_BAD_SEGMENT_TABLE = "no_bad_segment_table"
 IC_CLASSES_CONTENT = "content.nemar.ic-classes.v1.schema.json"
 
 
@@ -163,6 +166,7 @@ def _file_input(view: Mapping, role: str) -> Mapping | None:
 def check_signal_window(
     view: Mapping,
     files: Mapping[str, bytes],
+    labels: list[str | None],
     samples: int,
     rate: float,
     published_sha256: str | None,
@@ -175,9 +179,12 @@ def check_signal_window(
     when it differs from the declared one (``store_digest_mismatch``; when
     either is absent the state is ``not_checked``); the tables' grammar and
     columns (channels: name and status; badsegments: onset, duration and label,
-    the first two numbers); and a window that holds a sample of the recording
-    (``window_outside``). Every refusal draws nothing: a window with its marks
-    missing could pass for clean data.
+    the first two numbers); each bad channel's name, which must be the label of
+    a store row, compared as exact strings (``bad_channel_unknown``); and a
+    window that holds a sample of the recording (``window_outside``). Every
+    refusal draws nothing: a window with its marks missing could pass for clean
+    data. With no bad segments declared, the result notes
+    ``no_bad_segment_table``.
     """
     reader = _Reader(view, files, caps)
     tables = {}
@@ -207,6 +214,10 @@ def check_signal_window(
         )
     except KindRefused as exc:
         raise PresetRefused(exc.word, "nothing", str(exc)) from exc
+    bad = [row["name"] for row in channels if row["status"] == "bad"]
+    for name in bad:
+        if name not in labels:
+            raise PresetRefused("bad_channel_unknown", "nothing", name)
     parameters = view["parameters"]
     first, count = window_samples(
         parameters["start_s"], parameters["duration_s"], samples, rate
@@ -217,8 +228,9 @@ def check_signal_window(
         "state": state,
         "first": first,
         "count": count,
-        "bad_channels": [row["name"] for row in channels if row["status"] == "bad"],
+        "bad_channels": bad,
         "segments": segments,
+        "notes": [] if "badsegments" in tables else [NO_BAD_SEGMENT_TABLE],
     }
 
 
@@ -230,12 +242,13 @@ def check_preset(
 ) -> dict:
     """The outcome of a preset's own checks, as the vectors state it.
 
-    ``{"word": None}`` when they pass (with the state and window of a
-    ``nemar.signal-window``); ``{"word", "outcome"}`` when one fails, the
+    ``{"word": None}`` when they pass (with, for a ``nemar.signal-window``, its
+    state, the window's ``first`` sample and ``count``, its ``bad_channels``,
+    its ``segments`` and its ``notes``); ``{"word", "outcome"}`` when one fails, the
     outcome ``base`` or ``nothing``; and, for ``nemar.ic-classes`` when its base
     refuses its file first, the base's word with the outcome ``fallback``.
-    ``store`` holds a signal window's ``samples``, ``rate`` and
-    ``published_sha256``. A file that is not the one recorded gives the
+    ``store`` holds a signal window's store ``labels``, ``samples``, ``rate``
+    and ``published_sha256``. A file that is not the one recorded gives the
     generic kinds' word with the outcome ``nothing``.
     """
     registry = load_registry() if registry is None else registry
@@ -245,6 +258,7 @@ def check_preset(
             return {"word": None} | check_signal_window(
                 view,
                 files,
+                store["labels"],
                 store["samples"],
                 store["rate"],
                 store["published_sha256"],

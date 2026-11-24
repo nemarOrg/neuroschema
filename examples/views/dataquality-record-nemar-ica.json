@@ -413,7 +413,8 @@
           ],
           "parameters": {
             "start_s": 151.5,
-            "duration_s": 2
+            "duration_s": 2,
+            "bad_segment_table": true
           }
         },
         {

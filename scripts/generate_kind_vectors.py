@@ -1912,7 +1912,20 @@ def preset_verdicts() -> list[tuple[str, str, dict]]:
     )
     archive = _archive_activity(activity)
     signal = next(i for i, x in enumerate(activity["inputs"]) if x["role"] == "signal")
-    signal_only = _set(window, "inputs", window["inputs"][:1])
+    without_segments = _set(
+        _set(window, "inputs", window["inputs"][:2]),
+        "parameters/bad_segment_table",
+        False,
+    )
+    null_files = _set(
+        _set(
+            activity,
+            "inputs",
+            [i for i in activity["inputs"] if i["role"] != "badsegments"],
+        ),
+        "transform/parameters/shaded/files",
+        None,
+    )
     return [
         (
             "spectrum",
@@ -2203,6 +2216,26 @@ def preset_verdicts() -> list[tuple[str, str, dict]]:
             _set(activity, "transform/parameters/shaded/reason", "asr_burst_rejection"),
         ),
         (
+            "ic_activity_no_segment_table",
+            "The floor wrote no bad-segment table: shaded.files null, no input.",
+            null_files,
+        ),
+        (
+            "ic_activity_segments_named_not_declared",
+            "The record names the bad-segment tables and the view does not declare "
+            "the input.",
+            _set(
+                activity,
+                "inputs",
+                [i for i in activity["inputs"] if i["role"] != "badsegments"],
+            ),
+        ),
+        (
+            "ic_activity_segments_declared_not_named",
+            "A bad-segments input when shaded.files is null.",
+            _set(activity, "transform/parameters/shaded/files", None),
+        ),
+        (
             "ic_activity_preprocessing_closed",
             "A preprocessing step is {step, function}.",
             _set(
@@ -2212,7 +2245,31 @@ def preset_verdicts() -> list[tuple[str, str, dict]]:
             ),
         ),
         ("signal_window", "A recipe's midsegment window.", window),
-        ("signal_window_signal_only", "The floor's tables are optional.", signal_only),
+        (
+            "signal_window_without_segments",
+            "The floor wrote no bad segments (bad_segment_table false): none declared.",
+            without_segments,
+        ),
+        (
+            "signal_window_no_channels",
+            "The channels are required: the floor always writes them.",
+            _set(window, "inputs", [window["inputs"][0], window["inputs"][2]]),
+        ),
+        (
+            "signal_window_segments_named_not_declared",
+            "The record names the bad segments and the view does not declare them.",
+            _set(window, "inputs", window["inputs"][:2]),
+        ),
+        (
+            "signal_window_segments_declared_not_named",
+            "Bad segments declared when the record names none.",
+            _set(window, "parameters/bad_segment_table", False),
+        ),
+        (
+            "signal_window_no_table_flag",
+            "Whether the floor wrote the bad segments is stated.",
+            _set(window, "parameters/bad_segment_table", DROP),
+        ),
         (
             "signal_window_long",
             "A window of at most 30 seconds.",
@@ -2505,6 +2562,7 @@ FLOOR_CHANNELS = tsv(
     "P4 EEG bad flat flatline",
     "ECG ECG n/a non-signal not_assessed",
 )
+STORE_LABELS = ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"]
 FLOOR_SEGMENTS = tsv(
     "onset duration label nemar_reason",
     "151.700000 0.300000 bad_window clean_windows",
@@ -2540,13 +2598,18 @@ def signal_window_check_cases() -> list[tuple[str, str, dict, dict, dict]]:
         segments=FLOOR_SEGMENTS,
         recorded=None,
         caps=None,
+        labels=STORE_LABELS,
     ):
         """A window with the floor's tables; recorded, when given, maps a role
         to the bytes the view declares in place of the bytes served."""
         view = _set(
-            _set(window, "parameters/start_s", start_s),
-            "parameters/duration_s",
-            duration_s,
+            _set(
+                _set(window, "parameters/start_s", start_s),
+                "parameters/duration_s",
+                duration_s,
+            ),
+            "parameters/bad_segment_table",
+            segments is not None,
         )
         files = {}
         for role, data in (("channels", channels), ("badsegments", segments)):
@@ -2555,7 +2618,12 @@ def signal_window_check_cases() -> list[tuple[str, str, dict, dict, dict]]:
                 continue
             view = _with_input(view, role, (recorded or {}).get(role, data))
             files[_input_at(view, role)] = data
-        store = {"samples": samples, "rate": rate, "published_sha256": published}
+        store = {
+            "labels": labels,
+            "samples": samples,
+            "rate": rate,
+            "published_sha256": published,
+        }
         return view, files, store, caps or {}
 
     tampered = FLOOR_SEGMENTS.replace(b"0.300000", b"0.310000", 1)
@@ -2575,9 +2643,81 @@ def signal_window_check_cases() -> list[tuple[str, str, dict, dict, dict]]:
             *at(151.5, 2, published=None),
         ),
         (
-            "signal_window_without_tables",
-            "No floor tables: nothing to mark.",
-            *at(151.5, 2, channels=None, segments=None),
+            "signal_window_no_bad_segment_table",
+            "The floor wrote no bad segments: drawn, the bad channel marked, and "
+            "the note that nothing is marked as a bad segment.",
+            *at(151.5, 2, segments=None),
+        ),
+        (
+            "signal_window_columns_reordered",
+            "Both tables' columns in another order: found by name.",
+            *at(
+                151.5,
+                2,
+                channels=tsv(
+                    "status name type",
+                    "good Fp1 EEG",
+                    "bad P4 EEG",
+                    "n/a ECG ECG",
+                ),
+                segments=tsv(
+                    "label onset duration nemar_reason",
+                    "bad_window 151.700000 0.300000 clean_windows",
+                    "burst 152.100000 0.050000 asr_repaired",
+                ),
+            ),
+        ),
+        (
+            "signal_window_bad_channel_unknown",
+            "A bad channel named p4 where the store has P4: names compare as "
+            "exact strings, and an unknown bad channel refuses the view.",
+            *at(151.5, 2, channels=FLOOR_CHANNELS.replace(b"P4", b"p4", 1)),
+        ),
+        (
+            "signal_window_order_channels_file_before_segments_file",
+            "A channels file of the wrong size and bad segments of the wrong "
+            "digest: the channels file is checked first.",
+            *at(
+                151.5,
+                2,
+                channels=FLOOR_CHANNELS + b"F4\tEEG\tgood\tn/a\tn/a\n",
+                segments=tampered,
+                recorded={"channels": FLOOR_CHANNELS, "badsegments": FLOOR_SEGMENTS},
+            ),
+        ),
+        (
+            "signal_window_order_channels_before_segments",
+            "Channels with no status and an onset that is no number: the channels "
+            "are read first.",
+            *at(
+                151.5,
+                2,
+                channels=no_status,
+                segments=tsv("onset duration label", "n/a 0.300000 bad_window"),
+            ),
+        ),
+        (
+            "signal_window_onset_before_duration",
+            "An onset that is no number and a duration beyond binary64: the onset "
+            "column is read first.",
+            *at(151.5, 2, segments=tsv("onset duration label", "n/a 1e400 burst")),
+        ),
+        (
+            "signal_window_order_tables_before_bad_channels",
+            "Bad segments with no label and an unknown bad channel: the tables "
+            "come first.",
+            *at(
+                151.5,
+                2,
+                channels=FLOOR_CHANNELS.replace(b"P4", b"p4", 1),
+                segments=no_label,
+            ),
+        ),
+        (
+            "signal_window_order_bad_channels_before_window",
+            "An unknown bad channel and a window outside the recording: the bad "
+            "channels come first.",
+            *at(300, 2, channels=FLOOR_CHANNELS.replace(b"P4", b"p4", 1)),
         ),
         (
             "signal_window_digest_mismatch",

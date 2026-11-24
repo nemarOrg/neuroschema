@@ -38,7 +38,7 @@
     },
     "inputs": {
       "type": "array",
-      "description": "The roles the view reads: unmixing, signal and components, each once (the transform's schema requires them), and the optional role badsegments. No other role.",
+      "description": "The roles unmixing, signal and components, each once (the transform's schema requires them), and badsegments exactly when the record names the floor's bad-segment table (shaded.files not null). No other role.",
       "items": {
         "oneOf": [
           {
@@ -97,7 +97,7 @@
           },
           "minContains": 0,
           "maxContains": 1,
-          "description": "The bad segments are optional (minContains 0): the floor writes none when its window step was skipped."
+          "description": "At most one badsegments input, declared exactly when the transform's shaded.files is not null (the root's rule): the table is absent only when the floor's window step was skipped and ASR repaired nothing."
         }
       ]
     },
@@ -271,6 +271,122 @@
           }
         },
         "description": "A decomposition of the serving copy declares a signal store of profile serving."
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "transform": {
+            "type": "object",
+            "properties": {
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "shaded": {
+                    "type": "object",
+                    "properties": {
+                      "files": {
+                        "type": "array"
+                      }
+                    },
+                    "required": [
+                      "files"
+                    ]
+                  }
+                },
+                "required": [
+                  "shaded"
+                ]
+              }
+            },
+            "required": [
+              "parameters"
+            ]
+          }
+        },
+        "required": [
+          "transform"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": "array",
+            "contains": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "const": "badsegments"
+                }
+              },
+              "required": [
+                "role"
+              ]
+            }
+          }
+        },
+        "description": "The record names the floor's bad-segment tables (shaded.files), so the view declares the badsegments input: a table never read is never drawn silently."
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "transform": {
+            "type": "object",
+            "properties": {
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "shaded": {
+                    "type": "object",
+                    "properties": {
+                      "files": {
+                        "type": "null"
+                      }
+                    },
+                    "required": [
+                      "files"
+                    ]
+                  }
+                },
+                "required": [
+                  "shaded"
+                ]
+              }
+            },
+            "required": [
+              "parameters"
+            ]
+          }
+        },
+        "required": [
+          "transform"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": "array",
+            "not": {
+              "contains": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "const": "badsegments"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              }
+            }
+          }
+        },
+        "description": "With shaded.files null the floor wrote no table, so the view declares none and a renderer says nothing is shaded."
       }
     }
   ],

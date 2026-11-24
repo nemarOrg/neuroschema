@@ -531,12 +531,40 @@ class TestComputedPresets:
         instance["inputs"] = [i for i in instance["inputs"] if i["role"] != role]
         assert ("contains", "inputs") in view_errors(instance)
 
-    def test_badsegments_is_optional(self):
+    def test_a_table_the_record_names_is_declared(self):
+        """shaded.files names the floor's tables, so the input is required; with
+        files null (no table written) it is refused."""
         instance = view("icactivity")
         instance["inputs"] = [
             i for i in instance["inputs"] if i["role"] != "badsegments"
         ]
+        assert view_errors(instance) == {("contains", "inputs")}
+        instance["transform"]["parameters"]["shaded"]["files"] = None
         assert view_errors(instance) == set()
+        instance = view("icactivity")
+        instance["transform"]["parameters"]["shaded"]["files"] = None
+        assert view_errors(instance) == {("not", "inputs")}
+
+    @pytest.mark.parametrize("flag", [True, False])
+    def test_the_signal_window_declares_what_the_record_names(self, flag):
+        instance = view("midsegment")
+        instance["parameters"]["bad_segment_table"] = flag
+        segments = [i for i in instance["inputs"] if i["role"] == "badsegments"]
+        without = [i for i in instance["inputs"] if i["role"] != "badsegments"]
+        if flag:
+            assert view_errors(instance) == set()
+            instance["inputs"] = without
+            assert view_errors(instance) == {("contains", "inputs")}
+        else:
+            assert view_errors(instance) == {("not", "inputs")}
+            instance["inputs"] = without
+            assert view_errors(instance) == set()
+        assert segments
+
+    def test_the_signal_window_always_declares_its_channels(self):
+        instance = view("midsegment")
+        instance["inputs"] = [i for i in instance["inputs"] if i["role"] != "channels"]
+        assert view_errors(instance) == {("contains", "inputs")}
 
     @pytest.mark.parametrize(
         "member", ["channel_types", "channel_types_sha256", "channels", "reference"]

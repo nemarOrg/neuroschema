@@ -150,8 +150,8 @@ def _total_check(case):
 def _files_check(case):
     try:
         check_signal_window_files(case)
-    except Exception as exc:  # the generic file words
-        return getattr(exc, "word", "error")
+    except Refusal as exc:  # the generic file words
+        return exc.word
     return None
 
 
@@ -170,10 +170,8 @@ def check_signal_window_files(case):
             raise _Word("cap_exceeded")
 
 
-class _Word(Exception):
-    def __init__(self, word):
-        super().__init__(word)
-        self.word = word
+class _Word(Refusal):
+    """A file word this port raises itself."""
 
 
 def _digest_check(case):
@@ -195,6 +193,18 @@ def _tables_check(case):
             except Refusal as exc:
                 return exc.word
     return None
+
+
+def _bad_channels_check(case):
+    caps = load_registry()["caps"] | case.get("caps", {})
+    entry = next(i for i in case["view"]["inputs"] if i["role"] == "channels")
+    try:
+        rows = read_channels(files_of(case)[entry["file"]["location"]], caps)
+    except Refusal:
+        return None  # the tables' check refuses this one
+    labels = case["store"]["labels"]
+    unknown = [r for r in rows if r["status"] == "bad" and r["name"] not in labels]
+    return "bad_channel_unknown" if unknown else None
 
 
 def _window_check(case):
@@ -220,7 +230,13 @@ ORDERS = {
     "nemar.ic-classes": (IC_CLASSES, [_content_check, _variance_check, _total_check]),
     "nemar.signal-window": (
         WINDOWS,
-        [_files_check, _digest_check, _tables_check, _window_check],
+        [
+            _files_check,
+            _digest_check,
+            _tables_check,
+            _bad_channels_check,
+            _window_check,
+        ],
     ),
 }
 PAIRS = [
@@ -255,6 +271,40 @@ def test_each_neighboring_pair_of_checks_has_a_two_fault_case(kind, i):
     ]
     assert both, "no case holds both faults"
     assert any(_port(swapped)(c) != c["expected"]["word"] for c in both)
+
+
+IN_STEP = {
+    "signal_window_order_channels_file_before_segments_file": "file_size_mismatch",
+    "signal_window_order_channels_before_segments": "column_missing",
+    "signal_window_onset_before_duration": "cell_not_number",
+}
+
+
+def test_in_step_orders_have_two_fault_vectors():
+    """Channels before bad segments, for the files and for the reading, and
+    the onset before the duration: each a case with two faults of different
+    words, whose recorded word is the earlier check's."""
+    by_name = {c["name"]: c for c in CASES}
+    for name, word in IN_STEP.items():
+        assert by_name[name]["expected"] == {"word": word, "outcome": "nothing"}
+
+
+def test_a_table_the_record_names_none_of_is_said():
+    case = next(c for c in CASES if c["name"] == "signal_window_no_bad_segment_table")
+    assert case["view"]["parameters"]["bad_segment_table"] is False
+    assert case["expected"]["notes"] == ["no_bad_segment_table"]
+    assert case["expected"]["segments"] == []
+    drawn = [c for c in CASES if c["view"]["kind"] == "nemar.signal-window"]
+    for c in drawn:
+        if c["expected"]["word"] is None:
+            flag = c["view"]["parameters"]["bad_segment_table"]
+            assert c["expected"]["notes"] == ([] if flag else ["no_bad_segment_table"])
+
+
+def test_reordered_columns_draw():
+    case = next(c for c in CASES if c["name"] == "signal_window_columns_reordered")
+    plain = next(c for c in CASES if c["name"] == "signal_window")
+    assert case["expected"] == plain["expected"]
 
 
 def test_the_base_refuses_before_the_preset_checks():

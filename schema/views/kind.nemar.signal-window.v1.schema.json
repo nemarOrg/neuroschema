@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "kind.nemar.signal-window.v1.schema.json",
   "title": "View Kind nemar.signal-window, Version 1",
-  "description": "A window of the recording as the serving copy holds it, opened in the signal viewer, a preset over nemar.lines version 1, applied on top of the envelope to a view declaration whose kind is nemar.signal-window and kind_version 1. The role signal is the recording's store; the window starts at parameters.start_s and lasts parameters.duration_s. The optional roles channels and badsegments are the floor's decisions, which a renderer marks over the window (bad channels and bad segments). Nothing is computed or stored: the view names a window of data the viewer already reads under the dataset's read rule. docs/views/presets.md is normative.",
+  "description": "A window of the recording as the serving copy holds it, opened in the signal viewer, a preset over nemar.lines version 1, applied on top of the envelope to a view declaration whose kind is nemar.signal-window and kind_version 1. The role signal is the recording's store; the window starts at parameters.start_s and lasts parameters.duration_s. The role channels (always) and the role badsegments (when the floor wrote it, parameters.bad_segment_table) are the floor's decisions, which a renderer marks over the window (bad channels and bad segments). Nothing is computed or stored: the view names a window of data the viewer already reads under the dataset's read rule. docs/views/presets.md is normative.",
   "type": "object",
   "required": [
     "base",
@@ -29,7 +29,7 @@
     },
     "inputs": {
       "type": "array",
-      "description": "The role signal, once, and the optional roles channels and badsegments.",
+      "description": "The roles signal and channels, once each, and badsegments exactly when parameters.bad_segment_table is true.",
       "items": {
         "oneOf": [
           {
@@ -100,9 +100,9 @@
               "role"
             ]
           },
-          "minContains": 0,
+          "minContains": 1,
           "maxContains": 1,
-          "description": "The channels are optional (minContains 0)."
+          "description": "The channels are required: the floor always writes _channels.tsv."
         },
         {
           "contains": {
@@ -118,7 +118,7 @@
           },
           "minContains": 0,
           "maxContains": 1,
-          "description": "The bad segments are optional (minContains 0)."
+          "description": "At most one badsegments input; whether there is one follows parameters.bad_segment_table (the root's rule)."
         }
       ]
     },
@@ -127,7 +127,8 @@
       "description": "The window.",
       "required": [
         "start_s",
-        "duration_s"
+        "duration_s",
+        "bad_segment_table"
       ],
       "properties": {
         "start_s": {
@@ -140,9 +141,79 @@
           "exclusiveMinimum": 0,
           "maximum": 30,
           "description": "The window's length, in seconds."
+        },
+        "bad_segment_table": {
+          "type": "boolean",
+          "description": "Whether the floor wrote _badsegments.tsv for the recording, as the record names it: true, and the view declares the badsegments input; false (its window step was skipped and ASR repaired nothing), and it declares none and a renderer says nothing is marked."
         }
       },
       "additionalProperties": false
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "bad_segment_table": {
+                "const": true
+              }
+            },
+            "required": [
+              "bad_segment_table"
+            ]
+          }
+        },
+        "required": [
+          "parameters"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": "array",
+            "contains": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "const": "badsegments"
+                }
+              },
+              "required": [
+                "role"
+              ]
+            }
+          }
+        },
+        "description": "A table the record names is declared."
+      },
+      "else": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": "array",
+            "not": {
+              "type": "array",
+              "contains": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "const": "badsegments"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              }
+            }
+          }
+        },
+        "description": "No table, no input."
+      }
+    }
+  ]
 }

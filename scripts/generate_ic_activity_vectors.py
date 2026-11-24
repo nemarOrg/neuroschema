@@ -145,6 +145,18 @@ ONSET_TEXT = tsv_text(
     "onset duration label nemar_reason",
     "n/a 0.040000 burst asr_repaired",
 )
+# Columns are found by name, in any position.
+REORDERED = tsv_text(
+    "label nemar_reason onset duration",
+    "burst asr_repaired 0.100000 0.040000",
+    "bad_window clean_windows 0.200000 0.120000",
+    "burst asr_repaired 0.360000 0.200000",
+)
+# Two faults in one table: the onset column is read before the duration.
+ONSET_AND_DURATION = tsv_text(
+    "onset duration label nemar_reason",
+    "n/a 1e400 burst asr_repaired",
+)
 
 
 def corrupt_cell(text: bytes) -> bytes:
@@ -232,7 +244,10 @@ def declaration(
         "columns": list(header) if columns is None else columns,
         "unit": unit,
         "caption": None if match == "store_row" else CAPTION_UNCHECKED,
-        "shaded": {"label": "burst", "files": [SEGMENTS_AT, SAMPLEMASK_AT]},
+        "shaded": {
+            "label": "burst",
+            "files": [SEGMENTS_AT, SAMPLEMASK_AT] if segments else None,
+        },
     }
     typed = [[label, "EEG"] for label in header]
     decomposition = {
@@ -569,6 +584,26 @@ def transform_cases() -> list[Case]:
             *_small_view(),
             _small_store(),
             (45, 15),
+        )
+    )
+    cases.append(
+        Case(
+            "no_bad_segment_table",
+            "The floor wrote no bad-segment table (shaded.files null): the view "
+            "declares none, draws, shades nothing and says so (no_bad_segment_table).",
+            *_small_view(),
+            _small_store(),
+            (0, 60),
+        )
+    )
+    cases.append(
+        Case(
+            "segments_columns_reordered",
+            "The bad segments' columns in another order: found by name, the same "
+            "spans shaded.",
+            *_small_view(segments=REORDERED),
+            _small_store(),
+            (0, 60),
         )
     )
     cases.append(
@@ -960,6 +995,21 @@ def refusals() -> list[Case]:
         caps={"cells_per_role": 40},
     )
     refused(
+        "badsegments_onset_before_duration",
+        "An onset that is no number and a duration beyond binary64: the onset "
+        "column is read first.",
+        _small_view(segments=ONSET_AND_DURATION),
+    )
+    view, files = _small_view(segments=True)
+    files[COMPONENTS_AT] += b"\n"
+    files[SEGMENTS_AT] = SEGMENTS.replace(b"0.120000", b"0.130000", 1)
+    refused(
+        "order_components_file_before_segments_file",
+        "A components file of the wrong size and a bad segments file of the wrong "
+        "digest: the components file is checked first.",
+        (view, files),
+    )
+    refused(
         "badsegments_no_label",
         "The bad segments table has no column label.",
         _small_view(segments=NO_LABEL),
@@ -1236,6 +1286,7 @@ def _case(case: Case) -> dict:
             "activations": _floats(result.activations),
             "filtered": _floats(result.filtered),
             "shaded": result.shaded,
+            "notes": result.notes,
         }
     }
 

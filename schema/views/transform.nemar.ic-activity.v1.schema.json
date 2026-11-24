@@ -225,14 +225,21 @@
                   "description": "The label of the shaded rows (burst)."
                 },
                 "files": {
-                  "type": "array",
-                  "minItems": 1,
-                  "maxItems": 8,
-                  "uniqueItems": true,
-                  "items": {
-                    "$ref": "../definitions/processingTypes.schema.json#/$defs/relativeLocation"
-                  },
-                  "description": "The tables that hold those rows (the floor's _badsegments.tsv and _samplemask.tsv)."
+                  "anyOf": [
+                    {
+                      "type": "array",
+                      "minItems": 1,
+                      "maxItems": 8,
+                      "uniqueItems": true,
+                      "items": {
+                        "$ref": "../definitions/processingTypes.schema.json#/$defs/relativeLocation"
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The tables that hold those rows (the floor's _badsegments.tsv and _samplemask.tsv), or null when the floor wrote no table: its window step was skipped and ASR repaired nothing."
                 }
               },
               "additionalProperties": false
