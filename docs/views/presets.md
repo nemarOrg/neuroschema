@@ -76,11 +76,12 @@ The parameters record how the spectrum was computed; a renderer prints them and 
 | `unit` | yes | `dB`: 10 log10 of the density in microvolts squared per hertz, so 0 dB is 1 µV²/Hz. |
 | `upper_hz` | yes | The highest frequency the rows reach (125 Hz for NEMAR's EEG spectra); every `freq_hz` cell is at most this and at most half the sampling rate. |
 
+| `initial_maps_hz` | no | Up to 8 frequencies whose maps are shown before the reader picks one. |
+
 `welch` names one computation, so two renderers that print the parameters describe the same numbers.
 The recording is cut into windows of `window_s` seconds overlapping by `overlap`; each window is detrended by subtracting its own mean (a constant detrend), tapered by `window`, and its periodogram taken; the periodograms are averaged by their mean, not their median.
 The density is one-sided: the power of each frequency above 0 and below half the sampling rate is doubled, so the rows integrate to the variance of the signal over the frequencies they cover.
-The 0 Hz row is left out, since a mean-detrended window has no power there: the first row is the lowest frequency above 0, `1 / window_s` (0.5 Hz for NEMAR's), and the rows rise from it in steps of `1 / window_s`.
-| `initial_maps_hz` | no | Up to 8 frequencies whose maps are shown before the reader picks one. |
+By rule the 0 Hz row is left out, since detrending each window by its mean makes it meaningless: the first row is the lowest frequency above 0, `1 / window_s` (0.5 Hz for NEMAR's), and the rows rise from it in steps of `1 / window_s`.
 
 A renderer that knows this kind draws the `nemar.lines` model of the values, and below it a scalp map of the sensors' values at one frequency row: the row the readout snaps to, or, before the reader picks one, the row nearest each frequency of `initial_maps_hz` by the same rule.
 A map is the row's cells as one value per sensor, drawn with `nemar.sensor-field.v1` with `minmax` limits (the decibels are not signed about zero), and placed by the layout or by the sensors' names.
