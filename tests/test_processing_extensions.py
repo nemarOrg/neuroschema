@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 from jsonschema import Draft202012Validator
 
+import neuroschema
 from neuroschema.validate import (
     SCHEMA_BASE,
     load_schema,
@@ -192,6 +193,11 @@ def test_the_ids_name_the_released_version():
     pyproject.toml bumps the tag in SCHEMA_BASE with it (review r29)."""
     tag = re.fullmatch(r".*/neuroschema/v([^/]+)/schema/", SCHEMA_BASE)[1]
     assert tag == PYPROJECT_VERSION
+
+
+def test_the_package_version_is_the_released_version():
+    """neuroschema.__version__ is the version pyproject.toml releases."""
+    assert neuroschema.__version__ == PYPROJECT_VERSION
 
 
 def test_the_ajv_check_uses_the_same_ids():
