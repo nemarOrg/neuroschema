@@ -611,11 +611,10 @@ LAYOUT_MUTATIONS = {
 }
 
 
-def _suite_fails_or_raises() -> bool:
-    try:
-        return layout_suite_fails()
-    except (KeyError, FileNotFoundError):
-        return True
+# The one mutation that may raise rather than mismatch: a montage looked up on
+# the file system reads PROVENANCE.json, which has no center (KeyError), or a
+# case-sensitive file system finds no file for another case.
+MAY_RAISE = {"montages found through the file system": (KeyError, FileNotFoundError)}
 
 
 @pytest.mark.parametrize("mutation", list(LAYOUT_MUTATIONS))
@@ -624,7 +623,14 @@ def test_sensor_layout_vectors_catch_a_mutation(monkeypatch, mutation):
     pairs = [(name, value)] if isinstance(name, str) else [name, value]
     for attribute, replacement in pairs:
         monkeypatch.setattr(sl, attribute, replacement)
-    assert _suite_fails_or_raises(), mutation
+    if mutation not in MAY_RAISE:
+        assert layout_suite_fails(), mutation
+        return
+    try:
+        caught = layout_suite_fails()
+    except MAY_RAISE[mutation]:
+        caught = True
+    assert caught, mutation
 
 
 TEMPLATES = {"template_midline_9", "template_coronal_9"}
