@@ -461,6 +461,15 @@ class TestDataQualityRecord:
             "a\u0085b.tsv",
             "a\x9fb.tsv",
             "a\x7fb.tsv",
+            # Review r29: a JavaScript . does not match U+2028 or U+2029, so a
+            # lookahead written with . stopped there and let these through.
+            "a\u2028/../../x.tsv",
+            "a\u2029/../x.tsv",
+            "a\u2028/./x.tsv",
+            "a\u2028//x.tsv",
+            "a\u2028/",
+            "a\u2028 ",
+            "x\u2028.tsv",
         ],
     )
     def test_bad_location(self, location):

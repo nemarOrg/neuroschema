@@ -1761,6 +1761,22 @@ def view_verdicts() -> list[tuple[str, str, dict]]:
             _set(table, "data/0/location", "x/t\u007f.tsv"),
         ),
         (
+            "envelope_location_line_separator_dot_segment",
+            "A line separator (U+2028) before a .. segment: a JavaScript . stops "
+            "at it, so a lookahead written with . would not see the segment.",
+            _set(table, "data/0/location", "x/a\u2028/../t.tsv"),
+        ),
+        (
+            "envelope_location_line_separator_double_slash",
+            "A line separator before an empty segment.",
+            _set(table, "data/0/location", "x/a\u2028//t.tsv"),
+        ),
+        (
+            "envelope_location_paragraph_separator",
+            "A paragraph separator (U+2029) in a name.",
+            _set(table, "data/0/location", "x/t\u2029.tsv"),
+        ),
+        (
             "envelope_location_space_inside",
             "A space inside a name, and dots that are no dot segment, are one "
             "file: valid.",

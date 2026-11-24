@@ -119,7 +119,8 @@ Each entry of `data` is one file read as one role.
 ### Locations
 
 A location (`relativeLocation`, the `location` of a data entry or a file input, and every other path a view names) is a relative POSIX path: Unicode text, written in UTF-8 like the rest of the record, that names one file of the run's product and is never a URL.
-It has no leading slash, no URI scheme, no `.` or `..` segment, no empty segment, no backslash, none of `%`, `?` and `#`, no leading or trailing space, no control character (C0, DEL or C1) and no bidirectional control (U+061C, U+200E, U+200F, U+202A to U+202E, U+2066 to U+2069).
+It has no leading slash, no URI scheme, no `.` or `..` segment, no empty segment, no backslash, none of `%`, `?` and `#`, no leading or trailing space, no control character (C0, DEL or C1), no line or paragraph separator (U+2028, U+2029) and no bidirectional control (U+061C, U+200E, U+200F, U+202A to U+202E, U+2066 to U+2069).
+The pattern's lookaheads match any character with `[\s\S]`, never `.`, which in JavaScript stops at a line terminator.
 So it means the same file in every reader: a URL parser strips a leading or trailing space and decodes `%2e%2e` as `..`, `?` and `#` would end the path, and a bidirectional control can show one name as another.
 A renderer that fetches a file builds its URL from the location by percent-encoding the UTF-8 bytes of each `/`-separated segment (JavaScript's `encodeURIComponent`) and joining the segments with `/` under the product's base; it compares locations as text.
 

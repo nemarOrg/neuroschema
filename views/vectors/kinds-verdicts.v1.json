@@ -1390,6 +1390,126 @@
       ]
     },
     {
+      "name": "envelope_location_line_separator_dot_segment",
+      "covers": "A line separator (U+2028) before a .. segment: a JavaScript . stops at it, so a lookahead written with . would not see the segment.",
+      "schema": "view",
+      "instance": {
+        "key": "channels",
+        "kind": "nemar.table",
+        "kind_version": 1,
+        "caption": "Channels and the floor's decisions.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "table",
+            "location": "x/a /../t.tsv",
+            "format": "tsv",
+            "size": 86,
+            "sha256": "0cad6be49122197e1babfc62712a4de6fabebe2e8884380808f58c7a006ec062",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "status",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "data/0/location"]
+      ]
+    },
+    {
+      "name": "envelope_location_line_separator_double_slash",
+      "covers": "A line separator before an empty segment.",
+      "schema": "view",
+      "instance": {
+        "key": "channels",
+        "kind": "nemar.table",
+        "kind_version": 1,
+        "caption": "Channels and the floor's decisions.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "table",
+            "location": "x/a //t.tsv",
+            "format": "tsv",
+            "size": 86,
+            "sha256": "0cad6be49122197e1babfc62712a4de6fabebe2e8884380808f58c7a006ec062",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "status",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "data/0/location"]
+      ]
+    },
+    {
+      "name": "envelope_location_paragraph_separator",
+      "covers": "A paragraph separator (U+2029) in a name.",
+      "schema": "view",
+      "instance": {
+        "key": "channels",
+        "kind": "nemar.table",
+        "kind_version": 1,
+        "caption": "Channels and the floor's decisions.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "table",
+            "location": "x/t .tsv",
+            "format": "tsv",
+            "size": 86,
+            "sha256": "0cad6be49122197e1babfc62712a4de6fabebe2e8884380808f58c7a006ec062",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "status",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["pattern", "data/0/location"]
+      ]
+    },
+    {
       "name": "envelope_location_space_inside",
       "covers": "A space inside a name, and dots that are no dot segment, are one file: valid.",
       "schema": "view",
