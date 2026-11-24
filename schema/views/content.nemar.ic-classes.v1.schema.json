@@ -74,8 +74,8 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 64,
-      "pattern": "^[^\\t\\r\\n]+$(?!\n)",
-      "description": "The classifier that gave each component's class probabilities, by name. ICLabel fixes the categories; any other name leaves them open."
+      "pattern": "^[^\\s](?:[^\\t\\r\\n]*[^\\s])?$(?!\n)",
+      "description": "The classifier that gave each component's class probabilities, by name, with no leading or trailing white space. ICLabel fixes the categories; any other name leaves them open."
     },
     "categories": {
       "description": "The classes, in the classifier's order (for ICLabel: Brain, Muscle, Eye, Heart, Line Noise, Channel Noise, Other)."

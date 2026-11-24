@@ -121,7 +121,7 @@
         },
         "metrics": {
           "type": "object",
-          "description": "Metrics keyed by metric name: a recipe's own metric by a bare name, with the producer recipe, and a plugin's by <plugin>:<name>, with the producer plugin, the part after the one colon a letter and then letters, digits, _ or -. That the prefix is the producing plugin's name is the writer's rule.",
+          "description": "Metrics keyed by metric name (processingTypes metricName): a recipe's own metric by a bare name, with the producer recipe, and a plugin's by <plugin>:<name>, with the producer plugin. That the prefix is the producing plugin's name is the writer's rule.",
           "propertyNames": {
             "$ref": "../definitions/processingTypes.schema.json#/$defs/metricName"
           },
@@ -154,8 +154,7 @@
                 }
               ]
             }
-          },
-          "additionalProperties": false
+          }
         },
         "views": {
           "type": "array",

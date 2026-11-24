@@ -416,6 +416,12 @@ class TestIcClasses:
         }
         assert content_validator(IC_CLASSES).is_valid(content)
 
+    @pytest.mark.parametrize("name", [" ICLabel", "ICLabel ", "MARA\t", ""])
+    def test_the_classifier_has_no_edge_white_space(self, name):
+        content = CONTENT | {"classifier": name}
+        errors = failures(content_validator(IC_CLASSES).iter_errors(content))
+        assert ("pattern", "classifier") in errors
+
     @pytest.mark.parametrize("name", ["iclabel", "ICLABEL", "IcLabel"])
     def test_iclabel_is_spelled_iclabel(self, name):
         content = CONTENT | {"classifier": name}

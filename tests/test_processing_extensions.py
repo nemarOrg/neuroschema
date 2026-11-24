@@ -397,9 +397,19 @@ class TestMetricNames:
         """One colon, then a letter: a name the manifest rule accepts."""
         doc = dq_record()
         self._metrics(doc)[name] = self._plugin_metric()
-        errors = errors_for(DATA_QUALITY, doc)
-        assert ("additionalProperties", f"{FLOOR}/metrics") in errors
-        assert {v for v, _ in errors} <= {"additionalProperties", "pattern"}
+        assert errors_for(DATA_QUALITY, doc) == {("pattern", f"{FLOOR}/metrics")}
+
+    @pytest.mark.parametrize("name", ["nemar-quality:a:b", "nemar-quality:9x"])
+    @pytest.mark.parametrize("member", ["distributions", "observed_range"])
+    def test_dataset_level_keys_share_the_grammar(self, name, member):
+        """A distribution's and an observed range's key is a metric name too."""
+        doc = dq_dataset()
+        entry = doc["recipes"]["nemar-floor"]
+        values = entry[member]
+        values[name] = values.pop(next(iter(values)))
+        assert errors_for(DATA_QUALITY, doc) == {("pattern", f"{FLOOR}/{member}")}
+        values["nemar-quality:percentBrainComponents"] = values.pop(name)
+        assert errors_for(DATA_QUALITY, doc) == set()
 
     def test_the_example_names_its_producers(self):
         """The presets example carries one metric of each producer."""
