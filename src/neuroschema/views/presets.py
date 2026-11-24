@@ -25,6 +25,7 @@ Python reference. ``nemar.spectrum`` has no checks of its own, and
 from __future__ import annotations
 
 import bisect
+import math
 import posixpath
 from collections.abc import Mapping
 
@@ -86,15 +87,38 @@ def read_table(data: bytes, columns: tuple[str, ...], numbers: tuple[str, ...], 
     ]
 
 
+STATUSES = ("good", "bad", "n/a")
+
+
 def read_segments(data: bytes, caps) -> list[dict]:
     """The floor's ``_badsegments.tsv``: onset and duration (numbers, seconds)
-    and label, one row per segment."""
-    return read_table(data, SEGMENT_COLUMNS, ("onset", "duration"), caps)
+    and label, one row per segment, each duration above 0
+    (``duration_not_positive``): a span of no length, or a negative one, marks
+    nothing, and the floor writes none."""
+    rows = read_table(data, SEGMENT_COLUMNS, ("onset", "duration"), caps)
+    for row in rows:
+        if not row["duration"] > 0:
+            raise KindRefused("duration_not_positive", repr(row["duration"]))
+    return rows
 
 
 def read_channels(data: bytes, caps) -> list[dict]:
-    """The floor's ``_channels.tsv``: each channel's name and status."""
-    return read_table(data, CHANNEL_COLUMNS, (), caps)
+    """The floor's ``_channels.tsv``: each channel's name and status, the
+    status one of BIDS's ``good``, ``bad`` and ``n/a``, compared as exact
+    strings (``channel_status_unknown``). A near miss (``BAD``, ``Bad``,
+    ``excluded``) is refused, never read as good: the floor's decision would
+    otherwise be dropped silently (probe p8)."""
+    rows = read_table(data, CHANNEL_COLUMNS, (), caps)
+    for row in rows:
+        if row["status"] not in STATUSES:
+            raise KindRefused("channel_status_unknown", repr(row["status"]))
+    return rows
+
+
+def check_rate(rate: float) -> None:
+    """The store's sampling rate is a finite number above 0 (``rate_invalid``)."""
+    if not (isinstance(rate, int | float) and math.isfinite(rate) and rate > 0):
+        raise KindRefused("rate_invalid", repr(rate))
 
 
 def _base_only(registry: Mapping) -> Mapping:
@@ -238,6 +262,10 @@ def check_signal_window(
         raise PresetRefused("store_digest_mismatch", "nothing")
     else:
         state = "matches"
+    try:
+        check_rate(rate)
+    except KindRefused as exc:
+        raise PresetRefused(exc.word, "nothing", str(exc)) from exc
     try:
         channels = (
             read_channels(tables["channels"], caps) if "channels" in tables else []

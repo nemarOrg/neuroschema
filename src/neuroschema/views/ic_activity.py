@@ -35,6 +35,7 @@ from neuroschema.views.models import (
     read_tsv,
 )
 from neuroschema.views.presets import NO_BAD_SEGMENT_TABLE, read_segments
+from neuroschema.views.presets import check_rate as _check_rate
 
 IC_ACTIVITY = "nemar.ic-activity.v1"
 ORDER = 2
@@ -253,10 +254,14 @@ def match_rows(
     if match == "store_row":
         if rows is None or len(rows) != len(header):
             raise IcActivityRefusal("channel_set_mismatch", "rows and columns differ")
+        # A row is the integer its binary64 value is: JSON's 0.0 and 0 are one
+        # number (JavaScript reads both as 0), and the schema admits only
+        # integers, so 0.0 is row 0 in every reader.
+        rows = [int(row) for row in rows]
         for column, row in zip(header, rows, strict=True):
             if not 0 <= row < len(labels) or labels[row] != column:
                 raise IcActivityRefusal("channel_set_mismatch", f"{column} at {row}")
-        return list(rows)
+        return rows
     found = []
     for column in header:
         at = [row for row, label in enumerate(labels) if label == column]
@@ -396,6 +401,26 @@ def max_samples(max_window_s: float, rate: float) -> int:
     return math.floor(max_window_s * rate)
 
 
+def check_rate(rate: float) -> None:
+    """The store's sampling rate is a finite number above 0 (``rate_invalid``)."""
+    try:
+        _check_rate(rate)
+    except Refusal as exc:
+        raise IcActivityRefusal(exc.word, str(exc)) from exc
+
+
+def check_window(start: int, count: int, samples: int, max_window_s, rate) -> None:
+    """The window [start, start + count) holds at least one sample and lies in
+    the recording (``window_outside_store``), and holds at most
+    floor(max_window_s * rate) samples (``window_too_long``)."""
+    if not (count >= 1 and start >= 0 and start + count <= samples):
+        raise IcActivityRefusal(
+            "window_outside_store", f"[{start}, {start + count}) of {samples}"
+        )
+    if count > max_samples(max_window_s, rate):
+        raise IcActivityRefusal("window_too_long", f"{count} samples")
+
+
 def ic_activity(
     view: Mapping,
     files: Mapping[str, bytes],
@@ -427,13 +452,6 @@ def ic_activity(
     unmixing_entry = _input(view, "unmixing")["file"]
     components_entry = _input(view, "components")["file"]
     signal = _input(view, "signal")["store"]
-    if not (
-        count >= 1
-        and start >= 0
-        and start + count <= store.digital.shape[-1]
-        and count <= max_samples(parameters["max_window_s"], store.rate)
-    ):
-        raise ValueError(f"window [{start}, {start + count}) is not one to compute")
     segments_entry = next(
         (i["file"] for i in view["inputs"] if i["role"] == "badsegments"), None
     )
@@ -443,6 +461,10 @@ def ic_activity(
         None if segments_entry is None else verified(segments_entry, files, caps)
     )
     state = store_check(signal.get("content_sha256"), store.published_sha256)
+    check_rate(store.rate)
+    check_window(
+        start, count, store.digital.shape[-1], parameters["max_window_s"], store.rate
+    )
     header, weights = read_unmixing(unmixing_bytes, caps)
     labels = read_components(components_bytes, weights.shape[0], caps)
     shaded = (

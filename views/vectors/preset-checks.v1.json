@@ -3826,6 +3826,765 @@
       }
     },
     {
+      "name": "signal_window_status_uppercase",
+      "covers": "A channel whose status is 'BAD': not good, bad or n/a, so channel_status_unknown, never read as good (probe p8).",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "614fc799c58432320bfef342476405926b2e473d9e2f7186910591dc79e665fb",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tBAD\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "channel_status_unknown",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_status_capitalized",
+      "covers": "A channel whose status is 'Bad': not good, bad or n/a, so channel_status_unknown, never read as good (probe p8).",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "a217e5ef0f15fbd82b2c6102cfabc67d0aeb4aec51002313320431cba12c1f56",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tBad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "channel_status_unknown",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_status_excluded",
+      "covers": "A channel whose status is 'excluded': not good, bad or n/a, so channel_status_unknown, never read as good (probe p8).",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "477209be91ea91d49bff8e1362529c62f0987f8b6ec21b302b24bf612a228ec3",
+              "size": 177
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\texcluded\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "channel_status_unknown",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_status_padded",
+      "covers": "A channel whose status is 'bad ': not good, bad or n/a, so channel_status_unknown, never read as good (probe p8).",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "8813eda0b18a1b51faf02e4649573bbdc14040799588f4cfda24b19e9bfd3065",
+              "size": 173
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad \tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "channel_status_unknown",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_segment_duration_negative",
+      "covers": "A bad segment of negative duration: duration_not_positive.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "bf649f9c031d2c253b517df5683ffcbde0e12faf5f426f7affd5bdcb2e001056",
+              "size": 43
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\n151.7\t-0.3\tbad_window\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "duration_not_positive",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_segment_duration_zero",
+      "covers": "A bad segment of no duration: duration_not_positive.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "9554cef9394e453070b068fd8a522d963f4786de3d2d00468eae861952826a57",
+              "size": 40
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\n151.7\t0\tbad_window\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "duration_not_positive",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_rate_zero",
+      "covers": "A store whose rate is 0: rate_invalid, not a division by zero (probe p8).",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 0.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "rate_invalid",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_rate_negative",
+      "covers": "A store whose rate is below 0: rate_invalid.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": -250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "rate_invalid",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_order_digest_before_rate",
+      "covers": "A digest mismatch and a rate of 0: the digest comes first.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 0.0,
+        "published_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "expected": {
+        "word": "store_digest_mismatch",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_order_rate_before_tables",
+      "covers": "A rate of 0 and a channel status BAD: the rate comes first.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "614fc799c58432320bfef342476405926b2e473d9e2f7186910591dc79e665fb",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tBAD\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 0.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "rate_invalid",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_order_status_before_segments",
+      "covers": "A channel status BAD and a bad segment of negative duration: the channels are read first.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "614fc799c58432320bfef342476405926b2e473d9e2f7186910591dc79e665fb",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "bf649f9c031d2c253b517df5683ffcbde0e12faf5f426f7affd5bdcb2e001056",
+              "size": 43
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tBAD\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\n151.7\t-0.3\tbad_window\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "channel_status_unknown",
+        "outcome": "nothing"
+      }
+    },
+    {
       "name": "signal_window_order_files_before_digest",
       "covers": "Both faults: the file comes first.",
       "view": {

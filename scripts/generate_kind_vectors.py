@@ -3281,6 +3281,78 @@ def signal_window_check_cases() -> list[tuple[str, str, dict, dict, dict]]:
             ),
         ),
         (
+            "signal_window_status_uppercase",
+            "A channel whose status is 'BAD': not good, bad or n/a, so "
+            "channel_status_unknown, never read as good (probe p8).",
+            *at(151.5, 2, channels=FLOOR_CHANNELS.replace(b"\tbad\t", b"\tBAD\t")),
+        ),
+        (
+            "signal_window_status_capitalized",
+            "A channel whose status is 'Bad': not good, bad or n/a, so "
+            "channel_status_unknown, never read as good (probe p8).",
+            *at(151.5, 2, channels=FLOOR_CHANNELS.replace(b"\tbad\t", b"\tBad\t")),
+        ),
+        (
+            "signal_window_status_excluded",
+            "A channel whose status is 'excluded': not good, bad or n/a, so "
+            "channel_status_unknown, never read as good (probe p8).",
+            *at(151.5, 2, channels=FLOOR_CHANNELS.replace(b"\tbad\t", b"\texcluded\t")),
+        ),
+        (
+            "signal_window_status_padded",
+            "A channel whose status is 'bad ': not good, bad or n/a, so "
+            "channel_status_unknown, never read as good (probe p8).",
+            *at(151.5, 2, channels=FLOOR_CHANNELS.replace(b"\tbad\t", b"\tbad \t")),
+        ),
+        (
+            "signal_window_segment_duration_negative",
+            "A bad segment of negative duration: duration_not_positive.",
+            *at(
+                151.5, 2, segments=tsv("onset duration label", "151.7 -0.3 bad_window")
+            ),
+        ),
+        (
+            "signal_window_segment_duration_zero",
+            "A bad segment of no duration: duration_not_positive.",
+            *at(151.5, 2, segments=tsv("onset duration label", "151.7 0 bad_window")),
+        ),
+        (
+            "signal_window_rate_zero",
+            "A store whose rate is 0: rate_invalid, not a division by zero (probe p8).",
+            *at(151.5, 2, rate=0.0),
+        ),
+        (
+            "signal_window_rate_negative",
+            "A store whose rate is below 0: rate_invalid.",
+            *at(151.5, 2, rate=-250.0),
+        ),
+        (
+            "signal_window_order_digest_before_rate",
+            "A digest mismatch and a rate of 0: the digest comes first.",
+            *at(151.5, 2, published="f" * 64, rate=0.0),
+        ),
+        (
+            "signal_window_order_rate_before_tables",
+            "A rate of 0 and a channel status BAD: the rate comes first.",
+            *at(
+                151.5,
+                2,
+                rate=0.0,
+                channels=FLOOR_CHANNELS.replace(b"\tbad\t", b"\tBAD\t"),
+            ),
+        ),
+        (
+            "signal_window_order_status_before_segments",
+            "A channel status BAD and a bad segment of negative duration: the "
+            "channels are read first.",
+            *at(
+                151.5,
+                2,
+                channels=FLOOR_CHANNELS.replace(b"\tbad\t", b"\tBAD\t"),
+                segments=tsv("onset duration label", "151.7 -0.3 bad_window"),
+            ),
+        ),
+        (
             "signal_window_order_files_before_digest",
             "Both faults: the file comes first.",
             *at(

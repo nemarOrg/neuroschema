@@ -48,7 +48,9 @@ It declares at most `caps.bytes_per_role` bytes (`cap_exceeded`, checked before 
 It meets the TSV grammar, with its words ([generic-kinds.md](generic-kinds.md#tsv)), and holds at most `caps.cells_per_role` cells counting every header column (`cap_exceeded`).
 It has its columns (`column_missing`): `onset`, `duration` and `label` for the bad segments, and `name` and `status` for the channels.
 A column is found by its name in any position of the header, and the names are looked for in that order; other columns are ignored.
-Every `onset` cell and then every `duration` cell is a number (`cell_not_number`, `cell_not_finite`); the other columns are text.
+Every `onset` cell and then every `duration` cell is a number (`cell_not_number`, `cell_not_finite`), then every duration is above 0 (`duration_not_positive`): a span of no length or a negative one marks nothing, and the floor writes none.
+Every `status` cell of the channels is one of BIDS's `good`, `bad` and `n/a`, compared as exact strings (`channel_status_unknown`): a near miss such as `BAD`, `Bad` or `excluded` is refused, never read as a good channel.
+The other columns are text.
 The channels are read before the bad segments.
 
 **Said.** A view with no bad-segment table, because the record names none, is drawn and carries the note `no_bad_segment_table`, which a renderer shows as "no bad-segment table; nothing is shaded": nothing is left unshaded silently.
@@ -150,11 +152,12 @@ The view computes nothing and has no transform: the renderer opens the signal vi
 The window holds the samples k of the recording (0 <= k < S, for S samples at rate r) whose time `k / r`, one binary64 division, satisfies `start_s <= k / r < end`, where `end = start_s + duration_s`, one binary64 sum: the first is the least such k, and a window past the recording's end is clipped to its last sample.
 A renderer finds them from these times, not from `ceil(start_s * r)`, which can start a sample late at a rate such as 500/7 Hz.
 NEMAR's recipes declare the 2-second window inside the floor's good samples nearest the recording's middle (`midsegment`).
-The renderer runs seven checks in this order, and the first that fails gives the word; each draws nothing.
+The renderer runs eight checks in this order, and the first that fails gives the word; each draws nothing.
 First the declaration is valid (`declaration_invalid`).
 Then the tables are named as the recording's (`table_location_mismatch`, [the floor's tables](#the-floors-tables)).
 Then the tables' files (channels, then badsegments) are the ones recorded.
 Then the store digest, as [ic-activity.md](ic-activity.md#the-checks-in-order) checks it: when the view declares one and the serving copy publishes another, nothing is drawn (`store_digest_mismatch`), because the decisions marked over the window were made on other data; when either is absent, the window is drawn and the state is `not_checked`.
+Then the store's sampling rate is a finite number above 0 (`rate_invalid`).
 Then the tables, channels first, are read as [the floor's tables](#the-floors-tables) says.
 Then each bad channel's name is the label of a store row (`bad_channel_unknown`).
 Last, a window that holds no sample (one that starts at or after the recording's end, or lies between two samples) draws nothing (`window_outside`).
@@ -176,6 +179,9 @@ The vectors give, for a window drawn, its state, its `first` sample and `count`,
 | `column_missing` | `nemar.signal-window` | nothing drawn | The bad segments lack `onset`, `duration` or `label`, or the channels lack `name` or `status`. |
 | `cell_not_number`, `cell_not_finite` | `nemar.signal-window` | nothing drawn | A bad segment's `onset` or `duration` is not a finite JSON number. |
 | `cap_exceeded` | `nemar.signal-window` | nothing drawn | A floor table exceeds the registry's caps on bytes or cells. |
+| `channel_status_unknown` | `nemar.signal-window` | nothing drawn | A channel's `status` is not `good`, `bad` or `n/a`. |
+| `duration_not_positive` | `nemar.signal-window` | nothing drawn | A bad segment's `duration` is not above 0. |
+| `rate_invalid` | `nemar.signal-window` | nothing drawn | The store's sampling rate is not a finite number above 0. |
 | `store_digest_mismatch` | `nemar.signal-window` | nothing drawn | The serving copy publishes a digest other than the one the view declares. |
 | `bad_channel_unknown` | `nemar.signal-window` | nothing drawn | A channel the floor marked bad is no store row's label, compared as exact strings. |
 | `window_outside` | `nemar.signal-window` | nothing drawn | The window holds no sample of the recording. |

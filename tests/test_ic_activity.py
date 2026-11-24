@@ -245,10 +245,12 @@ def _doc_words() -> set[str]:
 
 def _raised_words() -> set[str]:
     source = (ROOT / "src" / "neuroschema" / "views" / "ic_activity.py").read_text()
-    own = set(re.findall(r'IcActivityRefusal\("([a-z_]+)"', source))
+    own = set(re.findall(r'IcActivityRefusal\(\s*"([a-z_]+)"', source))
     grammar = {"tsv_encoding", "tsv_line_endings", "tsv_header_repeated", "tsv_ragged"}
     cells = {"cell_not_number", "cell_not_finite"}
-    return own | grammar | cells
+    # The floor's tables and the store's rate are read as presets.md says.
+    shared = {"duration_not_positive", "rate_invalid"}
+    return own | grammar | cells | shared
 
 
 def test_words_table_matches_the_reference():
@@ -538,6 +540,18 @@ def _step_digest(case):
     ia.store_check(signal["content_sha256"], case["store"]["published_sha256"])
 
 
+def _step_rate(case):
+    ia.check_rate(case["store"]["rate"])
+
+
+def _step_window(case):
+    rate = case["store"]["rate"]
+    max_window_s = case["view"]["parameters"]["max_window_s"]
+    samples = len(case["store"]["digital"][0])
+    window = case["window"]
+    ia.check_window(window["start"], window["count"], samples, max_window_s, rate)
+
+
 def _step_matrix(case):
     ia.read_unmixing(_raw(case, "unmixing"), _caps(case))
 
@@ -581,6 +595,8 @@ ORDER = [
     _step_store,
     _step_files,
     _step_digest,
+    _step_rate,
+    _step_window,
     _step_matrix,
     _step_components,
     _step_segments,
@@ -594,7 +610,9 @@ PAIRS = [
     "order_locations_before_store",
     "order_store_before_files",
     "order_file_before_digest",
-    "order_digest_before_matrix",
+    "order_digest_before_rate",
+    "order_rate_before_window",
+    "order_window_before_matrix",
     "order_matrix_before_components",
     "order_components_before_segments",
     "order_segments_before_match",
@@ -646,12 +664,14 @@ def test_a_window_holds_a_sample():
 def test_a_window_beyond_the_cap_or_the_recording_is_not_computed():
     case = copy.deepcopy(next(c for c in CASES if c["name"] == "last_window"))
     case["window"]["count"] += 1
-    with pytest.raises(ValueError, match="not one to compute"):
+    with pytest.raises(ia.IcActivityRefusal) as raised:
         run(case)
+    assert raised.value.word == "window_outside_store"
     case["window"].update(start=0, count=1)
     case["view"]["parameters"]["max_window_s"] = 0.001  # 0.25 samples at 250 Hz
-    with pytest.raises(ValueError, match="not one to compute"):
+    with pytest.raises(ia.IcActivityRefusal) as raised:
         run(case)
+    assert raised.value.word == "window_too_long"
     assert ia.max_samples(30, 250.0) == 7500
 
 

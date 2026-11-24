@@ -27,6 +27,7 @@ from neuroschema.views.models import (
 from neuroschema.views.presets import (
     PRESET_CHECKS_FORMAT,
     check_preset,
+    check_rate,
     check_table_locations,
     read_channels,
     read_segments,
@@ -94,7 +95,7 @@ def _raised_words() -> set[str]:
     """The words the reference raises: its own, and the generic readers' it
     calls (the TSV grammar, a cell's number, the caps)."""
     source = (ROOT / "src" / "neuroschema" / "views" / "presets.py").read_text()
-    own = set(re.findall(r'(?:PresetRefused|KindRefused)\("([a-z_]+)"', source))
+    own = set(re.findall(r'(?:PresetRefused|KindRefused)\(\s*"([a-z_]+)"', source))
     return own | GRAMMAR | {"cell_not_number", "cell_not_finite", "cap_exceeded"}
 
 
@@ -203,6 +204,14 @@ def _digest_check(case):
     return "store_digest_mismatch"
 
 
+def _rate_check(case):
+    try:
+        check_rate(case["store"]["rate"])
+    except Refusal as exc:
+        return exc.word
+    return None
+
+
 def _tables_check(case):
     caps = load_registry()["caps"] | case.get("caps", {})
     for role, read in (("channels", read_channels), ("badsegments", read_segments)):
@@ -255,6 +264,7 @@ ORDERS = {
             _locations_check,
             _files_check,
             _digest_check,
+            _rate_check,
             _tables_check,
             _bad_channels_check,
             _window_check,

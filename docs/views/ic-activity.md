@@ -134,30 +134,34 @@ A renderer runs these checks in this order, and the first that fails gives the w
    When the view declares a digest (`content_sha256` is not null) and the serving copy publishes one for that group, the two are equal (`store_digest_mismatch`).
    Where the serving copy publishes each group's digest is nemarOrg/nemar-cli#2343's (the converter writes it at commit); until it does, no store publishes one and every view is `not_checked`.
    When either is absent, the activations are drawn and the state is `not_checked`; when both are present and equal, the state is `matches`.
-6. **The matrix.**
+6. **The rate.**
+   The store's sampling rate is a finite number above 0 (`rate_invalid`).
+7. **The window.**
+   The window the renderer asks for, `[s0, s0 + n)`, holds at least one sample and lies in the store, `0 <= s0` and `s0 + n <= S` for S samples (`window_outside_store`), and holds at most `floor(max_window_s · rate)` samples (`window_too_long`); see [The window](#the-window).
+8. **The matrix.**
    The `unmixing` file meets the TSV grammar, with its words, in their order ([generic-kinds.md](generic-kinds.md#tsv)); its header names are the channel labels, and the grammar already refuses a name twice (`tsv_header_repeated`).
    It has at least one data row (`empty`), and at most `caps.entries_per_dim` (1,024) rows and columns and `caps.cells_per_role` (262,144) cells (`cap_exceeded`).
    Then every cell is a `number` (`cell_not_number`, `cell_not_finite`), read column by column from the first, each from top to bottom.
-7. **The components.**
+9. **The components.**
    The `components` file meets the TSV grammar, holds at most `caps.cells_per_role` cells counting every header column (`cap_exceeded`), has the column `component` (`column_missing`), and has one data row per matrix row (`coords_length`).
    Its `component` cells, in order, label the matrix's rows.
-8. **The bad segments.**
-   When the view declares `badsegments`, its file is read as [presets.md](presets.md#the-floors-tables) says for the floor's tables: the TSV grammar, at most `caps.cells_per_role` cells counting every header column (`cap_exceeded`), the columns `onset`, `duration` and `label`, found by name in any position and looked for in that order (`column_missing`), then every `onset` cell and then every `duration` cell a number (`cell_not_number`, `cell_not_finite`).
+10. **The bad segments.**
+   When the view declares `badsegments`, its file is read as [presets.md](presets.md#the-floors-tables) says for the floor's tables: the TSV grammar, at most `caps.cells_per_role` cells counting every header column (`cap_exceeded`), the columns `onset`, `duration` and `label`, found by name in any position and looked for in that order (`column_missing`), then every `onset` cell and then every `duration` cell a number (`cell_not_number`, `cell_not_finite`), then every duration above 0 (`duration_not_positive`).
    A fault refuses the whole view, as every other check does: activations drawn without their shading could pass the spans ASR repaired for brain signal.
-9. **The channel match.**
+11. **The channel match.**
    The matrix's header is the transform's `columns`, in order (`channel_set_mismatch`).
    With `store_row`, `rows` has one entry per column, each a row of the store, and the label of row `rows[j]` is column j's label (`channel_set_mismatch`).
    With `label`, each column's label is the label of exactly one store row (`channel_set_mismatch` when none is, or two are).
    Labels are compared as exact strings: `FP1` is not `Fp1`.
    A store whose rows have no labels matches nothing.
-10. **The units.**
+12. **The units.**
    Each matched row's unit is one of the table below (`unit_unknown`, also for a row with no unit), and column j's factor is
 
        f_j = m(unit of row r_j) / m(unit)
 
    with `m` from the table, one binary64 division.
    For a decomposition of the serving copy the matrix takes the store's own unit, so every factor is 1.
-11. **The display filter.**
+13. **The display filter.**
    `display_filter.highpass_hz` is below half the store's rate (`filter_out_of_range`).
 
 | Unit | m, to microvolts |
@@ -188,6 +192,7 @@ The output is a `values` role of `nemar.lines`: time in seconds along x (the res
 ### The window
 
 A renderer computes the activations over a window of n consecutive samples `[s0, s0 + n)` that lies in the recording, with `1 <= n <= floor(max_window_s · rate)` (the product in binary64, then the floor).
+A window that holds no sample or runs outside the recording is refused with `window_outside_store`, and a longer one with `window_too_long` ([the checks](#the-checks-in-order)); the vectors hold both.
 It may draw a longer stretch as several windows, each computed and filtered on its own.
 
 ### The display filter
@@ -254,6 +259,10 @@ A filter case matches when every value is within 1e-6 times the largest magnitud
 | `declaration_invalid` | The declaration fails `view.schema.json#/$defs/view` (with the transform's schema) or has no digest; among others, it declares `badsegments` when `shaded.files` is null, or not when it names a table. |
 | `table_location_mismatch` | The `unmixing` input is not at the transform's `matrix`, or the `badsegments` input is not at `shaded.files[0]`. |
 | `store_mismatch` | `decomposition_input.store` does not name the `signal` store: another path, group or digest. |
+| `rate_invalid` | The store's sampling rate is not a finite number above 0. |
+| `window_outside_store` | The window holds no sample, or does not lie in the store. |
+| `window_too_long` | The window holds more than `floor(max_window_s · rate)` samples. |
+| `duration_not_positive` | A bad segment's `duration` is not above 0. |
 | `file_missing` | An input file is not there. |
 | `file_size_mismatch` | An input file's length is not its declared `size`. |
 | `file_digest_mismatch` | An input file's SHA-256 is not its declared `sha256`. |

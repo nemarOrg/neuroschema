@@ -615,6 +615,21 @@ def transform_cases() -> list[Case]:
             (0, 60),
         )
     )
+    view, files = _small_view()
+    rows = view["transform"]["parameters"]["rows"]
+    view["transform"]["parameters"]["rows"] = [float(row) for row in rows]
+    cases.append(
+        Case(
+            "rows_written_as_floats",
+            "Store rows written 0.0, 1.0 and so on: JSON reads them as the "
+            "integers 0, 1 and so on in every reader (JavaScript cannot tell them "
+            "apart), so the activations are those of integer rows (probe p7).",
+            view,
+            files,
+            _small_store(),
+            (0, 60),
+        )
+    )
     cases.append(
         Case(
             "highpass_40_hz",
@@ -1027,6 +1042,80 @@ def refusals() -> list[Case]:
         "filter_out_of_range",
         "A display cutoff at half the rate.",
         _small_view(highpass_hz=125.0),
+    )
+    refused(
+        "store_rate_zero",
+        "A store whose rate is 0: rate_invalid, not a division by zero.",
+        store_=_small_store(rate=0.0),
+    )
+    refused(
+        "store_rate_negative",
+        "A store whose rate is below 0: rate_invalid.",
+        store_=_small_store(rate=-250.0),
+    )
+    refused(
+        "window_outside_store",
+        "A window that runs past the store's last sample: window_outside_store, "
+        "not an error of the renderer's own (probe p12).",
+        window=(50, 20),
+    )
+    refused(
+        "window_before_store",
+        "A window that starts before the store's first sample.",
+        window=(-1, 10),
+    )
+    refused("window_empty", "A window of no sample.", window=(10, 0))
+    refused(
+        "window_too_long",
+        "A window longer than max_window_s (30 s at 1 Hz: 30 samples).",
+        store_=_small_store(rate=1.0),
+        window=(0, 31),
+    )
+    refused(
+        "badsegments_duration_negative",
+        "A bad segment of negative duration: duration_not_positive.",
+        _small_view(
+            segments=tsv_text(
+                "onset duration label nemar_reason",
+                "0.100000 -0.040000 burst asr_repaired",
+            )
+        ),
+    )
+    refused(
+        "badsegments_duration_zero",
+        "A bad segment of no duration: duration_not_positive.",
+        _small_view(
+            segments=tsv_text(
+                "onset duration label nemar_reason", "0.100000 0 burst asr_repaired"
+            )
+        ),
+    )
+    refused(
+        "order_digest_before_rate",
+        "A store digest mismatch and a rate of 0: the digest comes first.",
+        store_=_small_store(published=digest("another store"), rate=0.0),
+    )
+    refused(
+        "order_rate_before_window",
+        "A rate of 0 and a window past the store's end: the rate comes first.",
+        store_=_small_store(rate=0.0),
+        window=(50, 20),
+    )
+    refused(
+        "order_window_before_matrix",
+        "A window past the store's end and a matrix cell that is not a number: "
+        "the window comes first.",
+        declaration(
+            SMALL,
+            weights,
+            4,
+            match="store_row",
+            unit="uV",
+            rows=list(range(6)),
+            declared=digest("small"),
+            unmixing=corrupt_cell(matrix_text(SMALL, weights)),
+        ),
+        window=(50, 20),
     )
 
     # Two faults each: the first check in the specification's order gives the word.
