@@ -880,8 +880,8 @@ LAYOUT_MUTATIONS = {
     "theta not written in (-180, 180]": ("cart2topo", _no_wrap),
     "dilution bound 4.5 -> 6.5": ("PARTIAL_DILUTION", 6.5),
     "dilution bound 4.5 -> 4.3": ("PARTIAL_DILUTION", 4.3),
-    "stability bound 0.12 -> 0.2": ("PARTIAL_SHIFT", 0.2),
-    "stability bound 0.12 -> 0.08": ("PARTIAL_SHIFT", 0.08),
+    "stability bound 0.12 -> 0.13": ("PARTIAL_SHIFT", 0.13),
+    "stability bound 0.12 -> 0.11": ("PARTIAL_SHIFT", 0.11),
     "rows at (0, 0, 0) kept": ("has_position", _zeros_kept),
     "every row fitted": ("scalp_rows", _every_row_fitted),
     "sensor types ignored": ("scalp_rows", _types_ignored),
@@ -1126,11 +1126,8 @@ def test_the_stability_bound_is_pinned_from_both_sides():
         LAYOUT_CASES["stability_outside"],
     )
     assert "expected" in inside and outside["refused"] == "positions_partial"
-    assert (
-        inside["bounds"]["stability"]
-        < sl.PARTIAL_SHIFT
-        < outside["bounds"]["stability"]
-    )
+    got = inside["bounds"]["stability"], outside["bounds"]["stability"]
+    assert sl.PARTIAL_SHIFT - 0.006 < got[0] < sl.PARTIAL_SHIFT < got[1] < 0.126
     for case in (inside, outside):
         assert case["bounds"]["dilution"] < sl.PARTIAL_DILUTION - 1.0
 

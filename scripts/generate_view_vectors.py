@@ -1632,8 +1632,8 @@ def partial_cases():
         )
     center = np.array(ten_05["center"])
     for name, factor, verdict in [
-        ("stability_inside", 0.26, "drawn"),
-        ("stability_outside", 0.33, "refused (positions_partial)"),
+        ("stability_inside", 0.2875, "drawn"),
+        ("stability_outside", 0.31, "refused (positions_partial)"),
     ]:
         rows = [np.array(by_name[k]) for k in TEN_TWENTY_19]
         cz = TEN_TWENTY_19.index("Cz")
@@ -1642,11 +1642,11 @@ def partial_cases():
             layout_case(
                 name,
                 "The 19 electrodes of the 10-20 system on the Colin27 head "
-                f"(MNIColin27), with Cz digitized {round(100 * factor)}% too far "
+                f"(MNIColin27), with Cz digitized {100 * factor:g}% too far "
                 "from the montage's center: the dilution passes, and leaving Cz "
                 "out moves the fitted center by "
-                f"{'less' if factor < 0.3 else 'more'} than 0.12 of the radius; "
-                f"{verdict}.",
+                f"{'0.114, less' if factor < 0.3 else '0.125, more'} than 0.12 of "
+                f"the radius; {verdict}.",
                 TEN_TWENTY_19,
                 rows,
                 "MNIColin27",
