@@ -2,20 +2,81 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "content.nemar.ic-classes.v1.schema.json",
   "title": "Component Classes Content, Version 1",
-  "description": "The content of the role histogram of a nemar.ic-classes view: the independent components of one decomposition counted by the class each is most likely to be (its dominant class), with the variance the components of each class account for. It is a histogram content binned by category (content.nemar.histogram.v1), so a renderer that draws the view by its base nemar.histogram reads categories and counts; this preset adds summed_variance_pct and n_components. docs/views/presets.md gives the rules JSON Schema cannot state: one summed_variance_pct per category, and counts that sum to n_components.",
+  "description": "The content of the role histogram of a nemar.ic-classes view: the independent components of one decomposition counted by the class each is most likely to be (its dominant class), with the variance the components of each class account for. It is a histogram content binned by category (content.nemar.histogram.v1), so a renderer that draws the view by its base nemar.histogram reads categories and counts; this preset adds the classifier (with ICLabel, the categories are exactly its seven classes in its order), summed_variance_pct and n_components. docs/views/presets.md gives the rules JSON Schema cannot state: one summed_variance_pct per category, and counts that sum to n_components.",
   "type": "object",
   "allOf": [
     {
       "$ref": "../views/content.nemar.histogram.v1.schema.json"
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "classifier": {
+            "const": "ICLabel"
+          }
+        },
+        "required": [
+          "classifier"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "categories": {
+            "const": [
+              "Brain",
+              "Muscle",
+              "Eye",
+              "Heart",
+              "Line Noise",
+              "Channel Noise",
+              "Other"
+            ],
+            "description": "ICLabel's seven classes, in ICLabel's order and spelling."
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "classifier": {
+            "type": "string",
+            "pattern": "^[Ii][Cc][Ll][Aa][Bb][Ee][Ll]$(?!\n)"
+          }
+        },
+        "required": [
+          "classifier"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "classifier": {
+            "const": "ICLabel",
+            "description": "ICLabel is spelled as ICLabel spells it, so its categories cannot be left open by a change of case."
+          }
+        }
+      }
     }
   ],
   "required": [
+    "classifier",
     "categories",
     "counts",
     "summed_variance_pct",
     "n_components"
   ],
   "properties": {
+    "classifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[^\\t\\r\\n]+$(?!\n)",
+      "description": "The classifier that gave each component's class probabilities, by name. ICLabel fixes the categories; any other name leaves them open."
+    },
     "categories": {
       "description": "The classes, in the classifier's order (for ICLabel: Brain, Muscle, Eye, Heart, Line Noise, Channel Noise, Other)."
     },

@@ -2241,6 +2241,7 @@ def preset_verdicts() -> list[tuple[str, str, dict]]:
 
 def ic_classes_content_verdicts() -> list[tuple[str, str, object]]:
     counts = {
+        "classifier": "ICLabel",
         "categories": json.loads(ICLABEL)["categories"],
         "counts": [12, 3, 2, 0, 1, 0, 4],
         "summed_variance_pct": [61.25, 9.5, 14.75, 0, 0.5, 0, 6.125],
@@ -2257,7 +2258,57 @@ def ic_classes_content_verdicts() -> list[tuple[str, str, object]]:
         (
             "ic_classes_content_extra_member",
             "The root is open.",
-            counts | {"classifier": "iclabel"},
+            counts | {"threshold": 0.9},
+        ),
+        (
+            "ic_classes_content_no_classifier",
+            "The classifier is named.",
+            {k: v for k, v in counts.items() if k != "classifier"},
+        ),
+        (
+            "ic_classes_content_iclabel_order",
+            "With ICLabel, the classes are in ICLabel's order.",
+            counts | {"categories": [*counts["categories"][1:], "Brain"]},
+        ),
+        (
+            "ic_classes_content_iclabel_spelling",
+            "With ICLabel, Line Noise is spelled as ICLabel spells it.",
+            counts
+            | {
+                "categories": [
+                    c.replace("Line Noise", "Line noise") for c in counts["categories"]
+                ]
+            },
+        ),
+        (
+            "ic_classes_content_iclabel_six",
+            "With ICLabel, all seven classes.",
+            counts
+            | {
+                "categories": counts["categories"][:6],
+                "counts": counts["counts"][:6],
+                "summed_variance_pct": counts["summed_variance_pct"][:6],
+            },
+        ),
+        (
+            "ic_classes_content_other_classifier",
+            "Another classifier names its own classes.",
+            counts
+            | {
+                "classifier": "MARA",
+                "categories": ["Artifact", "Brain"],
+                "counts": [4, 18],
+                "summed_variance_pct": [20.5, 79.5],
+            },
+        ),
+        (
+            "ic_classes_content_iclabel_lowercase",
+            "ICLabel is spelled ICLabel, so a change of case cannot open its classes.",
+            counts
+            | {
+                "classifier": "iclabel",
+                "categories": ["a", "b", "c", "d", "e", "f", "g"],
+            },
         ),
         (
             "ic_classes_content_no_variance",

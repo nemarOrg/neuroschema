@@ -71,10 +71,14 @@ A renderer that knows only `nemar.sensor-field` draws the maps and offers the co
 
 The independent components of one decomposition counted by the class each is most likely to be (its dominant class), over `nemar.histogram`.
 
-- **`histogram`** is one JSON file (`_icclasses.json`) whose content meets [`content.nemar.ic-classes.v1`](../../schema/views/content.nemar.ic-classes.v1.schema.json): a `nemar.histogram` content binned by category, `categories` (the classes in the classifier's order; for ICLabel `Brain`, `Muscle`, `Eye`, `Heart`, `Line Noise`, `Channel Noise` and `Other`) and `counts` (the number of components whose dominant class each is), with `summed_variance_pct` (for each class, the sum of its components' `variance_pct`) and `n_components`.
+- **`histogram`** is one JSON file (`_icclasses.json`) whose content meets [`content.nemar.ic-classes.v1`](../../schema/views/content.nemar.ic-classes.v1.schema.json): a `nemar.histogram` content binned by category, `categories` (the classes in the classifier's order) and `counts` (the number of components whose dominant class each is), with `classifier`, `summed_variance_pct` (for each class, the sum of its components' `variance_pct`) and `n_components`.
+  With `classifier` `ICLabel`, `categories` is exactly ICLabel's seven classes in ICLabel's order and spelling: `Brain`, `Muscle`, `Eye`, `Heart`, `Line Noise`, `Channel Noise`, `Other` (eegprep's `DEFAULT_ICLABEL_CLASSES`).
+  The name is spelled `ICLabel`: any other case of it is refused, so a change of case cannot open the classes.
+  Any other classifier names its own classes.
 
 ```json
 {
+  "classifier": "ICLabel",
   "categories": ["Brain", "Muscle", "Eye", "Heart", "Line Noise", "Channel Noise", "Other"],
   "counts": [12, 3, 2, 0, 1, 0, 4],
   "summed_variance_pct": [61.25, 9.5, 14.75, 0, 0.5, 0, 6.125],

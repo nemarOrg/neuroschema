@@ -11616,6 +11616,7 @@
       "covers": "Dominant counts with summed variance.",
       "schema": "content.nemar.ic-classes.v1.schema.json",
       "instance": {
+        "classifier": "ICLabel",
         "categories": ["Brain", "Muscle", "Eye", "Heart", "Line Noise", "Channel Noise", "Other"],
         "counts": [12, 3, 2, 0, 1, 0, 4],
         "summed_variance_pct": [61.25, 9.5, 14.75, 0, 0.5, 0, 6.125],
@@ -11629,6 +11630,7 @@
       "covers": "A component's variance share may be negative.",
       "schema": "content.nemar.ic-classes.v1.schema.json",
       "instance": {
+        "classifier": "ICLabel",
         "categories": ["Brain", "Muscle", "Eye", "Heart", "Line Noise", "Channel Noise", "Other"],
         "counts": [12, 3, 2, 0, 1, 0, 4],
         "summed_variance_pct": [-1.5, 0, 0, 0, 0, 0, 0],
@@ -11642,20 +11644,115 @@
       "covers": "The root is open.",
       "schema": "content.nemar.ic-classes.v1.schema.json",
       "instance": {
+        "classifier": "ICLabel",
         "categories": ["Brain", "Muscle", "Eye", "Heart", "Line Noise", "Channel Noise", "Other"],
         "counts": [12, 3, 2, 0, 1, 0, 4],
         "summed_variance_pct": [61.25, 9.5, 14.75, 0, 0.5, 0, 6.125],
         "n_components": 22,
-        "classifier": "iclabel"
+        "threshold": 0.9
       },
       "valid": true,
       "errors": []
+    },
+    {
+      "name": "ic_classes_content_no_classifier",
+      "covers": "The classifier is named.",
+      "schema": "content.nemar.ic-classes.v1.schema.json",
+      "instance": {
+        "categories": ["Brain", "Muscle", "Eye", "Heart", "Line Noise", "Channel Noise", "Other"],
+        "counts": [12, 3, 2, 0, 1, 0, 4],
+        "summed_variance_pct": [61.25, 9.5, 14.75, 0, 0.5, 0, 6.125],
+        "n_components": 22
+      },
+      "valid": false,
+      "errors": [
+        ["required", ""]
+      ]
+    },
+    {
+      "name": "ic_classes_content_iclabel_order",
+      "covers": "With ICLabel, the classes are in ICLabel's order.",
+      "schema": "content.nemar.ic-classes.v1.schema.json",
+      "instance": {
+        "classifier": "ICLabel",
+        "categories": ["Muscle", "Eye", "Heart", "Line Noise", "Channel Noise", "Other", "Brain"],
+        "counts": [12, 3, 2, 0, 1, 0, 4],
+        "summed_variance_pct": [61.25, 9.5, 14.75, 0, 0.5, 0, 6.125],
+        "n_components": 22
+      },
+      "valid": false,
+      "errors": [
+        ["const", "categories"]
+      ]
+    },
+    {
+      "name": "ic_classes_content_iclabel_spelling",
+      "covers": "With ICLabel, Line Noise is spelled as ICLabel spells it.",
+      "schema": "content.nemar.ic-classes.v1.schema.json",
+      "instance": {
+        "classifier": "ICLabel",
+        "categories": ["Brain", "Muscle", "Eye", "Heart", "Line noise", "Channel Noise", "Other"],
+        "counts": [12, 3, 2, 0, 1, 0, 4],
+        "summed_variance_pct": [61.25, 9.5, 14.75, 0, 0.5, 0, 6.125],
+        "n_components": 22
+      },
+      "valid": false,
+      "errors": [
+        ["const", "categories"]
+      ]
+    },
+    {
+      "name": "ic_classes_content_iclabel_six",
+      "covers": "With ICLabel, all seven classes.",
+      "schema": "content.nemar.ic-classes.v1.schema.json",
+      "instance": {
+        "classifier": "ICLabel",
+        "categories": ["Brain", "Muscle", "Eye", "Heart", "Line Noise", "Channel Noise"],
+        "counts": [12, 3, 2, 0, 1, 0],
+        "summed_variance_pct": [61.25, 9.5, 14.75, 0, 0.5, 0],
+        "n_components": 22
+      },
+      "valid": false,
+      "errors": [
+        ["const", "categories"]
+      ]
+    },
+    {
+      "name": "ic_classes_content_other_classifier",
+      "covers": "Another classifier names its own classes.",
+      "schema": "content.nemar.ic-classes.v1.schema.json",
+      "instance": {
+        "classifier": "MARA",
+        "categories": ["Artifact", "Brain"],
+        "counts": [4, 18],
+        "summed_variance_pct": [20.5, 79.5],
+        "n_components": 22
+      },
+      "valid": true,
+      "errors": []
+    },
+    {
+      "name": "ic_classes_content_iclabel_lowercase",
+      "covers": "ICLabel is spelled ICLabel, so a change of case cannot open its classes.",
+      "schema": "content.nemar.ic-classes.v1.schema.json",
+      "instance": {
+        "classifier": "iclabel",
+        "categories": ["a", "b", "c", "d", "e", "f", "g"],
+        "counts": [12, 3, 2, 0, 1, 0, 4],
+        "summed_variance_pct": [61.25, 9.5, 14.75, 0, 0.5, 0, 6.125],
+        "n_components": 22
+      },
+      "valid": false,
+      "errors": [
+        ["const", "classifier"]
+      ]
     },
     {
       "name": "ic_classes_content_no_variance",
       "covers": "summed_variance_pct is required.",
       "schema": "content.nemar.ic-classes.v1.schema.json",
       "instance": {
+        "classifier": "ICLabel",
         "categories": ["Brain", "Muscle", "Eye", "Heart", "Line Noise", "Channel Noise", "Other"],
         "counts": [12, 3, 2, 0, 1, 0, 4],
         "n_components": 22
@@ -11670,6 +11767,7 @@
       "covers": "n_components is required.",
       "schema": "content.nemar.ic-classes.v1.schema.json",
       "instance": {
+        "classifier": "ICLabel",
         "categories": ["Brain", "Muscle", "Eye", "Heart", "Line Noise", "Channel Noise", "Other"],
         "counts": [12, 3, 2, 0, 1, 0, 4],
         "summed_variance_pct": [61.25, 9.5, 14.75, 0, 0.5, 0, 6.125]
@@ -11702,6 +11800,7 @@
       "covers": "Categories carry no unit (the histogram's rule).",
       "schema": "content.nemar.ic-classes.v1.schema.json",
       "instance": {
+        "classifier": "ICLabel",
         "categories": ["Brain", "Muscle", "Eye", "Heart", "Line Noise", "Channel Noise", "Other"],
         "counts": [12, 3, 2, 0, 1, 0, 4],
         "summed_variance_pct": [61.25, 9.5, 14.75, 0, 0.5, 0, 6.125],
@@ -11718,6 +11817,7 @@
       "covers": "At least one component.",
       "schema": "content.nemar.ic-classes.v1.schema.json",
       "instance": {
+        "classifier": "ICLabel",
         "categories": ["Brain", "Muscle", "Eye", "Heart", "Line Noise", "Channel Noise", "Other"],
         "counts": [12, 3, 2, 0, 1, 0, 4],
         "summed_variance_pct": [61.25, 9.5, 14.75, 0, 0.5, 0, 6.125],
@@ -11733,6 +11833,7 @@
       "covers": "A variance share is a number.",
       "schema": "content.nemar.ic-classes.v1.schema.json",
       "instance": {
+        "classifier": "ICLabel",
         "categories": ["Brain", "Muscle", "Eye", "Heart", "Line Noise", "Channel Noise", "Other"],
         "counts": [12, 3, 2, 0, 1, 0, 4],
         "summed_variance_pct": ["61.25", 9.5, 14.75, 0, 0.5, 0, 6.125],

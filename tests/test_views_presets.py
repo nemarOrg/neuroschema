@@ -352,6 +352,7 @@ LABEL_MATCH = {
 }
 
 CONTENT = {
+    "classifier": "ICLabel",
     "categories": [
         "Brain",
         "Muscle",
@@ -378,11 +379,48 @@ class TestIcClasses:
         assert content_validator(IC_CLASSES).is_valid(CONTENT)
         assert histogram_content_validator().is_valid(CONTENT)
 
-    @pytest.mark.parametrize("member", ["summed_variance_pct", "n_components"])
+    @pytest.mark.parametrize(
+        "member", ["classifier", "summed_variance_pct", "n_components"]
+    )
     def test_the_presets_members_are_required(self, member):
         content = {k: v for k, v in CONTENT.items() if k != member}
         assert failures(content_validator(IC_CLASSES).iter_errors(content)) == {
             ("required", "")
+        }
+
+    @pytest.mark.parametrize(
+        "categories",
+        [
+            ["Muscle", "Brain", "Eye", "Heart", "Line Noise", "Channel Noise", "Other"],
+            ["Brain", "Muscle", "Eye", "Heart", "Line noise", "Channel Noise", "Other"],
+            ["Brain", "Muscle", "Eye", "Heart", "Line Noise", "Channel Noise"],
+        ],
+        ids=["order", "spelling", "six"],
+    )
+    def test_iclabel_fixes_its_seven_classes(self, categories):
+        content = CONTENT | {"categories": categories}
+        content["counts"] = content["counts"][: len(categories)]
+        content["summed_variance_pct"] = content["summed_variance_pct"][
+            : len(categories)
+        ]
+        assert failures(content_validator(IC_CLASSES).iter_errors(content)) == {
+            ("const", "categories")
+        }
+
+    def test_another_classifier_names_its_own_classes(self):
+        content = CONTENT | {
+            "classifier": "MARA",
+            "categories": ["Artifact", "Brain"],
+            "counts": [4, 18],
+            "summed_variance_pct": [20.5, 79.5],
+        }
+        assert content_validator(IC_CLASSES).is_valid(content)
+
+    @pytest.mark.parametrize("name", ["iclabel", "ICLABEL", "IcLabel"])
+    def test_iclabel_is_spelled_iclabel(self, name):
+        content = CONTENT | {"classifier": name}
+        assert failures(content_validator(IC_CLASSES).iter_errors(content)) == {
+            ("const", "classifier")
         }
 
     def test_classes_are_categories_not_edges(self):
