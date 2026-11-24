@@ -33,7 +33,11 @@ from neuroschema.views.models import (
     snap_row,
     view_validator,
 )
-from neuroschema.views.presets import PRESET_CHECKS_FORMAT, check_preset
+from neuroschema.views.presets import (
+    PRESET_CHECKS_FORMAT,
+    check_preset,
+    spectrum_maps,
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 MODELS_PATH = ROOT / "views" / "vectors" / "kinds-models.v1.json"
@@ -2276,6 +2280,102 @@ def ic_maps_by_base_cases() -> list[Case]:
     ]
 
 
+FREQS = [2.0 * r for r in range(31)]
+
+
+def spectrum_text(names=NAMES_1020, rows=FREQS, at=None) -> bytes:
+    """freq_hz, then one sensor column per name, in decibels (5 to 16 dB)."""
+    at = at or (lambda k, r: repr(((7 * k + 3 * r) % 23) / 2 + 5.0))
+    body = [
+        [repr(f)] + [at(k, r) for k in range(len(names))] for r, f in enumerate(rows)
+    ]
+    return text_tsv(["freq_hz", *names], body)
+
+
+def spectrum_view(values: bytes, names=NAMES_1020, layout: bytes | None = None):
+    """The example's spectrum with these files: a layout, or names in the header."""
+    spectrum = copy.deepcopy(preset_views()["spectrum"])
+    sensor = (
+        {"role": "layout", "column": "name"} if layout is not None else {"header": True}
+    )
+    entry = data_entry(
+        "values",
+        _location(spectrum, "values"),
+        values,
+        columns=[col("freq_hz", unit="Hz")] + [col(n, unit="dB") for n in names],
+        dims=[
+            dim("freq", "rows", "number", {"column": "freq_hz"}, unit="Hz"),
+            dim("sensor", "columns", "string", sensor),
+        ],
+    )
+    files = {entry["location"]: values}
+    data = [entry]
+    if layout is not None:
+        layout_entry = copy.deepcopy(spectrum["data"][1])
+        layout_entry.update(size=len(layout), sha256=hashlib.sha256(layout).hexdigest())
+        data.append(layout_entry)
+        files[layout_entry["location"]] = layout
+    spectrum["data"] = data
+    return spectrum, files
+
+
+def spectrum_maps_cases() -> list[Case]:
+    """nemar.spectrum drawn by its base, with the maps a renderer that knows
+    it draws: at each frequency asked for, the row it snaps to."""
+    layout = chanlocs(types=["EEG"] * 19)
+    values = spectrum_text()
+    out = []
+    for name, covers, built, hz in [
+        (
+            "spectrum_maps_layout",
+            "The lines by their base, and maps at initial_maps_hz over the "
+            "layout: minmax limits, each map labeled by its row's frequency.",
+            spectrum_view(values, layout=layout),
+            [6, 10, 22, 50],
+        ),
+        (
+            "spectrum_maps_snap",
+            "Frequencies between rows snap as the readout does: 7 is the tie "
+            "between 6 and 8 and reads 6; 7.5 reads 8; 100 reads the last row.",
+            spectrum_view(values, layout=layout),
+            [7, 7.5, 100],
+        ),
+        (
+            "spectrum_maps_names",
+            "No layout: the header's sensor names are placed by "
+            "nemar.sensor-labels.v1 (standard_1005).",
+            spectrum_view(values),
+            [10],
+        ),
+        (
+            "spectrum_maps_layout_fault",
+            "A layout theta NA: the lines read only the layout's names and are "
+            "drawn, and every map shows cell_not_number.",
+            spectrum_view(values, layout=_replace(layout, "\t-54\t", "\tNA\t")),
+            [10],
+        ),
+        (
+            "spectrum_maps_too_few",
+            "Seven sensors: the lines are drawn and every map is too_few_sensors.",
+            spectrum_view(
+                spectrum_text(NAMES_1020[:7]),
+                NAMES_1020[:7],
+                chanlocs(TEN_TWENTY[:7], types=["EEG"] * 7),
+            ),
+            [10, 22],
+        ),
+        (
+            "spectrum_maps_base_refused",
+            "Two rows at one frequency: the base refuses (x_not_increasing), "
+            "the view falls back to its tables, and there are no maps.",
+            spectrum_view(spectrum_text(rows=[0.0, 2.0, 2.0, 4.0]), layout=layout),
+            [2],
+        ),
+    ]:
+        out.append(Case(name, covers, built[0], built[1], maps=hz))
+    return out
+
+
 # ── The verdict corpus ────────────────────────────────────────────────────
 
 
@@ -3802,6 +3902,11 @@ def _model_case(case: Case) -> dict:
     if "snaps" in case.queries:
         xs = inner["x"]["values"]
         out["snaps"] = [{"x": x, "row": snap_row(xs, x)} for x in case.queries["snaps"]]
+    if "maps" in case.queries:
+        frequencies = case.queries["maps"]
+        maps = spectrum_maps(case.view, case.files, frequencies, case.registry())
+        empty = dict.fromkeys(("rows", "refused", "model"))
+        out["maps"] = {"hz": frequencies} | (maps or empty)
     if "locates" in case.queries:
         edges = [inner["items"][0]["lower"], *(i["upper"] for i in inner["items"])]
         out["locates"] = [
@@ -3831,6 +3936,7 @@ def models() -> dict:
         *sensor_field_fault_cases(),
         *sensor_field_order_cases(),
         *ic_maps_by_base_cases(),
+        *spectrum_maps_cases(),
     ]
     names = [c.name for c in [*cases, *refusals()]]
     if len(names) != len(set(names)):

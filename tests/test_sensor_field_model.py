@@ -1,11 +1,11 @@
 """The scalp map's model (``nemar.sensor-field``) against its vectors.
 
 ``docs/views/sensor-field.md`` (The model, The order of checks) is the
-normative text. The scalp-map cases of ``views/vectors/kinds-models.v1.json``
-come from ``scripts/generate_kind_vectors.py``; these tests replay them with
-the Python reference, hold the words of the specification to the reference,
-and show that each rule is one the vectors catch: replacing it with a wrong
-one makes a case fail. No mocks.
+normative text. The scalp-map cases of ``views/vectors/kinds-models.v1.json``,
+and the spectrum's maps, come from ``scripts/generate_kind_vectors.py``; these
+tests replay them with the Python reference, hold the words of the
+specification to the reference, and show that each rule is one the vectors
+catch: replacing it with a wrong one makes a case fail. No mocks.
 
 Needs numpy, the ``views`` extra: ``uv run --extra views pytest``.
 """
@@ -29,7 +29,7 @@ from neuroschema.views import (  # noqa: E402
     sensor_labels,
 )
 from neuroschema.views import sensor_field as sf  # noqa: E402
-from neuroschema.views.presets import check_preset  # noqa: E402
+from neuroschema.views.presets import check_preset, spectrum_maps  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = ROOT / "docs" / "views" / "sensor-field.md"
@@ -48,6 +48,7 @@ def _is_field(case: dict) -> bool:
 
 FIELD_CASES = [c for c in MODELS["cases"] if _is_field(c)]
 DRAWN = [c for c in FIELD_CASES if c["model"]["model"]["type"] == "sensor-field"]
+SPECTRA = [c for c in MODELS["cases"] if "maps" in c]
 BY_NAME = {c["name"]: c for c in MODELS["cases"]}
 
 
@@ -83,12 +84,24 @@ def model_of(case: dict) -> dict:
     return build_model(case["view"], decode(case["files"]), registry_for(case))
 
 
+def maps_of(case: dict) -> dict:
+    hz = case["maps"]["hz"]
+    got = spectrum_maps(case["view"], decode(case["files"]), hz, registry_for(case))
+    return {"hz": hz} | (got or dict.fromkeys(("rows", "refused", "model")))
+
+
 def failing() -> list[str]:
-    """The scalp-map cases the reference misses, as it stands."""
-    return [c["name"] for c in FIELD_CASES if not same(model_of(c), c["model"])]
+    """The scalp-map and spectrum cases the reference misses, as it stands."""
+    out = [c["name"] for c in FIELD_CASES if not same(model_of(c), c["model"])]
+    return out + [c["name"] for c in SPECTRA if not same(maps_of(c), c["maps"])]
 
 
 # ── Replay ────────────────────────────────────────────────────────────────
+
+
+@pytest.mark.parametrize("case", SPECTRA, ids=[c["name"] for c in SPECTRA])
+def test_spectrum_maps_replay(case):
+    assert same(maps_of(case), case["maps"])
 
 
 def test_the_reference_matches_every_case():
@@ -108,6 +121,10 @@ def test_every_source_and_drawing_is_covered():
     }
     unused = {c["model"]["model"]["placement"]["unused_positions"] for c in DRAWN}
     assert unused >= {"frame_unknown", "positions_flat"}
+    spectra = {
+        c["maps"]["model"]["placement"]["source"] for c in SPECTRA if c["maps"]["model"]
+    }
+    assert spectra == {"layout", "names"}
 
 
 # ── The words ─────────────────────────────────────────────────────────────
@@ -140,6 +157,9 @@ def test_every_word_has_a_vector():
         model = case["model"]["model"]
         seen.add(model["placement"]["unused_positions"])
         seen |= {item["word"] for item in model["maps"]["items"]}
+    for case in SPECTRA:
+        if case["maps"]["model"]:
+            seen |= {i["word"] for i in case["maps"]["model"]["maps"]["items"]}
     seen |= {c["refused"] for c in FIELD["cases"] if "refused" in c}
     words = _doc_words()
     assert words <= seen
@@ -373,9 +393,15 @@ def test_the_vectors_catch_the_wrong_minimum(monkeypatch):
     assert failing()
 
 
-def test_a_preset_drawn_by_its_base_uses_absmax():
-    """A preset drawn by its base uses the base's default limits."""
+def test_a_preset_by_its_base_uses_absmax_and_the_spectrum_minmax():
+    """A preset drawn by its base uses the base's default limits; the
+    spectrum's own maps use minmax, since decibels are not signed about zero."""
     assert BY_NAME["ic_maps_by_base"]["model"]["model"]["limits"] == "absmax"
+    spectra = {c["maps"]["model"]["limits"] for c in SPECTRA if c["maps"]["model"]}
+    assert spectra == {"minmax"}
+
+
+# ── Presets over the scalp map ────────────────────────────────────────────
 
 
 def test_ic_maps_checks_run_on_their_base():
@@ -396,3 +422,24 @@ def test_ic_maps_checks_run_on_their_base():
         "word": "file_missing",
         "outcome": "nothing",
     }
+
+
+def test_spectrum_maps_follow_the_readout():
+    """Each map is the row its frequency snaps to, labeled by its stored text."""
+    for case in SPECTRA:
+        maps = case["maps"]
+        if maps["model"] is None:
+            continue
+        lines = case["model"]["model"]
+        labels = [item["label"] for item in maps["model"]["maps"]["items"]]
+        assert labels == [lines["x"]["text"][row] for row in maps["rows"]]
+        for item, row in zip(maps["model"]["maps"]["items"], maps["rows"], strict=True):
+            assert item["values"] == [
+                s["values"][row] for s in lines["series"]["items"]
+            ]
+    snap = BY_NAME["spectrum_maps_snap"]["maps"]
+    assert snap["hz"] == [7, 7.5, 100] and snap["rows"] == [3, 4, 30]
+    fault = BY_NAME["spectrum_maps_layout_fault"]
+    assert fault["model"]["refused"] is None, "the lines are drawn"
+    assert fault["maps"]["refused"] == "cell_not_number"
+    assert BY_NAME["spectrum_maps_base_refused"]["maps"]["rows"] is None
