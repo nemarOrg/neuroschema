@@ -42,8 +42,10 @@ from neuroschema.views.sensor_labels import (
     FIDUCIALS,
     MONTAGE_ALIASES,
     MONTAGE_FORMAT,
+    MONTAGE_NAMES,
     MONTAGE_ORDER,
     NON_EEG_PREFIXES,
+    TEMPLATE_ONLY_MONTAGES,
     infer_positions,
     label_key,
     montage_from_json,
@@ -148,14 +150,19 @@ UPSTREAM = {
         "Electrical Geodesics, Inc. (EGI) Geodesic Sensor Net layouts from before "
         "the HydroCel nets, in EGI's .sfp format with EGI's fiducial names "
         "(FidNz, FidT9, FidT10), as EEGLAB ships them in sample_locs: "
-        "GSN64v2_0.sfp and GSN65v2_0.sfp (the 64-channel net, version 2.0, "
-        "without and with Cz), GSN128.sfp and GSN129.sfp (the GSN 200 "
-        "128-channel net), GSN256.sfp and GSN257.sfp (the older 256-channel "
-        "net). EEGLAB places every 64, 65, 128 and 129 channel EGI recording on "
-        "GSN65v2_0.sfp or GSN129.sfp (functions/sigprocfunc/readegilocs.m); its "
-        "files record neither their EGI source nor a net version beyond the 64 "
-        "net's, and have not changed since sccn/eeglab commit 188434a9 "
-        "(2010-02-06, no message). EEGLAB's LICENSE (BSD 2-Clause, Copyright "
+        "GSN64v2_0.sfp and GSN65v2_0.sfp (a 64-channel net, version 2.0, "
+        "without and with Cz), GSN128.sfp and GSN129.sfp (a 128-channel net) "
+        "and GSN256.sfp and GSN257.sfp (a 256-channel net). EEGLAB's "
+        "readegilocs.m, given no file, defaults a 64 or 65 channel EGI recording "
+        "to GSN65v2_0.sfp and a 128 or 129 channel one to GSN129.sfp, with a "
+        "warning to check the file, and has mapped 256 and 257 channels to "
+        "GSN-HydroCel-257.sfp since sccn/eeglab commit 3affa98b (2010-09-24); "
+        "nothing in EEGLAB reads GSN256.sfp or GSN257.sfp. The files record "
+        "neither their EGI source nor a net version beyond the 64 net's, and "
+        "have not changed since commit 188434a9 (2010-02-06, no message). No "
+        "cap model names these nets, so nemar.sensor-labels.v1 never places a "
+        "recording on them by name; they are kept for template positions a "
+        "writer names exactly. EEGLAB's LICENSE (BSD 2-Clause, Copyright "
         "(c) 2024 Swartz Center for Computational Neuroscience) covers eeglab.m "
         "and the functions folder and states no license for sample_locs."
     ),
@@ -391,10 +398,6 @@ SOURCES = (
         for n in ("32", "64_1.0", "65_1.0", "128", "129", "256", "257")
     ),
     *(
-        Source(n, None, None, 0.01, "GSN", "EGI via EEGLAB", OLDER_GSN_WHY, f"{n}.sfp")
-        for n in ("GSN64v2_0", "GSN65v2_0", "GSN128", "GSN129", "GSN256", "GSN257")
-    ),
-    *(
         Source(f"biosemi{n}", f"biosemi{n}", 0.095, 1.0, "BioSemi", "BioSemi", BANK_WHY)
         for n in ("16", "32", "64")
     ),
@@ -403,6 +406,10 @@ SOURCES = (
             f"biosemi{n}", f"biosemi{n}", 0.095, 1.0, "BioSemi", "BioSemi", BIOSEMI_WHY
         )
         for n in ("128", "160", "256")
+    ),
+    *(
+        Source(n, None, None, 0.01, "GSN", "EGI via EEGLAB", OLDER_GSN_WHY, f"{n}.sfp")
+        for n in TEMPLATE_ONLY_MONTAGES
     ),
 )
 # Each net and its Cz variant must share every electrode position exactly.
@@ -1300,131 +1307,47 @@ CASES = [
     ),
     (
         "hbn_without_cap_model",
-        "The Healthy Brain Network (HBN) channels, E1 to E128 and Cz, with "
-        "neither CapManufacturersModelName nor ManufacturersModelName: the names "
-        "are numbered alike on the HydroCel nets and on the older nets, on "
-        "positions 20% to 40% of the head radius apart, so the names alone do "
-        "not place the recording.",
+        "The Healthy Brain Network (HBN) releases as published: E1 to E128 and Cz "
+        "on a HydroCel 128-channel net whose vertex reference is Cz, with no "
+        "CapManufacturersModelName (their ManufacturersModelName names the "
+        "recording system, says 128-channel GSN 200 v.2.1, and is not read). "
+        "The names are numbered alike on the HydroCel nets and on older nets, "
+        "on other positions, so they do not place the recording.",
         egi(128, ["Cz"]),
         ("refused", "cap_model_unknown", None),
-    ),
-    (
-        "hbn_as_released",
-        "The HBN channels as the releases on OpenNeuro describe them (E1 to E128 "
-        "and Cz typed EEG, as in ds005505; no CapManufacturersModelName, and "
-        "ManufacturersModelName 128-channel GSN 200 v.2.1 in each of ds005505 to "
-        "ds005512 and ds005514 to ds005516). The system field names the net, so the "
-        "recording is placed on the GSN 200 128-channel net with Cz (EEGLAB's "
-        "GSN129).",
-        egi(128, ["Cz"]),
-        ("placed", None, "GSN129"),
-        None,
-        "128-channel GSN 200 v.2.1",
     ),
     (
         "hbn_with_cap_model",
-        "The same channels with the cap model HydroCel GSN 128 1.0.",
+        "The same channels with a corrected CapManufacturersModelName, HydroCel "
+        "GSN 128 1.0: placed on the HydroCel 129 net.",
         egi(128, ["Cz"]),
         ("placed", None, "GSN-HydroCel-129"),
         "HydroCel GSN 128 1.0",
-    ),
-    (
-        "cap_field_wins",
-        "The HBN channels with a cap model, HydroCel GSN 128 1.0, and a system "
-        "model, 128-channel GSN 200 v.2.1: the cap field wins.",
-        egi(128, ["Cz"]),
-        ("placed", None, "GSN-HydroCel-129"),
-        "HydroCel GSN 128 1.0",
-        "128-channel GSN 200 v.2.1",
-    ),
-    (
-        "cap_field_wins_when_it_names_no_net",
-        "A cap model that names no net (actiCAP 128) beside a system model that "
-        "names one: the cap field wins, so no net is named.",
-        egi(128, ["Cz"]),
-        ("refused", "cap_model_unknown", None),
-        "actiCAP 128",
-        "128-channel GSN 200 v.2.1",
-    ),
-    (
-        "cap_field_n_a",
-        "A cap model of n/a is not given, so the system model names the net.",
-        egi(128, ["Cz"]),
-        ("placed", None, "GSN129"),
-        " N/A ",
-        "128-channel GSN 200 v.2.1",
     ),
     (
         "older_egi_net_gsn_200",
-        "E1 to E128 and Cz on a cap named 128-channel GSN 200 v.2.1, the "
-        "Geodesic Sensor Net 200's 128-channel net: placed on its own positions "
-        "(EEGLAB's GSN129), not the HydroCel net's.",
+        "E1 to E128 and Cz on a cap named 128-channel GSN 200 v.2.1: no listed "
+        "model, so refused. The older nets' montages (EEGLAB's GSN128 and "
+        "GSN129) are never reached by name.",
         egi(128, ["Cz"]),
-        ("placed", None, "GSN129"),
+        ("refused", "cap_model_unknown", None),
         "128-channel GSN 200 v.2.1",
     ),
     (
-        "older_egi_net_gsn_200_without_cz",
-        "E1 to E128 on a cap named GSN 200 v2.1: the net without its vertex "
-        "reference (EEGLAB's GSN128), the smaller of the two that hold the names.",
-        egi(128),
-        ("placed", None, "GSN128"),
-        "GSN 200 v2.1",
-    ),
-    (
-        "older_egi_net_e129",
-        "E1 to E129 on a cap named by EEGLAB's file, GSN129: E129 is Cz on that "
-        "net, as on the HydroCel 129 net.",
-        egi(129),
-        ("placed", None, "GSN129"),
-        "GSN129",
-    ),
-    (
-        "older_egi_net_gsn_200_with_64_names",
-        "E1 to E64 on a cap named GSN 200 v.2.1: the model names the 128-channel "
-        "net, and 64 names are below 90% of it.",
-        egi(64),
-        ("refused", "net_coverage_low", None),
-        "GSN 200 v.2.1",
+        "older_egi_net_by_eeglab_file",
+        "E1 to E256 on a cap named GSN256, EEGLAB's file name for an older "
+        "256-channel net: not a listed model, so refused.",
+        egi(256),
+        ("refused", "cap_model_unknown", None),
+        "GSN256",
     ),
     (
         "older_egi_net_gsn_64_v2",
         "E1 to E64 on a cap named Geodesic Sensor Net 64 2.0, the GSN 64 version "
-        "2.0: placed on its own positions (EEGLAB's GSN64v2_0).",
+        "2.0: not a listed model, so refused.",
         egi(64),
-        ("placed", None, "GSN64v2_0"),
-        "Geodesic Sensor Net 64 2.0",
-    ),
-    (
-        "older_egi_net_gsn_65_v2",
-        "E1 to E64 and Cz on a cap named GSN 64 v2.0: the net with Cz (EEGLAB's "
-        "GSN65v2_0).",
-        egi(64, ["Cz"]),
-        ("placed", None, "GSN65v2_0"),
-        "GSN 64 v2.0",
-    ),
-    (
-        "older_egi_net_256",
-        "E1 to E256 on a cap named GSN256, EEGLAB's file of the older "
-        "256-channel net, which has no other listed name.",
-        egi(256),
-        ("placed", None, "GSN256"),
-        "GSN256",
-    ),
-    (
-        "older_egi_net_257",
-        "E1 to E256 and VREF on a cap named GSN257: VREF is Cz on the older nets too.",
-        egi(256, ["VREF"]),
-        ("placed", None, "GSN257"),
-        "GSN257",
-    ),
-    (
-        "older_net_model_beside_hydrocel_size",
-        "E1 to E256 and Cz on a cap named GSN 200 v2.1, which names the "
-        "128-channel older net: no named net holds every name.",
-        egi(256, ["Cz"]),
         ("refused", "cap_model_unknown", None),
-        "GSN 200 v2.1",
+        "Geodesic Sensor Net 64 2.0",
     ),
     (
         "cap_model_case_and_whitespace",
@@ -1668,13 +1591,10 @@ CASES = [
 
 def build_vectors(montages: tuple, sha: dict[str, str]) -> str:
     cases = []
-    for name, description, channels, expected, *models in CASES:
-        cap_model, manufacturers_model = (*models, None, None)[:2]
+    for name, description, channels, expected, *model in CASES:
+        cap_model = model[0] if model else None
         result = infer_positions(
-            [tuple(c) for c in channels],
-            montages,
-            cap_model=cap_model,
-            manufacturers_model=manufacturers_model,
+            [tuple(c) for c in channels], montages, cap_model=cap_model
         ).to_json()
         got = (result["outcome"], result["reason"], result["montage"])
         if got != expected:
@@ -1685,7 +1605,6 @@ def build_vectors(montages: tuple, sha: dict[str, str]) -> str:
                 "description": description,
                 "channels": channels,
                 "cap_model": cap_model,
-                "manufacturers_model": manufacturers_model,
                 "result": result,
             }
         )
@@ -1695,9 +1614,8 @@ def build_vectors(montages: tuple, sha: dict[str, str]) -> str:
         "description": (
             "Cases every implementation of nemar.sensor-labels.v1 reproduces. Each "
             "case lists a recording's channels as [name, BIDS type or null] in "
-            "recording order, its sidecar's cap_model and manufacturers_model "
-            "(BIDS CapManufacturersModelName and ManufacturersModelName, each "
-            "null when absent), and the result: the outcome, the refusal reason, the "
+            "recording order and its cap_model (BIDS CapManufacturersModelName, or "
+            "null), and the result: the outcome, the refusal reason, the "
             "montage, the counts, the contending montages, the duplicated "
             "electrodes, and per channel its status, its normalized key and the "
             "montage electrode it is placed on. The montages are views/montages "
@@ -1736,7 +1654,7 @@ def generate() -> dict[Path, str]:
     if mne.__version__ != MNE_VERSION:
         fail(f"MNE-Python is {mne.__version__}; this generator pins {MNE_VERSION}")
     names = tuple(s.name for s in SOURCES)
-    if names != MONTAGE_ORDER:
+    if names != MONTAGE_NAMES:
         fail("the sources are not the montages of the algorithm, in its order")
 
     outputs: dict[Path, str] = {}
@@ -1777,7 +1695,7 @@ def generate() -> dict[Path, str]:
     }
     outputs[MONTAGES / "PROVENANCE.json"] = render(provenance) + "\n"
     montages = tuple(montage_from_json(documents[n]) for n in MONTAGE_ORDER)
-    outputs[VECTORS] = build_vectors(montages, sha)
+    outputs[VECTORS] = build_vectors(montages, {n: sha[n] for n in MONTAGE_ORDER})
     return outputs
 
 

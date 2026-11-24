@@ -27,7 +27,7 @@ import numpy as np
 from neuroschema.views.linalg import lu_solve
 from neuroschema.views.sensor_labels import (
     FIDUCIALS,
-    MONTAGE_ORDER,
+    MONTAGE_NAMES,
     clean,
     excluded_by_name,
     finish,
@@ -156,7 +156,7 @@ def orientation(coordinate_system: str, montage: str | None = None) -> str:
     Measured positions name their BIDS coordinate system. Template positions
     (a sensor role with ``position_source`` ``template``) name instead the
     montage they were taken from, exactly as ``nemar.sensor-labels.v1`` lists
-    it (:data:`~neuroschema.views.sensor_labels.MONTAGE_ORDER`), with the
+    it (:data:`~neuroschema.views.sensor_labels.MONTAGE_NAMES`), with the
     coordinate system ``n/a``; every montage file is RAS, in meters.
     Any other combination raises :class:`SensorLayoutRefusal`
     (``frame_unknown``): an unknown name, ``n/a`` without a montage, a frame
@@ -179,7 +179,7 @@ def orientation(coordinate_system: str, montage: str | None = None) -> str:
             f"template positions from montage {montage!r} name the coordinate "
             f"system {coordinate_system!r}, not n/a"
         )
-    elif montage in MONTAGE_ORDER:
+    elif montage in MONTAGE_NAMES:
         return "RAS"
     else:
         detail = f"{montage!r} is not a montage of nemar.sensor-labels.v1"
@@ -348,7 +348,7 @@ def montage_center(montage: str, directory: Path = MONTAGES) -> np.ndarray:
     generates the files). The name is matched exactly against that algorithm's
     montage list, never through the file system (which may fold case): any
     other name raises ``frame_unknown``."""
-    if montage not in MONTAGE_ORDER:
+    if montage not in MONTAGE_NAMES:
         raise SensorLayoutRefusal(
             "frame_unknown", f"{montage!r} is not a montage of nemar.sensor-labels.v1"
         )

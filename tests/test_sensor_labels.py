@@ -36,11 +36,13 @@ from neuroschema.views.sensor_labels import (
     FIDUCIALS,
     MONTAGE_ALIASES,
     MONTAGE_FORMAT,
+    MONTAGE_NAMES,
     MONTAGE_ORDER,
     NET_FAMILIES,
     NON_EEG_PREFIXES,
     REASONS,
     REFERENCES,
+    TEMPLATE_ONLY_MONTAGES,
     aliases,
     cap_model_nets,
     classify,
@@ -52,7 +54,6 @@ from neuroschema.views.sensor_labels import (
     label_key,
     load_montages,
     montage_from_json,
-    recording_cap_model,
     sidecar_models,
 )
 from tests.helpers import failures
@@ -103,11 +104,10 @@ SPEC_PREFIXES = [
     "bursts",
     "suppr",
 ]
-# The cap models that name EGI nets, as the spec lists them: a HydroCel model
-# with no size names every HydroCel net, any other the net of its size with
-# and without its vertex reference.
+# The cap models that name HydroCel nets, as the spec lists them: a model with
+# no size names every HydroCel net, any other the net of its size with and
+# without its vertex reference.
 _ALL_NETS = [n for n in MONTAGE_ORDER if n.startswith("GSN-HydroCel-")]
-_OLDER_NETS = ["GSN64v2_0", "GSN65v2_0", "GSN128", "GSN129", "GSN256", "GSN257"]
 _SIZED = {
     "32": ["GSN-HydroCel-32"],
     "64": ["GSN-HydroCel-64_1.0", "GSN-HydroCel-65_1.0"],
@@ -127,17 +127,6 @@ SPEC_CAP_MODELS = {
             ("hydrocel gsn", " 1.0"),
         ]
     },
-    "128-channel gsn 200 v.2.1": ["GSN128", "GSN129"],
-    "128-channel gsn 200 v2.1": ["GSN128", "GSN129"],
-    "gsn 200 v.2.1": ["GSN128", "GSN129"],
-    "gsn 200 v2.1": ["GSN128", "GSN129"],
-    "gsn 128 v2": ["GSN128", "GSN129"],
-    "gsn 128 v2.0": ["GSN128", "GSN129"],
-    "gsn 64 v2.0": ["GSN64v2_0", "GSN65v2_0"],
-    "gsn 64 v2": ["GSN64v2_0", "GSN65v2_0"],
-    "gsn 64 2.0": ["GSN64v2_0", "GSN65v2_0"],
-    "geodesic sensor net 64 2.0": ["GSN64v2_0", "GSN65v2_0"],
-    "geodesic sensor net 64 v2.0": ["GSN64v2_0", "GSN65v2_0"],
     "gsn-hydrocel-32": _SIZED["32"],
     "gsn-hydrocel-64_1.0": _SIZED["64"],
     "gsn-hydrocel-65_1.0": _SIZED["64"],
@@ -145,12 +134,6 @@ SPEC_CAP_MODELS = {
     "gsn-hydrocel-129": _SIZED["128"],
     "gsn-hydrocel-256": _SIZED["256"],
     "gsn-hydrocel-257": _SIZED["256"],
-    "gsn64v2_0": ["GSN64v2_0", "GSN65v2_0"],
-    "gsn65v2_0": ["GSN64v2_0", "GSN65v2_0"],
-    "gsn128": ["GSN128", "GSN129"],
-    "gsn129": ["GSN128", "GSN129"],
-    "gsn256": ["GSN256", "GSN257"],
-    "gsn257": ["GSN256", "GSN257"],
 }
 SPEC_REFERENCES = [
     "ref",
@@ -229,12 +212,7 @@ def keys(names, kind="EEG"):
 @pytest.mark.parametrize("case", CASES, ids=[c["name"] for c in CASES])
 def test_vectors_replay(case):
     channels = [(name, kind) for name, kind in case["channels"]]
-    result = infer_positions(
-        channels,
-        MONTAGES,
-        cap_model=case["cap_model"],
-        manufacturers_model=case["manufacturers_model"],
-    )
+    result = infer_positions(channels, MONTAGES, cap_model=case["cap_model"])
     assert result.to_json() == case["result"]
 
 
@@ -298,17 +276,19 @@ def test_registry_lists_the_algorithm():
 
 def test_montage_files_are_exactly_the_algorithms():
     files = sorted(p.name for p in MONTAGE_DIR.iterdir())
-    assert files == sorted([*(f"{n}.json" for n in MONTAGE_ORDER), "PROVENANCE.json"])
+    assert files == sorted([*(f"{n}.json" for n in MONTAGE_NAMES), "PROVENANCE.json"])
+    assert MONTAGE_NAMES == MONTAGE_ORDER + TEMPLATE_ONLY_MONTAGES
 
 
 def test_provenance_names_each_file_and_its_digest():
     assert PROVENANCE["format"] == "nemar.montages-provenance.v1"
-    assert [m["name"] for m in PROVENANCE["montages"]] == list(MONTAGE_ORDER)
+    assert [m["name"] for m in PROVENANCE["montages"]] == list(MONTAGE_NAMES)
+    every = {m.name: m for m in load_montages(names=MONTAGE_NAMES)}
     for entry in PROVENANCE["montages"]:
         path = ROOT / entry["file"]
         assert hashlib.sha256(path.read_bytes()).hexdigest() == entry["sha256"]
-        assert entry["electrodes"] == BY_NAME[entry["name"]].size
-        assert entry["family"] == BY_NAME[entry["name"]].family
+        assert entry["electrodes"] == every[entry["name"]].size
+        assert entry["family"] == every[entry["name"]].family
         assert entry["upstream"] in PROVENANCE["upstream"]
         if entry["family"] == "GSN":
             # The older EGI nets: EEGLAB's files, copied with their digests.
@@ -363,7 +343,7 @@ def test_standard_1005_is_fieldtrips_file():
     assert entry["mne_source_sha256"] == generator().FIELDTRIP_STANDARD_1005_SHA256
 
 
-@pytest.mark.parametrize("name", MONTAGE_ORDER)
+@pytest.mark.parametrize("name", MONTAGE_NAMES)
 def test_montage_is_ras_meters(name):
     doc = montage_document(name)
     assert (doc["format"], doc["unit"], doc["orientation"]) == (
@@ -748,7 +728,7 @@ def _full_net(net: str) -> list[str]:
 
 @pytest.mark.parametrize("model", sorted(SPEC_CAP_MODELS))
 def test_each_listed_cap_model_places_the_nets_it_names(model):
-    for net in [*_ALL_NETS, *_OLDER_NETS]:
+    for net in _ALL_NETS:
         if net == "GSN-HydroCel-32":
             continue  # never placed: its names are also BioSemi 160's E bank
         result = infer(_full_net(net), cap_model=model)
@@ -762,10 +742,25 @@ def test_each_listed_cap_model_places_the_nets_it_names(model):
             assert result.reason in ("cap_model_unknown", "net_coverage_low")
 
 
-@pytest.mark.parametrize("net", [n for n in MONTAGE_ORDER if n.startswith("GSN")])
-def test_each_egi_montage_name_is_a_model_of_its_net(net):
+@pytest.mark.parametrize("net", _ALL_NETS)
+def test_each_hydrocel_montage_name_is_a_model_of_its_net(net):
     assert net in cap_model_nets(net)
     assert net in cap_model_nets(net.upper())
+
+
+@pytest.mark.parametrize("net", TEMPLATE_ONLY_MONTAGES)
+def test_names_never_reach_the_older_nets(net):
+    """No model names an older net, and names are never matched against one:
+    the whole net's names, with its own file name or any listed model, are
+    never placed on it."""
+    every = {m.name: m for m in load_montages(names=MONTAGE_NAMES)}
+    size = every[net].size
+    names = [f"E{i}" for i in range(1, size + 1)]
+    if "cz" in every[net].positions:
+        names[-1] = "Cz"
+    assert cap_model_nets(net) == ()
+    for model in (net, *SPEC_CAP_MODELS):
+        assert infer(names, cap_model=model).montage != net
 
 
 EVERY_EGI_CONTENDER = (
@@ -773,10 +768,6 @@ EVERY_EGI_CONTENDER = (
     "GSN-HydroCel-129",
     "GSN-HydroCel-256",
     "GSN-HydroCel-257",
-    "GSN128",
-    "GSN129",
-    "GSN256",
-    "GSN257",
 )
 
 
@@ -790,6 +781,12 @@ EVERY_EGI_CONTENDER = (
         "GSN 200",
         "GSN 200 v2.0",
         "128-channel GSN 200",
+        "128-channel GSN 200 v.2.1",  # the HBN releases' ManufacturersModelName
+        "GSN 200 v2.1",
+        "gsn 128 v2",
+        "Geodesic Sensor Net 64 2.0",
+        "GSN129",
+        "GSN256",
         "EGI",
         "HydroCel",
         "HydroCel GSN 128 v1.0",
@@ -800,12 +797,11 @@ EVERY_EGI_CONTENDER = (
     ],
 )
 def test_any_other_cap_model_refuses_an_egi_placement(model):
-    for field in ("cap_model", "manufacturers_model"):
-        names = [(f"E{i}", "EEG") for i in range(1, 129)] + [("Cz", "EEG")]
-        result = infer_positions(names, MONTAGES, **{field: model})
-        assert (result.outcome, result.reason) == ("refused", "cap_model_unknown")
-        assert result.contenders == EVERY_EGI_CONTENDER
-        assert all(c.electrode is None for c in result.channels)
+    names = [(f"E{i}", "EEG") for i in range(1, 129)] + [("Cz", "EEG")]
+    result = infer_positions(names, MONTAGES, cap_model=model)
+    assert (result.outcome, result.reason) == ("refused", "cap_model_unknown")
+    assert result.contenders == EVERY_EGI_CONTENDER
+    assert all(c.electrode is None for c in result.channels)
 
 
 @pytest.mark.parametrize(
@@ -821,41 +817,23 @@ def test_a_cap_model_is_trimmed_collapsed_and_folded_only(model, folded):
     assert fold_cap_model(model) == folded
 
 
-@pytest.mark.parametrize(
-    ("cap", "system", "model"),
-    [
-        (None, None, None),
-        (None, "GSN 200 v2.1", "GSN 200 v2.1"),
-        ("HydroCel GSN", "GSN 200 v2.1", "HydroCel GSN"),
-        ("actiCAP", "GSN 200 v2.1", "actiCAP"),  # the cap field wins as given
-        ("", "GSN 200 v2.1", "GSN 200 v2.1"),
-        (" \t", "GSN 200 v2.1", "GSN 200 v2.1"),
-        ("N/A", "GSN 200 v2.1", "GSN 200 v2.1"),
-        ("n/a", "n/a", None),
-        (128, "GSN 200 v2.1", "GSN 200 v2.1"),  # not a string: not given
-    ],
-)
-def test_the_cap_field_wins_when_given(cap, system, model):
-    assert recording_cap_model(cap, system) == model
-
-
-def test_sidecar_models_reads_both_fields_as_strings_only():
-    sidecar = {
-        "CapManufacturersModelName": "HydroCel GSN 128 1.0",
+def test_sidecar_models_reads_the_cap_model_only():
+    """ManufacturersModelName names the recording system and is not read: the
+    HBN releases' names an older net for a HydroCel net."""
+    hbn = {
         "ManufacturersModelName": "128-channel GSN 200 v.2.1",
-        "CapManufacturer": "EGI",
+        "CapManufacturer": "Magstim EGI",
     }
-    assert sidecar_models(sidecar) == {
-        "cap_model": "HydroCel GSN 128 1.0",
-        "manufacturers_model": "128-channel GSN 200 v.2.1",
-    }
-    assert sidecar_models({"CapManufacturersModelName": 5}) == {
-        "cap_model": None,
-        "manufacturers_model": None,
-    }
+    assert sidecar_models(hbn) == {"cap_model": None}
+    assert sidecar_models({"CapManufacturersModelName": 5}) == {"cap_model": None}
     names = [(f"E{i}", "EEG") for i in range(1, 129)] + [("Cz", "EEG")]
-    hbn = {"ManufacturersModelName": "128-channel GSN 200 v.2.1"}
-    assert infer_positions(names, MONTAGES, **sidecar_models(hbn)).montage == "GSN129"
+    released = infer_positions(names, MONTAGES, **sidecar_models(hbn))
+    assert released.reason == "cap_model_unknown"
+    corrected = hbn | {"CapManufacturersModelName": "HydroCel GSN 128 1.0"}
+    placed = infer_positions(names, MONTAGES, **sidecar_models(corrected))
+    assert placed.montage == "GSN-HydroCel-129"
+    with pytest.raises(TypeError):
+        infer_positions(names, MONTAGES, manufacturers_model="GSN 200 v2.1")
 
 
 def test_the_cap_model_gates_egi_placements_only():
@@ -880,7 +858,7 @@ def test_the_cap_model_is_checked_right_after_the_counts():
     assert infer(e33, cap_model="GSN-HydroCel-32").reason == "montage_ambiguous"
     dup = [f"E{i}" for i in range(1, 129)] + ["Cz", "E001"]
     assert infer(dup, cap_model=None).reason == "cap_model_unknown"
-    assert infer(dup, cap_model="GSN 200 v2.1").reason == "duplicate_label"
+    assert infer(dup, cap_model="HydroCel GSN 128 1.0").reason == "duplicate_label"
     assert REASONS.index("cap_model_unknown") == REASONS.index("too_few_matched") + 1
 
 
@@ -888,7 +866,7 @@ def test_a_model_of_one_net_never_places_on_another_size():
     """The model's net must hold the best match: a 128-channel model beside 256
     names is refused, and 64 names on it are below its coverage."""
     e256 = [f"E{i}" for i in range(1, 257)]
-    for model in ("GSN 200 v2.1", "HydroCel GSN 128 1.0"):
+    for model in ("HydroCel GSN 128", "HydroCel GSN 128 1.0"):
         assert infer(e256, cap_model=model).reason == "cap_model_unknown"
         e64 = [f"E{i}" for i in range(1, 65)]
         assert infer(e64, cap_model=model).reason == "net_coverage_low"
@@ -941,23 +919,19 @@ def test_clean_keeps_case_and_inner_hyphens():
 def test_the_lists_are_the_specs():
     assert list(NON_EEG_PREFIXES) == SPEC_PREFIXES
     assert {k: list(v) for k, v in CAP_MODELS.items()} == SPEC_CAP_MODELS
-    assert EGI_FAMILIES == ("GSN-HydroCel", "GSN")
+    assert EGI_FAMILIES == ("GSN-HydroCel",)
     assert sorted(REFERENCES) == sorted(SPEC_REFERENCES)
     assert sorted(FIDUCIALS) == sorted(SPEC_FIDUCIALS)
     assert FAMILY_ALIASES == {
         "10-05": {"t3": "t7", "t4": "t8", "t5": "p7", "t6": "p8"},
         "GSN-HydroCel": {"vref": "cz"},
-        "GSN": {"vref": "cz"},
     }
-    assert NET_FAMILIES == ("GSN-HydroCel", "GSN", "BioSemi")
+    assert NET_FAMILIES == ("GSN-HydroCel", "BioSemi")
     assert MONTAGE_ALIASES == {
         "GSN-HydroCel-32": {"e33": "cz"},
         "GSN-HydroCel-65_1.0": {"e65": "cz"},
         "GSN-HydroCel-129": {"e129": "cz"},
         "GSN-HydroCel-257": {"e257": "cz"},
-        "GSN65v2_0": {"e65": "cz"},
-        "GSN129": {"e129": "cz"},
-        "GSN257": {"e257": "cz"},
     }
 
 
@@ -1063,9 +1037,6 @@ def test_aliases_belong_to_their_family():
         (65, "GSN-HydroCel-65_1.0"),
         (129, "GSN-HydroCel-129"),
         (257, "GSN-HydroCel-257"),
-        (65, "GSN65v2_0"),
-        (129, "GSN129"),
-        (257, "GSN257"),
     ],
 )
 def test_the_number_after_a_nets_last_electrode_is_its_cz(last, net):

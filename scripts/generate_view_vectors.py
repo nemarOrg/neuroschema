@@ -42,7 +42,7 @@ os.environ.setdefault("MPLBACKEND", "Agg")
 
 import numpy as np
 
-from neuroschema.views.sensor_labels import FIDUCIALS, MONTAGE_ORDER, NON_EEG_PREFIXES
+from neuroschema.views.sensor_labels import FIDUCIALS, MONTAGE_NAMES, NON_EEG_PREFIXES
 
 ROOT = Path(__file__).resolve().parent.parent
 VECTORS = ROOT / "views" / "vectors"
@@ -219,7 +219,7 @@ def to_als(xyz, frame, montage=None):
     RAS, in meters), and the frame n/a."""
     xyz = np.asarray(xyz, dtype=float)
     if montage is not None:
-        orientation = "RAS" if frame == "n/a" and montage in MONTAGE_ORDER else None
+        orientation = "RAS" if frame == "n/a" and montage in MONTAGE_NAMES else None
     else:
         orientation = "ALS" if frame in ALS else "RAS" if frame in RAS else None
     if orientation == "ALS":

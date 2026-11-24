@@ -1,6 +1,6 @@
 # `nemar.sensor-labels.v1`
 
-Sensor positions inferred from channel names: given a recording's channels (and, for an EGI net, the cap model its sidecar names), the algorithm either places them on the one standard montage their names identify, or refuses and says why.
+Sensor positions inferred from channel names: given a recording's channels (and, for an EGI net, its cap model), the algorithm either places them on the one standard montage their names identify, or refuses and says why.
 It never assumes a default.
 When the names do not identify one montage with confidence, nothing is placed, and the reason is shown instead of a map.
 
@@ -23,9 +23,9 @@ The pipeline does not use this algorithm: a recipe that needs positions (ICLabel
 ## Input
 
 - The recording's channels in recording order, each a name (a string) and a Brain Imaging Data Structure (BIDS) channel type (a string, or absent), as in `channels.tsv`.
-- Optionally, two fields of the recording's `eeg.json`: `CapManufacturersModelName` and `ManufacturersModelName` (each a string, or absent; any other value is absent).
-  They give the recording's cap model ([The cap model](#the-cap-model)), which only a placement on an EGI net reads.
-  `ManufacturersModelName` describes the recording system, but some datasets, the Healthy Brain Network (HBN) releases among them, name their EGI net there.
+- Optionally, the recording's cap model: the `CapManufacturersModelName` of its sidecar (a string, or absent; any other value is absent), which only a placement on an EGI net reads ([The cap model](#the-cap-model)).
+  The sidecar is the `eeg.json` that applies to the recording after BIDS inheritance: the files from the dataset level down to the recording's own, a key at a lower level replacing the same key above it.
+  `ManufacturersModelName` names the recording system, not the cap, and is not read: the Healthy Brain Network (HBN) releases record HydroCel 128-channel nets and give `128-channel GSN 200 v.2.1` there.
 
 ## Montages
 
@@ -39,12 +39,6 @@ The pipeline does not use this algorithm: a recipe that needs positions (ICLabel
 | `GSN-HydroCel-129` | `GSN-HydroCel` | 129 | same name | EGI, via FieldTrip |
 | `GSN-HydroCel-256` | `GSN-HydroCel` | 256 | same name | EGI, via FieldTrip |
 | `GSN-HydroCel-257` | `GSN-HydroCel` | 257 | same name | EGI, via FieldTrip |
-| `GSN64v2_0` | `GSN` | 64 | none: EEGLAB's `GSN64v2_0.sfp` | EGI, via EEGLAB |
-| `GSN65v2_0` | `GSN` | 65 | none: EEGLAB's `GSN65v2_0.sfp` | EGI, via EEGLAB |
-| `GSN128` | `GSN` | 128 | none: EEGLAB's `GSN128.sfp` | EGI, via EEGLAB |
-| `GSN129` | `GSN` | 129 | none: EEGLAB's `GSN129.sfp` | EGI, via EEGLAB |
-| `GSN256` | `GSN` | 256 | none: EEGLAB's `GSN256.sfp` | EGI, via EEGLAB |
-| `GSN257` | `GSN` | 257 | none: EEGLAB's `GSN257.sfp` | EGI, via EEGLAB |
 | `biosemi16` | `BioSemi` | 16 | `biosemi16`, relabeled A1 to A16 | BioSemi head caps |
 | `biosemi32` | `BioSemi` | 32 | `biosemi32`, relabeled A1 to A32 | BioSemi head caps |
 | `biosemi64` | `BioSemi` | 64 | `biosemi64`, relabeled A1 to B32 | BioSemi head caps |
@@ -54,19 +48,12 @@ The pipeline does not use this algorithm: a recipe that needs positions (ICLabel
 
 The table's order is the montage order, which breaks ties.
 Each file holds the positions MNE-Python 1.13.2 returns from `make_standard_montage(...).get_positions()` (for the BioSemi caps, from MNE-Python's own files as the list below says), in meters, rounded to 9 decimal places, in a right-anterior-superior (RAS) frame: +x toward the right preauricular point, +y toward the nasion, +z up.
-The older EGI nets (family `GSN`) are EEGLAB's `sample_locs` files, read by MNE-Python's own `.sfp` reader as the HydroCel files are (`head_size=None`, centimeters converted to meters).
 `scripts/generate_montages.py` writes them (`uv run --group vectors python scripts/generate_montages.py`, and `--check` to compare), and refuses any other MNE-Python version or any source file whose SHA-256 differs from the one it was written for.
 
 - `standard_1005` is MNE-Python's `colin27_1005` (MNE-Python 1.13 renamed `standard_1005`, which leaves in 1.14): FieldTrip's 10-05 positions on the Colin27 head, in Montreal Neurological Institute (MNI) coordinates, unscaled.
   It lists T3, T4, T5 and T6 on the positions of T7, T8, P7 and P8.
 - The HydroCel nets are read with `head_size=None`, the file's own geometry in centimeters, converted to meters.
   Each net and its Cz variant (64 and 65, 128 and 129, 256 and 257) then share every electrode position exactly; MNE-Python's default rescales each file by its own median radius, which moves the 64/65 and 256/257 pairs apart by up to 0.14 mm.
-- The older EGI nets are EEGLAB's files, copied unchanged into `scripts/montage_sources/eeglab` from sccn/eeglab at commit `1f8488b8` (the files last changed in `188434a9`, 2010-02-06), with EEGLAB's `LICENSE`; `PROVENANCE.json` records each file's digest and upstream address.
-  EEGLAB's license (BSD 2-Clause) covers `eeglab.m` and its `functions` folder and states none for `sample_locs`.
-  `GSN64v2_0` and `GSN65v2_0` are the 64-channel Geodesic Sensor Net, version 2.0, without and with Cz; `GSN128` and `GSN129` the 128-channel net of the Geodesic Sensor Net 200 series, on which EEGLAB places every 128- and 129-channel EGI recording; `GSN256` and `GSN257` the older 256-channel net.
-  EEGLAB's files record no version for the 128- and 256-channel nets.
-- The older nets number their electrodes E1, E2 and so on as the HydroCel nets do, on other positions: about each montage's own center, an electrode moves by a median of 22% of the head radius between `GSN129` and `GSN-HydroCel-129`, 19% between `GSN257` and `GSN-HydroCel-257` and 40% between `GSN65v2_0` and `GSN-HydroCel-65_1.0` (33, 25 and 52 mm in space).
-  Channel names cannot tell the families apart, so a recording is placed on an EGI net only when its cap model names that net ([The cap model](#the-cap-model)).
 - The BioSemi caps lie on a sphere of radius 0.095 m (MNE-Python's default).
   A BioSemi recording names its channels by amplifier bank (A1 to A32, then B1 to B32, and so on), while MNE-Python names the electrodes of the 16, 32 and 64 channel caps by the 10-20 system.
   The montages of those caps carry the bank labels, given to MNE-Python's electrodes in file order; BioSemi's own layout drawings label the electrodes in that order, and the generator fails unless the file order is the drawings' (`bank_labels` in `PROVENANCE.json` lists each label with its 10-20 name).
@@ -74,6 +61,26 @@ The older EGI nets (family `GSN`) are EEGLAB's `sample_locs` files, read by MNE-
   `make_standard_montage` reads their angles as integers, so an angle written as 11.5 becomes 11 and the electrode moves by up to 1.8 mm.
   The generator instead reads the angles in MNE-Python's `biosemi*.txt` as written and places them with MNE-Python's own spherical conversion.
   An electrode whose angles are integers sits exactly where MNE-Python puts it; `PROVENANCE.json` lists every other electrode (`angle_corrections`) with its angles as written, MNE-Python's integer angles and the distance between the two positions.
+
+### Montages that names never reach
+
+`views/montages` also holds six files of EGI's nets from before the HydroCel nets, which this algorithm never places a recording on by name; a sensor role may still store template positions from one of them, named exactly (`nemar.sensor-layout.v1`).
+
+| Montage | Family | Electrodes | Source |
+|---|---|---|---|
+| `GSN64v2_0` | `GSN` | 64 | EEGLAB's `sample_locs/GSN64v2_0.sfp` |
+| `GSN65v2_0` | `GSN` | 65 | EEGLAB's `sample_locs/GSN65v2_0.sfp` |
+| `GSN128` | `GSN` | 128 | EEGLAB's `sample_locs/GSN128.sfp` |
+| `GSN129` | `GSN` | 129 | EEGLAB's `sample_locs/GSN129.sfp` |
+| `GSN256` | `GSN` | 256 | EEGLAB's `sample_locs/GSN256.sfp` |
+| `GSN257` | `GSN` | 257 | EEGLAB's `sample_locs/GSN257.sfp` |
+
+- The files are copied unchanged into `scripts/montage_sources/eeglab` from sccn/eeglab at commit `1f8488b8` (they last changed in `188434a9`, 2010-02-06), with EEGLAB's `LICENSE`, and read by MNE-Python's own `.sfp` reader as the HydroCel files are (`head_size=None`, centimeters converted to meters); `PROVENANCE.json` records each file's digest and upstream address.
+  EEGLAB's license (BSD 2-Clause) covers `eeglab.m` and its `functions` folder and states none for `sample_locs`.
+- The files record neither their EGI source nor a net version, but the 64-channel net's, version 2.0.
+  EEGLAB's `readegilocs.m`, when given no file, defaults a 64- or 65-channel EGI recording to `GSN65v2_0.sfp` and a 128- or 129-channel one to `GSN129.sfp`, and prints a warning to check the file; since sccn/eeglab commit `3affa98b` (2010-09-24) it maps 256 and 257 channels to `GSN-HydroCel-257.sfp`, and nothing in EEGLAB reads `GSN256.sfp` or `GSN257.sfp`.
+- The nets number their electrodes E1, E2 and so on as the HydroCel nets do, on other positions: about each montage's own center, an electrode moves by a median of 22% of the head radius between `GSN129` and `GSN-HydroCel-129`, 19% between `GSN257` and `GSN-HydroCel-257` and 40% between `GSN65v2_0` and `GSN-HydroCel-65_1.0` (33, 25 and 52 mm in space).
+- No cap model with a sourced product name names one of them, and the older 256-channel net's geometry differs between EEGLAB's files and MNE-Python's, so no name reaches them: a recording numbered E1, E2 and so on is placed only on the HydroCel net its cap model names ([The cap model](#the-cap-model)).
 
 A montage file is `{"format": "nemar.montage.v1", "name", "family", "orientation": "RAS", "unit": "m", "fiducials": {"nasion", "lpa", "rpa"}, "center": [x, y, z], "electrodes": [[label, x, y, z], ...]}`, with the electrodes in MNE-Python's order.
 `center` is the montage's own center: the sphere `nemar.sensor-layout.v1` fits to all its electrodes, rounded to 9 decimal places as the positions are.
@@ -142,7 +149,6 @@ A candidate that is not bipolar matches a montage when its key, after the aliase
 |---|---|
 | `10-05` | `t3` is `t7`, `t4` is `t8`, `t5` is `p7`, `t6` is `p8` (the American Clinical Neurophysiology Society (ACNS) names) |
 | `GSN-HydroCel` | `vref` is `cz` (EGI's vertex reference) |
-| `GSN` | `vref` is `cz` (the same, on the older nets) |
 
 An EGI net's vertex reference is also often named by the number after the net's last electrode.
 On a larger net that number is an electrode of its own, so these aliases belong to one montage each:
@@ -153,9 +159,6 @@ On a larger net that number is an electrode of its own, so these aliases belong 
 | `GSN-HydroCel-65_1.0` | `e65` is `cz` |
 | `GSN-HydroCel-129` | `e129` is `cz` |
 | `GSN-HydroCel-257` | `e257` is `cz` |
-| `GSN65v2_0` | `e65` is `cz` |
-| `GSN129` | `e129` is `cz` |
-| `GSN257` | `e257` is `cz` |
 
 A family's alias applies only to the montages of its family, and a montage's alias only to that montage: `VREF` is Cz on an EGI net and matches nothing on the 10-05 montage, and `E129` is Cz on the 129-channel net and electrode E129 on the 256-channel net.
 A new alias is a new version of the algorithm.
@@ -173,13 +176,13 @@ These steps run in order, and the first that refuses decides the reason.
    - otherwise **`share_too_low`**.
 3. **`too_few_matched`**: best is below 8.
 4. **Contenders**: the montages with 10 × n(m) ≥ 9 × best, in montage order.
-5. **`cap_model_unknown`**: a contender that is an EGI net (family `GSN-HydroCel` or `GSN`) the cap model does not name ([The cap model](#the-cap-model)) is dismissed; when that dismisses every contender with n(m) = best, refuse.
+5. **`cap_model_unknown`**: a contender that is a HydroCel net (family `GSN-HydroCel`) the cap model does not name ([The cap model](#the-cap-model)) is dismissed; when that dismisses every contender with n(m) = best, refuse.
    The other contenders stay.
 6. **Nested nets**: a contender is dismissed when another contender of the same family has fewer electrodes and matches every candidate the first one matched (each montage with its own aliases).
 7. **The montage**: the first remaining contender with n(m) = best.
 8. **`duplicate_label`**: two or more candidates match one electrode of the montage (`T3` and `T7`, or `E1` and `E001`).
 9. **`montage_ambiguous`**: another remaining contender puts a channel that both match more than 1e-9 m (Euclidean distance) from where the montage puts it.
-10. **`net_coverage_low`**: the montage is a numbered net (family `GSN-HydroCel`, `GSN` or `BioSemi`) and best is below 90% of its electrodes (10 × best < 9 × electrodes).
+10. **`net_coverage_low`**: the montage is a numbered net (family `GSN-HydroCel` or `BioSemi`) and best is below 90% of its electrodes (10 × best < 9 × electrodes).
 11. Otherwise every candidate the montage matches is placed on its electrode, and the other candidates stay unplaced.
 
 Every comparison of a share is between integers, so every implementation decides a boundary case the same way.
@@ -191,16 +194,15 @@ Every comparison of a share is between integers, so every implementation decides
 | `labels_unrecognized` | No name matched a standard montage. |
 | `share_too_low` | Fewer than 80% of the names matched one montage. |
 | `too_few_matched` | Fewer than 8 names matched one montage. |
-| `cap_model_unknown` | The names number an EGI net's electrodes, which the HydroCel nets and the older nets put in different places, and the recording does not name its cap as one of those nets: no model, a model this algorithm does not list, or a model of a net of another size. |
+| `cap_model_unknown` | The names number an EGI net's electrodes, which HydroCel nets and older nets put in different places, and the recording's `CapManufacturersModelName` does not name the HydroCel net they point to: no model, a model this algorithm does not list (an older net's among them), or a model of a net of another size. |
 | `duplicate_label` | Two channels name the same electrode. |
 | `montage_ambiguous` | The names fit two montages that put the electrodes in different places. |
 | `net_coverage_low` | The names match fewer than 90% of the electrodes of the net they point to, so they may come from another cap that shares its numbering. |
 
 ### The cap model
 
-An EGI placement needs the recording's cap model to name the net, because the names alone are a HydroCel net's and an older net's alike.
-The cap model is `CapManufacturersModelName` when it is given, and otherwise `ManufacturersModelName`: a field is given when it is a string that, folded as below, is neither empty nor `n/a`.
-When `CapManufacturersModelName` is given it wins, whatever it says, even a model that names no net.
+A HydroCel placement needs the recording's cap model to name the net, because the names alone are a HydroCel net's and an older net's alike.
+The cap model is the sidecar's `CapManufacturersModelName`, and nothing else: `ManufacturersModelName` names the recording system and can name another net than the cap's (the HBN releases).
 The model is trimmed of the step-2 whitespace at both ends, each run of that whitespace inside it becomes one space, and its letters A to Z are folded to a to z; nothing else is folded.
 It names the nets of the one row of this table it then equals exactly, and no net when it equals none:
 
@@ -211,15 +213,11 @@ It names the nets of the one row of this table it then equals exactly, and no ne
 | `hydrocel geodesic sensor net 64`, `hydrocel gsn 64`, `hydrocel gsn 64 1.0`, `gsn-hydrocel-64_1.0`, `gsn-hydrocel-65_1.0` | `GSN-HydroCel-64_1.0`, `GSN-HydroCel-65_1.0` |
 | `hydrocel geodesic sensor net 128`, `hydrocel gsn 128`, `hydrocel gsn 128 1.0`, `gsn-hydrocel-128`, `gsn-hydrocel-129` | `GSN-HydroCel-128`, `GSN-HydroCel-129` |
 | `hydrocel geodesic sensor net 256`, `hydrocel gsn 256`, `hydrocel gsn 256 1.0`, `gsn-hydrocel-256`, `gsn-hydrocel-257` | `GSN-HydroCel-256`, `GSN-HydroCel-257` |
-| `128-channel gsn 200 v.2.1` (the HBN releases' `ManufacturersModelName`), `128-channel gsn 200 v2.1`, `gsn 200 v.2.1`, `gsn 200 v2.1`, `gsn 128 v2`, `gsn 128 v2.0`, `gsn128`, `gsn129` | `GSN128`, `GSN129` |
-| `gsn 64 v2.0`, `gsn 64 v2`, `gsn 64 2.0`, `geodesic sensor net 64 2.0`, `geodesic sensor net 64 v2.0`, `gsn64v2_0`, `gsn65v2_0` | `GSN64v2_0`, `GSN65v2_0` |
-| `gsn256`, `gsn257` | `GSN256`, `GSN257` |
 
-`HydroCel GSN 128 1.0` is the sensor layout name an EGI MFF recording carries, and each montage name is a model of its net (as MNE-Python, EEGLAB and FieldTrip name their files); a model names its net with and without the vertex reference, one physical net.
-The older 256-channel net has no listed name but EEGLAB's file names, because EEGLAB records none.
-A GSN 200 model that names no size (`gsn 200 v2.1`) names the 128-channel net, the one the HBN releases name; with the names of another size it places nothing, because step 5 needs a named net that holds the best match, and step 10 its coverage.
-Every other string names no net: a series with no size or version (`Geodesic Sensor Net 200`, `GSN 200`), a model with other words (`EGI HydroCel 128`, `HydroCel GSN 128 v1.0`), a file name with its extension (`GSN129.sfp`), and one written with a no-break space or full-width letters.
-A wrong guess is never made: an EGI recording whose sidecar names no listed model draws no map from its names.
+`HydroCel GSN 128 1.0` is the sensor layout name an EGI MFF recording carries, and `GSN-HydroCel-129` a montage name as MNE-Python, EEGLAB and FieldTrip spell it; a sized model names its net with and without the vertex reference, one physical net.
+Every other string names no net: an older net's name (`128-channel GSN 200 v.2.1`, `GSN 200 v2.1`, `Geodesic Sensor Net 64 2.0`) or one of EEGLAB's file names (`GSN129`, `GSN256`), since names never reach the older nets; a model with other words (`EGI HydroCel 128`, `HydroCel GSN 128 v1.0`); and one written with a no-break space or full-width letters.
+A wrong guess is never made: an EGI recording whose `CapManufacturersModelName` names no HydroCel net draws no map from its names.
+The HBN releases as published (no `CapManufacturersModelName`) are refused; with `CapManufacturersModelName` `HydroCel GSN 128 1.0` they are placed on `GSN-HydroCel-129`.
 
 ### Why nested nets are dismissed, and why a net needs coverage
 
@@ -243,9 +241,8 @@ a 32-channel EGI recording (`E1` to `E32` with `Cz` or `E33`), because the BioSe
 These wrong placements remain possible in version 1, and are accepted:
 
 - A recording that leaves banks of its cap unused is placed on the smallest net it fills, as above: A1 to A32 from a 64-channel cap lands on the 32-channel cap's positions.
-- A recording whose cap model names an EGI net it was not recorded on is placed on that net's positions: the model is the writer's statement, and is not checked against anything else.
-  A HydroCel model with no size names every HydroCel net, so with it a recording that left most of a larger net unused can land on a smaller net, as above.
-- EEGLAB's files for the older 128- and 256-channel nets carry no version, so a recording on another version of those nets is placed on EEGLAB's positions, as EEGLAB itself places it.
+- A recording whose cap model names a HydroCel net it was not recorded on is placed on that net's positions: the model is the writer's statement, and is not checked against anything else.
+  A model with no size names every HydroCel net, so with it a recording that left most of a larger net unused can land on a smaller net, as above.
 - The `POL ` prefix is dropped from untyped names too, so an untyped Nihon Kohden recording's intracranial strip or depth contacts named like scalp electrodes or bank labels (`POL C3`, `POL A1`) are read as EEG electrodes.
   A contact typed `SEEG` or `ECOG` is excluded by its type; an untyped set is refused only when the share, coverage or ambiguity rules refuse it.
 
@@ -272,7 +269,7 @@ A change to any step, list, threshold or alias, or to a montage's positions (inc
 
 ## Vectors
 
-Each case of the vectors file gives a recording's `channels` as `[name, type]` pairs (type null when absent), its sidecar's `cap_model` (`CapManufacturersModelName`) and `manufacturers_model` (`ManufacturersModelName`), each null when absent, and the `result` above.
+Each case of the vectors file gives a recording's `channels` as `[name, type]` pairs (type null when absent), its sidecar's `cap_model` (`CapManufacturersModelName`, null when absent) and the `result` above.
 The vectors file lists the SHA-256 of each montage file it was computed with; an implementation checks its copies against them, then reproduces every result exactly.
-The cases cover the normalization steps (the fold table, and characters outside it whose normalization depends on the runtime's Unicode version: outlined letters and digits, a modifier capital, subscripts, a Roman numeral, mathematical letters, a superscript), the exclusions (the auxiliary names of a Neuroscan cap and of a clinical EDF export among them), each reference name and the common reference, bipolar names, each count, share and coverage threshold at and beside its boundary, each refusal, the family and montage aliases, every montage but `GSN-HydroCel-32` (its names are also the BioSemi 160 cap's E bank), the nested nets, the coincident Cz variants, and the cap model: the HBN channels with no model, as released (`ManufacturersModelName` only, placed on `GSN129`) and with a HydroCel model, the cap field winning over the system field (also when it names no net, and not when it is `n/a`), each older net, a GSN 200 model beside 64 and 256 names, case and whitespace, a model of another size, one the list does not hold, and a model beside names that are not an EGI net's.
+The cases cover the normalization steps (the fold table, and characters outside it whose normalization depends on the runtime's Unicode version: outlined letters and digits, a modifier capital, subscripts, a Roman numeral, mathematical letters, a superscript), the exclusions (the auxiliary names of a Neuroscan cap and of a clinical EDF export among them), each reference name and the common reference, bipolar names, each count, share and coverage threshold at and beside its boundary, each refusal, the family and montage aliases, every montage but `GSN-HydroCel-32` (its names are also the BioSemi 160 cap's E bank), the nested nets, the coincident Cz variants, and the cap model: the HBN channels as published (refused) and with a corrected HydroCel model, older nets' names and EEGLAB's file names (refused), case and whitespace, a model of another size, one the list does not hold, and a model beside names that are not an EGI net's.
 No two real montages place an electrode within 1e-9 m of each other without placing it at the same point, so `tests/test_sensor_labels.py` tests that tolerance on a montage derived from a real one.

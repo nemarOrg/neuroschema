@@ -689,11 +689,11 @@ def test_an_unknown_montage_is_refused(montage):
 
 
 def test_the_montage_list_is_the_label_algorithms():
-    from neuroschema.views.sensor_labels import MONTAGE_ORDER
+    from neuroschema.views.sensor_labels import MONTAGE_NAMES
 
     files = {p.stem for p in (ROOT / "views" / "montages").glob("*.json")}
-    assert files == {*MONTAGE_ORDER, "PROVENANCE"}
-    for name in MONTAGE_ORDER:
+    assert files == {*MONTAGE_NAMES, "PROVENANCE"}
+    for name in MONTAGE_NAMES:
         assert sl.orientation("n/a", name) == "RAS"
 
 

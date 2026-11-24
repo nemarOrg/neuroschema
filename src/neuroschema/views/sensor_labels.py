@@ -1,7 +1,7 @@
 """``nemar.sensor-labels.v1``: sensor positions inferred from channel names.
 
 Given a recording's channels (name and BIDS type, in recording order) and,
-optionally, the cap and system models its sidecar names, the algorithm
+optionally, its cap model, the algorithm
 normalizes each name, matches the names against a fixed set of standard
 montages, and either places the channels on the one montage the names identify
 or refuses with a reason. It never falls back to a default: when no montage is
@@ -39,12 +39,6 @@ MONTAGE_ORDER = (
     "GSN-HydroCel-129",
     "GSN-HydroCel-256",
     "GSN-HydroCel-257",
-    "GSN64v2_0",
-    "GSN65v2_0",
-    "GSN128",
-    "GSN129",
-    "GSN256",
-    "GSN257",
     "biosemi16",
     "biosemi32",
     "biosemi64",
@@ -52,6 +46,20 @@ MONTAGE_ORDER = (
     "biosemi160",
     "biosemi256",
 )
+# Montage files that names never reach: EEGLAB's files of EGI's nets from before
+# the HydroCel nets. No cap model this algorithm can source names them, and
+# their geometry is EEGLAB's alone, so they are not matched by name; a sensor
+# role may still store template positions from them, named exactly.
+TEMPLATE_ONLY_MONTAGES = (
+    "GSN64v2_0",
+    "GSN65v2_0",
+    "GSN128",
+    "GSN129",
+    "GSN256",
+    "GSN257",
+)
+# Every montage file of views/montages, by its exact name.
+MONTAGE_NAMES = MONTAGE_ORDER + TEMPLATE_ONLY_MONTAGES
 
 # An untyped channel whose name starts with one of these is not EEG.
 NON_EEG_PREFIXES = (
@@ -118,9 +126,8 @@ REFERENCES = frozenset(
 FAMILY_ALIASES: Mapping[str, Mapping[str, str]] = {
     # The American Clinical Neurophysiology Society (ACNS) renamed these.
     "10-05": {"t3": "t7", "t4": "t8", "t5": "p7", "t6": "p8"},
-    # EGI's vertex reference electrode, on the HydroCel and the older nets.
+    # EGI's vertex reference electrode.
     "GSN-HydroCel": {"vref": "cz"},
-    "GSN": {"vref": "cz"},
 }
 # Aliases of one montage. An EGI net's vertex reference, Cz, is often named by
 # the number after the net's last electrode; on a larger net that number is an
@@ -130,9 +137,6 @@ MONTAGE_ALIASES: Mapping[str, Mapping[str, str]] = {
     "GSN-HydroCel-65_1.0": {"e65": "cz"},
     "GSN-HydroCel-129": {"e129": "cz"},
     "GSN-HydroCel-257": {"e257": "cz"},
-    "GSN65v2_0": {"e65": "cz"},
-    "GSN129": {"e129": "cz"},
-    "GSN257": {"e257": "cz"},
 }
 
 MIN_CHANNELS = 8
@@ -145,18 +149,17 @@ COMMON_REFERENCE_SHARE = (9, 10)
 COINCIDENT_M = 1e-9
 # A recording on a numbered net carries most of the net: a chosen net of these
 # families must match at least 90% of its electrodes.
-NET_FAMILIES = ("GSN-HydroCel", "GSN", "BioSemi")
+NET_FAMILIES = ("GSN-HydroCel", "BioSemi")
 NET_COVERAGE = (9, 10)
 
-# EGI's nets number their electrodes E1, E2, ... alike: the HydroCel nets
-# (family GSN-HydroCel) and the older Geodesic Sensor Nets of EEGLAB's files
-# (family GSN: the GSN 200 128 and 256 channel nets and the GSN 64 version 2.0)
-# put the same numbers on positions 20% to 40% of the head radius apart. Names
-# never choose between them: the recording's cap model does. Each model, folded
-# by fold_cap_model, names the nets it fits, each net with and without its
-# vertex reference; a HydroCel model without a size fits every HydroCel net.
-# Any other string names no net. A new model is a new version.
-EGI_FAMILIES = ("GSN-HydroCel", "GSN")
+# EGI's nets number their electrodes E1, E2, ...: the HydroCel nets, and the
+# older Geodesic Sensor Nets, which put the same numbers on positions 20% to
+# 40% of the head radius away. Names never tell which, so a HydroCel placement
+# needs the recording's cap model (BIDS CapManufacturersModelName) to name the
+# net. Each model, folded by fold_cap_model, names the nets it fits, each net
+# with and without its vertex reference; a model without a size fits every
+# HydroCel net. Any other string names no net. A new model is a new version.
+EGI_FAMILIES = ("GSN-HydroCel",)
 _HYDROCEL_NETS = {
     "32": ("GSN-HydroCel-32",),
     "64": ("GSN-HydroCel-64_1.0", "GSN-HydroCel-65_1.0"),
@@ -164,11 +167,6 @@ _HYDROCEL_NETS = {
     "256": ("GSN-HydroCel-256", "GSN-HydroCel-257"),
 }
 _EVERY_HYDROCEL_NET = tuple(n for nets in _HYDROCEL_NETS.values() for n in nets)
-_OLDER_NETS = {
-    "64": ("GSN64v2_0", "GSN65v2_0"),
-    "128": ("GSN128", "GSN129"),
-    "256": ("GSN256", "GSN257"),
-}
 CAP_MODELS: Mapping[str, tuple[str, ...]] = {
     "hydrocel geodesic sensor net": _EVERY_HYDROCEL_NET,
     # The misspelling of OpenNeuro ds004395's CapManufacturersModelName.
@@ -184,38 +182,8 @@ CAP_MODELS: Mapping[str, tuple[str, ...]] = {
             f"hydrocel gsn {size} 1.0",
         )
     },
-    # The GSN 200 128-channel net, version 2.1: the Healthy Brain Network's
-    # ManufacturersModelName first, then its other spellings.
-    **dict.fromkeys(
-        (
-            "128-channel gsn 200 v.2.1",
-            "128-channel gsn 200 v2.1",
-            "gsn 200 v.2.1",
-            "gsn 200 v2.1",
-            "gsn 128 v2",
-            "gsn 128 v2.0",
-        ),
-        _OLDER_NETS["128"],
-    ),
-    # The 64-channel Geodesic Sensor Net, version 2.0.
-    **dict.fromkeys(
-        (
-            "gsn 64 v2.0",
-            "gsn 64 v2",
-            "gsn 64 2.0",
-            "geodesic sensor net 64 2.0",
-            "geodesic sensor net 64 v2.0",
-        ),
-        _OLDER_NETS["64"],
-    ),
-    # The montage names, which are MNE-Python's, EEGLAB's and FieldTrip's file
-    # names (the older 256-channel net is named by EEGLAB's file name only).
-    **{
-        name.lower(): nets
-        for table in (_HYDROCEL_NETS, _OLDER_NETS)
-        for nets in table.values()
-        for name in nets
-    },
+    # The montage names (MNE-Python's, EEGLAB's and FieldTrip's files).
+    **{name.lower(): nets for nets in _HYDROCEL_NETS.values() for name in nets},
 }
 
 # Channel status, decided from the names alone.
@@ -395,26 +363,17 @@ def fold_cap_model(model: str) -> str:
     return ascii_lower(_WHITESPACE_RUN.sub(" ", model.strip(_WHITESPACE)))
 
 
-def recording_cap_model(
-    cap_model: str | None, manufacturers_model: str | None = None
-) -> str | None:
-    """The model a recording names its cap by: its sidecar's
-    ``CapManufacturersModelName`` when that is given, else its
-    ``ManufacturersModelName`` (where the Healthy Brain Network names its net).
-
-    A field is given when it is a string that, folded, is neither empty nor
-    ``n/a``; the cap field wins whenever it is given, whatever it says.
-    """
-    for model in (cap_model, manufacturers_model):
-        if isinstance(model, str) and fold_cap_model(model) not in ("", "n/a"):
-            return model
-    return None
-
-
 def sidecar_models(sidecar: Mapping) -> dict[str, str | None]:
-    """The keyword arguments :func:`infer_positions` takes from a recording's
-    ``eeg.json``: its ``CapManufacturersModelName`` and
-    ``ManufacturersModelName``, each None unless a string."""
+    """The keyword argument :func:`infer_positions` takes from a recording's
+    sidecar: its ``CapManufacturersModelName``, None unless a string.
+
+    ``sidecar`` is the ``eeg.json`` that applies to the recording after BIDS
+    inheritance: the files from the dataset level down to the recording's own,
+    a key at a lower level replacing the same key above it.
+    ``ManufacturersModelName`` names the recording system, not the cap, and is
+    not read: the Healthy Brain Network releases' says GSN 200 of a HydroCel
+    net.
+    """
 
     def text(key: str) -> str | None:
         value = sidecar.get(key)
@@ -422,7 +381,6 @@ def sidecar_models(sidecar: Mapping) -> dict[str, str | None]:
 
     return {
         "cap_model": text("CapManufacturersModelName"),
-        "manufacturers_model": text("ManufacturersModelName"),
     }
 
 
@@ -547,16 +505,13 @@ def infer_positions(
     montages: Sequence[Montage] | None = None,
     *,
     cap_model: str | None = None,
-    manufacturers_model: str | None = None,
 ) -> Inference:
     """Apply ``nemar.sensor-labels.v1`` to a recording's channels.
 
     ``channels`` is (name, BIDS type or None) per channel, in recording order;
-    ``montages`` defaults to :func:`load_montages`. ``cap_model`` and
-    ``manufacturers_model`` are the recording's ``eeg.json``
-    ``CapManufacturersModelName`` and ``ManufacturersModelName``
-    (:func:`sidecar_models` reads both): a placement on an EGI net needs the
-    model they give (:func:`recording_cap_model`) to name that net
+    ``montages`` defaults to :func:`load_montages`. ``cap_model`` is the
+    recording's ``CapManufacturersModelName`` (:func:`sidecar_models` reads it
+    from its sidecar): a placement on a HydroCel net needs it to name that net
     (:data:`CAP_MODELS`). See ``docs/views/sensor-labels.md`` for each rule.
     """
     montages = load_montages() if montages is None else tuple(montages)
@@ -584,7 +539,7 @@ def infer_positions(
 
     num, den = CONTENDER_SHARE
     contenders = [m for m in montages if len(hits[m.name]) * den >= best * num]
-    named = cap_model_nets(recording_cap_model(cap_model, manufacturers_model))
+    named = cap_model_nets(cap_model)
     kept = [m for m in contenders if m.family not in EGI_FAMILIES or m.name in named]
     if not any(len(hits[m.name]) == best for m in kept):
         names = [m.name for m in contenders]

@@ -26,7 +26,7 @@ A view declares the transform in one of two forms (`schema/views/transform.nemar
    A coordinate system of [ALS orientation](#frames) is kept as it is.
    One of right-anterior-superior (RAS) orientation (x right, y anterior, z superior) becomes ALS as `(x, y, z) -> (y, -x, z)`, the second component negated, not subtracted from 0.
    Template positions (coordinate system `n/a` and a `montage`) are RAS.
-   The montage is compared exactly, case included, against the twenty names of [`sensor-labels.md`](sensor-labels.md#montages), never looked up as a file: a file system may fold case, and `views/montages` also holds `PROVENANCE.json`, which is not a montage.
+   The montage is compared exactly, case included, against the twenty montage names of [`sensor-labels.md`](sensor-labels.md#montages) (the six of its older EGI nets among them, which names never reach), never looked up as a file: a file system may fold case, and `views/montages` also holds `PROVENANCE.json`, which is not a montage.
    Anything else is refused with `frame_unknown`: any other name, including `Other`, `Pixels`, `individual` and a known name in another case; `n/a` without a montage; a montage that is not one of the twenty (`gsn-hydrocel-32`, `PROVENANCE`); and a montage beside a coordinate system other than `n/a`, whose frame would be ambiguous.
    No frame is assumed.
 2. **Rows without a position.**
