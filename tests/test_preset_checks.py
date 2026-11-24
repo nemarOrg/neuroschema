@@ -9,6 +9,7 @@ vectors catch a renderer that gets the window rule wrong. No mocks.
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import math
@@ -111,40 +112,62 @@ def _notes_and_states() -> dict[str, str]:
 
 REC = "sub-01/eeg/sub-01_task-rest_eeg.set"
 DESC = "sub-01/eeg/sub-01_task-rest_desc-clean_eeg.set"
+PRE = "sub-01/eeg/sub-01_task-rest_desc-pre_eeg.set"
+MID = "sub-01/eeg/sub-01_desc-x_task-rest_eeg.set"
+TABLES = "sub-01/eeg/sub-01_task-rest"
 
 
 @pytest.mark.parametrize(
     ("location", "recording", "stem"),
     [
         (
-            "sub-01/eeg/sub-01_task-rest_desc-nemarfloor_channels.tsv",
+            f"{TABLES}_desc-nemarfloor_channels.tsv",
             REC,
             "sub-01_task-rest_desc-nemarfloor",
         ),
         (
-            "sub-01/eeg/sub-01_task-rest_desc-cleannemarfloor_channels.tsv",
+            f"{TABLES}_desc-cleannemarfloor_channels.tsv",
             DESC,
             "sub-01_task-rest_desc-cleannemarfloor",
         ),
-        ("sub-01/eeg/sub-01_task-rest_run-2_desc-nemarfloor_channels.tsv", REC, None),
-        ("sub-01/eeg/sub-01_task-restingstate_desc-nemarfloor_channels.tsv", REC, None),
+        # A desc entity that is not last takes the label in place, as
+        # nemar-process's naming.product_stem does.
         (
-            "sub-01/eeg/sub-01_task-rest_acq-other_desc-nemarfloor_channels.tsv",
-            REC,
-            None,
+            "sub-01/eeg/sub-01_desc-xnemarfloor_task-rest_channels.tsv",
+            MID,
+            "sub-01_desc-xnemarfloor_task-rest",
         ),
-        ("sub-01/eeg/sub-01_task-rest_desc-nemar-floor_channels.tsv", REC, None),
-        ("sub-01/eeg/sub-01_task-rest_desc-clean_desc-x_channels.tsv", DESC, None),
+        ("sub-01/eeg/sub-01_desc-x_task-rest_desc-nemarfloor_channels.tsv", MID, None),
+        # Siblings: another recording's products (review r29, round 2).
+        (f"{TABLES}_desc-preprocnemarfloor_channels.tsv", REC, None),
+        (f"{TABLES}_desc-preprocnemarfloor_channels.tsv", PRE, None),
+        (f"{TABLES}_run-2_desc-nemarfloor_channels.tsv", REC, None),
+        ("sub-01/eeg/sub-01_task-restingstate_desc-nemarfloor_channels.tsv", REC, None),
+        (f"{TABLES}_acq-other_desc-nemarfloor_channels.tsv", REC, None),
+        # Another recipe's label.
+        (f"{TABLES}_desc-nemarica_channels.tsv", REC, None),
+        (f"{TABLES}_desc-nemar-floor_channels.tsv", REC, None),
+        (f"{TABLES}_desc-clean_desc-x_channels.tsv", DESC, None),
         ("sub-01/meg/sub-01_task-rest_desc-nemarfloor_channels.tsv", REC, None),
-        ("sub-01/eeg/sub-01_task-rest_channels.tsv", REC, None),
-        ("sub-01/eeg/sub-01_task-rest_desc-nemarfloor_channels.json", REC, None),
+        (f"{TABLES}_channels.tsv", REC, None),
+        (f"{TABLES}_desc-nemarfloor_channels.json", REC, None),
     ],
 )
 def test_a_table_stem_follows_the_recordings_entities(location, recording, stem):
-    """After the recording's entities only _desc-<label> may follow, or, when
-    its last entity is a desc, the label appended to its value: the names
-    nemar-process's naming.product_stem gives (review r29)."""
-    assert table_stem(location, recording) == stem
+    """The stem is exactly the one nemar-process's naming.product_stem gives the
+    recording under the label of the view's recipe (here nemar-floor, label
+    nemarfloor): no sibling recording's product, and no other recipe's, passes
+    (review r29, rounds 1 and 2)."""
+    assert table_stem(location, recording, "nemarfloor") == stem
+
+
+def test_a_plugins_signal_window_cannot_tie_its_tables():
+    case = next(c for c in CASES if c["name"] == "signal_window")
+    view = copy.deepcopy(case["view"])
+    view["source"] = {"plugin": {"name": "acme-window", "version": "1.0.0"}}
+    with pytest.raises(Refusal) as raised:
+        check_table_locations(view)
+    assert raised.value.word == "table_location_mismatch"
 
 
 def test_one_table_words_every_note_and_state():

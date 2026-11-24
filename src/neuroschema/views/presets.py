@@ -222,60 +222,80 @@ def _file_input(view: Mapping, role: str) -> Mapping | None:
 
 TABLE_SUFFIXES = (("channels", "channels"), ("badsegments", "badsegments"))
 _TABLE = re.compile(r"(?P<stem>.+)_(?P<suffix>[A-Za-z0-9]+)\.tsv")
-_LABEL = re.compile(r"[A-Za-z0-9]+")
-_DESC = re.compile(r"_desc-[A-Za-z0-9]+")
+_DESC = re.compile(r"desc-(?P<value>[^_]*)")
 
 
-def table_stem(location: str, recording: str, suffix: str | None = None) -> str | None:
-    """The stem of a table a recipe wrote for a recording, or None.
+def recipe_label(view: Mapping) -> str | None:
+    """The label of the recipe that wrote the view: its id without hyphens, as
+    nemar-process's ``naming.label`` gives it (``nemar-ica`` is ``nemarica``),
+    from the view's ``source``; None for a view a plugin wrote. The record check
+    (``view_source_mismatch``) holds that recipe to the entry's."""
+    recipe = view.get("source", {}).get("recipe")
+    return None if recipe is None else recipe["name"].replace("-", "")
+
+
+def product_stem(recording: str, label: str) -> str:
+    """The stem nemar-process gives a recording's products under a recipe's
+    label (``naming.product_stem``): the recording's file name without its last
+    ``_<suffix>.<ext>``, with ``desc-<x>`` becoming ``desc-<x><label>`` in place
+    when it has a ``desc`` entity (the first), and ``_desc-<label>`` appended
+    when it has none."""
+    entities = posixpath.basename(recording).rsplit("_", 1)[0]
+    parts = entities.split("_")
+    for position, part in enumerate(parts):
+        found = _DESC.fullmatch(part)
+        if found:
+            parts[position] = f"desc-{found['value']}{label}"
+            return "_".join(parts)
+    return "_".join([*parts, f"desc-{label}"])
+
+
+def table_stem(
+    location: str, recording: str, label: str, suffix: str | None = None
+) -> str | None:
+    """The stem of a table the recipe of ``label`` wrote for the recording, or
+    None.
 
     The table lies in the recording's directory and is named
-    ``<stem>_<suffix>.tsv`` (``suffix`` when given), where the stem is the
-    recording's entities (its file name up to its last ``_``) and then, as
-    nemar-process names a product (``naming.product_stem``), either
-    ``_desc-<label>``, or, when the recording's last entity is a ``desc``, the
-    label appended to its value: ``<label>``, letters and digits. Anything else
-    after the entities (``_run-2``, ``ingstate`` of ``task-restingstate``,
-    ``_acq-other``) names another recording, and gives None.
+    ``<stem>_<suffix>.tsv`` (``suffix`` when given), and the stem is exactly the
+    one nemar-process gives that recording's products under the label
+    (:func:`product_stem`). So a table of another recording (``_run-2``, the
+    ``ingstate`` of ``task-restingstate``, ``_acq-other``, a sibling
+    ``_desc-preproc``) or of another recipe (``desc-nemarfloor`` in a nemar-ica
+    view) gives None.
     """
-    directory, name = posixpath.split(recording)
+    directory = posixpath.dirname(recording)
     where, table = posixpath.split(location)
     found = _TABLE.fullmatch(table)
-    if where != directory or found is None:
+    if where != directory or found is None or "_" not in posixpath.basename(recording):
         return None
     if suffix is not None and found["suffix"] != suffix:
         return None
-    entities = name.rsplit("_", 1)[0]
-    stem = found["stem"]
-    if "_" not in name or not stem.startswith(entities):
-        return None
-    tail = stem[len(entities) :]
-    last = entities.rsplit("_", 1)[-1]
-    rule = _LABEL if last.startswith("desc-") else _DESC
-    return stem if rule.fullmatch(tail) else None
+    stem = product_stem(recording, label)
+    return stem if found["stem"] == stem else None
 
 
 def check_table_locations(view: Mapping) -> None:
     """The floor's tables are the recording's (``table_location_mismatch``).
 
-    Each table the view declares has the stem of a product of the signal's
-    ``recording`` (:func:`table_stem`) and its suffix (``_channels.tsv``,
-    ``_badsegments.tsv``), and the two tables share one stem: the floor writes
-    both beside the recording, under one name. So a view cannot mark a window
-    with another recording's tables, or with a decoy (probe p8).
+    Each table the view declares is named for the signal's ``recording`` under
+    the label of the recipe that wrote the view (:func:`table_stem`), with its
+    suffix (``_channels.tsv``, ``_badsegments.tsv``): the recipe writes both
+    beside the recording, under one stem. So a view cannot mark a window with
+    another recording's tables, another recipe's, or a decoy (probes p8, r29).
+    A view a plugin wrote names no recipe, so its tables cannot be tied, and
+    are refused.
     """
     signal = next(i for i in view["inputs"] if i["role"] == "signal")["store"]
-    stems = set()
+    label = recipe_label(view)
     for role, suffix in TABLE_SUFFIXES:
         entry = _file_input(view, role)
         if entry is None:
             continue
-        stem = table_stem(entry["location"], signal["recording"], suffix)
-        if stem is None:
+        if label is None or not table_stem(
+            entry["location"], signal["recording"], label, suffix
+        ):
             raise PresetRefused("table_location_mismatch", "nothing", role)
-        stems.add(stem)
-    if len(stems) > 1:
-        raise PresetRefused("table_location_mismatch", "nothing", "two stems")
 
 
 def check_signal_window(

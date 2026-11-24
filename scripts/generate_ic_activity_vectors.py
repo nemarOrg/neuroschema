@@ -837,6 +837,26 @@ def refusals() -> list[Case]:
         "table_location_mismatch (review r29).",
         (view, files),
     )
+    view, files = _small_view(segments=True)
+    sibling = "sub-01/eeg/sub-01_task-rest_desc-preprocnemarica"
+    for given in view["inputs"]:
+        if "file" in given:
+            role, old = given["role"], given["file"]["location"]
+            moved = sibling + old.removeprefix(PREFIX)
+            files[moved] = files.pop(old)
+            given["file"]["location"] = moved
+            if role == "unmixing":
+                view["transform"]["parameters"]["matrix"] = moved
+            if role == "badsegments":
+                view["transform"]["parameters"]["shaded"]["files"] = [moved]
+    refused(
+        "tables_of_a_sibling_recording",
+        "The three tables of the sibling recording sub-01_task-rest_desc-preproc "
+        "(desc-preprocnemarica), consistent with matrix and shaded.files: the "
+        "stem must be exactly the one nemar-process gives this recording under "
+        "the view's recipe, so table_location_mismatch (review r29, round 2).",
+        (view, files),
+    )
     view, files = _small_view()
     moved = "sub-01/eeg/sub-01_task-rest_desc-nemarfloor_components.tsv"
     files[moved] = files.pop(COMPONENTS_AT)

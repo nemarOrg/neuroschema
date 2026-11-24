@@ -3515,6 +3515,37 @@ def signal_window_check_cases() -> list[tuple[str, str, dict, dict, dict]]:
             ),
         ),
         (
+            "signal_window_tables_sibling_recording",
+            "Both tables of the sibling recording sub-01_task-rest_desc-preproc "
+            "(desc-preprocnemarica): its name begins with this recording's "
+            "entities and then _desc-, but the stem is exactly the one "
+            "nemar-process gives this recording, so table_location_mismatch "
+            "(review r29, round 2).",
+            *_relocated(
+                _relocated(
+                    at(151.5, 2),
+                    "channels",
+                    "sub-01/eeg/sub-01_task-rest_desc-preprocnemarica_channels.tsv",
+                ),
+                "badsegments",
+                "sub-01/eeg/sub-01_task-rest_desc-preprocnemarica_badsegments.tsv",
+            ),
+        ),
+        (
+            "signal_window_tables_other_recipe",
+            "Both tables under the label of another recipe (desc-nemarfloor) in a "
+            "view nemar-ica wrote: table_location_mismatch.",
+            *_relocated(
+                _relocated(
+                    at(151.5, 2),
+                    "channels",
+                    "sub-01/eeg/sub-01_task-rest_desc-nemarfloor_channels.tsv",
+                ),
+                "badsegments",
+                "sub-01/eeg/sub-01_task-rest_desc-nemarfloor_badsegments.tsv",
+            ),
+        ),
+        (
             "signal_window_tables_desc_recording",
             "A recording whose last entity is a desc (desc-clean): the tables "
             "append the label to its value (desc-cleannemarica), as nemar-process "

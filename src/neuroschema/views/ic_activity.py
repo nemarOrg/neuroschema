@@ -39,6 +39,7 @@ from neuroschema.views.presets import (
     NO_BAD_SEGMENT_TABLE,
     NO_SHADED_ROWS,
     read_segments,
+    recipe_label,
     table_stem,
 )
 from neuroschema.views.presets import check_rate as _check_rate
@@ -140,10 +141,11 @@ def check_locations(view: Mapping) -> None:
     """Each file input is at the location the record names for it
     (``table_location_mismatch``): the ``unmixing`` input at the transform's
     ``matrix``, and the ``badsegments`` input, when declared, at
-    ``shaded.files[0]``; then the three tables are the recording's, beside it
-    under one stem (``presets.table_stem``). So a view cannot read one table and
-    name another, such as a decoy table with no rows in place of the floor's, or
-    another recording's (probes p7, r29)."""
+    ``shaded.files[0]``; then the three tables are the recording's, named for it
+    under the label of the recipe that wrote the view (``presets.table_stem``),
+    so all three share one stem. So a view cannot read one table and name
+    another, such as a decoy table with no rows in place of the floor's, or
+    another recording's or another recipe's (probes p7, r29)."""
     transform = view["transform"]["parameters"]
     if _input(view, "unmixing")["file"]["location"] != transform["matrix"]:
         raise IcActivityRefusal("table_location_mismatch", "unmixing is not matrix")
@@ -155,19 +157,15 @@ def check_locations(view: Mapping) -> None:
             "table_location_mismatch", "badsegments is not shaded.files[0]"
         )
     recording = _input(view, "signal")["store"]["recording"]
-    stems = set()
+    label = recipe_label(view)
     for role in ("unmixing", "components", "badsegments"):
         given = next((i["file"] for i in view["inputs"] if i["role"] == role), None)
         if given is None:
             continue
-        stem = table_stem(given["location"], recording)
-        if stem is None:
+        if label is None or not table_stem(given["location"], recording, label):
             raise IcActivityRefusal(
                 "table_location_mismatch", f"{role}: not the recording's"
             )
-        stems.add(stem)
-    if len(stems) > 1:
-        raise IcActivityRefusal("table_location_mismatch", "two stems")
 
 
 def check_store(view: Mapping) -> None:
