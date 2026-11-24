@@ -151,6 +151,17 @@ REORDERED = tsv_text(
     "bad_window clean_windows 0.200000 0.120000",
     "burst asr_repaired 0.360000 0.200000",
 )
+# The floor's segments with the label spelled another way: no row is "burst".
+MISSPELLED = tsv_text(
+    "onset duration label nemar_reason",
+    "0.100000 0.040000 Burst asr_repaired",
+    "0.200000 0.120000 bad_window clean_windows",
+)
+# Bad windows only: ASR repaired nothing the floor recorded.
+WINDOWS_ONLY = tsv_text(
+    "onset duration label nemar_reason",
+    "0.200000 0.120000 bad_window clean_windows",
+)
 # Two faults in one table: the onset column is read before the duration.
 ONSET_AND_DURATION = tsv_text(
     "onset duration label nemar_reason",
@@ -188,10 +199,12 @@ class Case:
         store: dict,
         window: tuple[int, int],
         caps: dict | None = None,
+        bursts_repaired: bool | None = None,
     ):
         self.name, self.covers, self.view = name, covers, view
         self.files, self.store, self.window = files, store, window
         self.caps = caps or {}
+        self.bursts_repaired = bursts_repaired
 
 
 def declaration(
@@ -632,6 +645,39 @@ def transform_cases() -> list[Case]:
     )
     cases.append(
         Case(
+            "shaded_bursts_repaired",
+            "The record says ASR repaired spans (bursts_repaired true) and the "
+            "table has burst rows: those rows are shaded, with no note.",
+            *_small_view(segments=True),
+            _small_store(),
+            (0, 60),
+            bursts_repaired=True,
+        )
+    )
+    cases.append(
+        Case(
+            "segments_label_unmatched_unknown",
+            "No row is labeled burst (the table says Burst) and the renderer does "
+            "not know whether ASR repaired a span: drawn, nothing shaded, and the "
+            "note no_shaded_rows says so (probe p7).",
+            *_small_view(segments=MISSPELLED),
+            _small_store(),
+            (0, 60),
+        )
+    )
+    cases.append(
+        Case(
+            "segments_none_repaired",
+            "The record says ASR repaired nothing (bursts_repaired false) and the "
+            "table holds bad windows only: drawn with the note no_shaded_rows.",
+            *_small_view(segments=WINDOWS_ONLY),
+            _small_store(),
+            (0, 60),
+            bursts_repaired=False,
+        )
+    )
+    cases.append(
+        Case(
             "highpass_40_hz",
             "A display cutoff of 40 Hz at 250 Hz, where the prewarped tangent and its "
             "argument differ by a tenth.",
@@ -696,10 +742,19 @@ def _short(count: int) -> Case:
 def refusals() -> list[Case]:
     out = []
 
-    def refused(name, covers, view_files=None, store_=None, window=(0, 20), caps=None):
+    def refused(
+        name,
+        covers,
+        view_files=None,
+        store_=None,
+        window=(0, 20),
+        caps=None,
+        bursts_repaired=None,
+    ):
         view, files = view_files or _small_view()
+        store_ = store_ or _small_store()
         out.append(
-            Case(name, covers, view, files, store_ or _small_store(), window, caps)
+            Case(name, covers, view, files, store_, window, caps, bursts_repaired)
         )
 
     def without_segments(view: dict) -> dict:
@@ -1070,6 +1125,36 @@ def refusals() -> list[Case]:
         "A window longer than max_window_s (30 s at 1 Hz: 30 samples).",
         store_=_small_store(rate=1.0),
         window=(0, 31),
+    )
+    refused(
+        "segments_label_unmatched",
+        "The record says ASR repaired spans and no row of the table is labeled "
+        "burst (it says Burst): label_unmatched, never drawn with the bursts "
+        "unshaded (probe p7).",
+        _small_view(segments=MISSPELLED),
+        bursts_repaired=True,
+    )
+    refused(
+        "segments_label_uppercase",
+        "The same with BURST.",
+        _small_view(segments=MISSPELLED.replace(b"Burst", b"BURST")),
+        bursts_repaired=True,
+    )
+    refused(
+        "order_label_before_match",
+        "No burst row where ASR repaired spans, and a column no store row has: "
+        "the bad segments come first.",
+        declaration(
+            [*SMALL[:5], "Oz"],
+            weights,
+            4,
+            match="label",
+            unit="uV",
+            profile="archive",
+            declared=None,
+            segments=MISSPELLED,
+        ),
+        bursts_repaired=True,
     )
     refused(
         "badsegments_duration_negative",
@@ -1465,6 +1550,7 @@ def _header(case: Case) -> dict:
         "files": _files(case.files),
         "store": case.store,
         "window": {"start": case.window[0], "count": case.window[1]},
+        "bursts_repaired": case.bursts_repaired,
     }
     return out | ({"caps": case.caps} if case.caps else {})
 
@@ -1472,7 +1558,12 @@ def _header(case: Case) -> dict:
 def _run(case: Case) -> ia.Activations:
     caps = ia.CAPS | case.caps
     return ia.ic_activity(
-        case.view, case.files, _store_object(case.store), *case.window, caps=caps
+        case.view,
+        case.files,
+        _store_object(case.store),
+        *case.window,
+        caps=caps,
+        bursts_repaired=case.bursts_repaired,
     )
 
 

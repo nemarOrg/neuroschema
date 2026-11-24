@@ -147,6 +147,8 @@ A renderer runs these checks in this order, and the first that fails gives the w
    Its `component` cells, in order, label the matrix's rows.
 10. **The bad segments.**
    When the view declares `badsegments`, its file is read as [presets.md](presets.md#the-floors-tables) says for the floor's tables: the TSV grammar, at most `caps.cells_per_role` cells counting every header column (`cap_exceeded`), the columns `onset`, `duration` and `label`, found by name in any position and looked for in that order (`column_missing`), then every `onset` cell and then every `duration` cell a number (`cell_not_number`, `cell_not_finite`), then every duration above 0 (`duration_not_positive`).
+   Then, when no row's `label` cell is `shaded.label`: if the record says ASR repaired at least one span of the decomposition's input (`bursts_repaired`, below), the table cannot be the right one or its labels are misspelled (`Burst`, `BURST`), and the view is refused (`label_unmatched`); otherwise, when the record says it repaired none or the renderer does not know, the view is drawn with nothing shaded and the note `no_shaded_rows`.
+   `bursts_repaired` is a fact of the record beside the view, not of the declaration: for nemar-ica, the recipe entry's metric `asrBurstFraction` is above 0; a renderer that has no such fact treats it as unknown.
    A fault refuses the whole view, as every other check does: activations drawn without their shading could pass the spans ASR repaired for brain signal.
 11. **The channel match.**
    The matrix's header is the transform's `columns`, in order (`channel_set_mismatch`).
@@ -233,7 +235,7 @@ The filter's transient at each end of a window is part of the display: the same 
 ### Drawing
 
 A renderer draws the filtered activations as `nemar.lines` draws a `values` role: one series per component, against time in seconds, with the readout snapping to a stored sample ([generic-kinds.md](generic-kinds.md#nemarlines-version-1)).
-It shades each row of the `badsegments` input whose `label` cell is `shaded.label`, and no other row, over `[onset, onset + duration)` seconds, where that meets the window: the spans ASR repaired in the decomposition's input; the vectors' `shaded` lists exactly those rows, in file order.
+It shades each row of the `badsegments` input whose `label` cell is `shaded.label`, and no other row; when there is none, it says so with the note `no_shaded_rows` ([presets.md](presets.md#notes-and-states)), over `[onset, onset + duration)` seconds, where that meets the window: the spans ASR repaired in the decomposition's input; the vectors' `shaded` lists exactly those rows, in file order.
 A view with no bad-segment table (`shaded.files` null) shades nothing and says so: its result carries the note `no_bad_segment_table`, shown with its sentence ([presets.md](presets.md#notes-and-states); the vectors' `notes`).
 It may mark the table's other rows (the floor's bad windows) apart from them.
 With the view's caption it states:
@@ -263,6 +265,7 @@ A filter case matches when every value is within 1e-6 times the largest magnitud
 | `window_outside_store` | The window holds no sample, or does not lie in the store. |
 | `window_too_long` | The window holds more than `floor(max_window_s · rate)` samples. |
 | `duration_not_positive` | A bad segment's `duration` is not above 0. |
+| `label_unmatched` | The record says ASR repaired a span, and no row of the bad segments is labeled `shaded.label`. |
 | `file_missing` | An input file is not there. |
 | `file_size_mismatch` | An input file's length is not its declared `size`. |
 | `file_digest_mismatch` | An input file's SHA-256 is not its declared `sha256`. |
@@ -282,7 +285,7 @@ A filter case matches when every value is within 1e-6 times the largest magnitud
 
 `ic-activity.v1.json` has `format` (`nemar.ic-activity.v1`), `spec`, `description`, `tolerance`, `cases`, `refusals`, `store_checks`, `channel_types_digests`, `coefficients` and `filter_cases`.
 
-- Each case has a `name`, what it `covers`, the `view` declaration, its `files` (each location's UTF-8 text), the `store` (`labels`, `units`, `scale`, `offset`, `rate`, `published_sha256`, the digest the serving copy publishes or null, and `digital`, rows by samples), the `window` (`start`, `count`), and what it gives under `expected`: `state`, `components`, `rows`, `factors`, `time_s`, `activations` and `filtered` (components by samples), `shaded`, the bad segments whose label is `shaded.label`, as `{onset, duration}` in file order, and `notes` (`no_bad_segment_table` when the view declares no bad segments).
+- Each case has a `name`, what it `covers`, the `view` declaration, its `files` (each location's UTF-8 text), the `store` (`labels`, `units`, `scale`, `offset`, `rate`, `published_sha256`, the digest the serving copy publishes or null, and `digital`, rows by samples), the `window` (`start`, `count`), `bursts_repaired` (whether the record says ASR repaired a span: true, false or null for unknown), and what it gives under `expected`: `state`, `components`, `rows`, `factors`, `time_s`, `activations` and `filtered` (components by samples), `shaded`, the bad segments whose label is `shaded.label`, as `{onset, duration}` in file order, and `notes` (`no_bad_segment_table` when the view declares no bad segments, `no_shaded_rows` when its table has no row labeled `shaded.label`).
   A case may carry `caps`, which take the place of the registry's caps of the same names for that case alone.
 - Each refusal has the same fields as a case, with the `word` in place of `expected`.
   The refusals cover each word, and each pair of neighboring checks with two faults, so a renderer that runs two checks in the other order gives the other word.

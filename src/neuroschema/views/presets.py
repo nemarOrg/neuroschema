@@ -47,6 +47,9 @@ PRESET_CHECKS_FORMAT = "nemar.preset-checks.v1"
 # The note a view carries when it legitimately has no bad-segment table, so that
 # drawing nothing shaded or marked is said, never silent.
 NO_BAD_SEGMENT_TABLE = "no_bad_segment_table"
+# The note a nemar.ic-activity carries when its bad-segment table has no row
+# labeled shaded.label and the record does not say ASR repaired a span.
+NO_SHADED_ROWS = "no_shaded_rows"
 IC_CLASSES_CONTENT = "content.nemar.ic-classes.v1.schema.json"
 
 

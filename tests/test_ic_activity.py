@@ -66,6 +66,7 @@ def run(case: dict) -> ia.Activations:
         window["start"],
         window["count"],
         caps=ia.CAPS | case.get("caps", {}),
+        bursts_repaired=case["bursts_repaired"],
     )
 
 
@@ -196,15 +197,28 @@ def test_only_the_shaded_label_is_shaded():
 
 def test_no_table_is_said_never_silent():
     """A view whose record names no bad-segment table shades nothing and says
-    so; one that declares a table carries no note."""
+    so; one whose table has no row labeled shaded.label shades nothing and says
+    so too; one that shades a row carries no note."""
     for case in CASES:
         declared = any(i["role"] == "badsegments" for i in case["view"]["inputs"])
         files = case["view"]["transform"]["parameters"]["shaded"]["files"]
         assert declared is (files is not None), case["name"]
-        assert case["expected"]["notes"] == (
-            [] if declared else ["no_bad_segment_table"]
-        )
+        if not declared:
+            expected = ["no_bad_segment_table"]
+        else:
+            expected = [] if case["expected"]["shaded"] else ["no_shaded_rows"]
+        assert case["expected"]["notes"] == expected, case["name"]
     assert any(c["name"] == "no_bad_segment_table" for c in CASES)
+    assert any(c["expected"]["notes"] == ["no_shaded_rows"] for c in CASES)
+
+
+def test_an_unmatched_label_refuses_only_where_bursts_were_repaired():
+    """No row labeled shaded.label: refused (label_unmatched) when the record
+    says ASR repaired a span, drawn with no_shaded_rows otherwise (probe p7)."""
+    refused = {r["name"]: r for r in REFUSALS if r["word"] == "label_unmatched"}
+    assert refused and all(r["bursts_repaired"] is True for r in refused.values())
+    drawn = [c for c in CASES if c["expected"]["notes"] == ["no_shaded_rows"]]
+    assert {c["bursts_repaired"] for c in drawn} == {None, False}
 
 
 def test_in_step_orders_have_two_fault_vectors():
@@ -565,7 +579,8 @@ def _step_segments(case):
     data = _raw(case, "badsegments")
     if data is not None:
         label = case["view"]["transform"]["parameters"]["shaded"]["label"]
-        ia.read_shading(data, label, _caps(case))
+        shaded = ia.read_shading(data, label, _caps(case))
+        ia.check_shaded(shaded, label, case["bursts_repaired"])
 
 
 def _step_match(case):

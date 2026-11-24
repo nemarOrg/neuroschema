@@ -34,7 +34,11 @@ from neuroschema.views.models import (
     declaration_valid,
     read_tsv,
 )
-from neuroschema.views.presets import NO_BAD_SEGMENT_TABLE, read_segments
+from neuroschema.views.presets import (
+    NO_BAD_SEGMENT_TABLE,
+    NO_SHADED_ROWS,
+    read_segments,
+)
 from neuroschema.views.presets import check_rate as _check_rate
 
 IC_ACTIVITY = "nemar.ic-activity.v1"
@@ -84,8 +88,9 @@ class Activations:
     components by samples. ``shaded`` lists, in file order, the bad segments
     whose label is the transform's ``shaded.label``, as ``{onset, duration}``
     in seconds: the spans a renderer shades. ``notes`` holds
-    ``no_bad_segment_table`` when the view declares no bad segments, which the
-    renderer shows with its sentence (presets.md, Notes and states).
+    ``no_bad_segment_table`` when the view declares no bad segments, and
+    ``no_shaded_rows`` when its table has no row labeled ``shaded.label``, each
+    shown with its sentence (presets.md, Notes and states).
     """
 
     state: str
@@ -233,6 +238,25 @@ def read_shading(data: bytes, label: str, caps: Mapping = CAPS) -> list[dict]:
         for row in rows
         if row["label"] == label
     ]
+
+
+def check_shaded(
+    shaded: Sequence[Mapping], label: str, bursts_repaired: bool | None
+) -> list[str]:
+    """The notes for a bad-segment table whose rows hold none labeled ``label``.
+
+    When the record says ASR repaired at least one span of the decomposition's
+    input (``bursts_repaired`` true), a table with no row of that label cannot
+    be the right one, or its labels are misspelled (``Burst``, ``BURST``):
+    ``label_unmatched`` refuses the view, never drawn with the bursts unshaded
+    (probe p7). Otherwise, false or unknown, the view is drawn with nothing
+    shaded and the note ``no_shaded_rows`` says so.
+    """
+    if shaded:
+        return []
+    if bursts_repaired:
+        raise IcActivityRefusal("label_unmatched", f"no row labeled {label!r}")
+    return [NO_SHADED_ROWS]
 
 
 def match_rows(
@@ -428,6 +452,7 @@ def ic_activity(
     start: int,
     count: int,
     caps: Mapping = CAPS,
+    bursts_repaired: bool | None = None,
 ) -> Activations:
     """The activations of a ``nemar.ic-activity`` view over samples
     [start, start + count) of its store, filtered for display.
@@ -442,6 +467,12 @@ def ic_activity(
     the units, then the filter. A fault in the bad segments refuses the whole
     view: unshaded artifact spans could pass for brain signal. The window must
     lie in the recording and hold at most ``max_window_s`` of it.
+
+    ``bursts_repaired`` is whether the record says ASR repaired at least one
+    span of the decomposition's input (for nemar-ica, its recipe entry's metric
+    ``asrBurstFraction`` above 0), or None when the renderer does not know: with
+    it true, a bad-segment table with no row labeled ``shaded.label`` refuses
+    the view (``label_unmatched``); otherwise it draws with ``no_shaded_rows``.
     """
 
     check_declaration(view)
@@ -467,11 +498,12 @@ def ic_activity(
     )
     header, weights = read_unmixing(unmixing_bytes, caps)
     labels = read_components(components_bytes, weights.shape[0], caps)
-    shaded = (
-        []
-        if segments_bytes is None
-        else read_shading(segments_bytes, transform["shaded"]["label"], caps)
-    )
+    if segments_bytes is None:
+        shaded, notes = [], [NO_BAD_SEGMENT_TABLE]
+    else:
+        label = transform["shaded"]["label"]
+        shaded = read_shading(segments_bytes, label, caps)
+        notes = check_shaded(shaded, label, bursts_repaired)
     rows = match_rows(
         header,
         store.labels,
@@ -493,5 +525,5 @@ def ic_activity(
         activations=raw,
         filtered=display_filter(raw, store.rate, cutoff),
         shaded=shaded,
-        notes=[NO_BAD_SEGMENT_TABLE] if segments_bytes is None else [],
+        notes=notes,
     )

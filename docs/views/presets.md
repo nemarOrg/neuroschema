@@ -198,6 +198,7 @@ The vectors give the state in `state` and the notes in `notes`.
 | `matches` | state | both | The serving copy matches the digest NEMAR recorded. |
 | `not_checked` | state | both | The serving copy was not checked against a digest NEMAR recorded. |
 | `no_bad_segment_table` | note | both | No bad-segment table was written, so nothing is shaded or marked as a bad segment. |
+| `no_shaded_rows` | note | `nemar.ic-activity` | The bad-segment table has no row labeled for the spans ASR repaired, so nothing is shaded. |
 
 `matches` claims no more than the digests' agreement ([docs/views.md](../views.md#digests-and-what-they-prove)), and `not_checked` is the state whenever the view declares no digest or the serving copy publishes none.
 
