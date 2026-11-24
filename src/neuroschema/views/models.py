@@ -3,12 +3,13 @@
 ``docs/views/generic-kinds.md`` is the normative text. From a view declaration
 and the bytes of the files it reads, a renderer builds one model: the table of
 ``nemar.table``, the x axis and series of ``nemar.lines``, the cells and color
-limits of ``nemar.heatmap``, the bins of ``nemar.histogram`` (all version 1),
-or the table-and-download fallback. A model's numbers are stored values, or
-are computed from them by a stated rule (a histogram's ``total`` and
-``max_count``, and the ``absmax`` limits), and every readout prints stored
-text. ``views/vectors/kinds-models.v1.json`` holds the cases every renderer
-reproduces; this module is the Python reference.
+limits of ``nemar.heatmap``, the bins of ``nemar.histogram``, the sensors,
+placement and maps of ``nemar.sensor-field`` (``docs/views/sensor-field.md``;
+all version 1), or the table-and-download fallback. A model's numbers are
+stored values, or are computed from them by a stated rule (a histogram's
+``total`` and ``max_count``, and the ``absmax`` limits), and every readout
+prints stored text. ``views/vectors/kinds-models.v1.json`` holds the cases
+every renderer reproduces; this module is the Python reference.
 """
 
 from __future__ import annotations
@@ -568,6 +569,368 @@ def _check_total(total: int) -> None:
         raise KindRefused("cap_exceeded", f"total {total}")
 
 
+# ── nemar.sensor-field ────────────────────────────────────────────────────
+
+NOT_SCALP_FRAMES = frozenset({"Pixels", "ACPC", "ScanRAS"})
+"""Coordinate systems no scalp map is drawn in (``frame_not_scalp``): BIDS's
+iEEG-specific systems (its ``_iEEGCoordSys``, less ``Other``). BIDS admits every
+standard template for EEG as well as for iEEG, so no template space is here."""
+
+PLACE_COLUMNS = {"layout": ("theta_deg", "radius"), "positions": ("x", "y", "z")}
+"""The columns of a sensor role that place each sensor."""
+
+_AXIS_KEYS = ("dim", "type", "unit")
+
+NO_PLACE = "n/a"
+"""A place cell that holds no number: that sensor has no place."""
+
+_TYPE_WHITESPACE = "\t\n\v\f\r "
+_ASCII_UPPER = str.maketrans("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")
+
+
+def sensor_type_class(text: str | None) -> str:
+    """``eeg``, ``untyped`` or ``other``: a ``sensor_type`` cell, read as
+    ``nemar.sensor-labels.v1`` reads a channel's type.
+
+    The text is trimmed of TAB, LF, VT, FF, CR and space at both ends and its
+    letters A to Z are folded to a to z; then ``eeg`` is EEG, an empty cell or
+    ``n/a`` is untyped, and anything else (``SEEG``, ``ECOG``, ``DBS``, ``EOG``)
+    is another type.
+    """
+    if text is None:
+        return "untyped"
+    folded = text.strip(_TYPE_WHITESPACE).translate(_ASCII_UPPER)
+    if folded in ("", "n/a"):
+        return "untyped"
+    return "eeg" if folded == "eeg" else "other"
+
+
+def drawn_rows(
+    types: Sequence[str] | None, count: int, measured: bool = False
+) -> list[bool]:
+    """Which sensor rows a scalp map draws, by their types.
+
+    Measured positions (a layout or positions role with ``position_source``
+    ``measured``): only the rows typed EEG, never an untyped row. Template
+    positions and names in the values file: with any row typed, only the rows
+    typed EEG; with no row typed (or no ``sensor_type`` column), every row.
+    So a map holds one sensor type, never draws a contact typed ``SEEG``,
+    ``ECOG`` or ``DBS``, and never draws a measured position that does not
+    say it is EEG.
+    """
+    classes = [sensor_type_class(text) for text in types or [None] * count]
+    if not measured and all(c == "untyped" for c in classes):
+        return [True] * count
+    return [c == "eeg" for c in classes]
+
+
+def _place_cell(text: str) -> float | None:
+    """A place cell: a finite number, or ``n/a`` for no place (None)."""
+    return None if text == NO_PLACE else cell_value(text, "number")
+
+
+@dataclass(frozen=True)
+class _Sensors:
+    """The values' sensors: their names and, from a sensor role, their places.
+
+    ``role`` is ``layout`` or ``positions`` when that role's rows are the
+    sensors (``entry`` is its data entry, ``places`` its place columns and
+    ``types`` its ``sensor_type`` cells, None without the column), and None
+    when the values file names the sensors.
+    """
+
+    labels: list[str]
+    role: str | None = None
+    entry: Mapping | None = None
+    places: Mapping[str, list[float | None]] | None = None
+    types: list[str] | None = None
+
+
+def _sensor_role(
+    reader: _Reader, dim: Mapping, count: int, names: Sequence[str] | None = None
+) -> _Sensors:
+    """The layout or positions role whose rows are the sensors, by position.
+
+    In order: the role is there once, as a TSV file that declares the
+    coordinate column (``coords_unresolved``); its file and the TSV grammar;
+    its declared columns (``column_repeated``, then each ``column_missing`` in
+    declared order); the coordinate column's type (``coords_mismatch``); one
+    row per sensor (``coords_length``); the cap on cells, counting every
+    declared column; its cells, column by column in declared order, where a
+    place column's cells are finite numbers or ``n/a``; and, when the sensors
+    run along the values' columns (``names``, the value columns' names in
+    declared order), its name cells are those names, compared as text
+    (``sensors_mismatch``), so no value is drawn at another sensor's place.
+    """
+    role, name = dim["coords"]["role"], dim["coords"]["column"]
+    entry = reader.entry(role)
+    if entry is None or entry.get("format") != "tsv" or role not in PLACE_COLUMNS:
+        raise KindRefused("coords_unresolved", f"{dim['name']}: role {role}")
+    column = next((c for c in entry.get("columns", []) if c["name"] == name), None)
+    if column is None:
+        raise KindRefused("coords_unresolved", f"{dim['name']}: {role}.{name}")
+    tsv = reader.tsv(entry)
+    declared = _declared(entry, tsv)
+    _match(dim, column)
+    if len(tsv.rows) != count:
+        raise KindRefused("coords_length", f"{role}: {len(tsv.rows)} != {count}")
+    if len(tsv.rows) * len(declared) > reader.caps["cells_per_role"]:
+        raise KindRefused("cap_exceeded", f"{role}: {len(tsv.rows)} rows")
+    types, places = None, {}
+    for declared_column in declared:
+        texts = tsv.cells(declared_column["name"])
+        if declared_column["name"] in PLACE_COLUMNS[role]:
+            places[declared_column["name"]] = [_place_cell(text) for text in texts]
+            continue
+        kind = dim["type"] if declared_column["name"] == name else None
+        for text in texts:
+            cell_value(text, kind or declared_column["type"])
+        if declared_column["name"] == "sensor_type":
+            types = texts
+    if names is not None and tsv.cells(name) != list(names):
+        raise KindRefused("sensors_mismatch", f"{role}: names differ from the header")
+    return _Sensors(tsv.cells(name), role, entry, places, types)
+
+
+def _label_column(dims: Sequence[Mapping], declared: Sequence[Mapping]):
+    """The values' coordinate column, if a dimension names one.
+
+    ``{"column": c}`` belongs on a dimension along the rows and
+    ``{"header": true}`` on one along the columns; the other pairings name no
+    coordinates of this file (``coords_unresolved``).
+    """
+    column = None
+    for dim in dims:
+        coords = dim["coords"]
+        if "role" in coords:
+            continue
+        if "header" in coords:
+            if dim["axis"] != "columns":
+                raise KindRefused("coords_unresolved", f"{dim['name']}: header")
+        elif dim["axis"] != "rows":
+            raise KindRefused("coords_unresolved", f"{dim['name']}: column")
+        else:
+            column = _coordinate_column(dim, declared)
+    return column
+
+
+def _sensor_field(reader: _Reader, own: bool) -> dict:
+    entry = reader.entry("values")
+    tsv = reader.tsv(entry)
+    declared = _declared(entry, tsv)
+    sensor_dim = next(d for d in entry["dims"] if d["name"] == "sensor")
+    maps_dim = next((d for d in entry["dims"] if d is not sensor_dim), None)
+    dims = [d for d in (sensor_dim, maps_dim) if d is not None]
+    label_column = _label_column(dims, declared)
+    value_columns = [c for c in declared if c is not label_column]
+    unit = _value_columns(value_columns)
+    if not tsv.rows or not value_columns:
+        raise KindRefused("empty")
+    _check_caps(reader.caps, len(tsv.rows), len(value_columns), len(declared))
+    label_texts = None
+    if label_column is not None:
+        _values, label_texts = _parse_column(tsv, label_column)
+    columns = [_parse_column(tsv, column) for column in value_columns]
+    names = [column["name"] for column in value_columns]
+    counts = {"rows": len(tsv.rows), "columns": len(value_columns)}
+    sensors, map_labels = None, None
+    for dim in sorted(dims, key=lambda d: d["axis"] != "rows"):
+        coords = dim["coords"]
+        if dim is sensor_dim and "role" in coords:
+            header = names if dim["axis"] == "columns" else None
+            sensors = _sensor_role(reader, dim, counts[dim["axis"]], header)
+        elif dim is sensor_dim:
+            sensors = _Sensors(names if "header" in coords else label_texts)
+        elif "role" in coords:
+            map_labels = _role_labels(reader, dim, counts[dim["axis"]])
+        else:
+            map_labels = names if "header" in coords else label_texts
+    along_rows = sensor_dim["axis"] == "rows"
+    if map_labels is None:
+        numbers = [str(k + 1) for k in range(counts["rows"])]
+        map_labels = names if along_rows else numbers
+    if along_rows:
+        maps = [(m, v, t) for m, (v, t) in zip(map_labels, columns, strict=True)]
+    else:
+        maps = [
+            (m, [v[k] for v, _t in columns], [t[k] for _v, t in columns])
+            for k, m in enumerate(map_labels)
+        ]
+    parameters = reader.view.get("parameters", {}) if own else {}
+    limits = parameters.get("limits", "absmax")
+    return sensor_field_model(sensors, maps, limits, unit, sensor_dim, maps_dim)
+
+
+def _projected(xyz, coordinate_system: str, montage: str | None, rows, count):
+    """Positions of some rows projected by ``nemar.sensor-layout.v1``, as theta
+    and radius for every row (NaN for the others). Needs numpy."""
+    from neuroschema.views.sensor_layout import sensor_layout
+
+    layout = sensor_layout(xyz, coordinate_system, montage=montage)
+    theta, radius = [math.nan] * count, [math.nan] * count
+    for k, t, r in zip(rows, layout.theta_deg, layout.radius, strict=True):
+        theta[k], radius[k] = float(t), float(r)
+    return theta, radius
+
+
+def _map_outcome(theta: list[float], radius: list[float], values: list):
+    """One map by ``nemar.sensor-field.v1``: (the word it is refused with, or
+    None; the notes of the drawn map)."""
+    from neuroschema.views.sensor_field import SensorFieldRefusal, sensor_field
+
+    try:
+        drawn = sensor_field(theta, radius, values)
+    except SensorFieldRefusal as exc:
+        return exc.word, []
+    return None, list(drawn.notes)
+
+
+def _nan(values: Sequence[float | None]) -> list[float]:
+    return [math.nan if v is None else v for v in values]
+
+
+def sensor_field_model(
+    sensors: _Sensors,
+    maps: Sequence[tuple[str, list[float], list[str]]],
+    limits: str,
+    unit: str | None,
+    sensor_dim: Mapping,
+    maps_dim: Mapping | None,
+) -> dict:
+    """A scalp map's model from its sensors and maps (sensor-field.md, The model).
+
+    The placement runs in order: a sensor role in a frame no scalp map is
+    drawn in (``frame_not_scalp``); no row to draw (``no_eeg_sensors``: rows
+    typed and none EEG, or measured positions with no row typed EEG);
+    template positions whose rows are not all their montage's electrodes
+    (``template_name_unknown``); for
+    positions, the projection, whose refusal (``frame_unknown``,
+    ``positions_flat``) places the sensors by name instead when every drawn
+    row is typed EEG, and is every map's word otherwise; and for names,
+    ``nemar.sensor-labels.v1`` (its reason). A
+    placement's word is every map's word; otherwise each map's word is the one
+    ``nemar.sensor-field.v1`` refuses it with, or None, and its notes are the
+    drawn map's (``flat_field``). The projection and the
+    maps need numpy (the ``views`` extra).
+    """
+    from neuroschema.views.sensor_labels import (
+        MONTAGE_ORDER,
+        infer_positions,
+        label_key,
+        load_montages,
+    )
+    from neuroschema.views.sensor_layout import SensorLayoutRefusal
+
+    count = len(sensors.labels)
+    entry = sensors.entry or {}
+    measured = entry.get("position_source") == "measured"
+    drawn = drawn_rows(sensors.types, count, measured)
+    rows = [k for k in range(count) if drawn[k]]
+    # The drawn rows may be placed by name after their positions are refused
+    # only when every one of them says it is EEG.
+    named_eeg = sensors.types is not None and all(
+        sensor_type_class(sensors.types[k]) == "eeg" for k in rows
+    )
+    placement = {
+        "source": sensors.role or "names",
+        "role": sensors.role,
+        "coordinate_system": entry.get("coordinate_system", "n/a"),
+        "position_source": entry.get("position_source", "template"),
+        "montage": entry.get("montage"),
+        "unused_positions": None,
+        "word": None,
+    }
+    places = dict.fromkeys(("electrodes", "theta_deg", "radius", "x", "y", "z"))
+    layout = None  # theta and radius of every row, for the maps
+    montage = entry.get("montage")
+    if entry.get("coordinate_system") in NOT_SCALP_FRAMES:
+        placement["word"] = "frame_not_scalp"
+    elif not rows:
+        placement["word"] = "no_eeg_sensors"
+    elif (
+        entry.get("position_source") == "template"
+        and montage in MONTAGE_ORDER
+        and not set(map(label_key, sensors.labels))
+        <= set(load_montages(names=(montage,))[0].positions)
+    ):
+        # Template positions are a montage's: every row names one of its
+        # electrodes, compared as sensor-labels compares names.
+        placement["word"] = "template_name_unknown"
+    elif sensors.role == "layout":
+        theta, radius = sensors.places["theta_deg"], sensors.places["radius"]
+        places.update(theta_deg=list(theta), radius=list(radius))
+        layout = (_nan(theta), _nan(radius))
+    elif sensors.role == "positions":
+        xyz = [_nan([sensors.places[axis][k] for axis in "xyz"]) for k in rows]
+        frame, montage = entry["coordinate_system"], entry.get("montage")
+        try:
+            layout = _projected(xyz, frame, montage, rows, count)
+        except SensorLayoutRefusal as exc:
+            placement["unused_positions"] = exc.word
+            if not named_eeg:
+                placement["word"] = exc.word
+        else:
+            places.update({axis: list(sensors.places[axis]) for axis in "xyz"})
+    if placement["word"] is None and layout is None:
+        types = sensors.types or [None] * count
+        inference = infer_positions([(sensors.labels[k], types[k]) for k in rows])
+        placement.update(
+            source="names", coordinate_system="n/a", position_source="template"
+        )
+        placement["montage"] = inference.montage
+        if inference.outcome != "placed":
+            placement["word"] = inference.reason
+        else:
+            electrodes, xyz = [None] * count, [None] * count
+            for k, channel in zip(rows, inference.channels, strict=True):
+                if channel.electrode is not None:
+                    electrodes[k] = channel.electrode
+                    xyz[k] = [v + 0.0 for v in channel.position]
+            drawn = [electrodes[k] is not None for k in range(count)]
+            rows = [k for k in range(count) if drawn[k]]
+            places["electrodes"] = electrodes
+            for i, axis in enumerate("xyz"):
+                places[axis] = [None if p is None else p[i] for p in xyz]
+            placed = [xyz[k] for k in rows]
+            layout = _projected(placed, "n/a", inference.montage, rows, count)
+    if placement["word"] is not None:
+        drawn = [False] * count
+    else:
+        # A row with no place (an n/a cell, or a position the projection gives
+        # none) is not drawn.
+        drawn = [
+            drawn[k] and math.isfinite(layout[0][k]) and math.isfinite(layout[1][k])
+            for k in range(count)
+        ]
+        rows = [k for k in range(count) if drawn[k]]
+    items = []
+    for label, values, texts in maps:
+        word, notes = placement["word"], []
+        if word is None:
+            theta, radius = ([layout[i][k] for k in rows] for i in (0, 1))
+            word, notes = _map_outcome(theta, radius, [values[k] for k in rows])
+        items.append(
+            {"label": label, "values": values, "text": texts, "word": word}
+            | {"notes": notes}
+        )
+    return {
+        "type": "sensor-field",
+        "limits": limits,
+        "unit": unit,
+        "placement": placement,
+        "sensors": _axis(sensor_dim)
+        | {
+            "axis": sensor_dim["axis"],
+            "labels": list(sensors.labels),
+            "types": None if sensors.types is None else list(sensors.types),
+            "drawn": drawn,
+        }
+        | places,
+        "maps": (_axis(maps_dim) if maps_dim else dict.fromkeys(_AXIS_KEYS))
+        | {"items": items},
+    }
+
+
 def _fallback(reader: _Reader) -> dict:
     tables = []
     for entry in reader.view.get("data", []):
@@ -609,6 +972,7 @@ BUILDERS: dict[tuple[str, int], Callable[[_Reader, bool], dict]] = {
     ("nemar.lines", 1): _lines,
     ("nemar.heatmap", 1): _heatmap,
     ("nemar.histogram", 1): _histogram,
+    ("nemar.sensor-field", 1): _sensor_field,
 }
 
 
@@ -631,8 +995,10 @@ def build_model(
     (none for an invalid declaration). A registered preset is drawn by its base
     (presets.md): this module builds no preset's own model, only the base's,
     and a computed preset, which has no stored data, falls back to the table.
-    Raises ``LookupError`` for a registered kind this module has no model for
-    (``nemar.sensor-field`` has its own reference), and so for a preset over it.
+    The model of ``nemar.sensor-field`` (sensor-field.md), and so of a preset
+    over it, places the sensors and runs each map, which needs numpy (the
+    ``views`` extra). Raises ``LookupError`` for a registered kind this module
+    has no model for.
     """
     registry = load_registry() if registry is None else registry
     try:

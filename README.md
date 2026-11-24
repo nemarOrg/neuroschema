@@ -68,14 +68,14 @@ scripts/
 ## Quick Start
 
 ```bash
-# Install
+# Install (the views extra, numpy, runs the scalp maps; the full suite needs it)
 uv venv && source .venv/bin/activate
-uv pip install -e ".[dev]"
+uv pip install -e ".[dev,views]"
 
 # Validate a document
 python -m neuroschema.validate examples/schema1.json
 
-# Run tests
+# Run tests (without the views extra, the tests that draw scalp maps are skipped)
 pytest tests/
 ```
 

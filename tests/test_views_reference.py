@@ -15,6 +15,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import math
+import re
 from pathlib import Path
 
 import pytest
@@ -40,8 +41,10 @@ def numbers(values) -> np.ndarray:
 
 def close(a, b, rel: float) -> bool:
     a, b = np.asarray(a, dtype=float), np.asarray(b, dtype=float)
+    if a.shape != b.shape:
+        return False
     scale = np.maximum(np.abs(a), np.abs(b))
-    return a.shape == b.shape and bool((np.abs(a - b) <= rel * scale).all())
+    return bool((np.abs(a - b) <= rel * scale).all())
 
 
 # ── nemar.sensor-field.v1 ─────────────────────────────────────────────────
@@ -77,10 +80,10 @@ def field_mismatches(case: dict) -> list[str]:
         problems.append("mask")
     cells = z[~np.isnan(z)]
     low, high = cells.min(), cells.max()
+    magnitude = float(np.abs(cells).max())
     bound = (
         TOL["cells_relative_to_range"] * (high - low)
-        if high > low
-        else TOL["constant_map_cells"] * max(1.0, abs(high))
+        + TOL["cells_relative_to_magnitude"] * magnitude
     )
     both = ~np.isnan(z) & ~np.isnan(drawn.z)
     if not (np.abs(drawn.z[both] - z[both]) <= bound).all():
@@ -103,6 +106,16 @@ def field_mismatches(case: dict) -> list[str]:
         or not (np.abs(np.subtract(drawn.contours, contours)) <= bound).all()
     ):
         problems.append("contours")
+    if list(drawn.notes) != expected["notes"]:
+        problems.append("notes")
+    if not close(drawn.value_range, expected["value_range"], geometry):
+        problems.append("value range")
+    head = expected["head"]
+    if not close(drawn.head.radius, head["radius"], geometry):
+        problems.append("head radius")
+    for part in ("nose", "right_ear", "left_ear"):
+        if not close(getattr(drawn.head, part), head[part], geometry):
+            problems.append(f"head {part}")
     if list(drawn.plotted) != expected["plotted"]:
         problems.append("plotted")
     if list(drawn.interpolated) != expected["interpolated"]:
@@ -159,10 +172,12 @@ def test_exact_duplicates_pseudo_inverse_equals_merge_then_lu():
     px, py = x * squeeze, y * squeeze
     g = sf.green(np.hypot(px[:, None] - px[None, :], py[:, None] - py[None, :]))
     assert np.linalg.matrix_rank(g) < len(g), "duplicates make G singular"
-    w = np.linalg.pinv(g) @ values
+    groups = sf.merge(x, y, list(range(len(values))))
+    m = sf.center(np.array([sf.mean(values, group) for group in groups.values()]))
+    w = np.linalg.pinv(g) @ (values - m)
     expected = case["expected"]
     qx, qy = np.meshgrid(numbers(expected["x"]), numbers(expected["y"]), indexing="ij")
-    z = sf.green(np.hypot(qx[:, :, None] - px, qy[:, :, None] - py)) @ w
+    z = m + sf.green(np.hypot(qx[:, :, None] - px, qy[:, :, None] - py)) @ w
     reference = np.array([numbers(row) for row in expected["z"]])
     inside = ~np.isnan(reference)
     span = reference[inside].max() - reference[inside].min()
@@ -184,6 +199,37 @@ def _abs_square(x, y, intrad):
 def _absmax_from_max(z):
     cells = z[~np.isnan(z)]
     return {"absmax": (-cells.max(), cells.max()), "minmax": (cells.min(), cells.max())}
+
+
+_HEAD = sf.head_outline  # the reference's, before a mutation replaces it
+
+
+def _head_unsqueezed(squeezefac):
+    return sf.Head(0.5, sf.NOSE, sf.RIGHT_EAR, tuple((x, -y) for x, y in sf.RIGHT_EAR))
+
+
+def _head_at_the_mask(squeezefac):
+    head = _HEAD(squeezefac)
+    return sf.Head(0.5, head.nose, head.right_ear, head.left_ear)
+
+
+def _ears_swapped(squeezefac):
+    head = _HEAD(squeezefac)
+    return sf.Head(head.radius, head.nose, head.left_ear, head.right_ear)
+
+
+def _eegprep_nose(squeezefac):
+    """eegprep's triangle in place of EEGLAB's nose."""
+    head = _HEAD(squeezefac)
+    r, w = 0.5 * squeezefac, 0.08 * squeezefac
+    nose = ((r, w), (r + 0.06 * squeezefac, 0.0), (r, -w))
+    return sf.Head(head.radius, nose, head.right_ear, head.left_ear)
+
+
+def _eeglab_axis(pair, rule):
+    """EEGLAB's caxis for every choice: 5% of each limit's magnitude away from
+    zero (topoplot.m:1248-1250), the rule this page keeps for absmax only."""
+    return tuple(v + np.sign(v) * sf.COLOR_MARGIN * abs(v) for v in pair)
 
 
 def _mean_is_first(values, members):
@@ -209,8 +255,16 @@ FIELD_MUTATIONS = {
     "merge distance 1e-3 -> 0": ("MERGE_DISTANCE", 0.0),
     "merge distance 1e-3 -> 2e-3": ("MERGE_DISTANCE", 2e-3),
     "contours 6 -> 5": ("CONTOUR_COUNT", 5),
-    "fewest sensors 3 -> 2": ("MIN_SENSORS", 2),
+    "contours on a flat field": ("is_flat", lambda values: False),
+    "head not squeezed": ("head_outline", _head_unsqueezed),
+    "head circle at the mask": ("head_outline", _head_at_the_mask),
+    "ears swapped": ("head_outline", _ears_swapped),
+    "eegprep's nose": ("head_outline", _eegprep_nose),
+    "fewest sensors 8 -> 7": ("MIN_SENSORS", 7),
+    "fewest sensors 8 -> 9": ("MIN_SENSORS", 9),
+    "fewest sensors 8 -> 3 (the old minimum)": ("MIN_SENSORS", 3),
     "color margin 5% -> 0": ("COLOR_MARGIN", 0.0),
+    "minmax margin by magnitude (EEGLAB)": ("color_axis", _eeglab_axis),
     "square with abs()": ("in_square", _abs_square),
     "mask radius 0.5 -> 0.49": (
         "outside_head",
@@ -259,6 +313,16 @@ def test_radii_from_the_kept_sensors_are_caught(monkeypatch):
     assert not field_mismatches(FIELD_CASES["montage_32"])
 
 
+def test_a_map_needs_as_many_sensors_as_names_need():
+    """The scalp map's minimum is sensor-labels' minimum of channels and matches."""
+    from neuroschema.views import sensor_labels
+
+    assert sf.MIN_SENSORS == sensor_labels.MIN_CHANNELS == sensor_labels.MIN_MATCHED
+    assert len(FIELD_CASES["eight_sensors"]["expected"]["interpolated"]) == 8
+    assert FIELD_CASES["seven_sensors"]["refused"] == "too_few_sensors"
+    assert FIELD_CASES["merged_to_seven"]["refused"] == "too_few_sensors"
+
+
 def test_refusals_without_usable_sensors():
     with pytest.raises(sf.SensorFieldRefusal) as raised:
         sf.sensor_field([math.nan, 10.0], [0.3, math.inf], [1.0, 2.0])
@@ -278,8 +342,206 @@ def test_grid_axis_is_numpy_linspace(low, high):
 
 
 def test_color_axis_of_zero_is_zero():
-    assert sf.color_axis((-0.0, 0.0)) == (0.0, 0.0)
-    assert sf.color_axis((-2.0, 4.0)) == (-2.1, 4.2)
+    for rule in ("absmax", "minmax"):
+        low, high = sf.color_axis((-0.0, 0.0), rule)
+        assert (low, high) == (0.0, 0.0)
+        assert math.copysign(1.0, low) == 1.0
+
+
+def test_the_head_sits_at_the_squeezed_equator():
+    """The head circle is the layout's equator (radius 0.5) squeezed like the
+    sensors, so with sensors below it the map's skirt reaches past the head."""
+    for case in DRAWN:
+        expected = case["expected"]
+        squeeze = expected["squeezefac"]
+        assert math.isclose(expected["head"]["radius"], 0.5 * squeeze, rel_tol=1e-15)
+        tip = max(expected["head"]["nose"], key=lambda point: point[0])
+        assert math.isclose(tip[0], 0.575 * squeeze, rel_tol=1e-12) and tip[1] == 0
+        right, left = expected["head"]["right_ear"], expected["head"]["left_ear"]
+        assert all(y > 0 for _x, y in right) and all(y < 0 for _x, y in left)
+        assert [[x, -y] for x, y in right] == left
+    outside = FIELD_CASES["outside"]["expected"]
+    assert outside["plotrad"] > 0.5 and outside["head"]["radius"] < 0.5
+
+
+def test_a_flat_field_is_drawn_at_its_value():
+    """Equal values would ripple through the spline; a flat field is drawn as
+    the value itself, in one color, with no contours and the note flat_field."""
+    case = FIELD_CASES["constant_values"]
+    assert len(set(case["sensors"]["value"])) == 1
+    expected = case["expected"]
+    assert set(_drawn_cells(case)) == {2.5}
+    assert expected["limits"] == {"absmax": [-2.5, 2.5], "minmax": [2.5, 2.5]}
+    assert expected["color_axis"] == {"absmax": [-2.625, 2.625], "minmax": [2.5, 2.5]}
+    assert expected["contours"] == []
+    flat = {c["name"] for c in DRAWN if c["expected"]["notes"] == [sf.FLAT_FIELD]}
+    assert flat == {
+        "constant_values",
+        "zero_map",
+        "flat_nan_value",
+        "flat_no_place",
+        "flat_merge_group",
+        "flat_huge_duplicate_pair",
+        "flat_minus_zero",
+    }
+    allowed = ([], [sf.FLAT_FIELD], [sf.NEAR_FLAT_NOTE])
+    assert all(c["expected"]["notes"] in allowed for c in DRAWN)
+    assert sf.is_flat(np.array([2.5, 2.5, 2.5]))
+    assert not sf.is_flat(np.array([2.5, 2.5, 2.5000000000000004]))
+
+
+@pytest.mark.parametrize("group", [1, 2, 3, 4])
+@pytest.mark.parametrize("count", [8, 10, 12, 15, 19, 32])
+@pytest.mark.parametrize(
+    "value", [2.5, 0.1, 0.7, -110.0, 1e-300, 1e300, 1.5e308, -1.5e308, -0.0]
+)
+def test_a_flat_field_draws_exactly_its_value(value, count, group):
+    """Equal values have deviations of exactly 0 from their mean, as the spec
+    computes it (the merge's mean too), so every cell is the value itself, with
+    no special case. A mean summed and then divided would not be: three 0.1s
+    summed and divided by 3 are 0.10000000000000002, and two of 1.5e308 sum to
+    infinity and would refuse a map that is flat."""
+    case = FIELD_CASES["montage_32"]["sensors"]
+    theta = numbers(case["theta_deg"])[:count]
+    radius = numbers(case["radius"])[:count]
+    theta = np.concatenate([theta, np.repeat(theta[5], group - 1)])
+    radius = np.concatenate([radius, np.repeat(radius[5], group - 1)])
+    drawn = sf.sensor_field(theta, radius, np.full(len(theta), value))
+    cells = drawn.z[~np.isnan(drawn.z)]
+    assert (cells == value).all()
+    if value == 0:
+        assert not np.signbit(cells).any(), "never -0"
+    assert drawn.contours == () and drawn.notes == (sf.FLAT_FIELD,)
+    if group > 1:
+        assert next(iter(drawn.merged.values()))[0] == 5
+
+
+@pytest.mark.parametrize("offset", [30.0, -110.0, 1e3])
+def test_a_constant_offset_moves_the_map_and_nothing_else(offset):
+    """The map of v + C is the map of v, plus C: the spline's ripple of a
+    constant, which EEGLAB draws, is gone."""
+    case = FIELD_CASES["montage_32"]["sensors"]
+    theta, radius = numbers(case["theta_deg"]), numbers(case["radius"])
+    values = numbers(case["value"])
+    base = sf.sensor_field(theta, radius, values)
+    moved = sf.sensor_field(theta, radius, values + offset)
+    inside = ~np.isnan(base.z)
+    span = np.ptp(base.z[inside])
+    bound = 1e-9 * span + 1e-12 * abs(offset)
+    assert np.abs(moved.z[inside] - offset - base.z[inside]).max() <= bound
+
+
+def _variant(func, old, new):
+    """``func`` with one line of its source replaced: a wrong rule to plant."""
+    import inspect
+    import textwrap
+
+    source = textwrap.dedent(inspect.getsource(func))
+    assert old in source, old
+    namespace = dict(func.__globals__)
+    exec(source.replace(old, new), namespace)
+    return namespace[func.__name__]
+
+
+FLAT_RULES = {
+    "flat within a relative 1e-6": (
+        "flat = is_flat(values[rows])",
+        "flat = bool(np.ptp(values[rows]) <= 1e-6 * np.abs(values[rows]).max())",
+    ),
+    "flat over every finite value, placed or not": (
+        "flat = is_flat(values[rows])",
+        "flat = is_flat(values[np.isfinite(values)])",
+    ),
+    "flat over the interpolated values": (
+        "flat = is_flat(values[rows])",
+        "flat = is_flat(v)",
+    ),
+    "raw values interpolated, as EEGLAB does": ("m = center(v)", "m = 0.0"),
+    "no near-flat field": (
+        "near_flat = not flat and is_near_flat(values[rows])",
+        "near_flat = False",
+    ),
+    "near flat within 1e-7": (
+        "near_flat = not flat and is_near_flat(values[rows])",
+        "near_flat = not flat and bool(np.ptp(values[rows]) "
+        "<= 1e-7 * np.abs(values[rows]).max())",
+    ),
+}
+
+
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")
+@pytest.mark.parametrize("rule", list(FLAT_RULES))
+def test_the_vectors_catch_a_wrong_flat_or_offset_rule(monkeypatch, rule):
+    old, new = FLAT_RULES[rule]
+    monkeypatch.setattr(sf, "sensor_field", _variant(sf.sensor_field, old, new))
+    assert any(field_mismatches(case) for case in FIELD["cases"]), rule
+
+
+def test_a_near_flat_field_is_one_color_at_its_mean():
+    """Within 1e-9 of their magnitude, the values' map would be the spline of
+    their last digits stretched over the color axis: it is one color at the
+    mean, with no contours and the note near_flat. Just above the bound, the
+    map is drawn as any other."""
+    for name in ("near_flat_one_ulp", "near_flat_one_nano_db"):
+        expected = FIELD_CASES[name]["expected"]
+        assert expected["notes"] == [sf.NEAR_FLAT_NOTE], name
+        assert len(set(_drawn_cells(FIELD_CASES[name]))) == 1, name
+        assert expected["contours"] == [], name
+        values = numbers(FIELD_CASES[name]["sensors"]["value"])
+        assert 0 < expected["value_range"] <= sf.NEAR_FLAT * np.abs(values).max()
+    above = FIELD_CASES["near_flat_above_threshold"]
+    values = numbers(above["sensors"]["value"])
+    assert above["expected"]["value_range"] > sf.NEAR_FLAT * np.abs(values).max()
+    assert above["expected"]["notes"] == [] and len(above["expected"]["contours"]) == 6
+    assert sf.is_near_flat(np.array([30.0, 30.0 + 1e-9]))
+    assert not sf.is_near_flat(np.array([30.0, 30.0 + 4e-8]))
+    assert not sf.is_near_flat(np.array([30.0, 30.0])), "flat is not near flat"
+    assert not sf.is_near_flat(np.zeros(3))
+
+
+def test_a_flat_field_note_reads_as_its_caption():
+    """The note's caption, as sensor-field.md's Notes table gives it."""
+    section = (ROOT / FIELD["spec"]).read_text().split("\n## Refusals\n", 1)[1]
+    notes = re.findall(r"^\| `([a-z_]+)` \| [^|]+ \| ([^|]+) \|", section, re.M)
+    captions = [(word, caption.strip()) for word, caption in notes]
+    assert ("flat_field", "all sensors have the same value") in captions
+    assert ("near_flat", "all sensors are within <range> of each other") in captions
+
+
+def test_color_axis_rules():
+    """absmax: 5% of each magnitude (EEGLAB's caxis); minmax: 5% of the range."""
+    assert sf.color_axis((-4.0, 4.0), "absmax") == (-4.2, 4.2)
+    assert sf.color_axis((-2.0, 4.0), "minmax") == (-2.3, 4.3)
+    assert sf.color_axis((10.0, 30.0), "minmax") == (9.0, 31.0)
+    assert sf.color_axis((-30.0, -10.0), "minmax") == (-31.0, -9.0)
+    assert sf.color_axis((2.5, 2.5), "minmax") == (2.5, 2.5)
+
+
+def _drawn_cells(case):
+    z = np.array([numbers(row) for row in case["expected"]["z"]])
+    return z[~np.isnan(z)]
+
+
+DRAWN = [c for c in FIELD["cases"] if "expected" in c]
+
+
+@pytest.mark.parametrize("case", DRAWN, ids=[c["name"] for c in DRAWN])
+def test_every_cell_lies_inside_both_color_axes(case):
+    """No cell of a drawn map takes the color at an end of the axis."""
+    cells = _drawn_cells(case)
+    for rule, (low, high) in case["expected"]["color_axis"].items():
+        assert low <= cells.min() and cells.max() <= high, rule
+
+
+@pytest.mark.parametrize("name", ["one_sign_positive_db", "one_sign_negative_db"])
+def test_eeglab_magnitude_rule_would_clip_a_one_sign_map(name):
+    """The divergence from EEGLAB, shown on the vectors: on a map of one sign
+    the magnitude rule moves the limit nearer zero inward, past cells."""
+    case = FIELD_CASES[name]
+    cells = _drawn_cells(case)
+    assert cells.min() > 0 or cells.max() < 0, "a map of one sign"
+    low, high = _eeglab_axis(case["expected"]["limits"]["minmax"], "minmax")
+    assert cells.min() < low or cells.max() > high
 
 
 # ── The LU solver ─────────────────────────────────────────────────────────
@@ -400,6 +662,8 @@ def test_sensor_layout_vector_file():
 def test_frame_table_is_the_vectors():
     assert set(LAYOUT["frames"]["ALS"]) == sl.ALS_FRAMES
     assert set(LAYOUT["frames"]["RAS"]) == sl.RAS_FRAMES
+    assert LAYOUT["frames"]["aliases"] == sl.FRAME_ALIASES
+    assert "enums.yaml" in LAYOUT["reference"]["frame_names"]
     assert not sl.ALS_FRAMES & sl.RAS_FRAMES
     assert LAYOUT["frames"]["template"] == {
         "coordinate_system": "n/a",
@@ -419,6 +683,19 @@ def test_template_positions_need_n_a_and_a_montage(coordinate_system, montage):
 
 def test_template_positions_are_ras():
     assert sl.orientation("n/a", "standard_1005") == "RAS"
+
+
+def test_the_schema_enum_spelling_with_the_appendix_as_an_alias():
+    """BIDS's schema enum spells MNI152NLin6Asym and its appendix MNI152NLin6ASym:
+    the table holds the enum's spelling, and the appendix's is read as it."""
+    assert "MNI152NLin6Asym" in sl.RAS_FRAMES
+    assert "MNI152NLin6ASym" not in sl.RAS_FRAMES | sl.ALS_FRAMES
+    for alias, name in sl.FRAME_ALIASES.items():
+        assert name in sl.RAS_FRAMES | sl.ALS_FRAMES
+        assert sl.orientation(alias) == sl.orientation(name)
+        case = LAYOUT_CASES[f"alias_{alias}"]
+        assert case["expected"] == LAYOUT_CASES["frame_ras"]["expected"]
+        assert LAYOUT_CASES[f"alias_{alias}_lowercase"]["refused"] == "frame_unknown"
 
 
 @pytest.mark.parametrize("frame", LAYOUT["frames"]["ALS"])
@@ -509,6 +786,11 @@ LAYOUT_MUTATIONS = {
         (sl.ALS_FRAMES - {"EEGLAB-HJ"}) | {"EEGLAB_HJ"},
     ),
     "an RAS name moved to ALS": ("ALS_FRAMES", sl.ALS_FRAMES | {"ACPC"}),
+    "the appendix's spelling not read": ("FRAME_ALIASES", {}),
+    "the appendix's spelling in the table": (
+        "RAS_FRAMES",
+        (sl.RAS_FRAMES - {"MNI152NLin6Asym"}) | {"MNI152NLin6ASym"},
+    ),
     "RAS positions not rotated": ("to_als", _ras_unrotated),
     "template positions refused": ("orientation", _template_unknown),
     "a montage beside a named frame accepted": ("orientation", _template_any_frame),
@@ -723,14 +1005,23 @@ def test_check_compares_layouts_by_planar_point():
     assert gen.differences(moved, case)
 
 
-# Every value the ubuntu-latest view-vectors job regenerated differently from
-# these macOS-written vectors (CI run 45247745795, eegprep edf694c8, numpy
-# 2.5.5, scipy 1.18.1): the regeneration tolerance must absorb each of them.
+# What the ubuntu-latest view-vectors job regenerated differently from the
+# macOS-written vectors (CI run 45247745795, eegprep edf694c8, numpy 2.5.5,
+# scipy 1.18.1), as the Linux value minus the macOS value: the regeneration
+# tolerance must absorb each of them. They are kept as differences, applied
+# to the committed vectors, since the maps those runs drew have changed since.
 LINUX_FIELD = {
-    ("close_pair", "limits", "absmax"): [-19.426989565881048, 19.426989565881048],
-    ("close_pair", "limits", "minmax"): [-19.426989565881048, 13.450841521473963],
-    ("close_pair", "color_axis", "absmax"): [-20.3983390441751, 20.3983390441751],
-    ("close_pair", "color_axis", "minmax"): [-20.3983390441751, 14.123383597547662],
+    ("close_pair", "limits", "absmax"): (-4.118660967833421e-11, 4.118660967833421e-11),
+    ("close_pair", "limits", "minmax"): (-4.118660967833421e-11, 3.370992374129855e-11),
+    ("close_pair", "color_axis", "absmax"): (
+        -4.32436308983597e-11,
+        4.32436308983597e-11,
+    ),
+    # The minmax axis of the Linux limits, widened by the range rule.
+    ("close_pair", "color_axis", "minmax"): (
+        -4.4931169895789935e-11,
+        3.745448395875428e-11,
+    ),
 }
 LINUX_RADIUS = ("nan_positions", 8, 0.48437218538703425)
 LINUX_CENTER = (
@@ -742,13 +1033,33 @@ LINUX_CENTER = (
 def _as_linux(field: dict, layout: dict) -> tuple[dict, dict]:
     field, layout = json.loads(json.dumps(field)), json.loads(json.dumps(layout))
     cases = {c["name"]: c for c in field["cases"]}
-    for (name, key, choice), pair in LINUX_FIELD.items():
-        cases[name]["expected"][key][choice] = pair
+    for (name, key, choice), deltas in LINUX_FIELD.items():
+        pair = cases[name]["expected"][key][choice]
+        cases[name]["expected"][key][choice] = [
+            v + d for v, d in zip(pair, deltas, strict=True)
+        ]
     name, row, radius = LINUX_RADIUS
     cases[name]["sensors"]["radius"][row] = radius
     name, center = LINUX_CENTER
     next(c for c in layout["cases"] if c["name"] == name)["expected"]["center"] = center
     return field, layout
+
+
+def test_check_bounds_cells_by_range_and_magnitude_with_no_floor():
+    """A cell may move 1e-9 of the map's range plus 1e-12 of its magnitude: a
+    map of zeros is compared exactly, and a map drawn at 30 within 3e-11."""
+    gen = _generator()
+    zero = json.loads(json.dumps(FIELD_CASES["zero_map"]))
+    moved = json.loads(json.dumps(zero))
+    row = next(i for i, r in enumerate(moved["expected"]["z"]) if r[33] is not None)
+    moved["expected"]["z"][row][33] = 1e-300
+    assert gen.differences(moved, zero)
+    near = json.loads(json.dumps(FIELD_CASES["near_flat_one_ulp"]))
+    moved = json.loads(json.dumps(near))
+    moved["expected"]["z"][row][33] += 2e-11
+    assert gen.differences(moved, near) == []
+    moved["expected"]["z"][row][33] += 2e-11
+    assert gen.differences(moved, near)
 
 
 def test_check_absorbs_the_linux_rounding():
