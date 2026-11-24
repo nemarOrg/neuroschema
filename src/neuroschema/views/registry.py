@@ -161,10 +161,22 @@ def draw_as(view: Mapping, registry: Mapping | None = None) -> Drawing:
     table. A base without a base version, or one this registry does not know,
     falls back to the table; nothing here raises for an unknown kind.
     """
-    kinds = known_kinds(load_registry() if registry is None else registry)
+    registry = load_registry() if registry is None else registry
     own = (view.get("kind"), view.get("kind_version"))
-    if own in kinds:
+    if own in known_kinds(registry):
         return Drawing("kind", *own)
+    return draw_by_base(view, registry)
+
+
+def draw_by_base(view: Mapping, registry: Mapping | None = None) -> Drawing:
+    """The renderer rule for a renderer that does not know the view's own kind.
+
+    The view's base when the registry lists it and the view's data meet its
+    role contract (:func:`meets_role_contract`), otherwise a table. A preset
+    with stored data meets its base's contract, so a renderer that knows only
+    the base draws it; a computed preset has no data and shows as a table.
+    """
+    kinds = known_kinds(load_registry() if registry is None else registry)
     base = kinds.get((view.get("base"), view.get("base_version")))
     if base is not None and meets_role_contract(view, base):
         return Drawing("base", base["kind"], base["kind_version"])
