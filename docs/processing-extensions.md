@@ -14,6 +14,7 @@ The NEMAR backend (`nemar-api`) is the only writer of all three.
 
 One entry per recipe: a recording processed by `nemar-floor` and `nemar-ica` has two entries.
 Each `dataQuality` entry records its `input_kind` (`bids` or `zarr`) and `profile` (`archive` or `serving`); a `zarr` input always describes the serving copy.
+In a recording's entry, every store input of a view names the copy the entry's run read (its `profile` is the entry's `profile`), so a view of the serving copy cannot ride in an entry of the archive.
 `dataQuality` is closed at every level, its root included, unlike the other namespaces, whose roots stay open: it holds the views a browser draws, so a member beside `level` and `recipes` (a second `views` list, a stray counts block) is refused rather than carried along unchecked.
 
 ## What the schema checks and what the writer must check

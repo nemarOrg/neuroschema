@@ -2523,6 +2523,26 @@ def preset_verdicts() -> list[tuple[str, str, dict]]:
             ),
         ),
         (
+            "ic_activity_serving_matched_by_label",
+            "A decomposition of the serving copy whose columns are matched by "
+            "label: the serving copy is matched by its own rows, never by label.",
+            _set(
+                _set(
+                    _set(activity, "transform/parameters/match", "label"),
+                    "transform/parameters/rows",
+                    None,
+                ),
+                "transform/parameters/caption",
+                "not checked against the decomposition input",
+            ),
+        ),
+        (
+            "ic_activity_label_without_caption",
+            "Columns matched by label with a null caption: the view must say "
+            "they were not checked against the decomposition's input.",
+            _set(archive, "transform/parameters/caption", None),
+        ),
+        (
             "ic_activity_transform_reused",
             "A kind the registry does not list, computed by nemar.ic-activity.v1: "
             "the envelope and the transform's schema apply.",

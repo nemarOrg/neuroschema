@@ -6401,7 +6401,7 @@
       "word": "channel_set_mismatch"
     },
     {
-      "name": "label_unmatched",
+      "name": "channel_label_unmatched",
       "covers": "A column whose label no store row has.",
       "view": {
         "key": "icactivity",
@@ -6431,8 +6431,8 @@
               "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
               "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
               "group": "eeg",
-              "content_sha256": "81db8ebbbbc69c6c6ad4a6aa92b76e0c08af547da236b9e2c9dbe1d8285a8130",
-              "profile": "serving"
+              "content_sha256": null,
+              "profile": "archive"
             }
           },
           {
@@ -6468,7 +6468,7 @@
           },
           "max_window_s": 30,
           "decomposition_input": {
-            "source": "serving_copy",
+            "source": "archive",
             "preprocessing": [
               {
                 "step": "select",
@@ -6506,12 +6506,7 @@
             ],
             "channel_types_sha256": "2b55c3d4577aa6b426b7386812bb9a41efce69a489f5a15be2f798dd7d2801a3",
             "reference": "average",
-            "unit": "uV",
-            "store": {
-              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
-              "group": "eeg",
-              "content_sha256": "81db8ebbbbc69c6c6ad4a6aa92b76e0c08af547da236b9e2c9dbe1d8285a8130"
-            }
+            "unit": "uV"
           }
         }
       },
@@ -6576,8 +6571,8 @@
               "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
               "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
               "group": "eeg",
-              "content_sha256": "81db8ebbbbc69c6c6ad4a6aa92b76e0c08af547da236b9e2c9dbe1d8285a8130",
-              "profile": "serving"
+              "content_sha256": null,
+              "profile": "archive"
             }
           },
           {
@@ -6613,7 +6608,7 @@
           },
           "max_window_s": 30,
           "decomposition_input": {
-            "source": "serving_copy",
+            "source": "archive",
             "preprocessing": [
               {
                 "step": "select",
@@ -6651,12 +6646,7 @@
             ],
             "channel_types_sha256": "47e4bf12c291f7d7c25483a9252f2f760d25c40c12ed0c7b62e2531e4ad600d0",
             "reference": "average",
-            "unit": "uV",
-            "store": {
-              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
-              "group": "eeg",
-              "content_sha256": "81db8ebbbbc69c6c6ad4a6aa92b76e0c08af547da236b9e2c9dbe1d8285a8130"
-            }
+            "unit": "uV"
           }
         }
       },
@@ -6721,8 +6711,8 @@
               "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
               "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
               "group": "eeg",
-              "content_sha256": "81db8ebbbbc69c6c6ad4a6aa92b76e0c08af547da236b9e2c9dbe1d8285a8130",
-              "profile": "serving"
+              "content_sha256": null,
+              "profile": "archive"
             }
           },
           {
@@ -6758,7 +6748,7 @@
           },
           "max_window_s": 30,
           "decomposition_input": {
-            "source": "serving_copy",
+            "source": "archive",
             "preprocessing": [
               {
                 "step": "select",
@@ -6796,12 +6786,7 @@
             ],
             "channel_types_sha256": "b41d46478a2533fff43f1e17c596718a8d95fae61d1c71908d212caf0e81af2a",
             "reference": "average",
-            "unit": "uV",
-            "store": {
-              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
-              "group": "eeg",
-              "content_sha256": "81db8ebbbbc69c6c6ad4a6aa92b76e0c08af547da236b9e2c9dbe1d8285a8130"
-            }
+            "unit": "uV"
           }
         }
       },
@@ -9122,8 +9107,8 @@
               "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
               "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
               "group": "eeg",
-              "content_sha256": "81db8ebbbbc69c6c6ad4a6aa92b76e0c08af547da236b9e2c9dbe1d8285a8130",
-              "profile": "serving"
+              "content_sha256": null,
+              "profile": "archive"
             }
           },
           {
@@ -9167,7 +9152,7 @@
           },
           "max_window_s": 30,
           "decomposition_input": {
-            "source": "serving_copy",
+            "source": "archive",
             "preprocessing": [
               {
                 "step": "select",
@@ -9205,12 +9190,7 @@
             ],
             "channel_types_sha256": "2b55c3d4577aa6b426b7386812bb9a41efce69a489f5a15be2f798dd7d2801a3",
             "reference": "average",
-            "unit": "uV",
-            "store": {
-              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
-              "group": "eeg",
-              "content_sha256": "81db8ebbbbc69c6c6ad4a6aa92b76e0c08af547da236b9e2c9dbe1d8285a8130"
-            }
+            "unit": "uV"
           }
         }
       },
@@ -9278,8 +9258,8 @@
               "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
               "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
               "group": "eeg",
-              "content_sha256": "81db8ebbbbc69c6c6ad4a6aa92b76e0c08af547da236b9e2c9dbe1d8285a8130",
-              "profile": "serving"
+              "content_sha256": null,
+              "profile": "archive"
             }
           },
           {
@@ -9315,7 +9295,7 @@
           },
           "max_window_s": 30,
           "decomposition_input": {
-            "source": "serving_copy",
+            "source": "archive",
             "preprocessing": [
               {
                 "step": "select",
@@ -9353,12 +9333,7 @@
             ],
             "channel_types_sha256": "2b55c3d4577aa6b426b7386812bb9a41efce69a489f5a15be2f798dd7d2801a3",
             "reference": "average",
-            "unit": "uV",
-            "store": {
-              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
-              "group": "eeg",
-              "content_sha256": "81db8ebbbbc69c6c6ad4a6aa92b76e0c08af547da236b9e2c9dbe1d8285a8130"
-            }
+            "unit": "uV"
           }
         }
       },

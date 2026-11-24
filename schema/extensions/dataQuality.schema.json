@@ -180,6 +180,92 @@
       "allOf": [
         {
           "$ref": "../definitions/processingTypes.schema.json#/$defs/inputProfilePairing"
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "profile": {
+                "const": "archive"
+              }
+            },
+            "required": [
+              "profile"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "views": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "store": {
+                            "type": "object",
+                            "properties": {
+                              "profile": {
+                                "const": "archive"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "description": "Every store input of the entry's views names the copy the entry's run read: the store's profile is the entry's."
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "profile": {
+                "const": "serving"
+              }
+            },
+            "required": [
+              "profile"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "views": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "store": {
+                            "type": "object",
+                            "properties": {
+                              "profile": {
+                                "const": "serving"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "description": "Every store input of the entry's views names the copy the entry's run read: the store's profile is the entry's."
+          }
         }
       ],
       "additionalProperties": false

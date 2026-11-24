@@ -84,7 +84,7 @@ The transform's parameters are the record's `browser_transform` block (`extensio
 | `rows` | With `store_row`, the 0-based store row of each column, in column order; `null` with `label`. |
 | `columns` | The matrix's columns: its header names, in column order. |
 | `unit` | The unit the matrix takes: the store's own unit for a decomposition of the serving copy (its factor to microvolts is folded into the matrix), `uV` for one of the archive. Microvolts may be spelled `uV`, `µV` (U+00B5) or `μV` (U+03BC). |
-| `caption` | A caption the view shows with the activations, or `null`: for a decomposition of the archive, "not checked against the decomposition input". |
+| `caption` | A caption the view shows with the activations, or `null`; a string when `match` is `label`, which says the channels were not checked against the decomposition's input (nemar-ica writes "not checked against the decomposition input"). |
 | `shaded` | `{label, files}`: the spans ASR repaired in the decomposition's input (flagged, never removed), the rows labeled `label` (`burst`) of the floor's bad-segment table. `files` names that table alone, the floor's `_badsegments.tsv` (the location of the `badsegments` input), or is null when the floor wrote no table (its window step was skipped and ASR repaired nothing). `_samplemask.tsv` is never named: its sample indices are the grid the floor read, not the serving copy the view draws. |
 
 The kind's parameters:
@@ -98,7 +98,8 @@ The kind's parameters:
 `channel_types_sha256` is the SHA-256, in lowercase hexadecimal, of the RFC 8785 canonical JSON of `{"channel_types": channel_types}` as UTF-8: the canonicalization of [`nemar.view-digest.v1`](view-digest.md#canonical-form), so a character outside ASCII is written as itself, not escaped, and there is no final line feed.
 `neuroschema.views.ic_activity.channel_types_sha256` computes it, and the vectors' `channel_types_digests` hold cases with labels outside ASCII; a renderer does not need it to draw, but can verify it.
 
-The schema checks that a decomposition of the archive declares a store of profile `archive` and matches by `label`, and that one of the serving copy declares a store of profile `serving`, whose `content_sha256` is then a digest.
+The schema checks that a decomposition of the archive declares a store of profile `archive` and matches by `label`, with a caption that is a string, and that one of the serving copy declares a store of profile `serving`, whose `content_sha256` is then a digest, and matches by `store_row`: the serving copy is never matched by label, which could find a row the decomposition did not read.
+In a recording's `dataQuality` entry, every store input of a view names the copy the entry's run read: its `profile` is the entry's.
 The transform's schema checks that the view declares `badsegments` exactly when `shaded.files` is not null, whatever the view's kind, so a kind that reuses the transform cannot drop the table.
 The writer also makes sure that `shaded.files` is null only when the floor wrote no bad-segment table, that `matrix` is the `unmixing` input's location, that `rows` has one entry per column, that the matrix's header is `columns` and `decomposition_input.channels`, that the components table has one row per matrix row, that the first of `shaded.files` is the `badsegments` input's location when there is one, and, for the serving copy, that `decomposition_input.store` names the `signal` store and its digest.
 

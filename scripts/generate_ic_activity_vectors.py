@@ -873,14 +873,18 @@ def refusals() -> list[Case]:
     )
 
     def rows_view(rows, header=SMALL, match="store_row"):
+        """By row, a decomposition of the serving copy; by label, one of the
+        archive, which read no store (the serving copy is never matched by label)."""
+        by_row = match == "store_row"
         return declaration(
             header,
             weights,
             4,
             match=match,
             unit="uV",
-            rows=rows if match == "store_row" else None,
-            declared=digest("small"),
+            rows=rows if by_row else None,
+            profile="serving" if by_row else "archive",
+            declared=digest("small") if by_row else None,
         )
 
     refused(
@@ -909,7 +913,7 @@ def refusals() -> list[Case]:
         ),
     )
     refused(
-        "label_unmatched",
+        "channel_label_unmatched",
         "A column whose label no store row has.",
         rows_view(None, header=[*SMALL[:5], "Oz"], match="label"),
     )
@@ -1079,7 +1083,8 @@ def refusals() -> list[Case]:
             4,
             match="label",
             unit="uV",
-            declared=digest("small"),
+            profile="archive",
+            declared=None,
             segments=NO_LABEL,
         ),
     )

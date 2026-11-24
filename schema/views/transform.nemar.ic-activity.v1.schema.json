@@ -327,6 +327,10 @@
                   "rows": {
                     "type": "null",
                     "description": "Columns matched by label name no rows."
+                  },
+                  "caption": {
+                    "type": "string",
+                    "description": "Columns matched by label were not checked against the decomposition's input, and the view says so: the caption is a string (for nemar-ica, not checked against the decomposition input)."
                   }
                 }
               }
@@ -391,6 +395,61 @@
           }
         },
         "description": "A decomposition of the archive read no store, so its columns can only be matched by label."
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": "array",
+            "contains": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "const": "signal"
+                },
+                "store": {
+                  "type": "object",
+                  "properties": {
+                    "profile": {
+                      "const": "serving"
+                    }
+                  },
+                  "required": [
+                    "profile"
+                  ]
+                }
+              },
+              "required": [
+                "role",
+                "store"
+              ]
+            }
+          }
+        },
+        "required": [
+          "inputs"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "transform": {
+            "type": "object",
+            "properties": {
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "match": {
+                    "const": "store_row"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "A decomposition of the serving copy read the store's own rows, so its columns are matched by row: never by label, which could find a row the decomposition did not read."
       }
     },
     {

@@ -750,6 +750,7 @@ class TestTransform:
         instance = transform_view()
         del instance["transform"]["parameters"]["match"]
         instance["transform"]["parameters"]["rows"] = None
+        instance["transform"]["parameters"]["caption"] = "not checked"
         assert view_errors(instance) == {("required", "transform/parameters")}
 
     def test_rows_are_distinct(self):

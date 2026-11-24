@@ -313,13 +313,18 @@ def dq_dataset():
     }
 
 
+CONDITIONS = {"allOf", "anyOf", "oneOf", "if", "then", "else", "not", "contains"}
+
+
 def _objects(node, path=""):
-    """Every subschema that names properties: an object shape."""
+    """Every subschema that names properties: an object shape (a condition's
+    subschemas constrain a shape, and are not one)."""
     if isinstance(node, dict):
         if "properties" in node and node.get("type") == "object":
             yield path, node
         for key, value in node.items():
-            yield from _objects(value, f"{path}/{key}")
+            if key not in CONDITIONS:
+                yield from _objects(value, f"{path}/{key}")
     elif isinstance(node, list):
         for index, value in enumerate(node):
             yield from _objects(value, f"{path}/{index}")
@@ -351,6 +356,30 @@ def test_data_quality_root_refuses_a_stray_member(member, builder):
     check (probe p11), is refused at the root."""
     doc = builder() | {member: [{"kind": "anything", "data": [{"location": "/x"}]}]}
     assert errors_for(DATA_QUALITY, doc) == {("additionalProperties", "")}
+
+
+@pytest.mark.parametrize(
+    ("input_kind", "profile", "store"),
+    [("bids", "archive", "serving"), ("zarr", "serving", "archive")],
+)
+def test_a_views_stores_name_the_entrys_copy(input_kind, profile, store):
+    """Each store input of an entry's views names the copy the entry's run read
+    (probe p11: a record of the archive whose views declare serving stores)."""
+    doc = json.loads(
+        (EXAMPLES_DIR / "views" / "dataquality-record-nemar-ica.json").read_text()
+    )
+    entry = doc["recipes"]["nemar-ica"]
+    entry.update(input_kind=input_kind, profile=profile)
+    failing = set()
+    for k, view in enumerate(entry["views"]):
+        for j, given in enumerate(view.get("inputs", [])):
+            if "store" in given:
+                given["store"]["profile"] = store
+                failing.add(
+                    ("const", f"recipes/nemar-ica/views/{k}/inputs/{j}/store/profile")
+                )
+    assert failing
+    assert failing <= errors_for(DATA_QUALITY, doc)
 
 
 class TestDataQualityRecord:
