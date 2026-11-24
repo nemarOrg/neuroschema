@@ -186,6 +186,10 @@ Each case has a `name`, what it `covers`, a `view` (built from the [example](../
 The cases cover every word of this page, each pair of neighboring checks with two faults, and a window at 500/7 Hz where the times rule and a rounded product disagree.
 `scripts/generate_kind_vectors.py` writes them with the Python reference.
 
+The example is one recording of the 19 electrodes of the 10-20 system, all good, decomposed into 18 components (the rank under the average reference).
+Its stored views ship their files, and the files of the inputs they share, in [`examples/views/product`](../../examples/views/product) at their locations, with the declared sizes and SHA-256 digests, so the example draws as it stands: its scalp maps and its spectrum's maps at `initial_maps_hz` are drawn, and its presets' checks pass.
+The same generator writes those files, and its `--check` holds them.
+
 ## The verdict corpus
 
 [`kinds-verdicts.v1.json`](../../views/vectors/kinds-verdicts.v1.json) holds each preset's declarations, valid and invalid, and contents of `content.nemar.ic-classes.v1`, with jsonschema's verdicts, beside the generic kinds' ([generic-kinds.md](generic-kinds.md#the-verdict-corpus)).

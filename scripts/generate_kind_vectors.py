@@ -2300,7 +2300,7 @@ def ic_maps_by_base_cases() -> list[Case]:
     return [
         Case(
             "ic_maps_by_base",
-            "nemar.ic-maps by its base: six component maps over the layout, "
+            "nemar.ic-maps by its base: 18 component maps over the layout, "
             "absmax, and the components table offered for download, not read.",
             *ic_maps_files(components),
         ),
@@ -3393,7 +3393,7 @@ def _location(view: dict, role: str) -> str:
     return next(e for e in view["data"] if e["role"] == role)["location"]
 
 
-IC_COMPONENTS = [f"IC{i:03d}" for i in range(1, 7)]
+IC_COMPONENTS = [f"IC{i:03d}" for i in range(1, 19)]
 
 
 def components_table(names: list[str], header: str = "component") -> bytes:
@@ -3404,10 +3404,10 @@ def components_table(names: list[str], header: str = "component") -> bytes:
 
 def ic_maps_files(components: bytes, layout: bytes | None = None) -> tuple:
     """The example's component maps with every file its base and it read: the
-    mixing matrix (19 sensors, six components), the layout and the components
+    mixing matrix (19 sensors, 18 components), the layout and the components
     table. Returns the view and its files by location."""
     files = {
-        "values": mixing(19, 6),
+        "values": mixing(19, 18),
         "layout": chanlocs(types=["EEG"] * 19) if layout is None else layout,
         "components": components,
     }
@@ -3438,12 +3438,12 @@ def ic_maps_check_cases() -> list[Case]:
         (
             "ic_maps_long",
             "One component row more than the maps.",
-            components_table([*IC_COMPONENTS, "IC007"]),
+            components_table([*IC_COMPONENTS, "IC019"]),
         ),
         (
             "ic_maps_renamed",
             "IC1 is not IC001: names compare as text.",
-            components_table([f"IC{i}" for i in range(1, 7)]),
+            components_table([f"IC{i}" for i in range(1, 19)]),
         ),
         (
             "ic_maps_no_column",
@@ -3453,7 +3453,7 @@ def ic_maps_check_cases() -> list[Case]:
         (
             "ic_maps_ragged",
             "A row with a cell missing (the generic word).",
-            components_table(IC_COMPONENTS) + b"IC007\t1\n",
+            components_table(IC_COMPONENTS) + b"IC019\t1\n",
         ),
     ]:
         out.append(Case(name, covers, *ic_maps_files(data)))
@@ -3915,6 +3915,78 @@ def verdicts() -> dict:
     }
 
 
+# ── The example's product ─────────────────────────────────────────────────
+
+# The files of the presets example's stored views (examples/views), shipped at
+# their locations under examples/views/product so that the example draws: a
+# recording of the 19 electrodes of the 10-20 system, all good, decomposed
+# into 18 components (the rank under the average reference). Every number is
+# written by + - * / and round, so the bytes are the same on every platform.
+EXAMPLE_PRODUCT = ROOT / "examples" / "views" / "product"
+EXAMPLE_COMPONENTS = [f"IC{i:03d}" for i in range(1, 19)]
+ICLABEL_CLASSES = ["Brain", "Muscle", "Eye", "Heart", "Line Noise", "Channel Noise"]
+ICLABEL_CLASSES.append("Other")
+# Each component's most probable class, by its index in ICLABEL_CLASSES.
+DOMINANT = [0, 0, 2, 0, 1, 0, 2, 0, 6, 0, 3, 0, 1, 4, 0, 5, 6, 0]
+
+
+COMPONENT_COLUMNS = ["component", "variance_pct", "brain", "muscle", "eye"]
+COMPONENT_COLUMNS += ["heart", "line_noise", "channel_noise", "other"]
+
+
+def decibels(f: float, k: int) -> str:
+    """Sensor k's power at f hertz: falling with frequency, an alpha peak."""
+    return repr(round(28 - f / 6 + (6 if 8 <= f <= 12 else 0) + (3 * k % 5) / 2, 2))
+
+
+def example_product() -> dict[str, bytes]:
+    """Each stored file of the presets example, by its location."""
+    variance = [round(24 / (m + 1), 2) for m in range(18)]
+    probabilities = [
+        [("0.82" if c == DOMINANT[m] else "0.03") for c in range(7)] for m in range(18)
+    ]
+    components = text_tsv(
+        COMPONENT_COLUMNS,
+        [
+            [name, repr(variance[m]), *probabilities[m]]
+            for m, name in enumerate(EXAMPLE_COMPONENTS)
+        ],
+    )
+    counts = [DOMINANT.count(c) for c in range(7)]
+    summed = [
+        round(sum(v for v, d in zip(variance, DOMINANT, strict=True) if d == c), 2)
+        for c in range(7)
+    ]
+    classes = {
+        "classifier": "ICLabel",
+        "categories": ICLABEL_CLASSES,
+        "counts": counts,
+        "summed_variance_pct": summed,
+        "n_components": 18,
+    }
+    spectrum = text_tsv(
+        ["freq_hz", *NAMES_1020],
+        [
+            [repr(f)] + [decibels(f, k) for k in range(19)]
+            for f in (r / 2 for r in range(251))
+        ],
+    )
+    unmixing = text_tsv(
+        NAMES_1020, [[pattern(m, k) for k in range(19)] for m in range(18)]
+    )
+    return {
+        f"{PREFIX}_chanlocs.tsv": chanlocs(types=["EEG"] * 19),
+        f"{PREFIX}_mixing.tsv": text_tsv(
+            EXAMPLE_COMPONENTS,
+            [[pattern(k, m) for m in range(18)] for k in range(19)],
+        ),
+        f"{PREFIX}_components.tsv": components,
+        f"{PREFIX}_icclasses.json": (json.dumps(classes, indent=2) + "\n").encode(),
+        f"{PREFIX}_spectrum.tsv": spectrum,
+        f"{PREFIX}_servingunmixing.tsv": unmixing,
+    }
+
+
 # ── The model vectors ─────────────────────────────────────────────────────
 
 
@@ -4012,8 +4084,8 @@ def dump(value, depth: int = 0) -> str:
 
 
 def render() -> dict[Path, str]:
-    """The text of each vectors file."""
-    return {
+    """The text of each vectors file, and of each file of the example's product."""
+    out = {
         path: dump(document) + "\n"
         for path, document in (
             (MODELS_PATH, models()),
@@ -4021,6 +4093,9 @@ def render() -> dict[Path, str]:
             (PRESET_CHECKS_PATH, preset_checks()),
         )
     }
+    for location, data in example_product().items():
+        out[EXAMPLE_PRODUCT / location] = data.decode("utf-8")
+    return out
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -4035,6 +4110,7 @@ def main(argv: list[str] | None = None) -> int:
             if not path.is_file() or path.read_text(encoding="utf-8") != text:
                 stale.append(path.relative_to(ROOT))
         else:
+            path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(text, encoding="utf-8")
     if stale:
         print(
