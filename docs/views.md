@@ -248,7 +248,7 @@ The schema checks the envelope, each registered kind and transform, identifier p
 Every integer it takes is at most 2^53 - 1 in magnitude, and every verdict is on the binary64 reading of the declaration ([JSON](#json)), so jsonschema and ajv agree on it.
 JSON Schema cannot compare one value with another, so the writer enforces:
 
-- view keys are unique within a recipe entry, and roles are unique within a view;
+- view keys are unique within a recipe entry, and a view's `source` recipe is the entry's (record checks the backend and a renderer run too: [processing-extensions.md](processing-extensions.md#record-checks)), and roles are unique within a view;
 - column names are unique within a role, and every declared column is in the file's header;
 - a `{role, column}` coordinate names a role of the same view and a column that role declares;
 - `size` and `sha256` are those of the file, and `location` is the `outputTargets` location of the step that wrote it;

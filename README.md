@@ -65,6 +65,7 @@ views/
 src/neuroschema/
   validate.py                      # The validator and CLI (schemas resolved from schema/, nothing fetched)
   ijson.py                         # The I-JSON reader every JSON text goes through
+  records.py                       # The record checks a dataQuality entry's cross-field rules need
   views/                           # Python references: registry, digest, models, presets, sensor maps, activations
 scripts/
   generate_kind_vectors.py         # Writes the generic-kind model, preset-check and verdict vectors

@@ -38,8 +38,22 @@ JSON Schema cannot compare one value with another, so the writer enforces:
 `tests/helpers.py` checks the examples against these rules; the package does not ship them.
 The writer also enforces rules that `tests/helpers.py` does not check:
 
-- the part of a plugin's metric name before the colon is the name of the plugin that produced it, and a recipe's metric is a bare name the recipe declares;
-- the view rules listed in [views.md](views.md): unique view keys and roles, declared columns present in each file, and the caps.
+- a recipe's metric is a bare name the recipe declares;
+- the view rules listed in [views.md](views.md): unique roles, declared columns present in each file, and the caps.
+
+### Record checks
+
+Four rules of a recording's `dataQuality` entry compare one value with another, so JSON Schema cannot state them; the backend checks them before it stores an entry, and a renderer before it draws the entry's views, so neither relies on the writer alone.
+`neuroschema.records.check_record(recipe_id, entry)` is the reference (`nemar.record-checks.v1`): it takes the entry and its key under `recipes`, since an entry does not hold its own key, and returns each finding as `{word, at}`, `at` a slash path inside the entry, the metrics first in key order, then the views, then the views skipped, each in document order.
+[`views/vectors/record-checks.v1.json`](../views/vectors/record-checks.v1.json) holds the cases every implementation reproduces, and `scripts/generate_kind_vectors.py` writes them.
+
+| Word | Meaning |
+|---|---|
+| `metric_producer_mismatch` | A metric `<plugin>:<name>` whose producer is another plugin, or a bare metric whose producer recipe is not the entry's recipe. |
+| `view_source_mismatch` | A view whose `source` is a recipe other than the entry's; a view a plugin wrote is the plugin's, and is not checked here. |
+| `view_key_repeated` | A view key a view earlier in the entry has, or a key of `views_skipped` that repeats or names a view the entry declares. |
+
+A finding refuses the entry: the backend does not store it, and a renderer draws none of its views, since a view or a metric credited to the wrong producer would mislead.
 
 ## Checkpoints
 

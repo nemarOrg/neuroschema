@@ -25,6 +25,7 @@ import sys
 from pathlib import Path
 
 from neuroschema.ijson import FORBIDDEN
+from neuroschema.records import RECORD_CHECKS_FORMAT, check_record
 from neuroschema.views import load_registry
 from neuroschema.views.models import (
     MODELS_FORMAT,
@@ -45,6 +46,7 @@ MODELS_PATH = ROOT / "views" / "vectors" / "kinds-models.v1.json"
 VERDICTS_PATH = ROOT / "views" / "vectors" / "kinds-verdicts.v1.json"
 VERDICTS_FORMAT = "nemar.kinds-verdicts.v1"
 PRESET_CHECKS_PATH = ROOT / "views" / "vectors" / "preset-checks.v1.json"
+RECORD_CHECKS_PATH = ROOT / "views" / "vectors" / "record-checks.v1.json"
 SPEC = "docs/views/generic-kinds.md"
 HISTOGRAM_CONTENT = "content.nemar.histogram.v1.schema.json"
 IC_CLASSES_CONTENT = "content.nemar.ic-classes.v1.schema.json"
@@ -4083,6 +4085,96 @@ def _scalars(value) -> str:
     return text
 
 
+def record_checks() -> dict:
+    """nemar.record-checks.v1: an entry of the example, and the cross-field
+    rules of a recording's dataQuality entry that the schema cannot state."""
+    document = json.loads(PRESET_EXAMPLE.read_text(encoding="utf-8"))
+    entry = document["recipes"]["nemar-ica"]
+    metric = "nemar-quality:percentBrainComponents"
+    first, second = entry["views"][0]["key"], entry["views"][1]["key"]
+    plugin = {"plugin": {"name": "nemar-quality", "version": "0.1.0"}}
+    activity = {"kind": "nemar.ic-activity", "reason": "step_failed"}
+    lines = {"key": "linenoise", "kind": "nemar.lines", "reason": "plugin_failed"}
+    cases = [
+        ("record", "The example's entry: no finding.", entry),
+        (
+            "metric_prefix_other_plugin",
+            "A metric nemar-quality:x whose producer is the plugin evil-plugin.",
+            _set(entry, f"metrics/{metric}/plugin/name", "evil-plugin"),
+        ),
+        (
+            "bare_metric_other_recipe",
+            "A bare metric in the nemar-ica entry produced by the recipe nemar-floor.",
+            _set(entry, "metrics/icaRank/recipe/name", "nemar-floor"),
+        ),
+        (
+            "view_source_other_recipe",
+            "A view in the nemar-ica entry whose source is another recipe.",
+            _set(
+                entry,
+                "views/0/source",
+                {"recipe": {"name": "someone-else", "version": "9"}},
+            ),
+        ),
+        (
+            "view_source_plugin",
+            "A view a plugin wrote within the run: the plugin's, no finding.",
+            _set(entry, "views/0/source", plugin),
+        ),
+        (
+            "view_key_repeated",
+            "Two views with one key: the second is the finding.",
+            _set(entry, "views/1/key", first),
+        ),
+        (
+            "skipped_key_names_a_view",
+            "A view skipped under the key of a view the entry declares.",
+            entry | {"views_skipped": [{"key": second} | activity]},
+        ),
+        (
+            "skipped_key_repeated",
+            "A key skipped twice.",
+            entry | {"views_skipped": [lines, lines]},
+        ),
+        (
+            "every_finding_in_order",
+            "Every rule broken at once: metrics, then views, then the views "
+            "skipped, each in document order.",
+            _set(
+                _set(
+                    _set(entry, "views/1/key", first),
+                    "views/1/source",
+                    {"recipe": {"name": "nemar-floor", "version": "1"}},
+                ),
+                f"metrics/{metric}/plugin/name",
+                "evil-plugin",
+            )
+            | {"views_skipped": [{"key": first} | activity]},
+        ),
+    ]
+    return {
+        "format": RECORD_CHECKS_FORMAT,
+        "spec": "docs/processing-extensions.md",
+        "description": (
+            "The rules of a recording's dataQuality entry that JSON Schema cannot "
+            "state. For each case, run the record checks on entry, the entry of "
+            "the recipe recipe, and compare the findings with expected: each "
+            "{word, at}, at a slash path inside the entry, metrics first, then "
+            "views, then views_skipped, in document order; an empty list passes."
+        ),
+        "cases": [
+            {
+                "name": name,
+                "covers": covers,
+                "recipe": "nemar-ica",
+                "entry": body,
+                "expected": check_record("nemar-ica", body),
+            }
+            for name, covers, body in cases
+        ],
+    }
+
+
 def render() -> dict[Path, str]:
     """The text of each vectors file."""
     return {
@@ -4091,6 +4183,7 @@ def render() -> dict[Path, str]:
             (MODELS_PATH, models()),
             (VERDICTS_PATH, verdicts()),
             (PRESET_CHECKS_PATH, preset_checks()),
+            (RECORD_CHECKS_PATH, record_checks()),
         )
     }
 
