@@ -6196,6 +6196,90 @@
       ]
     },
     {
+      "name": "histogram_tiny_unequal_widths",
+      "covers": "Edges 0, 1e-12 and 3e-12: widths 1e-12 and 2e-12 differ from the first by far more than 1e-9 times the widest, however small they are, so heights are densities.",
+      "view": {
+        "key": "hist",
+        "kind": "nemar.histogram",
+        "kind_version": 1,
+        "caption": "Recordings by share of good samples.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "format": "json",
+            "size": 100,
+            "sha256": "ca97b9377534e1fd37d5052f021b5f2a87c204217ddcc31ce20ef7760b33b64b"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json": {
+          "text": "{\n \"edges\": [\n  0,\n  1e-12,\n  3e-12\n ],\n \"counts\": [\n  1,\n  2\n ],\n \"underflow\": 0,\n \"overflow\": 0\n}\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "kind",
+          "kind": "nemar.histogram",
+          "kind_version": 1
+        },
+        "refused": null,
+        "downloads": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "size": 100,
+            "sha256": "ca97b9377534e1fd37d5052f021b5f2a87c204217ddcc31ce20ef7760b33b64b"
+          }
+        ],
+        "model": {
+          "type": "histogram",
+          "bins": "edges",
+          "heights": "density",
+          "unit": null,
+          "items": [
+            {
+              "label": "[0, 1e-12)",
+              "lower": 0.0,
+              "upper": 1e-12,
+              "upper_closed": false,
+              "count": 1,
+              "width": 1e-12,
+              "density": 1000000000000.0
+            },
+            {
+              "label": "[1e-12, 3e-12]",
+              "lower": 1e-12,
+              "upper": 3e-12,
+              "upper_closed": true,
+              "count": 2,
+              "width": 2.0000000000000004e-12,
+              "density": 999999999999.9999
+            }
+          ],
+          "underflow": {
+            "label": "< 0",
+            "count": 0
+          },
+          "overflow": {
+            "label": "> 3e-12",
+            "count": 0
+          },
+          "missing": null,
+          "total": 3,
+          "max_count": 2,
+          "max_density": 1000000000000.0
+        }
+      }
+    },
+    {
       "name": "histogram_missing_edges",
       "covers": "Values missing or not a number, counted apart: shown beside the bars, outside the total.",
       "view": {
@@ -7609,6 +7693,60 @@
             "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
             "size": 97,
             "sha256": "7fd3079efbd42d0d988ad71407ee6fe04c3a911afeed8ed93b0ea01ba7c6a90b"
+          }
+        ],
+        "model": {
+          "type": "fallback",
+          "tables": []
+        }
+      }
+    },
+    {
+      "name": "histogram_density_too_large",
+      "covers": "Two values in a bin 1e-308 wide: the density, count over width, overflows binary64, so cap_exceeded.",
+      "view": {
+        "key": "hist",
+        "kind": "nemar.histogram",
+        "kind_version": 1,
+        "caption": "Recordings by share of good samples.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "format": "json",
+            "size": 87,
+            "sha256": "c33e2fbb94edc1f5d89b9da7f222f2fcf40fe469f72840adacce4b3cf8dc3196"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json": {
+          "text": "{\n \"edges\": [\n  0,\n  1e-308\n ],\n \"counts\": [\n  2\n ],\n \"underflow\": 0,\n \"overflow\": 0\n}\n"
+        }
+      },
+      "model": {
+        "drawing": {
+          "via": "table",
+          "kind": null,
+          "kind_version": null
+        },
+        "refused": {
+          "kind": "nemar.histogram",
+          "kind_version": 1,
+          "word": "cap_exceeded"
+        },
+        "downloads": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_hist.json",
+            "size": 87,
+            "sha256": "c33e2fbb94edc1f5d89b9da7f222f2fcf40fe469f72840adacce4b3cf8dc3196"
           }
         ],
         "model": {

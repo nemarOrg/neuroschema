@@ -269,8 +269,8 @@ A value that is not a number (NaN) is in no bin, since every comparison with it 
 - Each bin's label is `[a, b)`, or `[a, b]` for the last bin; the underflow's is `< e` with the first edge, and the overflow's `> e` with the last.
   A number in a label is printed as ECMAScript's `String(x)` prints it (`0.1`, `100`, `1e-7`, `1e+21`), as the [view digest](view-digest.md#canonical-form) prints numbers.
 - Each bin by edges has its `width`, `upper - lower`, and its `density`, `count / width`, each one binary64 operation; `max_density` is the largest density.
-  `heights` is `count` when the bins are of equal width, every width within 1e-9 of the widest of the first (so edges 0, 0.1, 0.2, 0.3, whose binary64 widths differ in the last bit, are equal), and `density` otherwise.
-  A width too wide for binary64 (edges more than about 1.8e308 apart) is refused with `cap_exceeded`.
+  `heights` is `count` when the bins are of equal width, every width differing from the first by at most 1e-9 times the widest (so edges 0, 0.1, 0.2, 0.3, whose binary64 widths differ in the last bit, are equal, and edges 0, 1e-12, 3e-12 are not), and `density` otherwise.
+  A width too wide for binary64 (edges more than about 1.8e308 apart), or a density that is not finite (a count over a width so narrow that the division overflows, such as 2 over a bin from 0 to 1e-308), is refused with `cap_exceeded`.
 - With bins by category, `bins` is `categories`, `heights` is `count`, each item is `{"label", "count"}` with the category as its label, and `unit`, `underflow`, `overflow` and `max_density` are `null`.
 - `missing` is `{"label": "missing", "count"}` when the content carries `missing`, and `null` otherwise.
 - `total` is the sum of all the counts, underflow and overflow included and `missing` left out, summed in binary64, and `max_count` is the largest of them.

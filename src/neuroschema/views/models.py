@@ -43,8 +43,9 @@ HISTOGRAM_CONTENT = (
     REPO_ROOT / "schema" / "views" / "content.nemar.histogram.v1.schema.json"
 )
 MAX_SAFE_INTEGER = 2**53 - 1
-# Bins are of equal width when every width is within this share of the widest
-# of the first: edges such as 0, 0.1, 0.2, 0.3 differ in binary64 by an ulp.
+# Bins are of equal width when every width differs from the first by at most
+# this share of the widest: edges such as 0, 0.1, 0.2, 0.3 differ in binary64
+# by an ulp.
 EQUAL_WIDTHS = 1e-9
 
 _NUMBER = re.compile(r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?")
@@ -527,6 +528,8 @@ def _histogram(reader: _Reader, own: bool) -> dict:
                 "density": count / widths[i],
             }
         )
+    if not all(math.isfinite(item["density"]) for item in items):
+        raise KindRefused("cap_exceeded", "a density beyond binary64")
     return {
         "type": "histogram",
         "bins": "edges",

@@ -851,6 +851,7 @@ def histogram_cases() -> list[Case]:
         edges=[0, 50, 100], counts=[3, 4], underflow=0, overflow=1, missing=2
     )
     lacking_classes = content(categories=["a", "b"], counts=[3, 4], missing=5)
+    tiny = content(edges=[0, 1e-12, 3e-12], counts=[1, 2], underflow=0, overflow=0)
     nested_64 = (
         b'{"categories": ["a"], "counts": [1], "x": ' + b"[" * 63 + b"]" * 63 + b"}\n"
     )
@@ -887,6 +888,14 @@ def histogram_cases() -> list[Case]:
             histogram_view(fractions),
             {HIST_AT: fractions},
             locates=[0.005, 0.05, 1, 1.5],
+        ),
+        Case(
+            "histogram_tiny_unequal_widths",
+            "Edges 0, 1e-12 and 3e-12: widths 1e-12 and 2e-12 differ from the "
+            "first by far more than 1e-9 times the widest, however small they "
+            "are, so heights are densities.",
+            histogram_view(tiny),
+            {HIST_AT: tiny},
         ),
         Case(
             "histogram_missing_edges",
@@ -1014,6 +1023,12 @@ def histogram_cases() -> list[Case]:
             content(edges=[-1.7e308, 1.7e308], counts=[1], underflow=0, overflow=0),
             "A bin from -1.7e308 to 1.7e308, wider than binary64 holds: "
             "cap_exceeded, since its density cannot be computed.",
+        ),
+        (
+            "histogram_density_too_large",
+            content(edges=[0, 1e-308], counts=[2], underflow=0, overflow=0),
+            "Two values in a bin 1e-308 wide: the density, count over width, "
+            "overflows binary64, so cap_exceeded.",
         ),
         (
             "histogram_total_with_missing_beyond_2_53",
