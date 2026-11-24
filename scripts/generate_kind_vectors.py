@@ -970,6 +970,12 @@ def histogram_cases() -> list[Case]:
             "A byte order mark: json_invalid.",
         ),
         (
+            "histogram_not_utf8",
+            b'{"categories": ["a\xff"], "counts": [1]}\n',
+            "A byte that is not UTF-8 (0xFF): json_invalid, where a decoder "
+            "without fatal would read U+FFFD (review r29).",
+        ),
+        (
             "histogram_escaped_duplicate_member",
             b'{"categories": ["a"], "counts": [1], "\\u0063ounts": [2]}\n',
             "A member named twice, once escaped (counts and \\u0063ounts are one "

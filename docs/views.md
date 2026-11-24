@@ -202,7 +202,9 @@ Internet JSON (I-JSON, RFC 7493), the rules for every JSON text neuroschema read
 - Arrays and objects nest at most 64 deep: `[[1]]` is 2 deep and a scalar 0.
 
 Each number is the binary64 nearest its text, as JavaScript's `JSON.parse` reads it, and a schema check applies to that reading: 9007199254740993 is checked as 9007199254740992.
-`neuroschema.ijson` is the Python reader; a JavaScript reader parses with `JSON.parse` after a scan that refuses a repeated name and nesting past 64, and checks every string with `String.prototype.isWellFormed` and for the noncharacters.
+`neuroschema.ijson` is the Python reader.
+A JavaScript reader decodes the bytes with `new TextDecoder("utf-8", {fatal: true, ignoreBOM: true})`, which throws on bytes that are not UTF-8 (without `fatal` it would put U+FFFD in their place) and keeps a byte order mark as U+FEFF (without `ignoreBOM` it would drop it silently), and refuses text that begins with U+FEFF.
+It then parses with `JSON.parse` after a scan that refuses a repeated name and nesting past 64, and checks every string with `String.prototype.isWellFormed` and for the noncharacters.
 
 ## Caps
 

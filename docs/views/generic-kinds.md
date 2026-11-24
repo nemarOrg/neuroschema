@@ -39,7 +39,7 @@ A renderer offers each of them for download, so no view hides data, whether a fi
 A tab-separated values (TSV) file is read under the grammar of [docs/views.md](../views.md#tsv).
 
 - The bytes do not begin with a byte order mark, and they decode as UTF-8 (Unicode Transformation Format, 8-bit) (`tsv_encoding`).
-  JavaScript's `TextDecoder` replaces bytes that are not UTF-8 with U+FFFD unless it is built with `fatal: true`, and it drops a byte order mark unless it is built with `ignoreBOM: true`; a renderer builds it with `{fatal: true}` and checks the first three bytes itself.
+  JavaScript's `TextDecoder` replaces bytes that are not UTF-8 with U+FFFD unless it is built with `fatal: true`, and it drops a byte order mark unless it is built with `ignoreBOM: true`; a renderer builds it as `new TextDecoder("utf-8", {fatal: true, ignoreBOM: true})` and refuses text that begins with U+FEFF, as for JSON.
 - The text holds no carriage return (CR) and ends with a line feed (LF) (`tsv_line_endings`).
 - Without its final LF, the text splits at each LF into lines: the first is the header, and each later line is a data row.
 - A line splits at each TAB into cells.
@@ -63,7 +63,7 @@ The text is kept as well: a readout prints the stored text and never prints a nu
 
 ### JSON
 
-A JSON file is read as Internet JSON (I-JSON), under [the JSON grammar of docs/views.md](../views.md#json) (`json_invalid`): UTF-8 with no byte order mark, no object with two members of one name however they are escaped, no `NaN` or `Infinity` literal, every number finite as a binary64, no lone surrogate or noncharacter in a string or member name, and at most 64 levels of nesting.
+A JSON file is read as Internet JSON (I-JSON), under [the JSON grammar of docs/views.md](../views.md#json), which gives the JavaScript decoder (`TextDecoder("utf-8", {fatal: true, ignoreBOM: true})`) (`json_invalid`): UTF-8 with no byte order mark, no object with two members of one name however they are escaped, no `NaN` or `Infinity` literal, every number finite as a binary64, no lone surrogate or noncharacter in a string or member name, and at most 64 levels of nesting.
 These are the rules for the [view digest's input](view-digest.md#input).
 `1e400` is not finite, and neither is an integer literal beyond binary64 range, such as 1 followed by 400 zeros: JavaScript's `JSON.parse` reads it as `Infinity`, and Python reads it exactly but cannot make it a binary64.
 The rules cover the whole file, members the kind does not read included.
