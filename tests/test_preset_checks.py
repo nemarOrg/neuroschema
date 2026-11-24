@@ -41,6 +41,8 @@ def files_of(case: dict) -> dict[str, bytes]:
 
 @pytest.mark.parametrize("case", CASES, ids=[c["name"] for c in CASES])
 def test_cases_replay(case):
+    if case["view"]["kind"] == "nemar.ic-maps":
+        pytest.importorskip("numpy")  # its base, a scalp map, runs the maps
     registry = load_registry()
     registry = registry | {"caps": registry["caps"] | case.get("caps", {})}
     got = check_preset(case["view"], files_of(case), registry, case.get("store"))

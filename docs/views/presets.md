@@ -25,7 +25,8 @@ A renderer that does not know a computed preset offers its file inputs for downl
 
 However a preset is drawn, every file it names, in `data` or as a `file` input, is drawn or offered for download.
 
-A renderer that knows a preset first builds its base's model; when the base refuses the files, the view falls back as the base's rules say.
+A renderer that knows a preset with stored data first builds its base's model, as [generic-kinds.md](generic-kinds.md#building-a-model) says for `nemar.lines` and `nemar.histogram` and [sensor-field.md](sensor-field.md#the-model) for `nemar.sensor-field`.
+When the base refuses the files, the view shows as tables with the base's word, the fallback of the base's rules, and the preset's own checks do not run; the vectors give that the outcome `fallback`.
 When the base draws, the preset's own checks run in the order this page gives, and the first that fails gives the word: the renderer draws the view by its base and keeps the word, so the page can say why the preset's extras are missing, or, for `nemar.signal-window`, draws nothing.
 `neuroschema.views.presets.check_preset` is the Python reference of these checks, and [`views/vectors/preset-checks.v1.json`](../../views/vectors/preset-checks.v1.json) (`nemar.preset-checks.v1`) holds the cases every renderer reproduces.
 
@@ -55,7 +56,7 @@ The vectors give the note in `notes`.
 A power spectral density per sensor, over `nemar.lines`.
 
 - **`values`** is a `nemar.lines` values entry: the column `freq_hz` (a `number` in `Hz`) is the x column, with the dimension `freq` along the rows (`unit` `Hz`, coordinates `{"column": "freq_hz"}`), and every other declared column is one sensor, a `number` in `dB`, with the dimension `sensor` along the columns.
-- **`layout`**, optional, is a `nemar.sensor-field` layout entry (`name`, `theta_deg`, `radius`, optionally `sensor_type`).
+- **`layout`**, optional, is a `nemar.sensor-field` layout entry (`name`, `theta_deg`, `radius`, and `sensor_type`, required when `position_source` is `measured`).
   With a layout, the values' sensor coordinates are `{"role": "layout", "column": "name"}`: the sensors are the layout's rows, by position.
   Without one, they are `{"header": true}`: the sensors are the values' header names, which a renderer places with [`nemar.sensor-labels.v1`](sensor-labels.md).
 
@@ -73,7 +74,12 @@ The parameters record how the spectrum was computed; a renderer prints them and 
 
 A renderer that knows this kind draws the `nemar.lines` model of the values, and below it a scalp map of the sensors' values at one frequency row: the row the readout snaps to, or, before the reader picks one, the row nearest each frequency of `initial_maps_hz` by the same rule.
 A map is the row's cells as one value per sensor, drawn with `nemar.sensor-field.v1` with `minmax` limits (the decibels are not signed about zero), and placed by the layout or by the sensors' names.
-A map the scalp-map algorithm refuses (for example `too_few_sensors`) shows that word in its place, and the lines are drawn all the same.
+Its model is the `nemar.sensor-field` model ([sensor-field.md](sensor-field.md#the-model)) of the series' stored cells at those rows: one map per row, labeled by the row's stored frequency text (the dimension `freq`, in Hz), with the sensors and their places read and checked as that page's order of checks says from step 7 on, the layout's rows being the sensors, or the header's names without a layout.
+The lines have already read the layout's names, so what is left to check is its place columns and that its names are the sensor columns'.
+A fault in them (for example a theta that is not a number), or a layout whose names are not the sensor columns' (`sensors_mismatch`), puts that word in every map's place, and a map the placement or the scalp-map algorithm refuses (for example `too_few_sensors`) shows that word in its place; either way, the lines are drawn all the same.
+When the base refuses the values, there are no lines and no maps.
+A file that is not the one recorded draws nothing, neither the lines nor the maps: `spectrum_maps` raises `ViewRefused`, as `build_model` does.
+`neuroschema.views.presets.spectrum_maps` is the Python reference, and the [model vectors](generic-kinds.md#the-model-vectors)' `nemar.spectrum` cases list `maps`: the frequencies asked for (`hz`), the `rows` they snap to, and the maps' `model`, or the word that `refused` them.
 
 The writer makes sure that the rows rise strictly from 0 to at most `upper_hz`, and, with a layout, that the values' sensor columns are the layout's rows in order.
 
@@ -86,7 +92,8 @@ The scalp maps of the independent components of one decomposition, over `nemar.s
 - **`components`** is the components table (`_components.tsv`): one row per component, with the dimension `component` along the rows, named by its column `component` (a `string`); its other declared columns, such as `variance_pct` and the class probabilities, make the component's text row.
 
 There are no parameters.
-A renderer that knows this kind draws one map per component with `nemar.sensor-field.v1` and `absmax` limits, because a component's polarity is arbitrary, and prints each component's text row beside its map: the cells of its row of `components`, each with its column's name and unit, as stored text.
+A renderer that knows this kind first builds the `nemar.sensor-field` model of the values and the layout ([sensor-field.md](sensor-field.md#the-model)); when that refuses the files, the view falls back to its tables and no text row is checked.
+Otherwise it draws one map per component with `nemar.sensor-field.v1` and `absmax` limits, because a component's polarity is arbitrary, and prints each component's text row beside its map: the cells of its row of `components`, each with its column's name and unit, as stored text.
 The text row of the component labeled L is the row of `components` whose `component` cell is L.
 The renderer reads the components table under the TSV grammar ([generic-kinds.md](generic-kinds.md#tsv), with its words), checks it has the column `component` (`column_missing`), and checks that its `component` cells, top to bottom, are the values' declared column names in declared order, compared as text (`components_mismatch`): one row per map, in the maps' order.
 When any of these fails, it draws the maps by the base, without text rows, and keeps the word.
@@ -176,9 +183,13 @@ The words of a preset's base, of `nemar.sensor-field.v1` and of `nemar.ic-activi
 ## The preset-check vectors
 
 `preset-checks.v1.json` has `format`, `spec`, `description` and `cases`.
-Each case has a `name`, what it `covers`, a `view` (built from the [example](../../examples/views/dataquality-record-nemar-ica.json)), its `files` (each location's UTF-8 text), for a signal window the `store` (its row `labels`, `samples`, `rate` and the digest the serving copy publishes, or null), optionally `caps` in place of the registry's caps of the same names, and the `expected` outcome: `word` null when the checks pass, with, for a signal window, the `state`, the window's `first` sample and `count`, its `bad_channels`, its `segments` and its `notes`; otherwise the `word` and its `outcome`, `base`, `nothing` or `fallback` (the base refused the file first, with its own word).
+Each case has a `name`, what it `covers`, a `view` (built from the [example](../../examples/views/dataquality-record-nemar-ica.json)), its `files` (each location's UTF-8 text: for `nemar.ic-maps`, the mixing matrix and the layout its base reads as well as the components table), for a signal window the `store` (its row `labels`, `samples`, `rate` and the digest the serving copy publishes, or null), optionally `caps` in place of the registry's caps of the same names, and the `expected` outcome: `word` null when the checks pass, with, for a signal window, the `state`, the window's `first` sample and `count`, its `bad_channels`, its `segments` and its `notes`; otherwise the `word` and its `outcome`, `base`, `nothing` or `fallback` (the base refused the file first, with its own word).
 The cases cover every word of this page, each pair of neighboring checks with two faults, and a window at 500/7 Hz where the times rule and a rounded product disagree.
 `scripts/generate_kind_vectors.py` writes them with the Python reference.
+
+The example is one recording of the 19 electrodes of the 10-20 system, all good, decomposed into 18 components (the rank under the average reference).
+Its stored views ship their files, and the files of the inputs they share, in [`examples/views/product`](../../examples/views/product) at their locations, with the declared sizes and SHA-256 digests, so the example draws as it stands: its scalp maps and its spectrum's maps at `initial_maps_hz` are drawn, and its presets' checks pass.
+The same generator writes those files, and its `--check` holds them.
 
 ## The verdict corpus
 

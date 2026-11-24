@@ -31,7 +31,7 @@ A view declares the transform in one of two forms (`schema/views/transform.nemar
 2. **Rows without a position.**
    A row whose x, y or z is not finite has no layout (no theta and no radius) and takes no part in the fit.
 3. **Center.**
-   No center is guessed: positions that do not fix one are refused with `positions_flat`, and a renderer places the sensors by name instead.
+   No center is guessed: positions that do not fix one are refused with `positions_flat`, and a renderer places the sensors by name instead, only when every drawn row is typed EEG ([sensor-field.md](sensor-field.md#sensors)).
    - **Template positions** (`n/a` and a `montage`) are centered on the montage's own center, the `center` its file in `views/montages` stores (right-anterior-superior meters, rotated into ALS as the positions are; method `montage`).
      That center is the sphere this step fits to all of the montage's electrodes, computed once when the montage files are generated (`scripts/generate_montages.py`, which `--check` holds to it).
      Template positions are never fitted themselves: a subset of a montage, such as its midline or one coronal row, fixes no sphere of its own, and about the montage's center each electrode lands where the full cap puts it.
@@ -63,20 +63,23 @@ The output is one layout row per input row, in input order: the name, theta in d
 | `frame_unknown` | The coordinate system is not in the [frame table](#frames), and the positions are not template positions (`n/a` with a montage). |
 | `positions_flat` | Measured positions do not fix a center: none, all at one point, too close to one plane (singular ratio below 0.05), or on a sphere more than 3 times their scale (step 3). |
 
-When the layout is refused, a renderer places the sensors by their names with `nemar.sensor-labels.v1`, a separate algorithm specified beside this one, and says why.
+When the layout is refused, a renderer places the sensors by their names with `nemar.sensor-labels.v1`, a separate algorithm specified beside this one, and says why, only when every row the map draws is typed EEG; otherwise the refusal's word takes every map's place ([sensor-field.md](sensor-field.md#sensors)).
 After `frame_unknown`, it says that the positions' coordinate system is not one whose orientation is known, or names it inconsistently.
 After `positions_flat`, it says that the positions are too flat, or too few, to locate the center of the head.
 
 ## Frames
 
-The table is BIDS's own, from the coordinate-systems appendix of the BIDS specification at commit `147b46d7`: every name whose orientation BIDS states.
+The table is BIDS's own, from the coordinate-systems appendix of the BIDS specification at commit `147b46d7` ([`src/appendices/coordinate-systems.md`](https://github.com/bids-standard/bids-specification/blob/147b46d771cd2b35b31a72b1f1bd1d7dc2d5a88a/src/appendices/coordinate-systems.md)): every name whose orientation BIDS states.
+Each name is spelled as the BIDS schema's enumerations spell it at the same commit ([`src/schema/objects/enums.yaml`](https://github.com/bids-standard/bids-specification/blob/147b46d771cd2b35b31a72b1f1bd1d7dc2d5a88a/src/schema/objects/enums.yaml)), which is what a validated dataset writes.
 
 | Orientation | Coordinate systems |
 |---|---|
 | ALS | `CTF`, `4DBti`, `KitYokogawa`, `EEGLAB`, `EEGLAB-HJ` |
-| RAS | `NeuromagElektaMEGIN`, `ElektaNeuromag` (deprecated), `ChietiItab`, `CapTrak`, `ACPC`, `ScanRAS`, and the standard template identifiers: `ICBM452AirSpace`, `ICBM452Warp5Space`, `IXI549Space`, `fsaverage`, `fsaverageSym`, `fsLR`, `MNIColin27`, `MNI152Lin`, `MNI152NLin2009aSym`, `MNI152NLin2009bSym`, `MNI152NLin2009cSym`, `MNI152NLin2009aAsym`, `MNI152NLin2009bAsym`, `MNI152NLin2009cAsym`, `MNI152NLin6Sym`, `MNI152NLin6ASym`, `MNI305`, `NIHPD`, `OASIS30AntsOASISAnts`, `OASIS30Atropos`, `Talairach`, `UNCInfant`, and the deprecated `fsaverage3`, `fsaverage4`, `fsaverage5`, `fsaverage6`, `fsaveragesym` and `UNCInfant0V21` to `UNCInfant2V23` |
+| RAS | `NeuromagElektaMEGIN`, `ElektaNeuromag` (deprecated), `ChietiItab`, `CapTrak`, `ACPC`, `ScanRAS`, and the standard template identifiers: `ICBM452AirSpace`, `ICBM452Warp5Space`, `IXI549Space`, `fsaverage`, `fsaverageSym`, `fsLR`, `MNIColin27`, `MNI152Lin`, `MNI152NLin2009aSym`, `MNI152NLin2009bSym`, `MNI152NLin2009cSym`, `MNI152NLin2009aAsym`, `MNI152NLin2009bAsym`, `MNI152NLin2009cAsym`, `MNI152NLin6Sym`, `MNI152NLin6Asym`, `MNI305`, `NIHPD`, `OASIS30AntsOASISAnts`, `OASIS30Atropos`, `Talairach`, `UNCInfant`, and the deprecated `fsaverage3`, `fsaverage4`, `fsaverage5`, `fsaverage6`, `fsaveragesym` and `UNCInfant0V21` to `UNCInfant2V23` |
 
 Names are compared exactly, case included.
+One name has two spellings in BIDS: the schema enum writes `MNI152NLin6Asym` and the appendix's table writes `MNI152NLin6ASym`.
+The appendix's spelling is an alias, read as `MNI152NLin6Asym`; it too is compared exactly, so `mni152nlin6asym` is refused.
 Template positions, `n/a` with a montage, are RAS.
 `Pixels` (positions on an image), `Other`, and the image-space names `individual`, `study` and `scanner`, whose orientation BIDS leaves to other files, are not in the table.
 
@@ -110,7 +113,7 @@ Each `cart2topo` entry gives a centered ALS point and the theta and radius it co
 
 ## Vectors
 
-[`views/vectors/sensor-layout.v1.json`](../../views/vectors/sensor-layout.v1.json) has the reference (eegprep's commit, the numpy and scipy versions, and the BIDS specification the frames come from), the tolerances above, `frames` (the ALS and RAS names, and the orientation of template positions), `cart2topo` (centered points straight to theta and radius, including the axes, the poles and points straight behind with Y = +0 and Y = -0), and the cases.
+[`views/vectors/sensor-layout.v1.json`](../../views/vectors/sensor-layout.v1.json) has the reference (eegprep's commit, the numpy and scipy versions, and the BIDS specification the frames come from), the tolerances above, `frames` (the ALS and RAS names, the `aliases` with the name each is read as, and the orientation of template positions), `cart2topo` (centered points straight to theta and radius, including the axes, the poles and points straight behind with Y = +0 and Y = -0), and the cases.
 Each case gives `coordinate_system`, `montage` for template positions, `positions` (`name`, `x`, `y`, `z`, with `null` for a number that is not finite), `bounds` for measured positions (the two measures of step 3), and either `refused` (the word) or `expected`: `center` (in ALS), `center_method` (`montage` or `sphere`), and `theta_deg` and `radius` per row (`null` for a row without a position).
 An implementation gives the case `frame_als`'s layout for every ALS name and the case `frame_ras`'s for every RAS name.
 The cases cover:
@@ -120,6 +123,7 @@ The cases cover:
 - measured sets: F3, F4, C3, C4, P3 and P4 alone (drawn), and the nine midline positions Fpz to Oz (refused);
 - flat sets, each refused (`positions_flat`): a ring, a flat disk, a disk measured with noise, five collinear positions and five a hair off one line, three positions and four coincident ones;
 - template positions: the whole GSN-HydroCel-32 and standard_1005 montages, and the standard_1005 midline (Fpz to Oz) and coronal row (T7 to T8), drawn where the whole montage puts them; and a montage beside a named coordinate system (refused, `frame_unknown`);
+- the alias `MNI152NLin6ASym`, which gives `frame_ras`'s layout, and the same alias in lowercase (refused);
 - eleven coordinate systems that are refused.
 Each case's positions are frozen in `scripts/view_vector_inputs.json` ([`sensor-field.md`](sensor-field.md#vectors)).
 

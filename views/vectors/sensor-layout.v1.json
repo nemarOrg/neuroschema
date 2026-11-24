@@ -1,14 +1,15 @@
 {
   "format": "nemar.sensor-layout.v1",
   "spec": "docs/views/sensor-layout.md",
-  "description": "Cases every implementation of nemar.sensor-layout.v1 reproduces. Each case gives positions (name, x, y, z in the frame coordinate_system names, or, for template positions that name a montage, in that montage's frame, RAS, with coordinate_system n/a; null is not finite) and either the expected layout (center and center_method, montage or sphere, in the ALS frame, theta_deg and radius per row, null for a row without a finite position) or the word it is refused with. Template positions are centered on the montage's own center, its file's center; measured positions carry bounds, their singular_ratio and radius_ratio (null when not reached), which decide positions_flat against 0.05 and 3, within tolerance.bounds_absolute. The expected theta and radius are eegprep's convertlocs(..., 'cart2topo') of the positions minus the center, with -180 written 180. frames lists the BIDS coordinate systems of each orientation: an implementation gives frame_als's layout for every ALS name and frame_ras's for every RAS name. cart2topo gives centered ALS points and the theta and radius each converts to, with no fit (theta within tolerance.cart2topo_theta_deg degrees, with no wrapping, and radius within tolerance.radius). Tolerances for the cases: radius within tolerance.radius; theta through the planar point (cos(theta) * radius, sin(theta) * radius), within tolerance.planar of the expected one, because theta is undefined at the pole; the center within tolerance.center_relative_to_scale times the largest distance of a finite position from their centroid.",
+  "description": "Cases every implementation of nemar.sensor-layout.v1 reproduces. Each case gives positions (name, x, y, z in the frame coordinate_system names, or, for template positions that name a montage, in that montage's frame, RAS, with coordinate_system n/a; null is not finite) and either the expected layout (center and center_method, montage or sphere, in the ALS frame, theta_deg and radius per row, null for a row without a finite position) or the word it is refused with. Template positions are centered on the montage's own center, its file's center; measured positions carry bounds, their singular_ratio and radius_ratio (null when not reached), which decide positions_flat against 0.05 and 3, within tolerance.bounds_absolute. The expected theta and radius are eegprep's convertlocs(..., 'cart2topo') of the positions minus the center, with -180 written 180. frames lists the BIDS coordinate systems of each orientation: an implementation gives frame_als's layout for every ALS name and frame_ras's for every RAS name; aliases maps another spelling BIDS uses to the name it means, which an implementation reads in its place. cart2topo gives centered ALS points and the theta and radius each converts to, with no fit (theta within tolerance.cart2topo_theta_deg degrees, with no wrapping, and radius within tolerance.radius). Tolerances for the cases: radius within tolerance.radius; theta through the planar point (cos(theta) * radius, sin(theta) * radius), within tolerance.planar of the expected one, because theta is undefined at the pole; the center within tolerance.center_relative_to_scale times the largest distance of a finite position from their centroid.",
   "reference": {
     "implementation": "eegprep",
     "repository": "https://github.com/sccn/eegprep",
     "commit": "edf694c8344b9c4c68672eac3acf9a819f1462a8",
     "numpy": "2.5.5",
     "scipy": "1.18.1",
-    "frames": "https://github.com/bids-standard/bids-specification/blob/147b46d771cd2b35b31a72b1f1bd1d7dc2d5a88a/src/appendices/coordinate-systems.md"
+    "frames": "https://github.com/bids-standard/bids-specification/blob/147b46d771cd2b35b31a72b1f1bd1d7dc2d5a88a/src/appendices/coordinate-systems.md",
+    "frame_names": "https://github.com/bids-standard/bids-specification/blob/147b46d771cd2b35b31a72b1f1bd1d7dc2d5a88a/src/schema/objects/enums.yaml"
   },
   "tolerance": {
     "planar": 1e-12,
@@ -19,7 +20,10 @@
   },
   "frames": {
     "ALS": ["4DBti", "CTF", "EEGLAB", "EEGLAB-HJ", "KitYokogawa"],
-    "RAS": ["ACPC", "CapTrak", "ChietiItab", "ElektaNeuromag", "ICBM452AirSpace", "ICBM452Warp5Space", "IXI549Space", "MNI152Lin", "MNI152NLin2009aAsym", "MNI152NLin2009aSym", "MNI152NLin2009bAsym", "MNI152NLin2009bSym", "MNI152NLin2009cAsym", "MNI152NLin2009cSym", "MNI152NLin6ASym", "MNI152NLin6Sym", "MNI305", "MNIColin27", "NIHPD", "NeuromagElektaMEGIN", "OASIS30AntsOASISAnts", "OASIS30Atropos", "ScanRAS", "Talairach", "UNCInfant", "UNCInfant0V21", "UNCInfant0V22", "UNCInfant0V23", "UNCInfant1V21", "UNCInfant1V22", "UNCInfant1V23", "UNCInfant2V21", "UNCInfant2V22", "UNCInfant2V23", "fsLR", "fsaverage", "fsaverage3", "fsaverage4", "fsaverage5", "fsaverage6", "fsaverageSym", "fsaveragesym"],
+    "RAS": ["ACPC", "CapTrak", "ChietiItab", "ElektaNeuromag", "ICBM452AirSpace", "ICBM452Warp5Space", "IXI549Space", "MNI152Lin", "MNI152NLin2009aAsym", "MNI152NLin2009aSym", "MNI152NLin2009bAsym", "MNI152NLin2009bSym", "MNI152NLin2009cAsym", "MNI152NLin2009cSym", "MNI152NLin6Asym", "MNI152NLin6Sym", "MNI305", "MNIColin27", "NIHPD", "NeuromagElektaMEGIN", "OASIS30AntsOASISAnts", "OASIS30Atropos", "ScanRAS", "Talairach", "UNCInfant", "UNCInfant0V21", "UNCInfant0V22", "UNCInfant0V23", "UNCInfant1V21", "UNCInfant1V22", "UNCInfant1V23", "UNCInfant2V21", "UNCInfant2V22", "UNCInfant2V23", "fsLR", "fsaverage", "fsaverage3", "fsaverage4", "fsaverage5", "fsaverage6", "fsaverageSym", "fsaveragesym"],
+    "aliases": {
+      "MNI152NLin6ASym": "MNI152NLin6Asym"
+    },
     "template": {
       "coordinate_system": "n/a",
       "orientation": "RAS"
@@ -531,6 +535,39 @@
         "theta_deg": [-89.85804681298686, -88.25583787229607, -86.02588265929347, -80.41343923434124, -3.3916033962499057, 79.83867639754635, 85.40455410753646, 87.60730204426596, 89.17799365066116],
         "radius": [0.5305527645357699, 0.38615206119067425, 0.25196743172608865, 0.12452898054819656, 0.02217066546737234, 0.12601838794915504, 0.2542879320513992, 0.3879771299295305, 0.5313479460587471]
       }
+    },
+    {
+      "name": "alias_MNI152NLin6ASym",
+      "description": "The coordinate-systems appendix's spelling 'MNI152NLin6ASym', read as the schema enum's 'MNI152NLin6Asym': an RAS frame, so frame_ras's layout.",
+      "coordinate_system": "MNI152NLin6ASym",
+      "positions": {
+        "name": ["E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "E9", "E10", "E11", "E12"],
+        "x": [-2.695405558, 2.695405558, -4.459387187, 4.459387187, -5.47913021, 5.47913021, -5.831241498, 5.831241498, -2.738838019, 2.738838019, -6.399087198, 6.399087198],
+        "y": [8.884820317, 8.884820317, 6.021159964, 6.021159964, 0.284948655, 0.284948655, -4.494821698, -4.494821698, -8.607966849, -8.607966849, 4.127248875, 4.127248875],
+        "z": [1.088308144, 1.088308144, 4.365321482, 4.365321482, 6.38332782, 6.38332782, 4.955347697, 4.955347697, 0.239368223, 0.239368223, -0.356852241, -0.356852241]
+      },
+      "bounds": {
+        "singular_ratio": 0.42196420633989223,
+        "radius_ratio": 0.8371438937156133
+      },
+      "expected": {
+        "center": [-0.07905645090084779, -1.2320814234015357e-15, 0.09919357903934367],
+        "center_method": "sphere",
+        "theta_deg": [-16.735843926528503, 16.735843926528474, -36.16759329812956, 36.16759329812956, -86.19914962850623, 86.19914962850623, -127.13518605440908, 127.13518605440908, -162.1969278426626, 162.1969278426626, -56.68192284065134, 56.68192284065134],
+        "radius": [0.4664883694166212, 0.46648836941662114, 0.3364004399793471, 0.33640043997934704, 0.22859801155425352, 0.22859801155425347, 0.31344230067707135, 0.31344230067707135, 0.49501942954565836, 0.49501942954565836, 0.5189340751193944, 0.5189340751193944]
+      }
+    },
+    {
+      "name": "alias_MNI152NLin6ASym_lowercase",
+      "description": "'mni152nlin6asym': names compare exactly, case included, and an alias too, so it is refused (frame_unknown).",
+      "coordinate_system": "mni152nlin6asym",
+      "positions": {
+        "name": ["E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "E9", "E10", "E11", "E12"],
+        "x": [-2.695405558, 2.695405558, -4.459387187, 4.459387187, -5.47913021, 5.47913021, -5.831241498, 5.831241498, -2.738838019, 2.738838019, -6.399087198, 6.399087198],
+        "y": [8.884820317, 8.884820317, 6.021159964, 6.021159964, 0.284948655, 0.284948655, -4.494821698, -4.494821698, -8.607966849, -8.607966849, 4.127248875, 4.127248875],
+        "z": [1.088308144, 1.088308144, 4.365321482, 4.365321482, 6.38332782, 6.38332782, 4.955347697, 4.955347697, 0.239368223, 0.239368223, -0.356852241, -0.356852241]
+      },
+      "refused": "frame_unknown"
     },
     {
       "name": "unknown_frame_1",
