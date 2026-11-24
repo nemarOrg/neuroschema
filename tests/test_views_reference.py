@@ -58,7 +58,11 @@ def field_mismatches(case: dict) -> list[str]:
         if "x" in sensors:
             xyz = np.column_stack([numbers(sensors[axis]) for axis in "xyz"])
             drawn = sf.sensor_field_from_positions(
-                xyz, case["coordinate_system"], values, montage=case.get("montage")
+                xyz,
+                case["coordinate_system"],
+                values,
+                montage=case.get("montage"),
+                names=sensors["name"],
             )
         else:
             theta = numbers(sensors["theta_deg"])
@@ -70,7 +74,7 @@ def field_mismatches(case: dict) -> list[str]:
     expected = case["expected"]
     problems = []
     if "layout" in expected:
-        positions = {axis: sensors[axis] for axis in "xyz"}
+        positions = {axis: sensors[axis] for axis in ("name", "x", "y", "z")}
         projected = case | {"positions": positions, "expected": expected["layout"]}
         problems += [f"layout {p}" for p in layout_mismatches(projected)]
     z = np.array([numbers(row) for row in expected["z"]])
@@ -591,16 +595,38 @@ def layout_mismatches(case: dict, frame: str | None = None) -> list[str]:
     frame = frame or case["coordinate_system"]
     montage = case.get("montage")
     try:
-        layout = sl.sensor_layout(xyz, frame, montage=montage)
+        layout = sl.sensor_layout(
+            xyz,
+            frame,
+            montage=montage,
+            names=positions.get("name"),
+            sensor_types=positions.get("sensor_type"),
+        )
     except sl.SensorLayoutRefusal as exc:
         if case.get("refused") != exc.word:
             return [f"refused {exc.word}"]
-        return bounds_mismatches(case, exc.singular_ratio, exc.radius_ratio)
+        return bounds_mismatches(
+            case,
+            exc.singular_ratio,
+            exc.radius_ratio,
+            exc.dilution,
+            exc.stability,
+            exc.coverage,
+            exc.gap,
+        )
     if "refused" in case:
         return [f"gave a layout; the vector refuses it ({case['refused']})"]
     expected = case["expected"]
     theta, radius = numbers(expected["theta_deg"]), numbers(expected["radius"])
-    problems = bounds_mismatches(case, layout.singular_ratio, layout.radius_ratio)
+    problems = bounds_mismatches(
+        case,
+        layout.singular_ratio,
+        layout.radius_ratio,
+        layout.dilution,
+        layout.stability,
+        layout.coverage,
+        layout.gap,
+    )
     if not np.array_equal(np.isnan(layout.radius), np.isnan(radius)):
         return ["rows without a position"]
     if layout.center_method != expected["center_method"]:
@@ -629,16 +655,23 @@ def layout_mismatches(case: dict, frame: str | None = None) -> list[str]:
     return problems
 
 
-def bounds_mismatches(case, singular_ratio, radius_ratio) -> list[str]:
-    """A measured case's flatness measures, within tolerance.bounds_absolute
-    (a template case has none)."""
+def bounds_mismatches(
+    case, singular_ratio, radius_ratio, dilution, stability, coverage, gap
+) -> list[str]:
+    """A measured case's six measures, within tolerance.bounds_absolute (a
+    template case has none)."""
     bounds = case.get("bounds")
     if bounds is None:
-        return [] if singular_ratio is None and radius_ratio is None else ["bounds"]
+        reached = (singular_ratio, radius_ratio, dilution, stability, coverage, gap)
+        return [] if all(v is None for v in reached) else ["bounds"]
     problems = []
     for name, got in (
         ("singular_ratio", singular_ratio),
         ("radius_ratio", radius_ratio),
+        ("dilution", dilution),
+        ("stability", stability),
+        ("coverage", coverage),
+        ("gap", gap),
     ):
         want = bounds[name]
         if (want is None) != (got is None) or (
@@ -657,6 +690,25 @@ def test_sensor_layout_vector_file():
     assert LAYOUT["format"] == sl.SENSOR_LAYOUT
     assert (ROOT / LAYOUT["spec"]).is_file()
     assert "147b46d7" in LAYOUT["reference"]["frames"]
+
+
+LAYOUT_SPEC = (ROOT / "docs" / "views" / "sensor-layout.md").read_text(encoding="utf-8")
+
+
+def test_spec_names_every_frame_and_bound():
+    """The normative page lists every frame by its full name (no ranges), the
+    three words, and each bound."""
+    for frame in sorted(sl.ALS_FRAMES | sl.RAS_FRAMES):
+        assert f"`{frame}`" in LAYOUT_SPEC, frame
+    for word in ("frame_unknown", "positions_flat", "positions_partial"):
+        assert f"`{word}`" in LAYOUT_SPEC, word
+    phrases = ("`\u03c33 < 0.05 * \u03c31`", "`rho > 3`", "`D > 4.5`", "`L > 0.12`")
+    phrases += ("`C > 38`", "`G > 120`")
+    for phrase in (*phrases, "(0, 0, 0)"):
+        assert phrase in LAYOUT_SPEC, phrase
+    assert (sl.FLAT_RATIO, sl.RADIUS_RATIO) == (0.05, 3.0)
+    assert (sl.PARTIAL_DILUTION, sl.PARTIAL_SHIFT) == (4.5, 0.12)
+    assert (sl.COVERAGE_ELEVATION, sl.GAP_AZIMUTH) == (38.0, 120.0)
 
 
 def test_frame_table_is_the_vectors():
@@ -759,7 +811,7 @@ def _template_any_frame(coordinate_system, montage=None):
 
 def _always_centroid(points):
     centroid = points.sum(axis=0) / len(points)
-    return sl.Fit(centroid, 1.0, 1.0)
+    return sl.Fit(centroid, 1.0, 1.0, 3.0, 0.0, 0.0, 60.0)
 
 
 def _no_wrap(xyz):
@@ -772,7 +824,68 @@ def _no_wrap(xyz):
 def _fit_the_subset(points, coordinate_system, montage):
     """Template positions fitted like measured ones: the round-2 fault."""
     fit = sl.sphere_center(points)
-    return fit.center, "montage", None, None
+    return fit.center, "montage", None
+
+
+def _zeros_kept(xyz):
+    """Every finite row has a position, (0, 0, 0) included: the R4 M1 fault."""
+    return np.isfinite(np.asarray(xyz, dtype=float)).all(axis=1)
+
+
+def _every_row_fitted(count, names=None, sensor_types=None):
+    """Every row a scalp row, EOG, neck and fiducial rows included."""
+    return np.ones(count, dtype=bool)
+
+
+def _types_ignored(count, names=None, sensor_types=None):
+    """The scalp rows chosen by name alone, as if no row were typed."""
+    return _scalp_rows(count, names, None)
+
+
+def _fiducials_kept(count, names=None, sensor_types=None):
+    """Fiducial names are not excluded."""
+    return _scalp_rows(count, None, sensor_types)
+
+
+_scalp_rows = sl.scalp_rows
+
+
+def _coverage_above_the_equator(spokes):
+    """The owner's words read literally: only positions above the equator
+    count, so a side reached only by a position below it is uncovered."""
+    above = sl.elevations(spokes) > 0
+    return _coverage(spokes[above]) if above.any() else 90.0
+
+
+_coverage = sl.coverage
+
+
+def _quadrants_turned(spokes):
+    """Quadrants centered on the diagonals instead of on the axes."""
+    turn = np.array([[1, 1, 0], [-1, 1, 0], [0, 0, np.sqrt(2)]]) / np.sqrt(2)
+    return _quadrants(spokes @ turn.T)
+
+
+_quadrants = sl.quadrants
+
+
+def _montage_from_the_file_system(coordinate_system, montage=None):
+    """Template positions accepted for any montage name, then looked up as a
+    file: the R3 M9 fault (a case-folding file system finds another case, and
+    PROVENANCE.json has no center)."""
+    if montage is not None and coordinate_system == "n/a" and montage:
+        return "RAS"
+    return _orientation(coordinate_system, montage)
+
+
+def _center_from_the_file_system(montage, directory=sl.MONTAGES):
+    path = directory / f"{montage}.json"
+    if not path.is_file():
+        raise sl.SensorLayoutRefusal("frame_unknown", montage)
+    return np.array(json.loads(path.read_text())["center"], dtype=float)
+
+
+_orientation = sl.orientation
 
 
 LAYOUT_MUTATIONS = {
@@ -796,14 +909,51 @@ LAYOUT_MUTATIONS = {
     "a montage beside a named frame accepted": ("orientation", _template_any_frame),
     "always the centroid": ("sphere_center", _always_centroid),
     "theta not written in (-180, 180]": ("cart2topo", _no_wrap),
+    "dilution bound 4.5 -> 6.5": ("PARTIAL_DILUTION", 6.5),
+    "dilution bound 4.5 -> 4.3": ("PARTIAL_DILUTION", 4.3),
+    "stability bound 0.12 -> 0.13": ("PARTIAL_SHIFT", 0.13),
+    "stability bound 0.12 -> 0.11": ("PARTIAL_SHIFT", 0.11),
+    "coverage bound 38 -> 39": ("COVERAGE_ELEVATION", 39.0),
+    "coverage bound 38 -> 37": ("COVERAGE_ELEVATION", 37.0),
+    "coverage counts positions above the equator only": (
+        "coverage",
+        _coverage_above_the_equator,
+    ),
+    "quadrants about the diagonals": ("quadrants", _quadrants_turned),
+    "gap bound 120 -> 121": ("GAP_AZIMUTH", 121.0),
+    "gap bound 120 -> 119": ("GAP_AZIMUTH", 119.0),
+    "no gap bound": ("azimuth_gap", lambda spokes: 0.0),
+    "rows at (0, 0, 0) kept": ("has_position", _zeros_kept),
+    "every row fitted": ("scalp_rows", _every_row_fitted),
+    "sensor types ignored": ("scalp_rows", _types_ignored),
+    "fiducial names kept": ("scalp_rows", _fiducials_kept),
+    "montages found through the file system": (
+        ("orientation", _montage_from_the_file_system),
+        ("montage_center", _center_from_the_file_system),
+    ),
 }
+
+
+# The one mutation that may raise rather than mismatch: a montage looked up on
+# the file system reads PROVENANCE.json, which has no center (KeyError), or a
+# case-sensitive file system finds no file for another case.
+MAY_RAISE = {"montages found through the file system": (KeyError, FileNotFoundError)}
 
 
 @pytest.mark.parametrize("mutation", list(LAYOUT_MUTATIONS))
 def test_sensor_layout_vectors_catch_a_mutation(monkeypatch, mutation):
     name, value = LAYOUT_MUTATIONS[mutation]
-    monkeypatch.setattr(sl, name, value)
-    assert layout_suite_fails(), mutation
+    pairs = [(name, value)] if isinstance(name, str) else [name, value]
+    for attribute, replacement in pairs:
+        monkeypatch.setattr(sl, attribute, replacement)
+    if mutation not in MAY_RAISE:
+        assert layout_suite_fails(), mutation
+        return
+    try:
+        caught = layout_suite_fails()
+    except MAY_RAISE[mutation]:
+        caught = True
+    assert caught, mutation
 
 
 TEMPLATES = {"template_midline_9", "template_coronal_9"}
@@ -862,10 +1012,282 @@ def test_each_montage_stores_its_own_center(path):
     assert document["center"] == [round(float(v), 9) + 0.0 for v in fit.center]
 
 
-def test_an_unknown_montage_is_refused():
+@pytest.mark.parametrize(
+    "montage", ["no-such-cap", "PROVENANCE", "biosemi64 ", "BIOSEMI64", "Biosemi64"]
+)
+def test_an_unknown_montage_is_refused(montage):
+    """Names are matched exactly against the montage list: another case, a
+    trailing space and the provenance file are no montage."""
     with pytest.raises(sl.SensorLayoutRefusal) as raised:
-        sl.sensor_layout(np.eye(3), "n/a", montage="no-such-cap")
+        sl.sensor_layout(np.eye(3), "n/a", montage=montage)
     assert raised.value.word == "frame_unknown"
+    # Each layer refuses on its own: the frame step and the center lookup.
+    with pytest.raises(sl.SensorLayoutRefusal):
+        sl.orientation("n/a", montage)
+    with pytest.raises(sl.SensorLayoutRefusal):
+        sl.montage_center(montage)
+
+
+def test_the_montage_list_is_the_label_algorithms():
+    from neuroschema.views.sensor_labels import MONTAGE_NAMES
+
+    files = {p.stem for p in (ROOT / "views" / "montages").glob("*.json")}
+    assert files == {*MONTAGE_NAMES, "PROVENANCE"}
+    for name in MONTAGE_NAMES:
+        assert sl.orientation("n/a", name) == "RAS"
+
+
+@pytest.mark.parametrize(
+    "row",
+    [[0.0, 0.0, 0.0], [-0.0, 0.0, 0.0], [0.0, -0.0, -0.0], [-0.0, -0.0, -0.0]],
+)
+def test_a_row_at_the_origin_has_no_position(row):
+    xyz = np.array([[1.0, 2.0, 3.0], row, [0.0, 0.0, 1e-300], [math.nan, 0, 0]])
+    assert sl.has_position(xyz).tolist() == [True, False, True, False]
+
+
+def test_scalp_rows_follow_types_then_names():
+    names = ["Cz", "HEOG", "ECG", "Nz", "lpa ", "EEG RPA", "X1"]
+    # No row typed: names with a non-EEG prefix and fiducials are not scalp rows.
+    assert sl.scalp_rows(7, names).tolist() == [1, 0, 0, 0, 0, 0, 1]
+    untyped = [None, "", "n/a", " N/A ", None, None, None]
+    assert sl.scalp_rows(7, names, untyped).tolist() == [1, 0, 0, 0, 0, 0, 1]
+    # One row typed: only the rows typed EEG, never a fiducial name.
+    typed = [" eeg ", "EEG", "EOG", "EEG", None, "EEG", "n/a"]
+    assert sl.scalp_rows(7, names, typed).tolist() == [1, 1, 0, 0, 0, 0, 0]
+    # Types are not normalized: full-width EEG is another type.
+    assert sl.scalp_rows(2, ["Cz", "Pz"], ["EEG", "\uff25\uff25\uff27"]).tolist() == [
+        1,
+        0,
+    ]
+    # Without names, every row with a position is a scalp row.
+    assert sl.scalp_rows(3).tolist() == [1, 1, 1]
+
+
+def test_a_map_from_positions_drops_the_rows_that_are_not_scalp_rows():
+    """sensor_field_from_positions passes the names and types to the layout:
+    the cap with its eye and neck rows (values on every row) draws the cap's
+    own map."""
+    case = LAYOUT_CASES["eog_and_neck_typed"]
+    positions = case["positions"]
+    xyz = np.column_stack([numbers(positions[a]) for a in "xyz"])
+    values = np.linspace(-3.0, 4.0, len(xyz))
+    count = len(LAYOUT_CASES["hydrocel_32_off_center"]["positions"]["name"])
+    with_rows = sf.sensor_field_from_positions(
+        xyz,
+        case["coordinate_system"],
+        values,
+        names=positions["name"],
+        sensor_types=positions["sensor_type"],
+    )
+    cap = sf.sensor_field_from_positions(
+        xyz[:count], case["coordinate_system"], values[:count]
+    )
+    assert np.array_equal(np.isnan(with_rows.z), np.isnan(cap.z))
+    assert np.allclose(with_rows.z, cap.z, equal_nan=True, rtol=0, atol=1e-12)
+    assert list(with_rows.plotted) == list(cap.plotted)
+
+
+def test_names_and_types_have_one_entry_per_row():
+    with pytest.raises(ValueError, match="names has 2 entries for 3 rows"):
+        sl.sensor_layout(np.eye(3), "CapTrak", names=["a", "b"])
+    with pytest.raises(ValueError, match="sensor_types has 1 entries"):
+        sl.sensor_layout(np.eye(3), "CapTrak", sensor_types=["EEG"])
+
+
+def test_dilution_of_an_even_hemisphere_is_three_root_two():
+    """The mean of [e, 1] [e, 1]' over an even hemisphere is diag(1/3, 1/3, M),
+    with M = [[1/3, 1/2], [1/2, 1]], whose inverse gives 3 + 3 + 12: the
+    dilution is sqrt(18). A whole sphere gives sqrt(9); a ring, a singular
+    matrix and a value that is not finite."""
+    count = 200_000
+    i = np.arange(count) + 0.5
+    z = 1 - i / count
+    a = np.pi * (1 + 5**0.5) * i
+    r = np.sqrt(1 - z * z)
+    hemisphere = np.column_stack([r * np.cos(a), r * np.sin(a), z])
+    assert abs(sl.dilution(hemisphere) - math.sqrt(18)) < 1e-3
+    z = 1 - 2 * i / count
+    r = np.sqrt(1 - z * z)
+    sphere = np.column_stack([r * np.cos(a), r * np.sin(a), z])
+    assert abs(sl.dilution(sphere) - 3.0) < 1e-3
+    ring = np.column_stack([np.cos(a[:50]), np.sin(a[:50]), np.zeros(50)])
+    assert not math.isfinite(sl.dilution(ring))
+
+
+def test_partial_positions_carry_their_measures():
+    case = LAYOUT_CASES["measured_emotiv_14"]
+    xyz = np.column_stack([numbers(case["positions"][a]) for a in "xyz"])
+    with pytest.raises(sl.SensorLayoutRefusal) as raised:
+        sl.sensor_layout(xyz, case["coordinate_system"])
+    refusal = raised.value
+    assert refusal.word == "positions_partial"
+    assert abs(refusal.dilution - case["bounds"]["dilution"]) <= LTOL["bounds_absolute"]
+    assert refusal.radius_ratio is not None and refusal.singular_ratio is not None
+    assert refusal.stability is None  # the dilution refused it first
+    unstable = LAYOUT_CASES["p300_8_noisy_unstable"]
+    xyz = np.column_stack([numbers(unstable["positions"][a]) for a in "xyz"])
+    with pytest.raises(sl.SensorLayoutRefusal) as raised:
+        sl.sensor_layout(xyz, unstable["coordinate_system"])
+    refusal = raised.value
+    assert refusal.word == "positions_partial"
+    for measure in ("dilution", "stability"):
+        got, want = getattr(refusal, measure), unstable["bounds"][measure]
+        assert abs(got - want) <= LTOL["bounds_absolute"], measure
+    assert refusal.dilution <= sl.PARTIAL_DILUTION  # passed, so stability refused
+    assert refusal.stability > sl.PARTIAL_SHIFT
+    assert refusal.coverage is None and refusal.gap is None
+
+
+def test_stability_is_the_largest_move_of_a_refit_without_one_position():
+    """The downdated normal equations give the center a least-squares refit
+    without each row gives, on a real cap and on a noisy regional set."""
+    for name in ("hydrocel_32_off_center", "p300_8_noisy_unstable"):
+        case = LAYOUT_CASES[name]
+        xyz = np.column_stack([numbers(case["positions"][a]) for a in "xyz"])
+        als = sl.to_als(xyz, case["coordinate_system"])
+        n = len(als)
+        centroid = als.sum(axis=0) / n
+        u = (als - centroid) / np.sqrt(((als - centroid) ** 2).sum(axis=1)).max()
+        design = np.column_stack([2 * u, np.ones(n)])
+        target = (u * u).sum(axis=1)
+        w = np.linalg.lstsq(design, target, rcond=None)[0]
+        radius = math.sqrt(w[0] ** 2 + w[1] ** 2 + w[2] ** 2 + w[3])
+        moves = []
+        for k in range(n):
+            keep = np.arange(n) != k
+            wk = np.linalg.lstsq(design[keep], target[keep], rcond=None)[0]
+            moves.append(np.linalg.norm(wk[:3] - w[:3]) / radius)
+        assert abs(sl.stability(design, target, w, radius) - max(moves)) < 1e-9
+        assert abs(case["bounds"]["stability"] - max(moves)) < 1e-9
+
+
+def test_the_quadrants_put_a_diagonal_on_a_side():
+    """Front (-45, 45), left [45, 135], back (135, 225), right [225, 315] in
+    azimuth; a vector on the vertical axis is in no quadrant. The vectors hold
+    no case a diagonal decides, so this pins the edges."""
+    r = 1 / math.sqrt(2)
+    spokes = np.array(
+        [
+            [1, 0, 0],
+            [0, 1, 0],
+            [-1, 0, 0],
+            [0, -1, 0],
+            [r, r, 0],
+            [-r, r, 0],
+            [-r, -r, 0],
+            [r, -r, 0],
+            [0, 0, 1],
+            [0, 0, -1],
+        ]
+    )
+    assert sl.quadrants(spokes).tolist() == [0, 1, 2, 3, 1, 1, 3, 3, -1, -1]
+    assert sl.elevations(np.array([[r, 0, r], [0, 0, -1]])).tolist() == [45.0, -90.0]
+    ring = np.array([[1, 0, 0], [0, 1, 0], [-1, 0, 0]])
+    assert sl.coverage(ring) == 90.0  # no right quadrant
+    assert sl.azimuth_gap(ring) == 180.0
+    assert sl.azimuth_gap(np.array([[0, 0, 1], [1, 0, 0]])) == 360.0
+
+
+def test_the_flatness_cases_test_what_their_names_say():
+    """The cases inside the flatness bounds pass them and are refused only as
+    partial; a set with no midline that spans the head is drawn."""
+    for name, measure, inside in (
+        ("squashed_sphere_not_flat", "singular_ratio", lambda v: v > sl.FLAT_RATIO),
+        ("cap_not_flat", "radius_ratio", lambda v: v < sl.RADIUS_RATIO),
+    ):
+        case = LAYOUT_CASES[name]
+        assert case["refused"] == "positions_partial", name
+        assert inside(case["bounds"][measure]), name
+        assert case["bounds"]["dilution"] > sl.PARTIAL_DILUTION, name
+    eight = LAYOUT_CASES["measured_eight_no_midline"]
+    assert "expected" in eight and eight["expected"]["center_method"] == "sphere"
+    assert not any(n.lower().endswith("z") for n in eight["positions"]["name"])
+
+
+@pytest.mark.parametrize(
+    ("measure", "bound", "inside", "outside", "within"),
+    [
+        ("stability", sl.PARTIAL_SHIFT, "stability_inside", "stability_outside", 0.006),
+        (
+            "coverage",
+            sl.COVERAGE_ELEVATION,
+            "coverage_inside",
+            "coverage_outside",
+            1.01,
+        ),
+        ("gap", sl.GAP_AZIMUTH, "gap_inside", "gap_outside", 1.01),
+    ],
+)
+def test_each_partial_bound_is_pinned_from_both_sides(
+    measure, bound, inside, outside, within
+):
+    """A pair of cases on either side of the bound, each no further from it
+    than ``within``, which its last bound alone decides."""
+    inside, outside = LAYOUT_CASES[inside], LAYOUT_CASES[outside]
+    assert "expected" in inside and outside["refused"] == "positions_partial"
+    got = inside["bounds"][measure], outside["bounds"][measure]
+    assert bound - within < got[0] < bound < got[1] < bound + within
+    for case in (inside, outside):
+        assert case["bounds"]["dilution"] < sl.PARTIAL_DILUTION - 0.8
+
+
+@pytest.mark.parametrize(
+    "name", ["central_9_with_egi_fiducials", "p300_8_with_eeglab_fiducials"]
+)
+def test_a_regional_set_with_fiducial_rows_is_still_partial(name):
+    """FidNz, FidT9, FidT10, Nasion, LeftEar and RightEar are fiducials: left
+    out of the fit, so they cannot lend a regional set the coverage it lacks."""
+    case = LAYOUT_CASES[name]
+    assert case["refused"] == "positions_partial"
+    xyz = np.column_stack([numbers(case["positions"][a]) for a in "xyz"])
+    names = case["positions"]["name"]
+    fitted = sl.scalp_rows(len(names), names)
+    assert fitted.tolist() == [True] * (len(names) - 3) + [False] * 3
+    # Fitted with them, the fiducials would lend the set a passing dilution.
+    try:
+        spread = sl.sphere_center(sl.to_als(xyz, case["coordinate_system"])).dilution
+    except sl.SensorLayoutRefusal as refusal:
+        spread = refusal.dilution
+    assert spread is not None and spread <= sl.PARTIAL_DILUTION
+
+
+def test_the_coverage_bound_separates_the_reviewers_sets():
+    """Frontal 6, central 9 and the Emotiv 14 are refused; the 10-20 set is
+    drawn, each well clear of the bound."""
+    for name in ("measured_frontal_6", "measured_central_9", "measured_emotiv_14"):
+        case = LAYOUT_CASES[name]
+        assert case["refused"] == "positions_partial", name
+        assert case["bounds"]["dilution"] > sl.PARTIAL_DILUTION + 1.0, name
+    ten_twenty = LAYOUT_CASES["measured_ten_twenty"]
+    assert "expected" in ten_twenty
+    assert ten_twenty["bounds"]["dilution"] < sl.PARTIAL_DILUTION - 1.0
+
+
+@pytest.mark.parametrize(
+    ("with_rows", "without"),
+    [
+        ("eog_and_neck_typed", "hydrocel_32_off_center"),
+        ("eog_and_neck_untyped", "hydrocel_32_off_center"),
+        ("fiducials_typed", "measured_ten_twenty"),
+        ("fiducials_untyped", "measured_ten_twenty"),
+    ],
+)
+def test_rows_that_are_not_scalp_rows_change_nothing(with_rows, without):
+    """The cap's layout with and without the EOG, neck or fiducial rows is the
+    same: those rows get none, and the center is the cap's own."""
+    case, bare = LAYOUT_CASES[with_rows], LAYOUT_CASES[without]
+    count = len(bare["expected"]["radius"])
+    expected = case["expected"]
+    assert all(r is None for r in expected["radius"][count:])
+    for measure, value in bare["bounds"].items():
+        assert abs(case["bounds"][measure] - value) <= 1e-9, measure
+    if without == "hydrocel_32_off_center":
+        # That case is the same cap moved by (3, -1.5, 2): compare radii only.
+        assert np.allclose(expected["radius"][:count], bare["expected"]["radius"])
+    else:
+        assert expected["radius"][:count] == bare["expected"]["radius"]
+        assert expected["center"] == bare["expected"]["center"]
 
 
 def test_positions_are_n_by_3():
@@ -1086,15 +1508,60 @@ def test_check_still_catches_changes_where_linux_rounds():
 
 
 def test_generator_keeps_every_measure_off_its_bound():
-    """Each vector's flatness measures stay 0.002 and 0.05 from the bounds, so
-    an implementation's rounding cannot flip a case."""
+    """Each vector's measures stay 0.002, 0.05, 0.05, 0.005, 0.5 and 0.5 from
+    the bounds, so an implementation's rounding cannot flip a case."""
     gen = _generator()
-    gen.check_bounds("clear", {"singular_ratio": 0.06, "radius_ratio": 2.9})
-    gen.check_bounds("flat", {"singular_ratio": 0.0, "radius_ratio": None})
+
+    def bounds(
+        singular_ratio,
+        radius_ratio=None,
+        dilution=None,
+        stability=None,
+        coverage=None,
+        gap=None,
+    ):
+        return {
+            "singular_ratio": singular_ratio,
+            "radius_ratio": radius_ratio,
+            "dilution": dilution,
+            "stability": stability,
+            "coverage": coverage,
+            "gap": gap,
+        }
+
+    gen.check_bounds("clear", bounds(0.06, 2.9, 4.44))
+    gen.check_bounds("clear", bounds(0.06, 2.9, 4.56))
+    gen.check_bounds("flat", bounds(0.0))
     with pytest.raises(SystemExit, match="singular ratio"):
-        gen.check_bounds("near", {"singular_ratio": 0.0505, "radius_ratio": None})
+        gen.check_bounds("near", bounds(0.0505))
     with pytest.raises(SystemExit, match="radius ratio"):
-        gen.check_bounds("near", {"singular_ratio": 0.2, "radius_ratio": 3.01})
+        gen.check_bounds("near", bounds(0.2, 3.01))
+    with pytest.raises(SystemExit, match="dilution"):
+        gen.check_bounds("near", bounds(0.2, 1.0, 4.46))
+    with pytest.raises(SystemExit, match="dilution"):
+        gen.check_bounds("near", bounds(0.2, 1.0, 4.54))
+    gen.check_bounds("clear", bounds(0.2, 1.0, 3.0, 0.114))
+    gen.check_bounds("clear", bounds(0.2, 1.0, 3.0, 0.126))
+    with pytest.raises(SystemExit, match="stability"):
+        gen.check_bounds("near", bounds(0.2, 1.0, 3.0, 0.118))
+    with pytest.raises(SystemExit, match="stability"):
+        gen.check_bounds("near", bounds(0.2, 1.0, 3.0, 0.122))
+    gen.check_bounds("clear", bounds(0.2, 1.0, 3.0, 0.05, 37.4, 119.4))
+    gen.check_bounds("clear", bounds(0.2, 1.0, 3.0, 0.05, 38.6, None))
+    with pytest.raises(SystemExit, match="coverage"):
+        gen.check_bounds("near", bounds(0.2, 1.0, 3.0, 0.05, 37.6))
+    with pytest.raises(SystemExit, match="coverage"):
+        gen.check_bounds("near", bounds(0.2, 1.0, 3.0, 0.05, 38.4))
+    with pytest.raises(SystemExit, match="gap"):
+        gen.check_bounds("near", bounds(0.2, 1.0, 3.0, 0.05, 10.0, 119.6))
+    with pytest.raises(SystemExit, match="gap"):
+        gen.check_bounds("near", bounds(0.2, 1.0, 3.0, 0.05, 10.0, 120.4))
+    assert (gen.COVERAGE_ELEVATION, gen.GAP_AZIMUTH) == (
+        sl.COVERAGE_ELEVATION,
+        sl.GAP_AZIMUTH,
+    )
+    assert gen.PARTIAL_DILUTION == sl.PARTIAL_DILUTION
+    assert gen.PARTIAL_SHIFT == sl.PARTIAL_SHIFT
 
 
 def test_generator_checks_each_stored_montage_center(monkeypatch):

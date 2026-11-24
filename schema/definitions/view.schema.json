@@ -521,6 +521,16 @@
           "type": "string",
           "description": "For a role of template sensor positions: the montage they were taken from, by its name in views/montages (nemar.sensor-labels.v1, docs/views/sensor-labels.md). Given exactly with position_source template, with coordinate_system n/a; the positions are read as RAS meters, the montage's frame.",
           "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$(?!\n)"
+        },
+        "cap_model": {
+          "type": "string",
+          "maxLength": 256,
+          "description": "For a role whose sensors a renderer may place by name (nemar.sensor-labels.v1, docs/views/sensor-labels.md): the recording's BIDS CapManufacturersModelName, as its eeg.json gives it after BIDS inheritance. A placement on an EGI HydroCel net needs it to name the net."
+        },
+        "reference": {
+          "type": "string",
+          "maxLength": 256,
+          "description": "For a role whose sensors a renderer may place by name (nemar.sensor-labels.v1): the recording's BIDS EEGReference, as its eeg.json gives it after BIDS inheritance. The placed channel it names is the reference channel, which a scalp map leaves out only when all its values are exactly zero (docs/views/sensor-field.md)."
         }
       },
       "dependentSchemas": {

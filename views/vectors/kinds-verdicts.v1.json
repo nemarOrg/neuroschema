@@ -16698,6 +16698,295 @@
       "errors": []
     },
     {
+      "name": "sensor_field_positions_label_inputs",
+      "covers": "Positions carrying the recording's cap_model and reference, which a placement by name reads: valid.",
+      "schema": "view",
+      "instance": {
+        "key": "maps",
+        "kind": "nemar.sensor-field",
+        "kind_version": 1,
+        "caption": "Scalp maps.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0"
+          }
+        },
+        "transform": {
+          "name": "nemar.sensor-layout.v1",
+          "parameters": {}
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv",
+            "format": "tsv",
+            "size": 302,
+            "sha256": "03f9fe4ae2c800af783a26a819c2eec48efbd3e4b8b204e1569e6a386df7ca91",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC002",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC003",
+                "type": "number",
+                "unit": "uV"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "positions",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "positions",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_electrodes.tsv",
+            "format": "tsv",
+            "size": 720,
+            "sha256": "381f74da3bff79a12bf6cde50c9dc597c085bfbd0aa7175b81ea6453f9c165e9",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "x",
+                "type": "number",
+                "unit": "m"
+              },
+              {
+                "name": "y",
+                "type": "number",
+                "unit": "m"
+              },
+              {
+                "name": "z",
+                "type": "number",
+                "unit": "m"
+              },
+              {
+                "name": "sensor_type",
+                "type": "string"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured",
+            "cap_model": "HydroCel GSN 128",
+            "reference": "Cz"
+          }
+        ]
+      },
+      "valid": true,
+      "errors": []
+    },
+    {
+      "name": "sensor_field_values_label_inputs",
+      "covers": "Names in the values carrying cap_model and reference: valid.",
+      "schema": "view",
+      "instance": {
+        "key": "maps",
+        "kind": "nemar.sensor-field",
+        "kind_version": 1,
+        "caption": "Scalp maps.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv",
+            "format": "tsv",
+            "size": 366,
+            "sha256": "d5a374ed6e5b76c55c7f5f61044d82977e55cc83c08364bc4080b94bc682a2a8",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "IC001",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC002",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC003",
+                "type": "number",
+                "unit": "uV"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ],
+            "cap_model": "HydroCel GSN",
+            "reference": "Cz"
+          }
+        ]
+      },
+      "valid": true,
+      "errors": []
+    },
+    {
+      "name": "sensor_field_layout_label_inputs",
+      "covers": "A layout carrying a cap_model and a reference: refused, since a layout is drawn as stored and never placed by name.",
+      "schema": "view",
+      "instance": {
+        "key": "maps",
+        "kind": "nemar.sensor-field",
+        "kind_version": 1,
+        "caption": "Scalp maps.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_field.tsv",
+            "format": "tsv",
+            "size": 302,
+            "sha256": "03f9fe4ae2c800af783a26a819c2eec48efbd3e4b8b204e1569e6a386df7ca91",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC002",
+                "type": "number",
+                "unit": "uV"
+              },
+              {
+                "name": "IC003",
+                "type": "number",
+                "unit": "uV"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 357,
+            "sha256": "2fdca00cc2f6c1e83475a84a9b6f50670fe999347d8cf9da51469d8584c7f90a",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              },
+              {
+                "name": "sensor_type",
+                "type": "string"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured",
+            "cap_model": "HydroCel GSN",
+            "reference": "Cz"
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        ["oneOf", "data/1"]
+      ]
+    },
+    {
       "name": "dataquality_record",
       "covers": "The example's record entry.",
       "schema": "dataQuality",

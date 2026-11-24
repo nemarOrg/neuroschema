@@ -772,15 +772,42 @@ def _sensor_field(reader: _Reader, own: bool) -> dict:
         ]
     parameters = reader.view.get("parameters", {}) if own else {}
     limits = parameters.get("limits", "absmax")
-    return sensor_field_model(sensors, maps, limits, unit, sensor_dim, maps_dim)
+    return sensor_field_model(
+        sensors, maps, limits, unit, sensor_dim, maps_dim, label_inputs(sensors, entry)
+    )
 
 
-def _projected(xyz, coordinate_system: str, montage: str | None, rows, count):
+def label_inputs(sensors: _Sensors, values: Mapping) -> dict[str, str | None]:
+    """The recording's cap model and reference, for a placement by name.
+
+    They are the ``cap_model`` and ``reference`` of the role that names the
+    sensors: the positions role, or the values when they name the sensors (a
+    layout is never placed by name). Each is None unless a string, as
+    :func:`~neuroschema.views.sensor_labels.sidecar_inputs` reads a sidecar.
+    """
+    entry = (sensors.entry if sensors.role else values) or {}
+    return {
+        key: entry.get(key) if isinstance(entry.get(key), str) else None
+        for key in ("cap_model", "reference")
+    }
+
+
+def _projected(
+    xyz, coordinate_system: str, montage: str | None, rows, count, names, types
+):
     """Positions of some rows projected by ``nemar.sensor-layout.v1``, as theta
-    and radius for every row (NaN for the others). Needs numpy."""
+    and radius for every row (NaN for the others), the rows' names and
+    ``sensor_type`` cells (None without the column) choosing the scalp rows.
+    Needs numpy."""
     from neuroschema.views.sensor_layout import sensor_layout
 
-    layout = sensor_layout(xyz, coordinate_system, montage=montage)
+    layout = sensor_layout(
+        xyz,
+        coordinate_system,
+        montage=montage,
+        names=[names[k] for k in rows],
+        sensor_types=None if types is None else [types[k] for k in rows],
+    )
     theta, radius = [math.nan] * count, [math.nan] * count
     for k, t, r in zip(rows, layout.theta_deg, layout.radius, strict=True):
         theta[k], radius[k] = float(t), float(r)
@@ -810,25 +837,29 @@ def sensor_field_model(
     unit: str | None,
     sensor_dim: Mapping,
     maps_dim: Mapping | None,
+    inputs: Mapping[str, str | None] | None = None,
 ) -> dict:
     """A scalp map's model from its sensors and maps (sensor-field.md, The model).
 
     The placement runs in order: a sensor role in a frame no scalp map is
     drawn in (``frame_not_scalp``); no row to draw (``no_eeg_sensors``: rows
-    typed and none EEG, or measured positions with no row typed EEG);
-    template positions whose rows are not all their montage's electrodes
-    (``template_name_unknown``); for
-    positions, the projection, whose refusal (``frame_unknown``,
-    ``positions_flat``) places the sensors by name instead when every drawn
+    typed and none EEG, or measured positions with no row typed EEG); a
+    template layout naming a montage ``views/montages`` does not hold
+    (``montage_unknown``); template positions whose rows are not all their
+    montage's electrodes (``template_name_unknown``); for positions, the
+    projection, whose refusal (``frame_unknown``, ``positions_flat``,
+    ``positions_partial``) places the sensors by name instead when every drawn
     row is typed EEG, and is every map's word otherwise; and for names,
-    ``nemar.sensor-labels.v1`` (its reason). A
+    ``nemar.sensor-labels.v1`` (its reason), given ``inputs``, the cap model
+    and reference of :func:`label_inputs`. The reference channel it reports
+    is not drawn when all its values, in every map, are exactly zero. A
     placement's word is every map's word; otherwise each map's word is the one
     ``nemar.sensor-field.v1`` refuses it with, or None, and its notes are the
-    drawn map's (``flat_field``). The projection and the
-    maps need numpy (the ``views`` extra).
+    drawn map's (``flat_field``). The projection and the maps need numpy (the
+    ``views`` extra).
     """
     from neuroschema.views.sensor_labels import (
-        MONTAGE_ORDER,
+        MONTAGE_NAMES,
         infer_positions,
         label_key,
         load_montages,
@@ -852,6 +883,7 @@ def sensor_field_model(
         "position_source": entry.get("position_source", "template"),
         "montage": entry.get("montage"),
         "unused_positions": None,
+        "reference": None,
         "word": None,
     }
     places = dict.fromkeys(("electrodes", "theta_deg", "radius", "x", "y", "z"))
@@ -862,8 +894,16 @@ def sensor_field_model(
     elif not rows:
         placement["word"] = "no_eeg_sensors"
     elif (
+        sensors.role == "layout"
+        and entry.get("position_source") == "template"
+        and montage not in MONTAGE_NAMES
+    ):
+        # A layout is drawn as stored, so nothing else would refuse a montage
+        # that is not one of views/montages, compared exactly.
+        placement["word"] = "montage_unknown"
+    elif (
         entry.get("position_source") == "template"
-        and montage in MONTAGE_ORDER
+        and montage in MONTAGE_NAMES
         and not set(map(label_key, sensors.labels))
         <= set(load_montages(names=(montage,))[0].positions)
     ):
@@ -878,7 +918,9 @@ def sensor_field_model(
         xyz = [_nan([sensors.places[axis][k] for axis in "xyz"]) for k in rows]
         frame, montage = entry["coordinate_system"], entry.get("montage")
         try:
-            layout = _projected(xyz, frame, montage, rows, count)
+            layout = _projected(
+                xyz, frame, montage, rows, count, sensors.labels, sensors.types
+            )
         except SensorLayoutRefusal as exc:
             placement["unused_positions"] = exc.word
             if not named_eeg:
@@ -887,7 +929,9 @@ def sensor_field_model(
             places.update({axis: list(sensors.places[axis]) for axis in "xyz"})
     if placement["word"] is None and layout is None:
         types = sensors.types or [None] * count
-        inference = infer_positions([(sensors.labels[k], types[k]) for k in rows])
+        inference = infer_positions(
+            [(sensors.labels[k], types[k]) for k in rows], **(inputs or {})
+        )
         placement.update(
             source="names", coordinate_system="n/a", position_source="template"
         )
@@ -896,17 +940,34 @@ def sensor_field_model(
             placement["word"] = inference.reason
         else:
             electrodes, xyz = [None] * count, [None] * count
+            reference = None
             for k, channel in zip(rows, inference.channels, strict=True):
                 if channel.electrode is not None:
                     electrodes[k] = channel.electrode
                     xyz[k] = [v + 0.0 for v in channel.position]
+                    if channel.name == inference.reference:
+                        reference = k
             drawn = [electrodes[k] is not None for k in range(count)]
+            if reference is not None:
+                placement["reference"] = sensors.labels[reference]
+                # A channel recorded against itself is all zero; once it
+                # carries data (re-referenced), it is drawn like any other.
+                if all(values[reference] == 0 for _m, values, _t in maps):
+                    drawn[reference] = False
             rows = [k for k in range(count) if drawn[k]]
             places["electrodes"] = electrodes
             for i, axis in enumerate("xyz"):
                 places[axis] = [None if p is None else p[i] for p in xyz]
             placed = [xyz[k] for k in rows]
-            layout = _projected(placed, "n/a", inference.montage, rows, count)
+            layout = _projected(
+                placed,
+                "n/a",
+                inference.montage,
+                rows,
+                count,
+                sensors.labels,
+                sensors.types,
+            )
     if placement["word"] is not None:
         drawn = [False] * count
     else:
