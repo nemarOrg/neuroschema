@@ -48,6 +48,7 @@ from neuroschema.views.models import (
     check_sensor_names,
     content_validator,
     declaration_valid,
+    label_inputs,
     read_json,
     read_tsv,
     sensor_field_model,
@@ -509,7 +510,8 @@ def spectrum_maps(
         )
         for row in rows
     ]
+    inputs = label_inputs(sensors, entry)
     model = sensor_field_model(
-        sensors, maps, "minmax", lines["y"]["unit"], sensor_dim, freq_dim
+        sensors, maps, "minmax", lines["y"]["unit"], sensor_dim, freq_dim, inputs
     )
     return {"rows": rows, "refused": None, "model": model}

@@ -9,6 +9,7 @@ No mocks.
 
 from __future__ import annotations
 
+import importlib.util
 import os
 import subprocess
 import sys
@@ -293,3 +294,69 @@ def test_the_view_validator_reads_binary64_too():
     assert [e.validator for e in errors] == ["uniqueItems"]
     spectrum["parameters"]["initial_maps_hz"] = [float("inf")]
     assert [e.validator for e in view_validator().iter_errors(spectrum)] == ["binary64"]
+
+
+# The vectors files that carry, as data, an input the reader must refuse.
+CARRIERS = {
+    "views/vectors/kinds-models.v1.json": (
+        "histogram_noncharacter_raw and refusal_caption_noncharacter hold U+FFFE"
+    ),
+    "views/vectors/view-digest.v1.json": "a declaration nested 65 deep",
+}
+PUBLISHED = sorted(
+    p
+    for folder in ("schema", "views", "examples")
+    for p in (ROOT / folder).rglob("*.json")
+)
+
+
+@pytest.mark.parametrize(
+    "path", PUBLISHED, ids=[p.relative_to(ROOT).as_posix() for p in PUBLISHED]
+)
+def test_every_published_json_file_is_i_json(path):
+    """Every schema, montage, vectors file, registry and example reads under
+    the I-JSON reader (the montages and sensor vectors of S6b included), but
+    the two vectors files whose cases carry the input a reader refuses."""
+    name = path.relative_to(ROOT).as_posix()
+    if name in CARRIERS:
+        with pytest.raises(ijson.IJsonError):
+            ijson.parse(path.read_bytes())
+    else:
+        ijson.parse(path.read_bytes())
+
+
+def test_the_published_files_include_the_montages_and_sensor_vectors():
+    names = {p.relative_to(ROOT).as_posix() for p in PUBLISHED}
+    assert {
+        "views/montages/GSN128.json",
+        "views/montages/PROVENANCE.json",
+        "views/vectors/sensor-labels.v1.json",
+        "views/vectors/sensor-layout.v1.json",
+        "views/registry.json",
+    } <= names
+    assert set(CARRIERS) <= names
+
+
+def _script(name: str, monkeypatch):
+    """A generator script as a module, registered while it loads (its
+    dataclasses look their module up)."""
+    path = ROOT / "scripts" / f"{name}.py"
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    monkeypatch.setitem(sys.modules, name, module)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.mark.parametrize(
+    "name, writer",
+    [("generate_kind_vectors", "_scalars"), ("generate_montages", "render")],
+)
+def test_the_vector_writers_refuse_what_is_not_finite(name, writer, monkeypatch):
+    """The writers of the model vectors, the verdicts and the montages refuse
+    NaN and Infinity, which no I-JSON text holds, rather than write them."""
+    pytest.importorskip("numpy")
+    write = getattr(_script(name, monkeypatch), writer)
+    for value in (float("nan"), float("inf"), [1.0, float("-inf")]):
+        with pytest.raises(ValueError):
+            write(value)

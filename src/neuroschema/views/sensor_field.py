@@ -433,18 +433,23 @@ def sensor_field_from_positions(
     values: np.ndarray,
     *,
     montage: str | None = None,
+    names: list[str] | None = None,
+    sensor_types: list[str | None] | None = None,
 ) -> SensorField:
     """Draw a map whose sensors are placed by three-dimensional positions.
 
     The view's role ``positions`` gives ``xyz`` (n by 3) with its
     ``coordinate_system``, or ``n/a`` and the ``montage`` for template
-    positions. ``nemar.sensor-layout.v1`` projects them to theta and radius,
-    and :func:`sensor_field` draws the map; a row without a finite position is
-    dropped like any sensor without a place. Raises
+    positions, and its ``name`` and ``sensor_type`` columns. ``nemar.sensor-
+    layout.v1`` projects the scalp rows to theta and radius, and
+    :func:`sensor_field` draws the map; a row with no layout is dropped like
+    any sensor without a place. Raises
     :class:`~neuroschema.views.sensor_layout.SensorLayoutRefusal`
-    (``frame_unknown`` or ``positions_flat``), after which a renderer places
-    the sensors by name only when every drawn row is typed EEG, or
-    :class:`SensorFieldRefusal`.
+    (``frame_unknown``, ``positions_flat`` or ``positions_partial``), after
+    which a renderer places the sensors by name only when every drawn row is
+    typed EEG, or :class:`SensorFieldRefusal`.
     """
-    layout = sensor_layout(xyz, coordinate_system, montage=montage)
+    layout = sensor_layout(
+        xyz, coordinate_system, montage=montage, names=names, sensor_types=sensor_types
+    )
     return sensor_field(layout.theta_deg, layout.radius, values)

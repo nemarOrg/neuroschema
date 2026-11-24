@@ -4109,7 +4109,11 @@
       },
       "bounds": {
         "singular_ratio": 0.6742955256695562,
-        "radius_ratio": 0.7382295827637589
+        "radius_ratio": 0.7382295827637589,
+        "dilution": 3.257284176229058,
+        "stability": 0.01825932998364405,
+        "coverage": -34.46815715759237,
+        "gap": 14.743049523116166
       },
       "expected": {
         "layout": {
@@ -4554,7 +4558,11 @@
       },
       "bounds": {
         "singular_ratio": 0.0,
-        "radius_ratio": null
+        "radius_ratio": null,
+        "dilution": null,
+        "stability": null,
+        "coverage": null,
+        "gap": null
       },
       "refused": "positions_flat"
     },
@@ -4571,7 +4579,11 @@
       },
       "bounds": {
         "singular_ratio": 4.084424354473371e-17,
-        "radius_ratio": null
+        "radius_ratio": null,
+        "dilution": null,
+        "stability": null,
+        "coverage": null,
+        "gap": null
       },
       "refused": "positions_flat"
     },
@@ -4588,7 +4600,11 @@
       },
       "bounds": {
         "singular_ratio": 1.0683256095783204e-16,
-        "radius_ratio": null
+        "radius_ratio": null,
+        "dilution": null,
+        "stability": null,
+        "coverage": null,
+        "gap": null
       },
       "refused": "positions_flat"
     },
