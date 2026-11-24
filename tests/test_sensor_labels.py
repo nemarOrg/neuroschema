@@ -767,17 +767,23 @@ def test_each_hydrocel_montage_name_is_a_model_of_its_net(net):
 
 @pytest.mark.parametrize("net", TEMPLATE_ONLY_MONTAGES)
 def test_names_never_reach_the_older_nets(net):
-    """No model names an older net, and names are never matched against one:
-    the whole net's names, with its own file name or any listed model, are
-    never placed on it."""
-    every = {m.name: m for m in load_montages(names=MONTAGE_NAMES)}
-    size = every[net].size
-    names = [f"E{i}" for i in range(1, size + 1)]
-    if "cz" in every[net].positions:
+    """No model names an older net, and names are never matched against one,
+    even with every montage file passed in: the whole net's names, with its own
+    file name, any listed model or none, are never placed on it."""
+    every = load_montages(names=MONTAGE_NAMES)
+    older = next(m for m in every if m.name == net)
+    names = [f"E{i}" for i in range(1, older.size + 1)]
+    if "cz" in older.positions:
         names[-1] = "Cz"
     assert cap_model_nets(net) == ()
-    for model in (net, *SPEC_CAP_MODELS):
-        assert infer(names, cap_model=model).montage != net
+    assert older.family in EGI_FAMILIES
+    assert older.family in NET_FAMILIES
+    for model in (None, net, *SPEC_CAP_MODELS):
+        result = infer(names, montages=every, cap_model=model)
+        assert result.montage != net
+        assert not set(result.contenders) & set(TEMPLATE_ONLY_MONTAGES)
+        alone = infer(names, montages=(older,), cap_model=model)
+        assert (alone.outcome, alone.reason) == ("refused", "labels_unrecognized")
 
 
 EVERY_EGI_CONTENDER = (
@@ -957,14 +963,14 @@ def test_clean_keeps_case_and_inner_hyphens():
 def test_the_lists_are_the_specs():
     assert list(NON_EEG_PREFIXES) == SPEC_PREFIXES
     assert {k: list(v) for k, v in CAP_MODELS.items()} == SPEC_CAP_MODELS
-    assert EGI_FAMILIES == ("GSN-HydroCel",)
+    assert EGI_FAMILIES == ("GSN-HydroCel", "GSN")
+    assert NET_FAMILIES == ("GSN-HydroCel", "GSN", "BioSemi")
     assert sorted(REFERENCES) == sorted(SPEC_REFERENCES)
     assert sorted(FIDUCIALS) == sorted(SPEC_FIDUCIALS)
     assert FAMILY_ALIASES == {
         "10-05": {"t3": "t7", "t4": "t8", "t5": "p7", "t6": "p8"},
         "GSN-HydroCel": {"vref": "cz"},
     }
-    assert NET_FAMILIES == ("GSN-HydroCel", "BioSemi")
     assert MONTAGE_ALIASES == {
         "GSN-HydroCel-32": {"e33": "cz"},
         "GSN-HydroCel-65_1.0": {"e65": "cz"},

@@ -48,8 +48,9 @@ MONTAGE_ORDER = (
 )
 # Montage files that names never reach: EEGLAB's files of EGI's nets from before
 # the HydroCel nets. No cap model this algorithm can source names them, and
-# their geometry is EEGLAB's alone, so they are not matched by name; a sensor
-# role may still store template positions from them, named exactly.
+# their geometry is EEGLAB's alone, so they are not matched by name, even when a
+# caller passes them to infer_positions; a sensor role may still store template
+# positions from them, named exactly.
 TEMPLATE_ONLY_MONTAGES = (
     "GSN64v2_0",
     "GSN65v2_0",
@@ -164,7 +165,7 @@ COMMON_REFERENCE_SHARE = (9, 10)
 COINCIDENT_M = 1e-9
 # A recording on a numbered net carries most of the net: a chosen net of these
 # families must match at least 90% of its electrodes.
-NET_FAMILIES = ("GSN-HydroCel", "BioSemi")
+NET_FAMILIES = ("GSN-HydroCel", "GSN", "BioSemi")
 NET_COVERAGE = (9, 10)
 
 # EGI's nets number their electrodes E1, E2, ...: the HydroCel nets, and the
@@ -173,8 +174,9 @@ NET_COVERAGE = (9, 10)
 # needs the recording's cap model (BIDS CapManufacturersModelName) to name the
 # net. Each model, folded by fold_cap_model, names the nets it fits, each net
 # with and without its vertex reference; a model without a size fits every
-# HydroCel net. Any other string names no net. A new model is a new version.
-EGI_FAMILIES = ("GSN-HydroCel",)
+# HydroCel net. Any other string names no net, and no model names an older net
+# (family GSN). A new model is a new version.
+EGI_FAMILIES = ("GSN-HydroCel", "GSN")
 _HYDROCEL_NETS = {
     "32": ("GSN-HydroCel-32",),
     "64": ("GSN-HydroCel-64_1.0", "GSN-HydroCel-65_1.0"),
@@ -531,7 +533,9 @@ def infer_positions(
     """Apply ``nemar.sensor-labels.v1`` to a recording's channels.
 
     ``channels`` is (name, BIDS type or None) per channel, in recording order;
-    ``montages`` defaults to :func:`load_montages`. ``cap_model`` and
+    ``montages`` defaults to :func:`load_montages`, and a montage of
+    :data:`TEMPLATE_ONLY_MONTAGES` among them is set aside, never matched or
+    chosen. ``cap_model`` and
     ``reference`` are the recording's ``CapManufacturersModelName`` and
     ``EEGReference`` (:func:`sidecar_inputs` reads both from its sidecar): a
     placement on a HydroCel net needs the cap model to name that net
@@ -540,6 +544,7 @@ def infer_positions(
     for each rule.
     """
     montages = load_montages() if montages is None else tuple(montages)
+    montages = tuple(m for m in montages if m.name not in TEMPLATE_ONLY_MONTAGES)
     channels = [(name, channel_type) for name, channel_type in channels]
     classified = classify(channels, montages)
     candidates = sum(c.status in (CANDIDATE, BIPOLAR) for c in classified)

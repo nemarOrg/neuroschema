@@ -84,6 +84,8 @@ Each file holds the positions MNE-Python 1.13.2 returns from `make_standard_mont
   EEGLAB's `readegilocs.m`, when given no file, defaults a 64- or 65-channel EGI recording to `GSN65v2_0.sfp` and a 128- or 129-channel one to `GSN129.sfp`, and prints a warning to check the file; since sccn/eeglab commit `3affa98b` (2010-09-24) it maps 256 and 257 channels to `GSN-HydroCel-257.sfp`, and nothing in EEGLAB reads `GSN256.sfp` or `GSN257.sfp`.
 - The nets number their electrodes E1, E2 and so on as the HydroCel nets do, on other positions: about each montage's own center, an electrode moves by a median of 22% of the head radius between `GSN129` and `GSN-HydroCel-129`, 19% between `GSN257` and `GSN-HydroCel-257` and 40% between `GSN65v2_0` and `GSN-HydroCel-65_1.0` (33, 25 and 52 mm in space).
 - No cap model with a sourced product name names one of them, and the older 256-channel net's geometry differs between EEGLAB's files and MNE-Python's, so no name reaches them: a recording numbered E1, E2 and so on is placed only on the HydroCel net its cap model names ([The cap model](#the-cap-model)).
+- An implementation that is handed these montages among the others sets them aside before matching: they never match, contend or win.
+  Their family, `GSN`, is still an EGI family and a numbered net's (steps 5 and 10), so a placement on one, were one ever made, would need a cap model naming it, which none does, and 90% of its electrodes.
 
 A montage file is `{"format": "nemar.montage.v1", "name", "family", "orientation": "RAS", "unit": "m", "fiducials": {"nasion", "lpa", "rpa"}, "center": [x, y, z], "electrodes": [[label, x, y, z], ...]}`, with the electrodes in MNE-Python's order.
 `center` is the montage's own center: the sphere `nemar.sensor-layout.v1` fits to all its electrodes, rounded to 9 decimal places as the positions are.
@@ -179,13 +181,13 @@ These steps run in order, and the first that refuses decides the reason.
    - otherwise **`share_too_low`**.
 3. **`too_few_matched`**: best is below 8.
 4. **Contenders**: the montages with 10 × n(m) ≥ 9 × best, in montage order.
-5. **`cap_model_unknown`**: a contender that is a HydroCel net (family `GSN-HydroCel`) the cap model does not name ([The cap model](#the-cap-model)) is dismissed; when that dismisses every contender with n(m) = best, refuse.
+5. **`cap_model_unknown`**: a contender that is an EGI net (family `GSN-HydroCel` or `GSN`) the cap model does not name ([The cap model](#the-cap-model)) is dismissed; when that dismisses every contender with n(m) = best, refuse.
    The other contenders stay.
 6. **Nested nets**: a contender is dismissed when another contender of the same family has fewer electrodes and matches every candidate the first one matched (each montage with its own aliases).
 7. **The montage**: the first remaining contender with n(m) = best.
 8. **`duplicate_label`**: two or more candidates match one electrode of the montage (`T3` and `T7`, or `E1` and `E001`).
 9. **`montage_ambiguous`**: another remaining contender puts a channel that both match more than 1e-9 m (Euclidean distance) from where the montage puts it.
-10. **`net_coverage_low`**: the montage is a numbered net (family `GSN-HydroCel` or `BioSemi`) and best is below 90% of its electrodes (10 × best < 9 × electrodes).
+10. **`net_coverage_low`**: the montage is a numbered net (family `GSN-HydroCel`, `GSN` or `BioSemi`) and best is below 90% of its electrodes (10 × best < 9 × electrodes).
 11. Otherwise every candidate the montage matches is placed on its electrode, and the other candidates stay unplaced; the reference channel is reported ([The reference channel](#the-reference-channel)).
 
 Every comparison of a share is between integers, so every implementation decides a boundary case the same way.
