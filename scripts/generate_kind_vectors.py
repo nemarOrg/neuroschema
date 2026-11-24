@@ -28,6 +28,7 @@ from neuroschema.views.models import (
     ViewRefused,
     build_model,
     content_validator,
+    data_quality_validator,
     histogram_content_validator,
     locate_bin,
     snap_row,
@@ -1790,6 +1791,26 @@ def view_verdicts() -> list[tuple[str, str, dict]]:
         ),
         ("envelope_dims_valid", "An unknown kind with a dimension.", dims),
         (
+            "envelope_plugin_name_with_dot",
+            "A plugin named with a dot: plugin names take a metric prefix's "
+            "grammar, so every plugin can name its metrics.",
+            _set(
+                unknown,
+                "source",
+                {"plugin": {"name": "org.nemar.quality", "version": "1.0.0"}},
+            ),
+        ),
+        (
+            "envelope_plugin_name_64",
+            "A plugin name of 64 characters, the most.",
+            _set(unknown, "source", {"plugin": {"name": "p" * 64, "version": "1.0.0"}}),
+        ),
+        (
+            "envelope_plugin_name_65",
+            "A plugin name of 65 characters.",
+            _set(unknown, "source", {"plugin": {"name": "p" * 65, "version": "1.0.0"}}),
+        ),
+        (
             "envelope_kind_version_0",
             "kind_version starts at 1.",
             _set(unknown, "kind_version", 0),
@@ -2039,6 +2060,43 @@ def view_verdicts() -> list[tuple[str, str, dict]]:
             "histogram_parameters",
             "Version 1 takes no parameters.",
             _set(hist, "parameters", {"log": True}),
+        ),
+    ]
+
+
+def data_quality_verdicts() -> list[tuple[str, str, dict]]:
+    """A recording's dataQuality entry: the example, and the rules of the
+    namespace a renderer that validates with ajv must agree on."""
+    entry = json.loads(PRESET_EXAMPLE.read_text(encoding="utf-8"))
+    ica = "recipes/nemar-ica"
+    views = entry["recipes"]["nemar-ica"]["views"]
+    archive = _set(
+        _set(entry, f"{ica}/input_kind", "bids"), f"{ica}/profile", "archive"
+    )
+    metric = "nemar-quality:percentBrainComponents"
+    return [
+        ("dataquality_record", "The example's record entry.", entry),
+        (
+            "dataquality_root_closed",
+            "A views list beside recipes at the root, which no schema would "
+            "check: the root is closed (probe p11).",
+            entry | {"views": copy.deepcopy(views)},
+        ),
+        (
+            "dataquality_record_closed",
+            "A member beside level and recipes, refused by the record shape too.",
+            entry | {"dataset_level_counts": {"total": 3}},
+        ),
+        (
+            "dataquality_store_profile_pairing",
+            "An entry of the archive whose views name stores of the serving copy: "
+            "a store's profile is its entry's.",
+            archive,
+        ),
+        (
+            "dataquality_plugin_name_with_dot",
+            "A metric's plugin named with a dot, which no metric name can prefix.",
+            _set(entry, f"{ica}/metrics/{metric}/plugin/name", "org.nemar.quality"),
         ),
     ]
 
@@ -3700,6 +3758,7 @@ def verdicts() -> dict:
     cases = []
     for schema, validator, items in [
         ("view", view_validator(), [*view_verdicts(), *preset_verdicts()]),
+        ("dataQuality", data_quality_validator(), data_quality_verdicts()),
         (HISTOGRAM_CONTENT, histogram_content_validator(), content_verdicts()),
         (
             IC_CLASSES_CONTENT,
@@ -3724,10 +3783,12 @@ def verdicts() -> dict:
         "spec": SPEC,
         "description": (
             "Declarations and contents with jsonschema's verdicts, for a renderer "
-            "that checks them without a JSON Schema engine. Each verdict is on the "
+            "that checks them without a JSON Schema engine, or with another one. "
+            "Each verdict is on the "
             "binary64 reading of the instance, as JSON.parse reads it, so an integer "
             "beyond 2^53 is checked as the nearest binary64. schema view means "
-            "schema/definitions/view.schema.json#/$defs/view; any other schema is "
+            "schema/definitions/view.schema.json#/$defs/view, dataQuality "
+            "schema/extensions/dataQuality.schema.json; any other schema is "
             "a file in schema/views/. Only valid binds an implementation; errors "
             "list each failing keyword and instance path jsonschema reports."
         ),

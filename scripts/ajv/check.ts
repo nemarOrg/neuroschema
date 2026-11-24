@@ -69,7 +69,11 @@ report();
 
 function validator(name: string) {
   const id =
-    name === "view" ? `${BASE}definitions/view.schema.json#/$defs/view` : `${BASE}views/${name}`;
+    name === "view"
+      ? `${BASE}definitions/view.schema.json#/$defs/view`
+      : name === "dataQuality"
+        ? `${BASE}extensions/dataQuality.schema.json`
+        : `${BASE}views/${name}`;
   const validate = ajv.getSchema(id);
   if (!validate) throw new Error(`no schema ${id}`);
   return validate;

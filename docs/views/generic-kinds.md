@@ -348,7 +348,7 @@ JavaScript's `JSON.parse` reads a count written `-0` or `-0.0` as -0, and a sum 
 ## The verdict corpus
 
 `kinds-verdicts.v1.json` has `format`, `spec`, `description` and `cases`.
-Each case has a `name`, what it `covers`, the `schema` it is checked against (`view` for `view.schema.json#/$defs/view`, or a content schema's file name), the `instance`, the verdict `valid`, and `errors`: for each error jsonschema reports, the failing keyword and the instance path.
+Each case has a `name`, what it `covers`, the `schema` it is checked against (`view` for `view.schema.json#/$defs/view`, `dataQuality` for a recording's `dataQuality` entry, or a content schema's file name), the `instance`, the verdict `valid`, and `errors`: for each error jsonschema reports, the failing keyword and the instance path.
 Only `valid` binds an implementation; `errors` say why, for a reader.
 The corpus covers the envelope, each generic kind of this page and the histogram content; presets add their own cases.
 

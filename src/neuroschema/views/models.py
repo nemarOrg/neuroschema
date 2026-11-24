@@ -246,6 +246,11 @@ def view_validator() -> Binary64Validator:
     return _validator(str(VIEW_SCHEMA.relative_to(REPO_ROOT)), "#/$defs/view")
 
 
+def data_quality_validator() -> Binary64Validator:
+    """A validator for a ``dataQuality`` entry, on its binary64 reading."""
+    return _validator("schema/extensions/dataQuality.schema.json", "")
+
+
 def histogram_content_validator() -> Binary64Validator:
     """A validator for the content of a histogram role, on its binary64 reading."""
     return _validator(str(HISTOGRAM_CONTENT.relative_to(REPO_ROOT)), "")

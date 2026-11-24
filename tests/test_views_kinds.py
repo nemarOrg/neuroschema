@@ -40,6 +40,7 @@ from neuroschema.views import (
 )
 from neuroschema.views.models import (
     content_validator,
+    data_quality_validator,
     histogram_content_validator,
     number_text,
     view_validator,
@@ -292,6 +293,7 @@ def test_every_word_has_a_vector():
 VERDICT_CASES = VERDICTS["cases"]
 VALIDATORS = {
     "view": view_validator(),
+    "dataQuality": data_quality_validator(),
     "content.nemar.histogram.v1.schema.json": histogram_content_validator(),
     IC_CLASSES: content_validator(IC_CLASSES),
 }
@@ -329,8 +331,8 @@ def test_verdict_corpus_covers_each_kind_both_ways():
             group = case["schema"]
         groups.setdefault(group, set()).add(case["valid"])
     contents = sorted(p.name for p in SCHEMAS.glob("content.*.schema.json"))
-    assert set(VALIDATORS) == {"view", *contents}
-    for group in [*known, "env", *contents]:
+    assert set(VALIDATORS) == {"view", "dataQuality", *contents}
+    for group in [*known, "env", "dataQuality", *contents]:
         assert groups.get(group) == {True, False}, group
 
 
