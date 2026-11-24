@@ -175,6 +175,14 @@
           "items": {
             "$ref": "../definitions/view.schema.json#/$defs/view"
           }
+        },
+        "views_skipped": {
+          "type": "array",
+          "maxItems": 32,
+          "description": "The views the run declares for a recording and did not write for this one, each with the reason, so a renderer says why a view is absent rather than leaving it out silently (docs/views.md, Views a run skipped). Optional; keys are unique, and none is the key of a view in views (the writer's rule).",
+          "items": {
+            "$ref": "../extensions/dataQuality.schema.json#/$defs/viewSkipped"
+          }
         }
       },
       "allOf": [
@@ -268,6 +276,30 @@
           }
         }
       ],
+      "additionalProperties": false
+    },
+    "viewSkipped": {
+      "type": "object",
+      "description": "A view the run did not write for this recording: its key and kind, as the run would have declared them, and why.",
+      "required": [
+        "key",
+        "kind",
+        "reason"
+      ],
+      "properties": {
+        "key": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/viewKey",
+          "description": "The view's key, as the run declares it for other recordings."
+        },
+        "kind": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/kindName",
+          "description": "The view's kind."
+        },
+        "reason": {
+          "$ref": "../definitions/processingTypes.schema.json#/$defs/failureCode",
+          "description": "Why the view was not written: a word of docs/views.md (labels_unusable, plugin_failed, step_failed, step_skipped, cap_exceeded), or another word, which a renderer shows as it is."
+        }
+      },
       "additionalProperties": false
     },
     "datasetRecipeSummary": {
