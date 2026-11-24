@@ -16,7 +16,7 @@
     {
       "name": "standard_1005",
       "file": "views/montages/standard_1005.json",
-      "sha256": "4ff141cc26ab8dbdd59c980bcdf86463c02602c6e8a8836cb0338030e4b1b4ce",
+      "sha256": "2232d1a904f80e5f0825449bd15693d0b5b640db716dc462ccb1e3c5f10bb52b",
       "electrodes": 343,
       "family": "10-05",
       "mne_call": "mne.channels.make_standard_montage('colin27_1005', head_size=None).get_positions()",
@@ -33,7 +33,7 @@
     {
       "name": "GSN-HydroCel-32",
       "file": "views/montages/GSN-HydroCel-32.json",
-      "sha256": "aff4f2bfa0252457ba929f890db0da921263740fd068c6ed23109961bb24b70d",
+      "sha256": "24eb05a1af2b4d07f9200c7c6cdf3c490e07bdaab526fcab71dc3e72f07afb20",
       "electrodes": 33,
       "family": "GSN-HydroCel",
       "mne_call": "mne.channels.make_standard_montage('GSN-HydroCel-32', head_size=None).get_positions()",
@@ -50,7 +50,7 @@
     {
       "name": "GSN-HydroCel-64_1.0",
       "file": "views/montages/GSN-HydroCel-64_1.0.json",
-      "sha256": "5c8dab13d94b05fa5edcd76d471adafbe962799c12bdcc1da88d15af95628e24",
+      "sha256": "529083ff4140b9f5076360a9c35255fa928c962598b059fbdc31e6fcc04137b0",
       "electrodes": 64,
       "family": "GSN-HydroCel",
       "mne_call": "mne.channels.make_standard_montage('GSN-HydroCel-64_1.0', head_size=None).get_positions()",
@@ -67,7 +67,7 @@
     {
       "name": "GSN-HydroCel-65_1.0",
       "file": "views/montages/GSN-HydroCel-65_1.0.json",
-      "sha256": "f5c25369fc40562829386584cb94a70236ac42b39f202422220b640c6c72b194",
+      "sha256": "76e9e3f25d2ffae8305d36eb1d87fdebcb3e8b6c43a99a69c19d41d088704cfb",
       "electrodes": 65,
       "family": "GSN-HydroCel",
       "mne_call": "mne.channels.make_standard_montage('GSN-HydroCel-65_1.0', head_size=None).get_positions()",
@@ -84,7 +84,7 @@
     {
       "name": "GSN-HydroCel-128",
       "file": "views/montages/GSN-HydroCel-128.json",
-      "sha256": "f03d79cf6a0eb37021e8f393511845610ed93d0b41725697e17141d19d7247de",
+      "sha256": "9aa0b938a5af370328c1e2657939a3fa81f9df86ded15e2ae933d72d0ccc0680",
       "electrodes": 128,
       "family": "GSN-HydroCel",
       "mne_call": "mne.channels.make_standard_montage('GSN-HydroCel-128', head_size=None).get_positions()",
@@ -101,7 +101,7 @@
     {
       "name": "GSN-HydroCel-129",
       "file": "views/montages/GSN-HydroCel-129.json",
-      "sha256": "19238df21f0c0595ec9b128d65ccc3bf3cea5966dced165bbc9e459e16d41284",
+      "sha256": "54e48e489ed996043ae18bb8d5714625d9882171f7242833b8b881bb07da292d",
       "electrodes": 129,
       "family": "GSN-HydroCel",
       "mne_call": "mne.channels.make_standard_montage('GSN-HydroCel-129', head_size=None).get_positions()",
@@ -118,7 +118,7 @@
     {
       "name": "GSN-HydroCel-256",
       "file": "views/montages/GSN-HydroCel-256.json",
-      "sha256": "f6428e9fad76d23b0c401945b649d105297142ddb928449cf050a840bc5797e8",
+      "sha256": "a995a4a97db9486d8089baaaa368f1c9d4edfbd857dbdf423d3c7fe88f556f6c",
       "electrodes": 256,
       "family": "GSN-HydroCel",
       "mne_call": "mne.channels.make_standard_montage('GSN-HydroCel-256', head_size=None).get_positions()",
@@ -135,7 +135,7 @@
     {
       "name": "GSN-HydroCel-257",
       "file": "views/montages/GSN-HydroCel-257.json",
-      "sha256": "a4ec1e1103561e64c253f626bc172a6615c2b8c712ca6c819004010fb6a911d8",
+      "sha256": "a098e70cf9fd39ed5bbeb4c6a21ce92a7e9961feffd9a7102ba2397b06e1d501",
       "electrodes": 257,
       "family": "GSN-HydroCel",
       "mne_call": "mne.channels.make_standard_montage('GSN-HydroCel-257', head_size=None).get_positions()",
@@ -152,7 +152,7 @@
     {
       "name": "biosemi16",
       "file": "views/montages/biosemi16.json",
-      "sha256": "2b4d7e508eea7d8f5713a028597bedefed3fdd358c5f2a35f904d1a3265c7f8b",
+      "sha256": "bce3736f131c3b469d42bc8d7664b126c6ab71c0ca0ec16237de422a65a7c1cb",
       "electrodes": 16,
       "family": "BioSemi",
       "mne_call": "mne.channels.make_standard_montage('biosemi16', head_size=0.095).get_positions()",
@@ -191,7 +191,7 @@
     {
       "name": "biosemi32",
       "file": "views/montages/biosemi32.json",
-      "sha256": "5ed78f3ec65b520009c7df7ac8da7b138c916d8d561c6c1bc3230b65b371c728",
+      "sha256": "c3774f6cda6df731e09ce463e8876b48792632929599b80d6593a3818388eac4",
       "electrodes": 32,
       "family": "BioSemi",
       "mne_call": "mne.channels.make_standard_montage('biosemi32', head_size=0.095).get_positions()",
@@ -246,7 +246,7 @@
     {
       "name": "biosemi64",
       "file": "views/montages/biosemi64.json",
-      "sha256": "3f9b29cf37ff89465fc117ca9a6a8c843ecf78418b32e4e04905949e6b4f991e",
+      "sha256": "b807cc2e0f407d9e44214f1755ad86e31411bb9e5ab6048b3d4de26c7776186e",
       "electrodes": 64,
       "family": "BioSemi",
       "mne_call": "mne.channels.make_standard_montage('biosemi64', head_size=0.095).get_positions()",
@@ -333,7 +333,7 @@
     {
       "name": "biosemi128",
       "file": "views/montages/biosemi128.json",
-      "sha256": "6926fb5b1f143c1b9521103d571211589c9be54ae70d418a414e6ba720b3eae8",
+      "sha256": "2e4c901666ddae73bb5739d2bbfe0d3f0038dbaff0e45bda31de10dfb4f31e8b",
       "electrodes": 128,
       "family": "BioSemi",
       "mne_call": "angles from biosemi128.txt as written; mne.transforms._sph_to_cart on a sphere of 0.095 m, as make_standard_montage('biosemi128', head_size=0.095) does with integer angles",
@@ -423,7 +423,7 @@
     {
       "name": "biosemi160",
       "file": "views/montages/biosemi160.json",
-      "sha256": "fa4371b3343d720ac25f3a3a1a215965e57ec472e570fb3ccd33b69ff08da840",
+      "sha256": "9befce6988429f9ec91087c11f50c8b9137a96b1f5ff2b4ceb3d98504505fa20",
       "electrodes": 160,
       "family": "BioSemi",
       "mne_call": "angles from biosemi160.txt as written; mne.transforms._sph_to_cart on a sphere of 0.095 m, as make_standard_montage('biosemi160', head_size=0.095) does with integer angles",
@@ -519,7 +519,7 @@
     {
       "name": "biosemi256",
       "file": "views/montages/biosemi256.json",
-      "sha256": "a66c9fb1b97445aa950cf6a124017d77643f9d191d6a5f06755e55e53dc5ef59",
+      "sha256": "a40abd1cc9f099dab48f873d356599cd3d0a4c05fce25899bf57223dfb1b8621",
       "electrodes": 256,
       "family": "BioSemi",
       "mne_call": "angles from biosemi256.txt as written; mne.transforms._sph_to_cart on a sphere of 0.095 m, as make_standard_montage('biosemi256', head_size=0.095) does with integer angles",
