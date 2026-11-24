@@ -24,7 +24,9 @@ A computed preset (`nemar.ic-activity`, `nemar.signal-window`) has inputs and no
 A renderer that does not know a computed preset offers its file inputs for download, and the renderer rule shows the view as a table with nothing in it.
 
 However a preset is drawn, every file it names, in `data` or as a `file` input, is drawn or offered for download.
-When a preset's own checks refuse its files but its base's do not, the renderer draws the view by its base and keeps the word, so the page can say why the preset's extras are missing; the words below are of that kind unless they say otherwise.
+A renderer that knows a preset first builds its base's model; when the base refuses the files, the view falls back as the base's rules say.
+When the base draws, the preset's own checks run in the order this page gives, and the first that fails gives the word: the renderer draws the view by its base and keeps the word, so the page can say why the preset's extras are missing, or, for `nemar.signal-window`, draws nothing.
+`neuroschema.views.presets.check_preset` is the Python reference of these checks, and [`views/vectors/preset-checks.v1.json`](../../views/vectors/preset-checks.v1.json) (`nemar.preset-checks.v1`) holds the cases every renderer reproduces.
 
 ## `nemar.spectrum` version 1
 
@@ -64,7 +66,8 @@ The scalp maps of the independent components of one decomposition, over `nemar.s
 There are no parameters.
 A renderer that knows this kind draws one map per component with `nemar.sensor-field.v1` and `absmax` limits, because a component's polarity is arbitrary, and prints each component's text row beside its map: the cells of its row of `components`, each with its column's name and unit, as stored text.
 The text row of the component labeled L is the row of `components` whose `component` cell is L.
-When the components table's `component` cells are not the values' header names in the same order, the renderer draws the maps by the base, without text rows, with the word `components_mismatch`.
+The renderer reads the components table under the TSV grammar ([generic-kinds.md](generic-kinds.md#tsv), with its words), checks it has the column `component` (`column_missing`), and checks that its `component` cells, top to bottom, are the values' declared column names in declared order, compared as text (`components_mismatch`): one row per map, in the maps' order.
+When any of these fails, it draws the maps by the base, without text rows, and keeps the word.
 A renderer that knows only `nemar.sensor-field` draws the maps and offers the components table for download.
 
 ## `nemar.ic-classes` version 1
@@ -90,8 +93,8 @@ There are no parameters.
 `variance_pct` is the percent of the data's variance a component accounts for on its own (EEGLAB's `pvaf`), which is not bounded to 0 to 100 and does not sum to 100 across components, so neither does `summed_variance_pct`.
 
 A renderer that knows this kind draws the `nemar.histogram` model of the content, and prints with each bar its count and its class's summed variance, as the stored numbers; the text alternative names `n_components`.
-JSON Schema cannot state two rules, which the renderer checks after the histogram's own: `summed_variance_pct` has one entry per category (`variance_length`), and the counts sum to `n_components` (`components_total`).
-Content that fails `content.nemar.ic-classes.v1` but meets the histogram's content schema is drawn by the base with the word `content_invalid`.
+After the histogram's own checks, the renderer checks, in this order, that the content meets `content.nemar.ic-classes.v1` (`content_invalid`: content that meets the histogram's content schema but not this one, such as ICLabel's classes out of order), that `summed_variance_pct` has one entry per category (`variance_length`), and that the counts sum to `n_components` (`components_total`); JSON Schema cannot state the last two.
+When one fails, the view is drawn by the base with the word.
 A renderer that knows only `nemar.histogram` draws the categories and counts.
 
 ## `nemar.ic-activity` version 1
@@ -112,23 +115,34 @@ A window of the recording as the serving copy holds it, opened in the signal vie
 | `start_s` | yes | The window's start, in seconds from the recording's first sample. |
 | `duration_s` | yes | Its length, in seconds, at most 30. |
 
-The view computes nothing and has no transform: the renderer opens the signal viewer on the store at `[start_s, start_s + duration_s)`, clipped to the recording, and shows the samples as the store holds them, in physical units, with the floor's decisions marked.
+The view computes nothing and has no transform: the renderer opens the signal viewer on the store's samples in the window and shows them as the store holds them, in physical units, with the floor's decisions marked.
+The window holds the samples k of the recording (0 <= k < S, for S samples at rate r) whose time `k / r`, one binary64 division, satisfies `start_s <= k / r < end`, where `end = start_s + duration_s`, one binary64 sum: the first is the least such k, and a window past the recording's end is clipped to its last sample.
+A renderer finds them from these times, not from `ceil(start_s * r)`, which can start a sample late at a rate such as 500/7 Hz.
 NEMAR's recipes declare the 2-second window inside the floor's good samples nearest the recording's middle (`midsegment`).
-The renderer checks the store digest as [ic-activity.md](ic-activity.md#the-checks-in-order) does: when the view declares one and the serving copy publishes another, nothing is drawn (`store_digest_mismatch`), because the decisions marked over the window were made on other data; when either is absent, the window is drawn and the state is `not_checked`.
-A window that lies wholly after the recording's end draws nothing (`window_outside`).
+The renderer checks the store digest first, as [ic-activity.md](ic-activity.md#the-checks-in-order) does: when the view declares one and the serving copy publishes another, nothing is drawn (`store_digest_mismatch`), because the decisions marked over the window were made on other data; when either is absent, the window is drawn and the state is `not_checked`.
+Then a window that holds no sample (one that starts at or after the recording's end, or lies between two samples) draws nothing (`window_outside`).
 
 ## Words
 
 | Word | Preset | Outcome | Meaning |
 |---|---|---|---|
+| `tsv_encoding`, `tsv_line_endings`, `tsv_header_repeated`, `tsv_ragged` | `nemar.ic-maps` | base | The components table breaks the TSV grammar ([generic-kinds.md](generic-kinds.md#words)). |
+| `column_missing` | `nemar.ic-maps` | base | The components table has no column `component`. |
 | `components_mismatch` | `nemar.ic-maps` | base | The components table's `component` cells are not the values' header names, in order. |
 | `content_invalid` | `nemar.ic-classes` | base | The content fails `content.nemar.ic-classes.v1` (it meets the histogram's). |
 | `variance_length` | `nemar.ic-classes` | base | `summed_variance_pct` does not have one entry per category. |
 | `components_total` | `nemar.ic-classes` | base | The counts do not sum to `n_components`. |
 | `store_digest_mismatch` | `nemar.signal-window` | nothing drawn | The serving copy publishes a digest other than the one the view declares. |
-| `window_outside` | `nemar.signal-window` | nothing drawn | The window starts after the recording's last sample. |
+| `window_outside` | `nemar.signal-window` | nothing drawn | The window holds no sample of the recording. |
 
-The words of a preset's base, of `nemar.sensor-field.v1` and of `nemar.ic-activity.v1` keep their meanings and outcomes.
+The words of a preset's base, of `nemar.sensor-field.v1` and of `nemar.ic-activity.v1` keep their meanings and outcomes; a file that is not the one recorded (`file_missing`, `file_size_mismatch`, `file_digest_mismatch`) draws nothing, as for every kind.
+
+## The preset-check vectors
+
+`preset-checks.v1.json` has `format`, `spec`, `description` and `cases`.
+Each case has a `name`, what it `covers`, a `view` (built from the [example](../../examples/views/dataquality-record-nemar-ica.json)), its `files` (each location's UTF-8 text), for a signal window the `store` (`samples`, `rate` and the digest the serving copy publishes, or null), and the `expected` outcome: `word` null when the checks pass, with the `state` and the window's `first` sample and `count` for a signal window; otherwise the `word` and its `outcome`, `base`, `nothing` or `fallback` (the base refused the file first, with its own word).
+The cases cover every word of this page, each pair of neighboring checks with two faults, and a window at 500/7 Hz where the times rule and a rounded product disagree.
+`scripts/generate_kind_vectors.py` writes them with the Python reference.
 
 ## The verdict corpus
 

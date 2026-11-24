@@ -32,11 +32,13 @@ from neuroschema.views.models import (
     snap_row,
     view_validator,
 )
+from neuroschema.views.presets import PRESET_CHECKS_FORMAT, check_preset
 
 ROOT = Path(__file__).resolve().parent.parent
 MODELS_PATH = ROOT / "views" / "vectors" / "kinds-models.v1.json"
 VERDICTS_PATH = ROOT / "views" / "vectors" / "kinds-verdicts.v1.json"
 VERDICTS_FORMAT = "nemar.kinds-verdicts.v1"
+PRESET_CHECKS_PATH = ROOT / "views" / "vectors" / "preset-checks.v1.json"
 SPEC = "docs/views/generic-kinds.md"
 HISTOGRAM_CONTENT = "content.nemar.histogram.v1.schema.json"
 IC_CLASSES_CONTENT = "content.nemar.ic-classes.v1.schema.json"
@@ -2343,6 +2345,244 @@ def ic_classes_content_verdicts() -> list[tuple[str, str, object]]:
     ]
 
 
+# ── The presets' own checks ───────────────────────────────────────────────
+
+
+def _with_file(view: dict, role: str, data: bytes) -> dict:
+    """A copy of the view whose data entry for the role names these bytes."""
+    out = copy.deepcopy(view)
+    entry = next(e for e in out["data"] if e["role"] == role)
+    entry.update(size=len(data), sha256=hashlib.sha256(data).hexdigest())
+    return out
+
+
+def _location(view: dict, role: str) -> str:
+    return next(e for e in view["data"] if e["role"] == role)["location"]
+
+
+IC_COMPONENTS = [f"IC{i:03d}" for i in range(1, 7)]
+
+
+def components_table(names: list[str], header: str = "component") -> bytes:
+    rows = [f"{header} variance_pct brain other"]
+    rows += [f"{name} {30 / (i + 1):.4f} 0.9 0.1" for i, name in enumerate(names)]
+    return tsv(*rows)
+
+
+def ic_maps_check_cases() -> list[Case]:
+    maps = preset_views()["icmaps"]
+    out = []
+    for name, covers, data in [
+        (
+            "ic_maps",
+            "The components table names the maps, in order.",
+            components_table(IC_COMPONENTS),
+        ),
+        (
+            "ic_maps_reordered",
+            "Two components in the other order.",
+            components_table([IC_COMPONENTS[1], IC_COMPONENTS[0], *IC_COMPONENTS[2:]]),
+        ),
+        (
+            "ic_maps_short",
+            "One component row fewer than the maps.",
+            components_table(IC_COMPONENTS[:5]),
+        ),
+        (
+            "ic_maps_long",
+            "One component row more than the maps.",
+            components_table([*IC_COMPONENTS, "IC007"]),
+        ),
+        (
+            "ic_maps_renamed",
+            "IC1 is not IC001: names compare as text.",
+            components_table([f"IC{i}" for i in range(1, 7)]),
+        ),
+        (
+            "ic_maps_no_column",
+            "The file has no column component (the generic word).",
+            components_table(IC_COMPONENTS, header="name"),
+        ),
+        (
+            "ic_maps_ragged",
+            "A row with a cell missing (the generic word).",
+            components_table(IC_COMPONENTS) + b"IC007\t1\n",
+        ),
+    ]:
+        view = _with_file(maps, "components", data)
+        out.append(Case(name, covers, view, {_location(view, "components"): data}))
+    view = _with_file(maps, "components", components_table(IC_COMPONENTS))
+    tampered = components_table(IC_COMPONENTS).replace(b"0.9", b"0.8", 1)
+    out.append(
+        Case(
+            "ic_maps_digest",
+            "The components file is not the one recorded.",
+            view,
+            {_location(view, "components"): tampered},
+        )
+    )
+    return out
+
+
+def ic_classes_check_cases() -> list[Case]:
+    classes = preset_views()["icclasses"]
+    good = {
+        "classifier": "ICLabel",
+        "categories": json.loads(ICLABEL)["categories"],
+        "counts": [12, 3, 2, 0, 1, 0, 4],
+        "summed_variance_pct": [61.25, 9.5, 14.75, 0, 0.5, 0, 6.125],
+        "n_components": 22,
+    }
+    other = {
+        "classifier": "MARA",
+        "categories": ["Artifact", "Brain"],
+        "counts": [4, 18],
+        "summed_variance_pct": [20.5, 79.5],
+        "n_components": 22,
+    }
+    out = []
+    for name, covers, members in [
+        ("ic_classes", "ICLabel's classes, counts that sum to n_components.", good),
+        ("ic_classes_other_classifier", "Another classifier's own classes.", other),
+        (
+            "ic_classes_iclabel_order",
+            "ICLabel's classes out of order: the histogram draws, the preset refuses.",
+            good | {"categories": [*good["categories"][1:], "Brain"]},
+        ),
+        (
+            "ic_classes_no_variance",
+            "No summed_variance_pct: a histogram content, not this preset's.",
+            {k: v for k, v in good.items() if k != "summed_variance_pct"},
+        ),
+        (
+            "ic_classes_variance_length",
+            "Six summed variances for seven classes.",
+            good | {"summed_variance_pct": good["summed_variance_pct"][:6]},
+        ),
+        (
+            "ic_classes_components_total",
+            "Counts that sum to 22 with n_components 21.",
+            good | {"n_components": 21},
+        ),
+        (
+            "ic_classes_order_variance_before_total",
+            "Both faults: the variance length comes first.",
+            good | {"summed_variance_pct": [1.0], "n_components": 21},
+        ),
+        (
+            "ic_classes_order_content_before_total",
+            "Both faults: the content schema comes first.",
+            good | {"classifier": "", "n_components": 21},
+        ),
+        (
+            "ic_classes_base_refuses",
+            "Six counts for seven classes: the base refuses "
+            "first and the view falls back.",
+            good | {"counts": good["counts"][:6]},
+        ),
+    ]:
+        data = content(**members)
+        view = _with_file(classes, "histogram", data)
+        out.append(Case(name, covers, view, {_location(view, "histogram"): data}))
+    return out
+
+
+def signal_window_check_cases() -> list[tuple[str, str, dict, dict]]:
+    window = preset_views()["midsegment"]
+    declared = next(i for i in window["inputs"] if i["role"] == "signal")["store"][
+        "content_sha256"
+    ]
+
+    def at(start_s, duration_s, samples=75000, rate=250.0, published=declared):
+        view = _set(
+            _set(window, "parameters/start_s", start_s),
+            "parameters/duration_s",
+            duration_s,
+        )
+        return view, {"samples": samples, "rate": rate, "published_sha256": published}
+
+    return [
+        (
+            "signal_window",
+            "Two seconds at 151.5 s, the digest published and matching.",
+            *at(151.5, 2),
+        ),
+        (
+            "signal_window_not_checked",
+            "The serving copy publishes no digest.",
+            *at(151.5, 2, published=None),
+        ),
+        (
+            "signal_window_digest_mismatch",
+            "The serving copy publishes another digest.",
+            *at(151.5, 2, published="f" * 64),
+        ),
+        (
+            "signal_window_clipped",
+            "A window past the recording's end is clipped.",
+            *at(299.5, 2),
+        ),
+        (
+            "signal_window_outside",
+            "A window that starts at the recording's end.",
+            *at(300, 2),
+        ),
+        (
+            "signal_window_between_samples",
+            "A window between two samples holds none.",
+            *at(0.001, 0.002),
+        ),
+        (
+            "signal_window_odd_rate",
+            "Times k / rate at 500/7 Hz, where ceil(start * rate) "
+            "would start a sample late and end a sample early.",
+            *at(0.098, 0.364, samples=100, rate=500 / 7),
+        ),
+        (
+            "signal_window_order",
+            "Both faults: the digest comes first.",
+            *at(300, 2, published="f" * 64),
+        ),
+    ]
+
+
+def preset_checks() -> dict:
+    cases = []
+    for case in [*ic_maps_check_cases(), *ic_classes_check_cases()]:
+        expected = check_preset(case.view, case.files, REGISTRY)
+        cases.append(_header(case) | {"expected": expected})
+    for name, covers, view, store in signal_window_check_cases():
+        expected = check_preset(view, {}, REGISTRY, store)
+        cases.append(
+            {
+                "name": name,
+                "covers": covers,
+                "view": view,
+                "files": {},
+                "store": store,
+                "expected": expected,
+            }
+        )
+    names = [c["name"] for c in cases]
+    if len(names) != len(set(names)):
+        raise AssertionError("case names repeat")
+    return {
+        "format": PRESET_CHECKS_FORMAT,
+        "spec": "docs/views/presets.md",
+        "description": (
+            "The checks a renderer of a preset runs beyond its base. For each case, "
+            "decode files (UTF-8 text), run the preset's checks on view (for a "
+            "signal window, with store: the recording's samples, its rate and the "
+            "digest the serving copy publishes, or null) and compare with expected: "
+            "word null when they pass (with the state and the window's first "
+            "sample and count for a signal window), else the word and its outcome: "
+            "base (drawn by its base, with the word), nothing (nothing drawn) or "
+            "fallback (the base itself refused the file first)."
+        ),
+        "cases": cases,
+    }
+
+
 def _errors(validator, instance) -> list[list[str]]:
     pairs = {
         (e.validator, "/".join(str(p) for p in e.absolute_path))
@@ -2477,6 +2717,7 @@ def render() -> dict[Path, str]:
         for path, document in (
             (MODELS_PATH, models()),
             (VERDICTS_PATH, verdicts()),
+            (PRESET_CHECKS_PATH, preset_checks()),
         )
     }
 

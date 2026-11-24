@@ -267,6 +267,11 @@
       "name": "nemar.sensor-field.v1",
       "spec": "docs/views/sensor-field.md",
       "vectors": "views/vectors/sensor-field.v1.json"
+    },
+    {
+      "name": "nemar.preset-checks.v1",
+      "spec": "docs/views/presets.md",
+      "vectors": "views/vectors/preset-checks.v1.json"
     }
   ],
   "formats": {
