@@ -31,7 +31,14 @@ from neuroschema.views.digest import (
     canonicalize,
     parse_declaration,
 )
-from neuroschema.views.registry import REPO_ROOT, Drawing, draw_as, load_registry
+from neuroschema.views.registry import (
+    REPO_ROOT,
+    Drawing,
+    draw_as,
+    draw_by_base,
+    known_kinds,
+    load_registry,
+)
 
 MODELS_FORMAT = "nemar.kinds-models.v1"
 VIEW_SCHEMA = REPO_ROOT / "schema" / "definitions" / "view.schema.json"
@@ -229,6 +236,11 @@ def view_validator() -> Draft202012Validator:
 def histogram_content_validator() -> Draft202012Validator:
     """A validator for the content of a histogram role."""
     return _validator(str(HISTOGRAM_CONTENT.relative_to(REPO_ROOT)), "")
+
+
+def content_validator(name: str) -> Draft202012Validator:
+    """A validator for a content schema of ``schema/views/``, by its file name."""
+    return _validator(f"schema/views/{name}", "")
 
 
 class _Reader:
@@ -574,9 +586,11 @@ def build_model(
     Raises :class:`ViewRefused` when the declaration is invalid or a file it
     reads is missing or differs from its recorded size or SHA-256: nothing is
     drawn, and the refusal's ``downloads`` still offer every other view file
-    (none for an invalid declaration). Raises ``LookupError`` for a registered
-    kind this module has no model for (``nemar.sensor-field`` has its own
-    reference).
+    (none for an invalid declaration). A registered preset is drawn by its base
+    (presets.md): this module builds no preset's own model, only the base's,
+    and a computed preset, which has no stored data, falls back to the table.
+    Raises ``LookupError`` for a registered kind this module has no model for
+    (``nemar.sensor-field`` has its own reference), and so for a preset over it.
     """
     registry = load_registry() if registry is None else registry
     try:
@@ -593,6 +607,15 @@ def _build(view: Mapping, files: Mapping[str, bytes], registry: Mapping) -> dict
     if not view_validator().is_valid(view):
         raise ViewRefused("declaration_invalid")
     drawing = draw_as(view, registry)
+    pair = (drawing.kind, drawing.kind_version)
+    if (
+        drawing.via == "kind"
+        and pair not in BUILDERS
+        and known_kinds(registry)[pair]["base"]
+    ):
+        # A preset's own drawing is its renderer's; the reference draws it by
+        # its base, as a renderer that knows only the base would.
+        drawing = draw_by_base(view, registry)
     reader = _Reader(view, files, registry["caps"])
     refused = None
     model = None

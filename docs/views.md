@@ -58,6 +58,7 @@ An unknown kind is never an error, and neither is a base the renderer does not k
 `neuroschema.views.draw_as` implements the rule against the registry, `neuroschema.views.meets_role_contract` the contract, `neuroschema.views.role_schemas` finds each role's subschema, and `neuroschema.views.optional_roles` the roles a kind marks optional.
 
 In the registry, each kind lists its roles: `roles.<role>.formats` are the formats the role may take, and `roles.<role>.dims` are the dimensions it may carry, where an empty list means the role carries none.
+A computed kind, which has inputs and no stored data, lists no roles; it lists its inputs instead, `inputs.<role>.source` (`file` or `store`) and, for a file, `inputs.<role>.formats`.
 `null` means the names are open: the kind's schema constrains how many dimensions the role carries, along which axes, and where their coordinates come from, but not their names.
 A JSON role whose content has a schema names it in `roles.<role>.content`, a file in `schema/views/`.
 The kind's schema admits exactly these roles, formats and dimensions, and a test holds the two to each other.
@@ -85,6 +86,19 @@ A renderer draws each map with the algorithm `nemar.sensor-field.v1`; [`views/se
 It is a generic kind: it has no base and no inputs, a transform only with `positions`, and its one parameter, `limits`, chooses `absmax` (the default) or `minmax` color limits.
 In the registry, the `values` role's dimensions are `null`, open names: its schema requires one `sensor` dimension (with `contains`) and admits one more of any name, which labels the maps; the `layout` and `positions` roles carry `sensor` only.
 A registry entry lists the dimensions a role may carry; which of them it must carry, the kind's schema says, and the role contract reads it there.
+
+### Presets
+
+This release also defines five presets, version 1, each drawn over a generic kind:
+
+- `nemar.spectrum`, a spectrum per sensor with scalp maps at a frequency, over `nemar.lines`;
+- `nemar.ic-maps`, independent component maps with a text row per component, over `nemar.sensor-field`;
+- `nemar.ic-classes`, components counted by their dominant class, over `nemar.histogram`, with the content `content.nemar.ic-classes.v1`;
+- `nemar.ic-activity`, component activations computed in the browser, over `nemar.lines`;
+- `nemar.signal-window`, a window of the recording in the signal viewer, over `nemar.lines`.
+
+[presets.md](views/presets.md) is normative for all five, and [ic-activity.md](views/ic-activity.md) for `nemar.ic-activity` and its transform.
+A preset with stored data meets its base's role contract, so a renderer that knows only the base draws it by the base; a computed preset has no stored data, and its base names how its output is drawn.
 
 ## Data roles
 
@@ -142,6 +156,7 @@ A transform is `{name, parameters}`; its name is namespaced and versioned (`nema
 The registry lists the transforms neuroschema specifies, each with its specification, its vectors and its schema, `schema/views/transform.<name>.schema.json`.
 `view.schema.json` applies a listed transform's schema to every view that names it, whatever the view's kind: the schema checks the view's inputs and the transform's parameters.
 This release specifies `nemar.sensor-layout.v1` ([views/sensor-layout.md](views/sensor-layout.md)), three-dimensional sensor positions to a layout: the positions are a stored data role `positions` that names its own frame (as `nemar.sensor-field` declares it), or the view's one input `positions`, whose frame the transform's parameters name.
+It also specifies `nemar.ic-activity.v1` ([views/ic-activity.md](views/ic-activity.md)), component activations as one plain multiply: the browser's unmixing matrix (`unmixing`) times the serving copy's physical values (`signal`) of the decomposition's channels, with no preprocessing, the rows labeled by `components`.
 A view's files are its `data` files and its `file` inputs.
 
 ## Scope

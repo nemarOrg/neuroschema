@@ -18,6 +18,7 @@ Each `dataQuality` entry records its `input_kind` (`bids` or `zarr`) and `profil
 ## What the schema checks and what the writer must check
 
 The schema checks types, closed objects, identifier patterns, the view declarations ([views.md](views.md)), a metric's single producer (a plugin or a recipe), and the status rules (a passed checkpoint has no code; a completed link has a location, digest and signalJourney version).
+In a recording's `metrics`, it also pairs each name with its producer: a bare name is a recipe's metric, with the producer `recipe`, and `<plugin>:<name>` is a plugin's, with the producer `plugin`, one colon and then a letter followed by letters, digits, `_` or `-`.
 JSON Schema cannot compare one value with another, so the writer enforces:
 
 - every checkpoint's counts satisfy passed + failed + skipped = total once reconciled (at most total while a run reports live);
@@ -33,7 +34,7 @@ JSON Schema cannot compare one value with another, so the writer enforces:
 `tests/helpers.py` checks the examples against these rules; the package does not ship them.
 The writer also enforces rules that `tests/helpers.py` does not check:
 
-- a plugin's metric is named `<plugin>:<name>`, the part after the colon matching `[A-Za-z][A-Za-z0-9_-]*`, and a recipe's metric is a bare name the recipe declares;
+- the part of a plugin's metric name before the colon is the name of the plugin that produced it, and a recipe's metric is a bare name the recipe declares;
 - the view rules listed in [views.md](views.md): unique view keys and roles, declared columns present in each file, and the caps.
 
 ## Checkpoints

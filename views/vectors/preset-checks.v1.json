@@ -1,0 +1,3707 @@
+{
+  "format": "nemar.preset-checks.v1",
+  "spec": "docs/views/presets.md",
+  "description": "The checks a renderer of a preset runs beyond its base. For each case, decode files (UTF-8 text), run the preset's checks on view (for a signal window, with store: the recording's samples, its rate and the digest the serving copy publishes, or null) and compare with expected: word null when they pass (with the state, the window's first sample and count, the bad channels and the segments for a signal window), else the word and its outcome: base (drawn by its base, with the word), nothing (nothing drawn) or fallback (the base itself refused the file first). A case's caps take the place of the registry's caps of the same names for that case.",
+  "cases": [
+    {
+      "name": "ic_maps",
+      "covers": "The components table names the maps, in order.",
+      "view": {
+        "key": "icmaps",
+        "kind": "nemar.ic-maps",
+        "kind_version": 1,
+        "base": "nemar.sensor-field",
+        "base_version": 1,
+        "caption": "Scalp maps of the independent components, each with its share of the variance and its ICLabel probabilities.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
+            "format": "tsv",
+            "size": 836,
+            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number"
+              },
+              {
+                "name": "IC002",
+                "type": "number"
+              },
+              {
+                "name": "IC003",
+                "type": "number"
+              },
+              {
+                "name": "IC004",
+                "type": "number"
+              },
+              {
+                "name": "IC005",
+                "type": "number"
+              },
+              {
+                "name": "IC006",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 1094,
+            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              },
+              {
+                "name": "sensor_type",
+                "type": "string"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured"
+          },
+          {
+            "role": "components",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
+            "format": "tsv",
+            "size": 164,
+            "sha256": "e73050f7277b7eb875825f9c039eb11ddc520f18b286d1535ed57bdf6c381911",
+            "columns": [
+              {
+                "name": "component",
+                "type": "string"
+              },
+              {
+                "name": "variance_pct",
+                "type": "number",
+                "unit": "%"
+              },
+              {
+                "name": "brain",
+                "type": "number"
+              },
+              {
+                "name": "muscle",
+                "type": "number"
+              },
+              {
+                "name": "eye",
+                "type": "number"
+              },
+              {
+                "name": "heart",
+                "type": "number"
+              },
+              {
+                "name": "line_noise",
+                "type": "number"
+              },
+              {
+                "name": "channel_noise",
+                "type": "number"
+              },
+              {
+                "name": "other",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "component",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "component"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
+          "text": "component\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.9\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\n"
+        }
+      },
+      "expected": {
+        "word": null
+      }
+    },
+    {
+      "name": "ic_maps_reordered",
+      "covers": "Two components in the other order.",
+      "view": {
+        "key": "icmaps",
+        "kind": "nemar.ic-maps",
+        "kind_version": 1,
+        "base": "nemar.sensor-field",
+        "base_version": 1,
+        "caption": "Scalp maps of the independent components, each with its share of the variance and its ICLabel probabilities.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
+            "format": "tsv",
+            "size": 836,
+            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number"
+              },
+              {
+                "name": "IC002",
+                "type": "number"
+              },
+              {
+                "name": "IC003",
+                "type": "number"
+              },
+              {
+                "name": "IC004",
+                "type": "number"
+              },
+              {
+                "name": "IC005",
+                "type": "number"
+              },
+              {
+                "name": "IC006",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 1094,
+            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              },
+              {
+                "name": "sensor_type",
+                "type": "string"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured"
+          },
+          {
+            "role": "components",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
+            "format": "tsv",
+            "size": 164,
+            "sha256": "57ce487254ebcca323cc6951066498544d572358e522df0cf23ab55d8e1df352",
+            "columns": [
+              {
+                "name": "component",
+                "type": "string"
+              },
+              {
+                "name": "variance_pct",
+                "type": "number",
+                "unit": "%"
+              },
+              {
+                "name": "brain",
+                "type": "number"
+              },
+              {
+                "name": "muscle",
+                "type": "number"
+              },
+              {
+                "name": "eye",
+                "type": "number"
+              },
+              {
+                "name": "heart",
+                "type": "number"
+              },
+              {
+                "name": "line_noise",
+                "type": "number"
+              },
+              {
+                "name": "channel_noise",
+                "type": "number"
+              },
+              {
+                "name": "other",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "component",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "component"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
+          "text": "component\tvariance_pct\tbrain\tother\nIC002\t30.0000\t0.9\t0.1\nIC001\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\n"
+        }
+      },
+      "expected": {
+        "word": "components_mismatch",
+        "outcome": "base"
+      }
+    },
+    {
+      "name": "ic_maps_short",
+      "covers": "One component row fewer than the maps.",
+      "view": {
+        "key": "icmaps",
+        "kind": "nemar.ic-maps",
+        "kind_version": 1,
+        "base": "nemar.sensor-field",
+        "base_version": 1,
+        "caption": "Scalp maps of the independent components, each with its share of the variance and its ICLabel probabilities.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
+            "format": "tsv",
+            "size": 836,
+            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number"
+              },
+              {
+                "name": "IC002",
+                "type": "number"
+              },
+              {
+                "name": "IC003",
+                "type": "number"
+              },
+              {
+                "name": "IC004",
+                "type": "number"
+              },
+              {
+                "name": "IC005",
+                "type": "number"
+              },
+              {
+                "name": "IC006",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 1094,
+            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              },
+              {
+                "name": "sensor_type",
+                "type": "string"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured"
+          },
+          {
+            "role": "components",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
+            "format": "tsv",
+            "size": 143,
+            "sha256": "843dc226378e8646c424d3379fe02d5d7bbb548a95301ae428d541afd84d4ed0",
+            "columns": [
+              {
+                "name": "component",
+                "type": "string"
+              },
+              {
+                "name": "variance_pct",
+                "type": "number",
+                "unit": "%"
+              },
+              {
+                "name": "brain",
+                "type": "number"
+              },
+              {
+                "name": "muscle",
+                "type": "number"
+              },
+              {
+                "name": "eye",
+                "type": "number"
+              },
+              {
+                "name": "heart",
+                "type": "number"
+              },
+              {
+                "name": "line_noise",
+                "type": "number"
+              },
+              {
+                "name": "channel_noise",
+                "type": "number"
+              },
+              {
+                "name": "other",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "component",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "component"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
+          "text": "component\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.9\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\n"
+        }
+      },
+      "expected": {
+        "word": "components_mismatch",
+        "outcome": "base"
+      }
+    },
+    {
+      "name": "ic_maps_long",
+      "covers": "One component row more than the maps.",
+      "view": {
+        "key": "icmaps",
+        "kind": "nemar.ic-maps",
+        "kind_version": 1,
+        "base": "nemar.sensor-field",
+        "base_version": 1,
+        "caption": "Scalp maps of the independent components, each with its share of the variance and its ICLabel probabilities.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
+            "format": "tsv",
+            "size": 836,
+            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number"
+              },
+              {
+                "name": "IC002",
+                "type": "number"
+              },
+              {
+                "name": "IC003",
+                "type": "number"
+              },
+              {
+                "name": "IC004",
+                "type": "number"
+              },
+              {
+                "name": "IC005",
+                "type": "number"
+              },
+              {
+                "name": "IC006",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 1094,
+            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              },
+              {
+                "name": "sensor_type",
+                "type": "string"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured"
+          },
+          {
+            "role": "components",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
+            "format": "tsv",
+            "size": 185,
+            "sha256": "2f5779ece0e256c3e6c720003ebe1f821b2674850e9cd7650c16692e0075ddec",
+            "columns": [
+              {
+                "name": "component",
+                "type": "string"
+              },
+              {
+                "name": "variance_pct",
+                "type": "number",
+                "unit": "%"
+              },
+              {
+                "name": "brain",
+                "type": "number"
+              },
+              {
+                "name": "muscle",
+                "type": "number"
+              },
+              {
+                "name": "eye",
+                "type": "number"
+              },
+              {
+                "name": "heart",
+                "type": "number"
+              },
+              {
+                "name": "line_noise",
+                "type": "number"
+              },
+              {
+                "name": "channel_noise",
+                "type": "number"
+              },
+              {
+                "name": "other",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "component",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "component"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
+          "text": "component\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.9\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\nIC007\t4.2857\t0.9\t0.1\n"
+        }
+      },
+      "expected": {
+        "word": "components_mismatch",
+        "outcome": "base"
+      }
+    },
+    {
+      "name": "ic_maps_renamed",
+      "covers": "IC1 is not IC001: names compare as text.",
+      "view": {
+        "key": "icmaps",
+        "kind": "nemar.ic-maps",
+        "kind_version": 1,
+        "base": "nemar.sensor-field",
+        "base_version": 1,
+        "caption": "Scalp maps of the independent components, each with its share of the variance and its ICLabel probabilities.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
+            "format": "tsv",
+            "size": 836,
+            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number"
+              },
+              {
+                "name": "IC002",
+                "type": "number"
+              },
+              {
+                "name": "IC003",
+                "type": "number"
+              },
+              {
+                "name": "IC004",
+                "type": "number"
+              },
+              {
+                "name": "IC005",
+                "type": "number"
+              },
+              {
+                "name": "IC006",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 1094,
+            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              },
+              {
+                "name": "sensor_type",
+                "type": "string"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured"
+          },
+          {
+            "role": "components",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
+            "format": "tsv",
+            "size": 152,
+            "sha256": "9a663b87ba8d6a74afe706cfbdad7bd13c527cf542f542b9ebed7951e9f73ec9",
+            "columns": [
+              {
+                "name": "component",
+                "type": "string"
+              },
+              {
+                "name": "variance_pct",
+                "type": "number",
+                "unit": "%"
+              },
+              {
+                "name": "brain",
+                "type": "number"
+              },
+              {
+                "name": "muscle",
+                "type": "number"
+              },
+              {
+                "name": "eye",
+                "type": "number"
+              },
+              {
+                "name": "heart",
+                "type": "number"
+              },
+              {
+                "name": "line_noise",
+                "type": "number"
+              },
+              {
+                "name": "channel_noise",
+                "type": "number"
+              },
+              {
+                "name": "other",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "component",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "component"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
+          "text": "component\tvariance_pct\tbrain\tother\nIC1\t30.0000\t0.9\t0.1\nIC2\t15.0000\t0.9\t0.1\nIC3\t10.0000\t0.9\t0.1\nIC4\t7.5000\t0.9\t0.1\nIC5\t6.0000\t0.9\t0.1\nIC6\t5.0000\t0.9\t0.1\n"
+        }
+      },
+      "expected": {
+        "word": "components_mismatch",
+        "outcome": "base"
+      }
+    },
+    {
+      "name": "ic_maps_no_column",
+      "covers": "The file has no column component (the generic word).",
+      "view": {
+        "key": "icmaps",
+        "kind": "nemar.ic-maps",
+        "kind_version": 1,
+        "base": "nemar.sensor-field",
+        "base_version": 1,
+        "caption": "Scalp maps of the independent components, each with its share of the variance and its ICLabel probabilities.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
+            "format": "tsv",
+            "size": 836,
+            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number"
+              },
+              {
+                "name": "IC002",
+                "type": "number"
+              },
+              {
+                "name": "IC003",
+                "type": "number"
+              },
+              {
+                "name": "IC004",
+                "type": "number"
+              },
+              {
+                "name": "IC005",
+                "type": "number"
+              },
+              {
+                "name": "IC006",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 1094,
+            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              },
+              {
+                "name": "sensor_type",
+                "type": "string"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured"
+          },
+          {
+            "role": "components",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
+            "format": "tsv",
+            "size": 159,
+            "sha256": "1a6546493bf2b22dd9f955660a7e2cef43dfccba85b221a136aaa5c450971c58",
+            "columns": [
+              {
+                "name": "component",
+                "type": "string"
+              },
+              {
+                "name": "variance_pct",
+                "type": "number",
+                "unit": "%"
+              },
+              {
+                "name": "brain",
+                "type": "number"
+              },
+              {
+                "name": "muscle",
+                "type": "number"
+              },
+              {
+                "name": "eye",
+                "type": "number"
+              },
+              {
+                "name": "heart",
+                "type": "number"
+              },
+              {
+                "name": "line_noise",
+                "type": "number"
+              },
+              {
+                "name": "channel_noise",
+                "type": "number"
+              },
+              {
+                "name": "other",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "component",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "component"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
+          "text": "name\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.9\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\n"
+        }
+      },
+      "expected": {
+        "word": "column_missing",
+        "outcome": "base"
+      }
+    },
+    {
+      "name": "ic_maps_ragged",
+      "covers": "A row with a cell missing (the generic word).",
+      "view": {
+        "key": "icmaps",
+        "kind": "nemar.ic-maps",
+        "kind_version": 1,
+        "base": "nemar.sensor-field",
+        "base_version": 1,
+        "caption": "Scalp maps of the independent components, each with its share of the variance and its ICLabel probabilities.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
+            "format": "tsv",
+            "size": 836,
+            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number"
+              },
+              {
+                "name": "IC002",
+                "type": "number"
+              },
+              {
+                "name": "IC003",
+                "type": "number"
+              },
+              {
+                "name": "IC004",
+                "type": "number"
+              },
+              {
+                "name": "IC005",
+                "type": "number"
+              },
+              {
+                "name": "IC006",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 1094,
+            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              },
+              {
+                "name": "sensor_type",
+                "type": "string"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured"
+          },
+          {
+            "role": "components",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
+            "format": "tsv",
+            "size": 172,
+            "sha256": "9f95aaecd8d89d2b866c992f38c26d1ea099a28b56cb8d5228c21a9716718b72",
+            "columns": [
+              {
+                "name": "component",
+                "type": "string"
+              },
+              {
+                "name": "variance_pct",
+                "type": "number",
+                "unit": "%"
+              },
+              {
+                "name": "brain",
+                "type": "number"
+              },
+              {
+                "name": "muscle",
+                "type": "number"
+              },
+              {
+                "name": "eye",
+                "type": "number"
+              },
+              {
+                "name": "heart",
+                "type": "number"
+              },
+              {
+                "name": "line_noise",
+                "type": "number"
+              },
+              {
+                "name": "channel_noise",
+                "type": "number"
+              },
+              {
+                "name": "other",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "component",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "component"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
+          "text": "component\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.9\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\nIC007\t1\n"
+        }
+      },
+      "expected": {
+        "word": "tsv_ragged",
+        "outcome": "base"
+      }
+    },
+    {
+      "name": "ic_maps_digest",
+      "covers": "The components file is not the one recorded.",
+      "view": {
+        "key": "icmaps",
+        "kind": "nemar.ic-maps",
+        "kind_version": 1,
+        "base": "nemar.sensor-field",
+        "base_version": 1,
+        "caption": "Scalp maps of the independent components, each with its share of the variance and its ICLabel probabilities.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "data": [
+          {
+            "role": "values",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_mixing.tsv",
+            "format": "tsv",
+            "size": 836,
+            "sha256": "c3014462bd6fab5b872e75bc1051e57144469c1e800815ad1a81889d57dcbd5b",
+            "columns": [
+              {
+                "name": "IC001",
+                "type": "number"
+              },
+              {
+                "name": "IC002",
+                "type": "number"
+              },
+              {
+                "name": "IC003",
+                "type": "number"
+              },
+              {
+                "name": "IC004",
+                "type": "number"
+              },
+              {
+                "name": "IC005",
+                "type": "number"
+              },
+              {
+                "name": "IC006",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "role": "layout",
+                  "column": "name"
+                }
+              },
+              {
+                "name": "component",
+                "axis": "columns",
+                "type": "string",
+                "coords": {
+                  "header": true
+                }
+              }
+            ]
+          },
+          {
+            "role": "layout",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_chanlocs.tsv",
+            "format": "tsv",
+            "size": 1094,
+            "sha256": "34dfa7fc337ec742f111894583da14b1d3badaf21c738cf006f98223c228d99c",
+            "columns": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "theta_deg",
+                "type": "number",
+                "unit": "deg"
+              },
+              {
+                "name": "radius",
+                "type": "number"
+              },
+              {
+                "name": "sensor_type",
+                "type": "string"
+              }
+            ],
+            "dims": [
+              {
+                "name": "sensor",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "name"
+                }
+              }
+            ],
+            "coordinate_system": "CapTrak",
+            "position_source": "measured"
+          },
+          {
+            "role": "components",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv",
+            "format": "tsv",
+            "size": 164,
+            "sha256": "e73050f7277b7eb875825f9c039eb11ddc520f18b286d1535ed57bdf6c381911",
+            "columns": [
+              {
+                "name": "component",
+                "type": "string"
+              },
+              {
+                "name": "variance_pct",
+                "type": "number",
+                "unit": "%"
+              },
+              {
+                "name": "brain",
+                "type": "number"
+              },
+              {
+                "name": "muscle",
+                "type": "number"
+              },
+              {
+                "name": "eye",
+                "type": "number"
+              },
+              {
+                "name": "heart",
+                "type": "number"
+              },
+              {
+                "name": "line_noise",
+                "type": "number"
+              },
+              {
+                "name": "channel_noise",
+                "type": "number"
+              },
+              {
+                "name": "other",
+                "type": "number"
+              }
+            ],
+            "dims": [
+              {
+                "name": "component",
+                "axis": "rows",
+                "type": "string",
+                "coords": {
+                  "column": "component"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_components.tsv": {
+          "text": "component\tvariance_pct\tbrain\tother\nIC001\t30.0000\t0.8\t0.1\nIC002\t15.0000\t0.9\t0.1\nIC003\t10.0000\t0.9\t0.1\nIC004\t7.5000\t0.9\t0.1\nIC005\t6.0000\t0.9\t0.1\nIC006\t5.0000\t0.9\t0.1\n"
+        }
+      },
+      "expected": {
+        "word": "file_digest_mismatch",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "ic_classes",
+      "covers": "ICLabel's classes, counts that sum to n_components.",
+      "view": {
+        "key": "icclasses",
+        "kind": "nemar.ic-classes",
+        "kind_version": 1,
+        "base": "nemar.histogram",
+        "base_version": 1,
+        "caption": "Components counted by their most probable ICLabel class, with the variance each class accounts for.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.json",
+            "format": "json",
+            "size": 291,
+            "sha256": "ed40739419cff02716dcdb09da3eb6c809f0b12cf8d1c6d1f312f7cf3d3bcc55"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.json": {
+          "text": "{\n \"classifier\": \"ICLabel\",\n \"categories\": [\n  \"Brain\",\n  \"Muscle\",\n  \"Eye\",\n  \"Heart\",\n  \"Line Noise\",\n  \"Channel Noise\",\n  \"Other\"\n ],\n \"counts\": [\n  12,\n  3,\n  2,\n  0,\n  1,\n  0,\n  4\n ],\n \"summed_variance_pct\": [\n  61.25,\n  9.5,\n  14.75,\n  0,\n  0.5,\n  0,\n  6.125\n ],\n \"n_components\": 22\n}\n"
+        }
+      },
+      "expected": {
+        "word": null
+      }
+    },
+    {
+      "name": "ic_classes_other_classifier",
+      "covers": "Another classifier's own classes.",
+      "view": {
+        "key": "icclasses",
+        "kind": "nemar.ic-classes",
+        "kind_version": 1,
+        "base": "nemar.histogram",
+        "base_version": 1,
+        "caption": "Components counted by their most probable ICLabel class, with the variance each class accounts for.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.json",
+            "format": "json",
+            "size": 164,
+            "sha256": "5b61bc5543a4e42c9202b2182724a293fe26dfde8036262ce8d26580457494be"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.json": {
+          "text": "{\n \"classifier\": \"MARA\",\n \"categories\": [\n  \"Artifact\",\n  \"Brain\"\n ],\n \"counts\": [\n  4,\n  18\n ],\n \"summed_variance_pct\": [\n  20.5,\n  79.5\n ],\n \"n_components\": 22\n}\n"
+        }
+      },
+      "expected": {
+        "word": null
+      }
+    },
+    {
+      "name": "ic_classes_iclabel_order",
+      "covers": "ICLabel's classes out of order: the histogram draws, the preset refuses.",
+      "view": {
+        "key": "icclasses",
+        "kind": "nemar.ic-classes",
+        "kind_version": 1,
+        "base": "nemar.histogram",
+        "base_version": 1,
+        "caption": "Components counted by their most probable ICLabel class, with the variance each class accounts for.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.json",
+            "format": "json",
+            "size": 291,
+            "sha256": "3a81f672be5312a35503c9058e5c83b42079c6d3cb9c334aecb4654fa5c8705a"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.json": {
+          "text": "{\n \"classifier\": \"ICLabel\",\n \"categories\": [\n  \"Muscle\",\n  \"Eye\",\n  \"Heart\",\n  \"Line Noise\",\n  \"Channel Noise\",\n  \"Other\",\n  \"Brain\"\n ],\n \"counts\": [\n  12,\n  3,\n  2,\n  0,\n  1,\n  0,\n  4\n ],\n \"summed_variance_pct\": [\n  61.25,\n  9.5,\n  14.75,\n  0,\n  0.5,\n  0,\n  6.125\n ],\n \"n_components\": 22\n}\n"
+        }
+      },
+      "expected": {
+        "word": "content_invalid",
+        "outcome": "base"
+      }
+    },
+    {
+      "name": "ic_classes_no_variance",
+      "covers": "No summed_variance_pct: a histogram content, not this preset's.",
+      "view": {
+        "key": "icclasses",
+        "kind": "nemar.ic-classes",
+        "kind_version": 1,
+        "base": "nemar.histogram",
+        "base_version": 1,
+        "caption": "Components counted by their most probable ICLabel class, with the variance each class accounts for.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.json",
+            "format": "json",
+            "size": 211,
+            "sha256": "3d5f4e3bfac9e2147a3561065d7c0df45739aa73be5a1130eb85906a984ff6e5"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.json": {
+          "text": "{\n \"classifier\": \"ICLabel\",\n \"categories\": [\n  \"Brain\",\n  \"Muscle\",\n  \"Eye\",\n  \"Heart\",\n  \"Line Noise\",\n  \"Channel Noise\",\n  \"Other\"\n ],\n \"counts\": [\n  12,\n  3,\n  2,\n  0,\n  1,\n  0,\n  4\n ],\n \"n_components\": 22\n}\n"
+        }
+      },
+      "expected": {
+        "word": "content_invalid",
+        "outcome": "base"
+      }
+    },
+    {
+      "name": "ic_classes_variance_length",
+      "covers": "Six summed variances for seven classes.",
+      "view": {
+        "key": "icclasses",
+        "kind": "nemar.ic-classes",
+        "kind_version": 1,
+        "base": "nemar.histogram",
+        "base_version": 1,
+        "caption": "Components counted by their most probable ICLabel class, with the variance each class accounts for.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.json",
+            "format": "json",
+            "size": 282,
+            "sha256": "b48833b257e3c69aa6fbc2e1c9477638a62dc43e3e84f4d118a00ea989d0c7a5"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.json": {
+          "text": "{\n \"classifier\": \"ICLabel\",\n \"categories\": [\n  \"Brain\",\n  \"Muscle\",\n  \"Eye\",\n  \"Heart\",\n  \"Line Noise\",\n  \"Channel Noise\",\n  \"Other\"\n ],\n \"counts\": [\n  12,\n  3,\n  2,\n  0,\n  1,\n  0,\n  4\n ],\n \"summed_variance_pct\": [\n  61.25,\n  9.5,\n  14.75,\n  0,\n  0.5,\n  0\n ],\n \"n_components\": 22\n}\n"
+        }
+      },
+      "expected": {
+        "word": "variance_length",
+        "outcome": "base"
+      }
+    },
+    {
+      "name": "ic_classes_components_total",
+      "covers": "Counts that sum to 22 with n_components 21.",
+      "view": {
+        "key": "icclasses",
+        "kind": "nemar.ic-classes",
+        "kind_version": 1,
+        "base": "nemar.histogram",
+        "base_version": 1,
+        "caption": "Components counted by their most probable ICLabel class, with the variance each class accounts for.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.json",
+            "format": "json",
+            "size": 291,
+            "sha256": "7618a386d5c4880ca5b5a85e2bebd324df41c842a2ebb20bf66b6e9813775b86"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.json": {
+          "text": "{\n \"classifier\": \"ICLabel\",\n \"categories\": [\n  \"Brain\",\n  \"Muscle\",\n  \"Eye\",\n  \"Heart\",\n  \"Line Noise\",\n  \"Channel Noise\",\n  \"Other\"\n ],\n \"counts\": [\n  12,\n  3,\n  2,\n  0,\n  1,\n  0,\n  4\n ],\n \"summed_variance_pct\": [\n  61.25,\n  9.5,\n  14.75,\n  0,\n  0.5,\n  0,\n  6.125\n ],\n \"n_components\": 21\n}\n"
+        }
+      },
+      "expected": {
+        "word": "components_total",
+        "outcome": "base"
+      }
+    },
+    {
+      "name": "ic_classes_order_variance_before_total",
+      "covers": "Both faults: the variance length comes first.",
+      "view": {
+        "key": "icclasses",
+        "kind": "nemar.ic-classes",
+        "kind_version": 1,
+        "base": "nemar.histogram",
+        "base_version": 1,
+        "caption": "Components counted by their most probable ICLabel class, with the variance each class accounts for.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.json",
+            "format": "json",
+            "size": 247,
+            "sha256": "4136a8e1178b1e32472b28e4cc86eb27ed82f1039a1fdccf9dd0baa30874181a"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.json": {
+          "text": "{\n \"classifier\": \"ICLabel\",\n \"categories\": [\n  \"Brain\",\n  \"Muscle\",\n  \"Eye\",\n  \"Heart\",\n  \"Line Noise\",\n  \"Channel Noise\",\n  \"Other\"\n ],\n \"counts\": [\n  12,\n  3,\n  2,\n  0,\n  1,\n  0,\n  4\n ],\n \"summed_variance_pct\": [\n  1.0\n ],\n \"n_components\": 21\n}\n"
+        }
+      },
+      "expected": {
+        "word": "variance_length",
+        "outcome": "base"
+      }
+    },
+    {
+      "name": "ic_classes_order_content_before_variance",
+      "covers": "Both faults, ICLabel's classes out of order and six summed variances: the content schema comes first.",
+      "view": {
+        "key": "icclasses",
+        "kind": "nemar.ic-classes",
+        "kind_version": 1,
+        "base": "nemar.histogram",
+        "base_version": 1,
+        "caption": "Components counted by their most probable ICLabel class, with the variance each class accounts for.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.json",
+            "format": "json",
+            "size": 282,
+            "sha256": "2daed7d883ba03617a59c2111c66310d59a31a77f6735f3b4d7d85b66af8d5cb"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.json": {
+          "text": "{\n \"classifier\": \"ICLabel\",\n \"categories\": [\n  \"Muscle\",\n  \"Eye\",\n  \"Heart\",\n  \"Line Noise\",\n  \"Channel Noise\",\n  \"Other\",\n  \"Brain\"\n ],\n \"counts\": [\n  12,\n  3,\n  2,\n  0,\n  1,\n  0,\n  4\n ],\n \"summed_variance_pct\": [\n  61.25,\n  9.5,\n  14.75,\n  0,\n  0.5,\n  0\n ],\n \"n_components\": 22\n}\n"
+        }
+      },
+      "expected": {
+        "word": "content_invalid",
+        "outcome": "base"
+      }
+    },
+    {
+      "name": "ic_classes_order_content_before_total",
+      "covers": "Both faults: the content schema comes first.",
+      "view": {
+        "key": "icclasses",
+        "kind": "nemar.ic-classes",
+        "kind_version": 1,
+        "base": "nemar.histogram",
+        "base_version": 1,
+        "caption": "Components counted by their most probable ICLabel class, with the variance each class accounts for.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.json",
+            "format": "json",
+            "size": 284,
+            "sha256": "e839dee61cbfa64f42d43296df6d38c58e3d12040def59106cec80591c3be14c"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.json": {
+          "text": "{\n \"classifier\": \"\",\n \"categories\": [\n  \"Brain\",\n  \"Muscle\",\n  \"Eye\",\n  \"Heart\",\n  \"Line Noise\",\n  \"Channel Noise\",\n  \"Other\"\n ],\n \"counts\": [\n  12,\n  3,\n  2,\n  0,\n  1,\n  0,\n  4\n ],\n \"summed_variance_pct\": [\n  61.25,\n  9.5,\n  14.75,\n  0,\n  0.5,\n  0,\n  6.125\n ],\n \"n_components\": 21\n}\n"
+        }
+      },
+      "expected": {
+        "word": "content_invalid",
+        "outcome": "base"
+      }
+    },
+    {
+      "name": "ic_classes_base_refuses",
+      "covers": "Six counts for seven classes: the base refuses first and the view falls back.",
+      "view": {
+        "key": "icclasses",
+        "kind": "nemar.ic-classes",
+        "kind_version": 1,
+        "base": "nemar.histogram",
+        "base_version": 1,
+        "caption": "Components counted by their most probable ICLabel class, with the variance each class accounts for.",
+        "source": {
+          "plugin": {
+            "name": "nemar-quality",
+            "version": "0.1.0"
+          }
+        },
+        "data": [
+          {
+            "role": "histogram",
+            "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.json",
+            "format": "json",
+            "size": 286,
+            "sha256": "9856f1f66aef9b77a6582d47f6b7a5edd7064028b0d0dc43b7c768d4a5285873"
+          }
+        ]
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_icclasses.json": {
+          "text": "{\n \"classifier\": \"ICLabel\",\n \"categories\": [\n  \"Brain\",\n  \"Muscle\",\n  \"Eye\",\n  \"Heart\",\n  \"Line Noise\",\n  \"Channel Noise\",\n  \"Other\"\n ],\n \"counts\": [\n  12,\n  3,\n  2,\n  0,\n  1,\n  0\n ],\n \"summed_variance_pct\": [\n  61.25,\n  9.5,\n  14.75,\n  0,\n  0.5,\n  0,\n  6.125\n ],\n \"n_components\": 22\n}\n"
+        }
+      },
+      "expected": {
+        "word": "counts_length",
+        "outcome": "fallback"
+      }
+    },
+    {
+      "name": "signal_window",
+      "covers": "Two seconds at 151.5 s, the digest published and matching, with the floor's bad channel and both its segments.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": null,
+        "state": "matches",
+        "first": 37875,
+        "count": 500,
+        "bad_channels": ["P4"],
+        "segments": [
+          {
+            "onset": 151.7,
+            "duration": 0.3,
+            "label": "bad_window"
+          },
+          {
+            "onset": 152.1,
+            "duration": 0.05,
+            "label": "burst"
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "signal_window_not_checked",
+      "covers": "The serving copy publishes no digest.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": null
+      },
+      "expected": {
+        "word": null,
+        "state": "not_checked",
+        "first": 37875,
+        "count": 500,
+        "bad_channels": ["P4"],
+        "segments": [
+          {
+            "onset": 151.7,
+            "duration": 0.3,
+            "label": "bad_window"
+          },
+          {
+            "onset": 152.1,
+            "duration": 0.05,
+            "label": "burst"
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "signal_window_no_bad_segment_table",
+      "covers": "The floor wrote no bad segments: drawn, the bad channel marked, and the note that nothing is marked as a bad segment.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": false
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": null,
+        "state": "matches",
+        "first": 37875,
+        "count": 500,
+        "bad_channels": ["P4"],
+        "segments": [],
+        "notes": ["no_bad_segment_table"]
+      }
+    },
+    {
+      "name": "signal_window_columns_reordered",
+      "covers": "Both tables' columns in another order: found by name.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "258d2190d42e1568faf02526eaa07bd72c4a2dd60397e06916fba97ca31c25c8",
+              "size": 53
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "5c35ecbfc3b69cc3a2413c452081f00efa062fe47e125c9612a7d54871fd40e7",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "status\tname\ttype\ngood\tFp1\tEEG\nbad\tP4\tEEG\nn/a\tECG\tECG\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "label\tonset\tduration\tnemar_reason\nbad_window\t151.700000\t0.300000\tclean_windows\nburst\t152.100000\t0.050000\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": null,
+        "state": "matches",
+        "first": 37875,
+        "count": 500,
+        "bad_channels": ["P4"],
+        "segments": [
+          {
+            "onset": 151.7,
+            "duration": 0.3,
+            "label": "bad_window"
+          },
+          {
+            "onset": 152.1,
+            "duration": 0.05,
+            "label": "burst"
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "signal_window_bad_channel_unknown",
+      "covers": "A bad channel named p4 where the store has P4: names compare as exact strings, and an unknown bad channel refuses the view.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "2a3c77cc23ab06b841776a098884fa248fe74f8ff9512b40dcf8e248c8242235",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\np4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "bad_channel_unknown",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_order_channels_file_before_segments_file",
+      "covers": "A channels file of the wrong size and bad segments of the wrong digest: the channels file is checked first.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\nF4\tEEG\tgood\tn/a\tn/a\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.310000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "file_size_mismatch",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_order_channels_before_segments",
+      "covers": "Channels with no status and an onset that is no number: the channels are read first.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "4a278c7c5656b6ea44411133b03572ed0c1ff41a5685fcdbabb195e2fc9a86af",
+              "size": 18
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "6f5e8e6d6f5ee8eacc929f186eadf0d190c683bca650501d2c49cc93306fcad0",
+              "size": 45
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\nFp1\tEEG\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\nn/a\t0.300000\tbad_window\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "column_missing",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_onset_before_duration",
+      "covers": "An onset that is no number and a duration beyond binary64: the onset column is read first.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "65e3db5a29c381e517b4910337072768fc1ae302f3b548096725678d3fddf523",
+              "size": 37
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\nn/a\t1e400\tburst\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "cell_not_number",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_order_tables_before_bad_channels",
+      "covers": "Bad segments with no label and an unknown bad channel: the tables come first.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "2a3c77cc23ab06b841776a098884fa248fe74f8ff9512b40dcf8e248c8242235",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "56dfd8671cd3b65271a765970e8de40ef07e7ba40ee06943a70bdffdef5addd6",
+              "size": 62
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\np4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tnemar_reason\n151.700000\t0.300000\tclean_windows\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "column_missing",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_order_bad_channels_before_window",
+      "covers": "An unknown bad channel and a window outside the recording: the bad channels come first.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "2a3c77cc23ab06b841776a098884fa248fe74f8ff9512b40dcf8e248c8242235",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 300,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\np4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "bad_channel_unknown",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_digest_mismatch",
+      "covers": "The serving copy publishes another digest.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "expected": {
+        "word": "store_digest_mismatch",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_badsegments_digest",
+      "covers": "The bad segments are not the file recorded: nothing is drawn, never a window unmarked.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.310000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "file_digest_mismatch",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_channels_digest",
+      "covers": "The channels table is not the file recorded.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbed\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "file_digest_mismatch",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_badsegments_no_label",
+      "covers": "The bad segments have no column label.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "56dfd8671cd3b65271a765970e8de40ef07e7ba40ee06943a70bdffdef5addd6",
+              "size": 62
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tnemar_reason\n151.700000\t0.300000\tclean_windows\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "column_missing",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_channels_no_status",
+      "covers": "The channels table has no column status.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "4a278c7c5656b6ea44411133b03572ed0c1ff41a5685fcdbabb195e2fc9a86af",
+              "size": 18
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\nFp1\tEEG\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "column_missing",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_badsegments_onset_text",
+      "covers": "A bad segment whose onset is not a number.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "6f5e8e6d6f5ee8eacc929f186eadf0d190c683bca650501d2c49cc93306fcad0",
+              "size": 45
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\nn/a\t0.300000\tbad_window\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "cell_not_number",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_tables_too_many_bytes",
+      "covers": "A floor table longer than a cap on bytes lowered to 100.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "caps": {
+        "bytes_per_role": 100
+      },
+      "expected": {
+        "word": "cap_exceeded",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_tables_too_many_cells",
+      "covers": "Floor tables over a cap on cells lowered to 12.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "caps": {
+        "cells_per_role": 12
+      },
+      "expected": {
+        "word": "cap_exceeded",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_badsegments_ragged",
+      "covers": "A bad segments row with one cell.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "4808e53fc7ec285b236fe8f80db0709ee27a7bee8563f6134fe31150d4737644",
+              "size": 122
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n153\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "tsv_ragged",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_clipped",
+      "covers": "A window past the recording's end is clipped.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 299.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": null,
+        "state": "matches",
+        "first": 74875,
+        "count": 125,
+        "bad_channels": ["P4"],
+        "segments": [
+          {
+            "onset": 151.7,
+            "duration": 0.3,
+            "label": "bad_window"
+          },
+          {
+            "onset": 152.1,
+            "duration": 0.05,
+            "label": "burst"
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "signal_window_outside",
+      "covers": "A window that starts at the recording's end.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 300,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "window_outside",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_between_samples",
+      "covers": "A window between two samples holds none.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 0.001,
+          "duration_s": 0.002,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "window_outside",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_odd_rate",
+      "covers": "Times k / rate at 500/7 Hz, where ceil(start * rate) would start a sample late and end a sample early.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 0.098,
+          "duration_s": 0.364,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 100,
+        "rate": 71.42857142857143,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": null,
+        "state": "matches",
+        "first": 7,
+        "count": 26,
+        "bad_channels": ["P4"],
+        "segments": [
+          {
+            "onset": 151.7,
+            "duration": 0.3,
+            "label": "bad_window"
+          },
+          {
+            "onset": 152.1,
+            "duration": 0.05,
+            "label": "burst"
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "signal_window_order_files_before_digest",
+      "covers": "Both faults: the file comes first.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.310000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "expected": {
+        "word": "file_digest_mismatch",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_order_digest_before_tables",
+      "covers": "Both faults: the digest comes first.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "56dfd8671cd3b65271a765970e8de40ef07e7ba40ee06943a70bdffdef5addd6",
+              "size": 62
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 151.5,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tnemar_reason\n151.700000\t0.300000\tclean_windows\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "expected": {
+        "word": "store_digest_mismatch",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_order_tables_before_window",
+      "covers": "Both faults: the tables come first.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "56dfd8671cd3b65271a765970e8de40ef07e7ba40ee06943a70bdffdef5addd6",
+              "size": 62
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 300,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tnemar_reason\n151.700000\t0.300000\tclean_windows\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4"
+      },
+      "expected": {
+        "word": "column_missing",
+        "outcome": "nothing"
+      }
+    },
+    {
+      "name": "signal_window_order",
+      "covers": "Both faults: the digest before the window.",
+      "view": {
+        "key": "midsegment",
+        "kind": "nemar.signal-window",
+        "kind_version": 1,
+        "base": "nemar.lines",
+        "base_version": 1,
+        "caption": "Two seconds of the recording inside the floor's good samples nearest its middle, as the serving copy holds it, with the floor's bad channels and segments marked.",
+        "source": {
+          "recipe": {
+            "name": "nemar-ica",
+            "version": "1.0.0-b1"
+          }
+        },
+        "inputs": [
+          {
+            "role": "signal",
+            "store": {
+              "recording": "sub-01/eeg/sub-01_task-rest_eeg.set",
+              "path": "sub-01/eeg/sub-01_task-rest_eeg.zarr",
+              "group": "eeg",
+              "content_sha256": "71ba2dddb2289ba96cb27532ebe00f414f1f1bf068f6c40c8e9000adf75004a4",
+              "profile": "serving"
+            }
+          },
+          {
+            "role": "channels",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv",
+              "sha256": "ef802a829ceb8b7bf13acebda0037918df3ede45fd97d2900ab03da7a3729988",
+              "size": 172
+            }
+          },
+          {
+            "role": "badsegments",
+            "file": {
+              "location": "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv",
+              "sha256": "8fa71fa1e7947bac4a8fd15d9ef17cda2b234505d2009b0615f71c68ecc59c36",
+              "size": 118
+            }
+          }
+        ],
+        "parameters": {
+          "start_s": 300,
+          "duration_s": 2,
+          "bad_segment_table": true
+        }
+      },
+      "files": {
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_channels.tsv": {
+          "text": "name\ttype\tstatus\tstatus_description\tnemar_reason\nFp1\tEEG\tgood\tn/a\tn/a\nFp2\tEEG\tgood\tn/a\tn/a\nF3\tEEG\tgood\tn/a\tn/a\nP4\tEEG\tbad\tflat\tflatline\nECG\tECG\tn/a\tnon-signal\tnot_assessed\n"
+        },
+        "sub-01/eeg/sub-01_task-rest_desc-nemarica_badsegments.tsv": {
+          "text": "onset\tduration\tlabel\tnemar_reason\n151.700000\t0.300000\tbad_window\tclean_windows\n152.100000\t0.050000\tburst\tasr_repaired\n"
+        }
+      },
+      "store": {
+        "labels": ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"],
+        "samples": 75000,
+        "rate": 250.0,
+        "published_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "expected": {
+        "word": "store_digest_mismatch",
+        "outcome": "nothing"
+      }
+    }
+  ]
+}

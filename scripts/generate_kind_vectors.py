@@ -26,18 +26,23 @@ from neuroschema.views.models import (
     MODELS_FORMAT,
     ViewRefused,
     build_model,
+    content_validator,
     histogram_content_validator,
     locate_bin,
     snap_row,
     view_validator,
 )
+from neuroschema.views.presets import PRESET_CHECKS_FORMAT, check_preset
 
 ROOT = Path(__file__).resolve().parent.parent
 MODELS_PATH = ROOT / "views" / "vectors" / "kinds-models.v1.json"
 VERDICTS_PATH = ROOT / "views" / "vectors" / "kinds-verdicts.v1.json"
 VERDICTS_FORMAT = "nemar.kinds-verdicts.v1"
+PRESET_CHECKS_PATH = ROOT / "views" / "vectors" / "preset-checks.v1.json"
 SPEC = "docs/views/generic-kinds.md"
 HISTOGRAM_CONTENT = "content.nemar.histogram.v1.schema.json"
+IC_CLASSES_CONTENT = "content.nemar.ic-classes.v1.schema.json"
+PRESET_EXAMPLE = ROOT / "examples" / "views" / "dataquality-record-nemar-ica.json"
 
 PLUGIN = {"plugin": {"name": "nemar-quality", "version": "0.1.0"}}
 RECIPE = {"recipe": {"name": "nemar-ica", "version": "1.0.0"}}
@@ -1860,6 +1865,1006 @@ def content_verdicts() -> list[tuple[str, str, object]]:
     ]
 
 
+# ── The presets' verdicts ─────────────────────────────────────────────────
+
+
+def preset_views() -> dict[str, dict]:
+    """The example's five preset views, by key (examples/views)."""
+    document = json.loads(PRESET_EXAMPLE.read_text(encoding="utf-8"))
+    views = document["recipes"]["nemar-ica"]["views"]
+    return {v["key"]: v for v in views}
+
+
+def _archive_activity(activity: dict) -> dict:
+    """The activations of a decomposition of the archive: matched by label, in
+    microvolts, with no store digest and no decomposition store."""
+    out = copy.deepcopy(activity)
+    signal = next(i for i in out["inputs"] if i["role"] == "signal")
+    signal["store"].update(profile="archive", content_sha256=None)
+    out["transform"]["parameters"] |= {
+        "applies_to": (
+            "serving_copy channels matched by label, in microvolts: the view converts "
+            "by the store's unit field and refuses an unknown unit or any channel it "
+            "cannot match"
+        ),
+        "match": "label",
+        "rows": None,
+        "unit": "uV",
+        "caption": "not checked against the decomposition input",
+    }
+    given = out["parameters"]["decomposition_input"]
+    given["source"] = "archive"
+    del given["store"]
+    return out
+
+
+def preset_verdicts() -> list[tuple[str, str, dict]]:
+    views = preset_views()
+    spectrum, maps = views["spectrum"], views["icmaps"]
+    classes, activity, window = (
+        views["icclasses"],
+        views["icactivity"],
+        views["midsegment"],
+    )
+    by_header = dim("sensor", "columns", "string", {"header": True})
+    bare = _set(
+        _set(spectrum, "data", spectrum["data"][:1]), "data/0/dims/1", by_header
+    )
+    archive = _archive_activity(activity)
+    signal = next(i for i, x in enumerate(activity["inputs"]) if x["role"] == "signal")
+    without_segments = _set(
+        _set(window, "inputs", window["inputs"][:2]),
+        "parameters/bad_segment_table",
+        False,
+    )
+    null_files = _set(
+        _set(
+            activity,
+            "inputs",
+            [i for i in activity["inputs"] if i["role"] != "badsegments"],
+        ),
+        "transform/parameters/shaded/files",
+        None,
+    )
+    return [
+        (
+            "spectrum",
+            "A plugin's spectrum, its sensors the recipe's layout rows.",
+            spectrum,
+        ),
+        (
+            "spectrum_without_layout",
+            "Without a layout the sensors are the header names.",
+            bare,
+        ),
+        (
+            "spectrum_freq_unit",
+            "The dimension freq in kHz, not Hz.",
+            _set(spectrum, "data/0/dims/0/unit", "kHz"),
+        ),
+        (
+            "spectrum_freq_column_unit",
+            "The column freq_hz in kHz.",
+            _set(spectrum, "data/0/columns/0/unit", "kHz"),
+        ),
+        (
+            "spectrum_sensor_unit",
+            "A sensor column in uV^2/Hz, not dB.",
+            _set(spectrum, "data/0/columns/1/unit", "uV^2/Hz"),
+        ),
+        (
+            "spectrum_no_upper_hz",
+            "upper_hz is required.",
+            _set(spectrum, "parameters/upper_hz", DROP),
+        ),
+        (
+            "spectrum_no_window",
+            "The window is recorded.",
+            _set(spectrum, "parameters/window", DROP),
+        ),
+        (
+            "spectrum_no_overlap",
+            "The overlap is recorded.",
+            _set(spectrum, "parameters/overlap", DROP),
+        ),
+        (
+            "spectrum_no_unit",
+            "The unit is recorded.",
+            _set(spectrum, "parameters/unit", DROP),
+        ),
+        (
+            "spectrum_overlap_one",
+            "An overlap of 1 is no step.",
+            _set(spectrum, "parameters/overlap", 1),
+        ),
+        (
+            "spectrum_method",
+            "Version 1 records Welch's method.",
+            _set(spectrum, "parameters/method", "multitaper"),
+        ),
+        (
+            "spectrum_header_with_layout",
+            "With a layout, the sensors are its rows, not the header.",
+            _set(spectrum, "data/0/dims/1", by_header),
+        ),
+        (
+            "spectrum_layout_coords_without_layout",
+            "Sensors from a layout the view does not have.",
+            _set(bare, "data/0/dims/1/coords", {"role": "layout", "column": "name"}),
+        ),
+        (
+            "spectrum_x_from_a_role",
+            "The x axis is the values' own column.",
+            _set(
+                spectrum, "data/0/dims/0/coords", {"role": "layout", "column": "radius"}
+            ),
+        ),
+        (
+            "spectrum_base",
+            "A spectrum is drawn over nemar.lines.",
+            _set(spectrum, "base", "nemar.heatmap"),
+        ),
+        (
+            "spectrum_no_base",
+            "A preset declares its base.",
+            _set(_set(spectrum, "base", DROP), "base_version", DROP),
+        ),
+        (
+            "spectrum_two_values",
+            "The values once.",
+            _set(spectrum, "data", [spectrum["data"][0], *spectrum["data"]]),
+        ),
+        ("ic_maps", "The recipe's component maps, layout and components table.", maps),
+        (
+            "ic_maps_no_layout",
+            "Component maps need the layout.",
+            _set(maps, "data", [maps["data"][0], maps["data"][2]]),
+        ),
+        (
+            "ic_maps_no_components",
+            "Component maps need the components table.",
+            _set(maps, "data", maps["data"][:2]),
+        ),
+        (
+            "ic_maps_sensors_by_name",
+            "The sensors are the layout's rows, not a column of the values.",
+            _set(maps, "data/0/dims/0/coords", {"column": "IC001"}),
+        ),
+        (
+            "ic_maps_components_by_header",
+            "The components are named by the header.",
+            _set(
+                maps,
+                "data/0/dims/1/coords",
+                {"role": "components", "column": "component"},
+            ),
+        ),
+        (
+            "ic_maps_components_dim",
+            "The components table is named by its column component.",
+            _set(maps, "data/2/dims/0/coords", {"column": "variance_pct"}),
+        ),
+        (
+            "ic_maps_no_component_column",
+            "The components table declares component.",
+            _set(maps, "data/2/columns", maps["data"][2]["columns"][1:]),
+        ),
+        (
+            "ic_maps_parameters",
+            "Version 1 takes no parameters.",
+            _set(maps, "parameters", {"limits": "minmax"}),
+        ),
+        ("ic_classes", "A plugin's class counts.", classes),
+        (
+            "ic_classes_tsv",
+            "The class counts are a JSON file.",
+            _set(
+                _set(classes, "data/0/format", "tsv"),
+                "data/0/location",
+                classes["data"][0]["location"].replace(".json", ".tsv"),
+            ),
+        ),
+        (
+            "ic_classes_parameters",
+            "Version 1 takes no parameters.",
+            _set(classes, "parameters", {"threshold": 0.9}),
+        ),
+        (
+            "ic_classes_base_version",
+            "nemar.histogram version 1.",
+            _set(classes, "base_version", 2),
+        ),
+        (
+            "ic_activity",
+            "Activations of a decomposition of the serving copy.",
+            activity,
+        ),
+        (
+            "ic_activity_archive",
+            "Activations of a decomposition of the archive: "
+            "matched by label, no digest.",
+            archive,
+        ),
+        (
+            "ic_activity_no_transform",
+            "The transform is required.",
+            _set(activity, "transform", DROP),
+        ),
+        (
+            "ic_activity_other_transform",
+            "The transform is nemar.ic-activity.v1.",
+            _set(
+                activity,
+                "transform",
+                {"name": "nemar.sensor-layout.v1", "parameters": {}},
+            ),
+        ),
+        (
+            "ic_activity_data",
+            "Activations are never stored.",
+            _set(activity, "data", classes["data"]),
+        ),
+        (
+            "ic_activity_no_components",
+            "The components label the rows.",
+            _set(
+                activity,
+                "inputs",
+                [i for i in activity["inputs"] if i["role"] != "components"],
+            ),
+        ),
+        (
+            "ic_activity_signal_as_file",
+            "The signal is a store.",
+            _set(
+                activity,
+                f"inputs/{signal}",
+                {"role": "signal", "file": activity["inputs"][0]["file"]},
+            ),
+        ),
+        (
+            "ic_activity_store_row_without_rows",
+            "Matching by row names the rows.",
+            _set(activity, "transform/parameters/rows", None),
+        ),
+        (
+            "ic_activity_label_with_rows",
+            "Matching by label names no rows.",
+            _set(archive, "transform/parameters/rows", [0, 1]),
+        ),
+        (
+            "ic_activity_archive_by_row",
+            "A decomposition of the archive read no store rows.",
+            _set(
+                _set(archive, "transform/parameters/match", "store_row"),
+                "transform/parameters/rows",
+                [0],
+            ),
+        ),
+        (
+            "ic_activity_nanovolts",
+            "The matrix's unit is one of the table's.",
+            _set(activity, "transform/parameters/unit", "nV"),
+        ),
+        (
+            "ic_activity_no_display_filter",
+            "The display filter is declared.",
+            _set(activity, "parameters/display_filter", DROP),
+        ),
+        (
+            "ic_activity_filter_order",
+            "The display filter is of order 2.",
+            _set(activity, "parameters/display_filter/order", 4),
+        ),
+        (
+            "ic_activity_window_60",
+            "A window of at most 30 seconds.",
+            _set(activity, "parameters/max_window_s", 60),
+        ),
+        (
+            "ic_activity_no_decomposition_input",
+            "What the decomposition got is declared.",
+            _set(activity, "parameters/decomposition_input", DROP),
+        ),
+        (
+            "ic_activity_serving_without_store",
+            "A decomposition of the serving copy names its store.",
+            _set(activity, "parameters/decomposition_input/store", DROP),
+        ),
+        (
+            "ic_activity_archive_with_store",
+            "A decomposition of the archive names no store.",
+            _set(
+                archive,
+                "parameters/decomposition_input/store",
+                activity["parameters"]["decomposition_input"]["store"],
+            ),
+        ),
+        (
+            "ic_activity_source_and_profile",
+            "A decomposition of the archive with a store of profile serving.",
+            _set(archive, f"inputs/{signal}", activity["inputs"][signal]),
+        ),
+        (
+            "ic_activity_types_without_digest",
+            "channel_types comes with its digest.",
+            _set(activity, "parameters/decomposition_input/channel_types_sha256", DROP),
+        ),
+        (
+            "ic_activity_no_channel_types",
+            "The record states every row's type.",
+            _set(activity, "parameters/decomposition_input/channel_types", DROP),
+        ),
+        (
+            "ic_activity_no_shaded",
+            "The browser_transform block names the shaded spans.",
+            _set(activity, "transform/parameters/shaded", DROP),
+        ),
+        (
+            "ic_activity_no_columns",
+            "The browser_transform block names the matrix's columns.",
+            _set(activity, "transform/parameters/columns", DROP),
+        ),
+        (
+            "ic_activity_caption_empty",
+            "A caption is text or null.",
+            _set(activity, "transform/parameters/caption", ""),
+        ),
+        (
+            "ic_activity_shaded_closed",
+            "The shaded spans are {label, files}.",
+            _set(activity, "transform/parameters/shaded/reason", "asr_burst_rejection"),
+        ),
+        (
+            "ic_activity_no_segment_table",
+            "The floor wrote no bad-segment table: shaded.files null, no input.",
+            null_files,
+        ),
+        (
+            "ic_activity_segments_named_not_declared",
+            "The record names the bad-segment tables and the view does not declare "
+            "the input.",
+            _set(
+                activity,
+                "inputs",
+                [i for i in activity["inputs"] if i["role"] != "badsegments"],
+            ),
+        ),
+        (
+            "ic_activity_segments_declared_not_named",
+            "A bad-segments input when shaded.files is null.",
+            _set(activity, "transform/parameters/shaded/files", None),
+        ),
+        (
+            "ic_activity_preprocessing_closed",
+            "A preprocessing step is {step, function}.",
+            _set(
+                activity,
+                "parameters/decomposition_input/preprocessing/0/parameters",
+                {"chans": 7},
+            ),
+        ),
+        ("signal_window", "A recipe's midsegment window.", window),
+        (
+            "signal_window_without_segments",
+            "The floor wrote no bad segments (bad_segment_table false): none declared.",
+            without_segments,
+        ),
+        (
+            "signal_window_no_channels",
+            "The channels are required: the floor always writes them.",
+            _set(window, "inputs", [window["inputs"][0], window["inputs"][2]]),
+        ),
+        (
+            "signal_window_segments_named_not_declared",
+            "The record names the bad segments and the view does not declare them.",
+            _set(window, "inputs", window["inputs"][:2]),
+        ),
+        (
+            "signal_window_segments_declared_not_named",
+            "Bad segments declared when the record names none.",
+            _set(window, "parameters/bad_segment_table", False),
+        ),
+        (
+            "signal_window_no_table_flag",
+            "Whether the floor wrote the bad segments is stated.",
+            _set(window, "parameters/bad_segment_table", DROP),
+        ),
+        (
+            "signal_window_long",
+            "A window of at most 30 seconds.",
+            _set(window, "parameters/duration_s", 60),
+        ),
+        (
+            "signal_window_no_start",
+            "The start is required.",
+            _set(window, "parameters/start_s", DROP),
+        ),
+        (
+            "signal_window_transform",
+            "Nothing is computed.",
+            _set(window, "transform", activity["transform"]),
+        ),
+        (
+            "signal_window_no_signal",
+            "The store is required.",
+            _set(window, "inputs", window["inputs"][1:]),
+        ),
+        (
+            "signal_window_other_input",
+            "Only the store and the floor's tables.",
+            _set(window, "inputs", [*window["inputs"], activity["inputs"][0]]),
+        ),
+    ]
+
+
+def ic_classes_content_verdicts() -> list[tuple[str, str, object]]:
+    counts = {
+        "classifier": "ICLabel",
+        "categories": json.loads(ICLABEL)["categories"],
+        "counts": [12, 3, 2, 0, 1, 0, 4],
+        "summed_variance_pct": [61.25, 9.5, 14.75, 0, 0.5, 0, 6.125],
+        "n_components": 22,
+    }
+    edges = json.loads(EDGES)
+    return [
+        ("ic_classes_content", "Dominant counts with summed variance.", counts),
+        (
+            "ic_classes_content_negative_variance",
+            "A component's variance share may be negative.",
+            counts | {"summed_variance_pct": [-1.5, 0, 0, 0, 0, 0, 0]},
+        ),
+        (
+            "ic_classes_content_extra_member",
+            "The root is open.",
+            counts | {"threshold": 0.9},
+        ),
+        (
+            "ic_classes_content_no_classifier",
+            "The classifier is named.",
+            {k: v for k, v in counts.items() if k != "classifier"},
+        ),
+        (
+            "ic_classes_content_iclabel_order",
+            "With ICLabel, the classes are in ICLabel's order.",
+            counts | {"categories": [*counts["categories"][1:], "Brain"]},
+        ),
+        (
+            "ic_classes_content_iclabel_spelling",
+            "With ICLabel, Line Noise is spelled as ICLabel spells it.",
+            counts
+            | {
+                "categories": [
+                    c.replace("Line Noise", "Line noise") for c in counts["categories"]
+                ]
+            },
+        ),
+        (
+            "ic_classes_content_iclabel_six",
+            "With ICLabel, all seven classes.",
+            counts
+            | {
+                "categories": counts["categories"][:6],
+                "counts": counts["counts"][:6],
+                "summed_variance_pct": counts["summed_variance_pct"][:6],
+            },
+        ),
+        (
+            "ic_classes_content_other_classifier",
+            "Another classifier names its own classes.",
+            counts
+            | {
+                "classifier": "MARA",
+                "categories": ["Artifact", "Brain"],
+                "counts": [4, 18],
+                "summed_variance_pct": [20.5, 79.5],
+            },
+        ),
+        (
+            "ic_classes_content_iclabel_lowercase",
+            "ICLabel is spelled ICLabel, so a change of case cannot open its classes.",
+            counts
+            | {
+                "classifier": "iclabel",
+                "categories": ["a", "b", "c", "d", "e", "f", "g"],
+            },
+        ),
+        (
+            "ic_classes_content_no_variance",
+            "summed_variance_pct is required.",
+            {k: v for k, v in counts.items() if k != "summed_variance_pct"},
+        ),
+        (
+            "ic_classes_content_no_n",
+            "n_components is required.",
+            {k: v for k, v in counts.items() if k != "n_components"},
+        ),
+        (
+            "ic_classes_content_edges",
+            "Classes are categories, not edges.",
+            edges | {"summed_variance_pct": [1.0], "n_components": 3},
+        ),
+        (
+            "ic_classes_content_unit",
+            "Categories carry no unit (the histogram's rule).",
+            counts | {"unit": "%"},
+        ),
+        (
+            "ic_classes_content_zero_components",
+            "At least one component.",
+            counts | {"n_components": 0},
+        ),
+        (
+            "ic_classes_content_text_variance",
+            "A variance share is a number.",
+            counts | {"summed_variance_pct": ["61.25", 9.5, 14.75, 0, 0.5, 0, 6.125]},
+        ),
+    ]
+
+
+# ── The presets' own checks ───────────────────────────────────────────────
+
+
+def _with_file(view: dict, role: str, data: bytes) -> dict:
+    """A copy of the view whose data entry for the role names these bytes."""
+    out = copy.deepcopy(view)
+    entry = next(e for e in out["data"] if e["role"] == role)
+    entry.update(size=len(data), sha256=hashlib.sha256(data).hexdigest())
+    return out
+
+
+def _location(view: dict, role: str) -> str:
+    return next(e for e in view["data"] if e["role"] == role)["location"]
+
+
+IC_COMPONENTS = [f"IC{i:03d}" for i in range(1, 7)]
+
+
+def components_table(names: list[str], header: str = "component") -> bytes:
+    rows = [f"{header} variance_pct brain other"]
+    rows += [f"{name} {30 / (i + 1):.4f} 0.9 0.1" for i, name in enumerate(names)]
+    return tsv(*rows)
+
+
+def ic_maps_check_cases() -> list[Case]:
+    maps = preset_views()["icmaps"]
+    out = []
+    for name, covers, data in [
+        (
+            "ic_maps",
+            "The components table names the maps, in order.",
+            components_table(IC_COMPONENTS),
+        ),
+        (
+            "ic_maps_reordered",
+            "Two components in the other order.",
+            components_table([IC_COMPONENTS[1], IC_COMPONENTS[0], *IC_COMPONENTS[2:]]),
+        ),
+        (
+            "ic_maps_short",
+            "One component row fewer than the maps.",
+            components_table(IC_COMPONENTS[:5]),
+        ),
+        (
+            "ic_maps_long",
+            "One component row more than the maps.",
+            components_table([*IC_COMPONENTS, "IC007"]),
+        ),
+        (
+            "ic_maps_renamed",
+            "IC1 is not IC001: names compare as text.",
+            components_table([f"IC{i}" for i in range(1, 7)]),
+        ),
+        (
+            "ic_maps_no_column",
+            "The file has no column component (the generic word).",
+            components_table(IC_COMPONENTS, header="name"),
+        ),
+        (
+            "ic_maps_ragged",
+            "A row with a cell missing (the generic word).",
+            components_table(IC_COMPONENTS) + b"IC007\t1\n",
+        ),
+    ]:
+        view = _with_file(maps, "components", data)
+        out.append(Case(name, covers, view, {_location(view, "components"): data}))
+    view = _with_file(maps, "components", components_table(IC_COMPONENTS))
+    tampered = components_table(IC_COMPONENTS).replace(b"0.9", b"0.8", 1)
+    out.append(
+        Case(
+            "ic_maps_digest",
+            "The components file is not the one recorded.",
+            view,
+            {_location(view, "components"): tampered},
+        )
+    )
+    return out
+
+
+def ic_classes_check_cases() -> list[Case]:
+    classes = preset_views()["icclasses"]
+    good = {
+        "classifier": "ICLabel",
+        "categories": json.loads(ICLABEL)["categories"],
+        "counts": [12, 3, 2, 0, 1, 0, 4],
+        "summed_variance_pct": [61.25, 9.5, 14.75, 0, 0.5, 0, 6.125],
+        "n_components": 22,
+    }
+    other = {
+        "classifier": "MARA",
+        "categories": ["Artifact", "Brain"],
+        "counts": [4, 18],
+        "summed_variance_pct": [20.5, 79.5],
+        "n_components": 22,
+    }
+    out = []
+    for name, covers, members in [
+        ("ic_classes", "ICLabel's classes, counts that sum to n_components.", good),
+        ("ic_classes_other_classifier", "Another classifier's own classes.", other),
+        (
+            "ic_classes_iclabel_order",
+            "ICLabel's classes out of order: the histogram draws, the preset refuses.",
+            good | {"categories": [*good["categories"][1:], "Brain"]},
+        ),
+        (
+            "ic_classes_no_variance",
+            "No summed_variance_pct: a histogram content, not this preset's.",
+            {k: v for k, v in good.items() if k != "summed_variance_pct"},
+        ),
+        (
+            "ic_classes_variance_length",
+            "Six summed variances for seven classes.",
+            good | {"summed_variance_pct": good["summed_variance_pct"][:6]},
+        ),
+        (
+            "ic_classes_components_total",
+            "Counts that sum to 22 with n_components 21.",
+            good | {"n_components": 21},
+        ),
+        (
+            "ic_classes_order_variance_before_total",
+            "Both faults: the variance length comes first.",
+            good | {"summed_variance_pct": [1.0], "n_components": 21},
+        ),
+        (
+            "ic_classes_order_content_before_variance",
+            "Both faults, ICLabel's classes out of order and six summed variances: "
+            "the content schema comes first.",
+            good
+            | {
+                "categories": [*good["categories"][1:], "Brain"],
+                "summed_variance_pct": good["summed_variance_pct"][:6],
+            },
+        ),
+        (
+            "ic_classes_order_content_before_total",
+            "Both faults: the content schema comes first.",
+            good | {"classifier": "", "n_components": 21},
+        ),
+        (
+            "ic_classes_base_refuses",
+            "Six counts for seven classes: the base refuses "
+            "first and the view falls back.",
+            good | {"counts": good["counts"][:6]},
+        ),
+    ]:
+        data = content(**members)
+        view = _with_file(classes, "histogram", data)
+        out.append(Case(name, covers, view, {_location(view, "histogram"): data}))
+    return out
+
+
+FLOOR_CHANNELS = tsv(
+    "name type status status_description nemar_reason",
+    "Fp1 EEG good n/a n/a",
+    "Fp2 EEG good n/a n/a",
+    "F3 EEG good n/a n/a",
+    "P4 EEG bad flat flatline",
+    "ECG ECG n/a non-signal not_assessed",
+)
+STORE_LABELS = ["Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4", "ECG"]
+FLOOR_SEGMENTS = tsv(
+    "onset duration label nemar_reason",
+    "151.700000 0.300000 bad_window clean_windows",
+    "152.100000 0.050000 burst asr_repaired",
+)
+
+
+def _with_input(view: dict, role: str, data: bytes) -> dict:
+    """A copy of the view whose file input for the role names these bytes."""
+    out = copy.deepcopy(view)
+    entry = next(i for i in out["inputs"] if i["role"] == role)["file"]
+    entry.update(size=len(data), sha256=hashlib.sha256(data).hexdigest())
+    return out
+
+
+def _input_at(view: dict, role: str) -> str:
+    return next(i for i in view["inputs"] if i["role"] == role)["file"]["location"]
+
+
+def signal_window_check_cases() -> list[tuple[str, str, dict, dict, dict]]:
+    window = preset_views()["midsegment"]
+    declared = next(i for i in window["inputs"] if i["role"] == "signal")["store"][
+        "content_sha256"
+    ]
+
+    def at(
+        start_s,
+        duration_s,
+        samples=75000,
+        rate=250.0,
+        published=declared,
+        channels=FLOOR_CHANNELS,
+        segments=FLOOR_SEGMENTS,
+        recorded=None,
+        caps=None,
+        labels=STORE_LABELS,
+    ):
+        """A window with the floor's tables; recorded, when given, maps a role
+        to the bytes the view declares in place of the bytes served."""
+        view = _set(
+            _set(
+                _set(window, "parameters/start_s", start_s),
+                "parameters/duration_s",
+                duration_s,
+            ),
+            "parameters/bad_segment_table",
+            segments is not None,
+        )
+        files = {}
+        for role, data in (("channels", channels), ("badsegments", segments)):
+            if data is None:
+                view["inputs"] = [i for i in view["inputs"] if i["role"] != role]
+                continue
+            view = _with_input(view, role, (recorded or {}).get(role, data))
+            files[_input_at(view, role)] = data
+        store = {
+            "labels": labels,
+            "samples": samples,
+            "rate": rate,
+            "published_sha256": published,
+        }
+        return view, files, store, caps or {}
+
+    tampered = FLOOR_SEGMENTS.replace(b"0.300000", b"0.310000", 1)
+    no_label = tsv("onset duration nemar_reason", "151.700000 0.300000 clean_windows")
+    no_status = tsv("name type", "Fp1 EEG")
+    ragged = FLOOR_SEGMENTS + b"153\n"
+    return [
+        (
+            "signal_window",
+            "Two seconds at 151.5 s, the digest published and "
+            "matching, with the floor's bad channel and both its segments.",
+            *at(151.5, 2),
+        ),
+        (
+            "signal_window_not_checked",
+            "The serving copy publishes no digest.",
+            *at(151.5, 2, published=None),
+        ),
+        (
+            "signal_window_no_bad_segment_table",
+            "The floor wrote no bad segments: drawn, the bad channel marked, and "
+            "the note that nothing is marked as a bad segment.",
+            *at(151.5, 2, segments=None),
+        ),
+        (
+            "signal_window_columns_reordered",
+            "Both tables' columns in another order: found by name.",
+            *at(
+                151.5,
+                2,
+                channels=tsv(
+                    "status name type",
+                    "good Fp1 EEG",
+                    "bad P4 EEG",
+                    "n/a ECG ECG",
+                ),
+                segments=tsv(
+                    "label onset duration nemar_reason",
+                    "bad_window 151.700000 0.300000 clean_windows",
+                    "burst 152.100000 0.050000 asr_repaired",
+                ),
+            ),
+        ),
+        (
+            "signal_window_bad_channel_unknown",
+            "A bad channel named p4 where the store has P4: names compare as "
+            "exact strings, and an unknown bad channel refuses the view.",
+            *at(151.5, 2, channels=FLOOR_CHANNELS.replace(b"P4", b"p4", 1)),
+        ),
+        (
+            "signal_window_order_channels_file_before_segments_file",
+            "A channels file of the wrong size and bad segments of the wrong "
+            "digest: the channels file is checked first.",
+            *at(
+                151.5,
+                2,
+                channels=FLOOR_CHANNELS + b"F4\tEEG\tgood\tn/a\tn/a\n",
+                segments=tampered,
+                recorded={"channels": FLOOR_CHANNELS, "badsegments": FLOOR_SEGMENTS},
+            ),
+        ),
+        (
+            "signal_window_order_channels_before_segments",
+            "Channels with no status and an onset that is no number: the channels "
+            "are read first.",
+            *at(
+                151.5,
+                2,
+                channels=no_status,
+                segments=tsv("onset duration label", "n/a 0.300000 bad_window"),
+            ),
+        ),
+        (
+            "signal_window_onset_before_duration",
+            "An onset that is no number and a duration beyond binary64: the onset "
+            "column is read first.",
+            *at(151.5, 2, segments=tsv("onset duration label", "n/a 1e400 burst")),
+        ),
+        (
+            "signal_window_order_tables_before_bad_channels",
+            "Bad segments with no label and an unknown bad channel: the tables "
+            "come first.",
+            *at(
+                151.5,
+                2,
+                channels=FLOOR_CHANNELS.replace(b"P4", b"p4", 1),
+                segments=no_label,
+            ),
+        ),
+        (
+            "signal_window_order_bad_channels_before_window",
+            "An unknown bad channel and a window outside the recording: the bad "
+            "channels come first.",
+            *at(300, 2, channels=FLOOR_CHANNELS.replace(b"P4", b"p4", 1)),
+        ),
+        (
+            "signal_window_digest_mismatch",
+            "The serving copy publishes another digest.",
+            *at(151.5, 2, published="f" * 64),
+        ),
+        (
+            "signal_window_badsegments_digest",
+            "The bad segments are not the file "
+            "recorded: nothing is drawn, never a window unmarked.",
+            *at(151.5, 2, segments=tampered, recorded={"badsegments": FLOOR_SEGMENTS}),
+        ),
+        (
+            "signal_window_channels_digest",
+            "The channels table is not the file recorded.",
+            *at(
+                151.5,
+                2,
+                channels=FLOOR_CHANNELS.replace(b"bad", b"bed", 1),
+                recorded={"channels": FLOOR_CHANNELS},
+            ),
+        ),
+        (
+            "signal_window_badsegments_no_label",
+            "The bad segments have no column label.",
+            *at(151.5, 2, segments=no_label),
+        ),
+        (
+            "signal_window_channels_no_status",
+            "The channels table has no column status.",
+            *at(151.5, 2, channels=no_status),
+        ),
+        (
+            "signal_window_badsegments_onset_text",
+            "A bad segment whose onset is not a number.",
+            *at(
+                151.5,
+                2,
+                segments=tsv("onset duration label", "n/a 0.300000 bad_window"),
+            ),
+        ),
+        (
+            "signal_window_tables_too_many_bytes",
+            "A floor table longer than a cap on bytes lowered to 100.",
+            *at(151.5, 2, caps={"bytes_per_role": 100}),
+        ),
+        (
+            "signal_window_tables_too_many_cells",
+            "Floor tables over a cap on cells lowered to 12.",
+            *at(151.5, 2, caps={"cells_per_role": 12}),
+        ),
+        (
+            "signal_window_badsegments_ragged",
+            "A bad segments row with one cell.",
+            *at(151.5, 2, segments=ragged),
+        ),
+        (
+            "signal_window_clipped",
+            "A window past the recording's end is clipped.",
+            *at(299.5, 2),
+        ),
+        (
+            "signal_window_outside",
+            "A window that starts at the recording's end.",
+            *at(300, 2),
+        ),
+        (
+            "signal_window_between_samples",
+            "A window between two samples holds none.",
+            *at(0.001, 0.002),
+        ),
+        (
+            "signal_window_odd_rate",
+            "Times k / rate at 500/7 Hz, where ceil(start * "
+            "rate) would start a sample late and end a sample early.",
+            *at(0.098, 0.364, samples=100, rate=500 / 7),
+        ),
+        (
+            "signal_window_order_files_before_digest",
+            "Both faults: the file comes first.",
+            *at(
+                151.5,
+                2,
+                published="f" * 64,
+                segments=tampered,
+                recorded={"badsegments": FLOOR_SEGMENTS},
+            ),
+        ),
+        (
+            "signal_window_order_digest_before_tables",
+            "Both faults: the digest comes first.",
+            *at(151.5, 2, published="f" * 64, segments=no_label),
+        ),
+        (
+            "signal_window_order_tables_before_window",
+            "Both faults: the tables come first.",
+            *at(300, 2, segments=no_label),
+        ),
+        (
+            "signal_window_order",
+            "Both faults: the digest before the window.",
+            *at(300, 2, published="f" * 64),
+        ),
+    ]
+
+
+def preset_checks() -> dict:
+    cases = []
+    for case in [*ic_maps_check_cases(), *ic_classes_check_cases()]:
+        expected = check_preset(case.view, case.files, REGISTRY)
+        cases.append(_header(case) | {"expected": expected})
+    for name, covers, view, files, store, caps in signal_window_check_cases():
+        registry = REGISTRY | {"caps": REGISTRY["caps"] | caps}
+        expected = check_preset(view, files, registry, store)
+        cases.append(
+            {
+                "name": name,
+                "covers": covers,
+                "view": view,
+                "files": _encoded(files),
+                "store": store,
+            }
+            | ({"caps": caps} if caps else {})
+            | {"expected": expected}
+        )
+    names = [c["name"] for c in cases]
+    if len(names) != len(set(names)):
+        raise AssertionError("case names repeat")
+    return {
+        "format": PRESET_CHECKS_FORMAT,
+        "spec": "docs/views/presets.md",
+        "description": (
+            "The checks a renderer of a preset runs beyond its base. For each case, "
+            "decode files (UTF-8 text), run the preset's checks on view (for a "
+            "signal window, with store: the recording's samples, its rate and the "
+            "digest the serving copy publishes, or null) and compare with expected: "
+            "word null when they pass (with the state, the window's first "
+            "sample and count, the bad channels and the segments for a signal "
+            "window), else the word and its outcome: "
+            "base (drawn by its base, with the word), nothing (nothing drawn) or "
+            "fallback (the base itself refused the file first). A case's caps take "
+            "the place of the registry's caps of the same names for that case."
+        ),
+        "cases": cases,
+    }
+
+
 def _errors(validator, instance) -> list[list[str]]:
     pairs = {
         (e.validator, "/".join(str(p) for p in e.absolute_path))
@@ -1871,8 +2876,13 @@ def _errors(validator, instance) -> list[list[str]]:
 def verdicts() -> dict:
     cases = []
     for schema, validator, items in [
-        ("view", view_validator(), view_verdicts()),
+        ("view", view_validator(), [*view_verdicts(), *preset_verdicts()]),
         (HISTOGRAM_CONTENT, histogram_content_validator(), content_verdicts()),
+        (
+            IC_CLASSES_CONTENT,
+            content_validator(IC_CLASSES_CONTENT),
+            ic_classes_content_verdicts(),
+        ),
     ]:
         for name, covers, instance in items:
             errors = _errors(validator, instance)
@@ -1986,7 +2996,11 @@ def render() -> dict[Path, str]:
     """The text of each vectors file."""
     return {
         path: dump(document) + "\n"
-        for path, document in ((MODELS_PATH, models()), (VERDICTS_PATH, verdicts()))
+        for path, document in (
+            (MODELS_PATH, models()),
+            (VERDICTS_PATH, verdicts()),
+            (PRESET_CHECKS_PATH, preset_checks()),
+        )
     }
 
 

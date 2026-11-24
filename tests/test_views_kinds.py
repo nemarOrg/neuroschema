@@ -39,6 +39,7 @@ from neuroschema.views import (
     snap_row,
 )
 from neuroschema.views.models import (
+    content_validator,
     histogram_content_validator,
     number_text,
     view_validator,
@@ -51,6 +52,14 @@ VERDICTS = json.loads((VECTORS / "kinds-verdicts.v1.json").read_text(encoding="u
 SPEC = ROOT / "docs" / "views" / "generic-kinds.md"
 REGISTRY = load_registry()
 GENERIC = ["nemar.table", "nemar.lines", "nemar.heatmap", "nemar.histogram"]
+PRESETS = [
+    "nemar.spectrum",
+    "nemar.ic-maps",
+    "nemar.ic-classes",
+    "nemar.ic-activity",
+    "nemar.signal-window",
+]
+IC_CLASSES = "content.nemar.ic-classes.v1.schema.json"
 
 CASES = MODELS["cases"]
 REFUSALS = MODELS["refusals"]
@@ -270,6 +279,7 @@ VERDICT_CASES = VERDICTS["cases"]
 VALIDATORS = {
     "view": view_validator(),
     "content.nemar.histogram.v1.schema.json": histogram_content_validator(),
+    IC_CLASSES: content_validator(IC_CLASSES),
 }
 
 
@@ -294,16 +304,19 @@ def test_verdict_corpus_header():
 
 
 def test_verdict_corpus_covers_each_kind_both_ways():
-    """Each generic kind and the content schema has valid and invalid cases."""
+    """Each registered kind and each content schema has valid and invalid cases."""
     groups: dict[str, set[bool]] = {}
+    known = [*GENERIC, *PRESETS]
     for case in VERDICT_CASES:
         instance = case["instance"]
         if case["schema"] == "view":
-            group = instance.get("kind") if instance.get("kind") in GENERIC else "env"
+            group = instance.get("kind") if instance.get("kind") in known else "env"
         else:
             group = case["schema"]
         groups.setdefault(group, set()).add(case["valid"])
-    for group in [*GENERIC, "env", "content.nemar.histogram.v1.schema.json"]:
+    contents = sorted(p.name for p in SCHEMAS.glob("content.*.schema.json"))
+    assert set(VALIDATORS) == {"view", *contents}
+    for group in [*known, "env", *contents]:
         assert groups.get(group) == {True, False}, group
 
 

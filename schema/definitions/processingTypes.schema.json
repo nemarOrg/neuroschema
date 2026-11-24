@@ -44,8 +44,9 @@
     },
     "metricName": {
       "type": "string",
-      "description": "Name of a quality metric. Safe as a document key (no . or $); allows namespaced names such as eeg:lineNoise. Naming rules live in signalJourney's nemar namespace.",
-      "pattern": "^[A-Za-z][A-Za-z0-9_:-]{0,127}$(?!\n)"
+      "description": "Name of a quality metric, safe as a document key (no . or $): a recipe's metric by a bare name, or a plugin's by <plugin>:<name>, one colon and a name after it that starts with a letter. In a recording's dataQuality metrics each name is paired with its producer (dataQuality.schema.json, recordRecipeResults.metrics: a bare name requires recipe, a prefixed one plugin); that the prefix is the producing plugin's name is the writer's rule.",
+      "maxLength": 128,
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*(:[A-Za-z][A-Za-z0-9_-]*)?$(?!\n)"
     },
     "relativeLocation": {
       "type": "string",
