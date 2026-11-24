@@ -56,7 +56,7 @@ The vectors give the note in `notes`.
 A power spectral density per sensor, over `nemar.lines`.
 
 - **`values`** is a `nemar.lines` values entry: the column `freq_hz` (a `number` in `Hz`) is the x column, with the dimension `freq` along the rows (`unit` `Hz`, coordinates `{"column": "freq_hz"}`), and every other declared column is one sensor, a `number` in `dB`, with the dimension `sensor` along the columns.
-- **`layout`**, optional, is a `nemar.sensor-field` layout entry (`name`, `theta_deg`, `radius`, optionally `sensor_type`).
+- **`layout`**, optional, is a `nemar.sensor-field` layout entry (`name`, `theta_deg`, `radius`, and `sensor_type`, required when `position_source` is `measured`).
   With a layout, the values' sensor coordinates are `{"role": "layout", "column": "name"}`: the sensors are the layout's rows, by position.
   Without one, they are `{"header": true}`: the sensors are the values' header names, which a renderer places with [`nemar.sensor-labels.v1`](sensor-labels.md).
 

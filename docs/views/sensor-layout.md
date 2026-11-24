@@ -31,7 +31,7 @@ A view declares the transform in one of two forms (`schema/views/transform.nemar
 2. **Rows without a position.**
    A row whose x, y or z is not finite has no layout (no theta and no radius) and takes no part in the fit.
 3. **Center.**
-   No center is guessed: positions that do not fix one are refused with `positions_flat`, and a renderer places the sensors by name instead.
+   No center is guessed: positions that do not fix one are refused with `positions_flat`, and a renderer places the sensors by name instead, only when every drawn row is typed EEG ([sensor-field.md](sensor-field.md#sensors)).
    - **Template positions** (`n/a` and a `montage`) are centered on the montage's own center, the `center` its file in `views/montages` stores (right-anterior-superior meters, rotated into ALS as the positions are; method `montage`).
      That center is the sphere this step fits to all of the montage's electrodes, computed once when the montage files are generated (`scripts/generate_montages.py`, which `--check` holds to it).
      Template positions are never fitted themselves: a subset of a montage, such as its midline or one coronal row, fixes no sphere of its own, and about the montage's center each electrode lands where the full cap puts it.
@@ -63,7 +63,7 @@ The output is one layout row per input row, in input order: the name, theta in d
 | `frame_unknown` | The coordinate system is not in the [frame table](#frames), and the positions are not template positions (`n/a` with a montage). |
 | `positions_flat` | Measured positions do not fix a center: none, all at one point, too close to one plane (singular ratio below 0.05), or on a sphere more than 3 times their scale (step 3). |
 
-When the layout is refused, a renderer places the sensors by their names with `nemar.sensor-labels.v1`, a separate algorithm specified beside this one, and says why.
+When the layout is refused, a renderer places the sensors by their names with `nemar.sensor-labels.v1`, a separate algorithm specified beside this one, and says why, only when every row the map draws is typed EEG; otherwise the refusal's word takes every map's place ([sensor-field.md](sensor-field.md#sensors)).
 After `frame_unknown`, it says that the positions' coordinate system is not one whose orientation is known, or names it inconsistently.
 After `positions_flat`, it says that the positions are too flat, or too few, to locate the center of the head.
 
