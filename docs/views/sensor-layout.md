@@ -26,8 +26,8 @@ A view declares the transform in one of two forms (`schema/views/transform.nemar
    A coordinate system of [ALS orientation](#frames) is kept as it is.
    One of right-anterior-superior (RAS) orientation (x right, y anterior, z superior) becomes ALS as `(x, y, z) -> (y, -x, z)`, the second component negated, not subtracted from 0.
    Template positions (coordinate system `n/a` and a `montage`) are RAS.
-   The montage is compared exactly, case included, against the fourteen names of [`sensor-labels.md`](sensor-labels.md#montages), never looked up as a file: a file system may fold case, and `views/montages` also holds `PROVENANCE.json`, which is not a montage.
-   Anything else is refused with `frame_unknown`: any other name, including `Other`, `Pixels`, `individual` and a known name in another case; `n/a` without a montage; a montage that is not one of the fourteen (`gsn-hydrocel-32`, `PROVENANCE`); and a montage beside a coordinate system other than `n/a`, whose frame would be ambiguous.
+   The montage is compared exactly, case included, against the twenty names of [`sensor-labels.md`](sensor-labels.md#montages), never looked up as a file: a file system may fold case, and `views/montages` also holds `PROVENANCE.json`, which is not a montage.
+   Anything else is refused with `frame_unknown`: any other name, including `Other`, `Pixels`, `individual` and a known name in another case; `n/a` without a montage; a montage that is not one of the twenty (`gsn-hydrocel-32`, `PROVENANCE`); and a montage beside a coordinate system other than `n/a`, whose frame would be ambiguous.
    No frame is assumed.
 2. **Rows without a position.**
    A row whose x, y or z is not finite has no position, and neither has a row at exactly (0, 0, 0), with either sign of zero: files write it for a position they do not have, and no sensor sits at a frame's origin.
@@ -43,7 +43,7 @@ A view declares the transform in one of two forms (`schema/views/transform.nemar
    - **Template positions** (`n/a` and a `montage`) are centered on the montage's own center, the `center` its file in `views/montages` stores (right-anterior-superior meters, rotated into ALS as the positions are; method `montage`).
      That center is the sphere this step fits to all of the montage's electrodes, computed once when the montage files are generated (`scripts/generate_montages.py`, which `--check` holds to it).
      Template positions are never fitted themselves: a subset of a montage, such as its midline or one coronal row, fixes no sphere of its own, and about the montage's center each electrode lands where the full cap puts it.
-     A montage outside the fourteen is refused with `frame_unknown` at step 1.
+     A montage outside the twenty is refused with `frame_unknown` at step 1.
    - **Measured positions** are centered on the sphere fitted to all their scalp rows with a position, whether or not a view draws a value for each, so a writer gives the recording's full set of measured positions (method `sphere`).
      With `n` such positions `p`, the centroid `c0` is their sum, in row order, divided by `n`; `q = p - c0`; the scale `s` is the largest Euclidean length of a `q`; and `u = q / s`.
      If `s = 0` (no positions, or all at one point), they are refused.

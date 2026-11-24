@@ -1,17 +1,17 @@
 """``nemar.sensor-labels.v1``: sensor positions inferred from channel names.
 
 Given a recording's channels (name and BIDS type, in recording order) and,
-optionally, its cap model, the algorithm normalizes each name, matches the
-names against a fixed set of standard montages, and either places the channels
-on the one montage the names identify or refuses with a reason. It never falls
-back to a default: when no montage is a confident match, nothing is placed and
-the reason says why.
+optionally, its cap model, the algorithm
+normalizes each name, matches the names against a fixed set of standard
+montages, and either places the channels on the one montage the names identify
+or refuses with a reason. It never falls back to a default: when no montage is
+a confident match, nothing is placed and the reason says why.
 
 ``docs/views/sensor-labels.md`` is the normative text,
 ``views/vectors/sensor-labels.v1.json`` holds the cases every implementation
 reproduces, and ``views/montages/`` holds the montages (generated from MNE-Python
-by ``scripts/generate_montages.py``). This module is pure Python, with no numpy,
-so it runs wherever neuroschema does.
+and EEGLAB's files by ``scripts/generate_montages.py``). This module is pure
+Python, with no numpy, so it runs wherever neuroschema does.
 """
 
 from __future__ import annotations
@@ -39,6 +39,12 @@ MONTAGE_ORDER = (
     "GSN-HydroCel-129",
     "GSN-HydroCel-256",
     "GSN-HydroCel-257",
+    "GSN64v2_0",
+    "GSN65v2_0",
+    "GSN128",
+    "GSN129",
+    "GSN256",
+    "GSN257",
     "biosemi16",
     "biosemi32",
     "biosemi64",
@@ -112,8 +118,9 @@ REFERENCES = frozenset(
 FAMILY_ALIASES: Mapping[str, Mapping[str, str]] = {
     # The American Clinical Neurophysiology Society (ACNS) renamed these.
     "10-05": {"t3": "t7", "t4": "t8", "t5": "p7", "t6": "p8"},
-    # EGI's vertex reference electrode.
+    # EGI's vertex reference electrode, on the HydroCel and the older nets.
     "GSN-HydroCel": {"vref": "cz"},
+    "GSN": {"vref": "cz"},
 }
 # Aliases of one montage. An EGI net's vertex reference, Cz, is often named by
 # the number after the net's last electrode; on a larger net that number is an
@@ -123,6 +130,9 @@ MONTAGE_ALIASES: Mapping[str, Mapping[str, str]] = {
     "GSN-HydroCel-65_1.0": {"e65": "cz"},
     "GSN-HydroCel-129": {"e129": "cz"},
     "GSN-HydroCel-257": {"e257": "cz"},
+    "GSN65v2_0": {"e65": "cz"},
+    "GSN129": {"e129": "cz"},
+    "GSN257": {"e257": "cz"},
 }
 
 MIN_CHANNELS = 8
@@ -135,18 +145,18 @@ COMMON_REFERENCE_SHARE = (9, 10)
 COINCIDENT_M = 1e-9
 # A recording on a numbered net carries most of the net: a chosen net of these
 # families must match at least 90% of its electrodes.
-NET_FAMILIES = ("GSN-HydroCel", "BioSemi")
+NET_FAMILIES = ("GSN-HydroCel", "GSN", "BioSemi")
 NET_COVERAGE = (9, 10)
 
-# Older EGI nets (the Geodesic Sensor Net 200, the GSN 64 version 2.0) number
-# their electrodes E1, E2, ... as the HydroCel nets do, on other positions, so
-# names alone never place a recording on a HydroCel net: the recording's cap
-# model (BIDS CapManufacturersModelName) must name one. Each model, folded by
-# fold_cap_model, names the HydroCel montages it fits: a model without a size
-# fits every HydroCel net, and a sized one the net of that size with and
-# without its vertex reference. Any other string, an older net's name
-# included, is not a HydroCel model. A new model is a new version.
-HYDROCEL_FAMILY = "GSN-HydroCel"
+# EGI's nets number their electrodes E1, E2, ... alike: the HydroCel nets
+# (family GSN-HydroCel) and the older Geodesic Sensor Nets of EEGLAB's files
+# (family GSN: the GSN 200 128 and 256 channel nets and the GSN 64 version 2.0)
+# put the same numbers on positions 20% to 40% of the head radius apart. Names
+# never choose between them: the recording's cap model does. Each model, folded
+# by fold_cap_model, names the nets it fits, each net with and without its
+# vertex reference; a HydroCel model without a size fits every HydroCel net.
+# Any other string names no net. A new model is a new version.
+EGI_FAMILIES = ("GSN-HydroCel", "GSN")
 _HYDROCEL_NETS = {
     "32": ("GSN-HydroCel-32",),
     "64": ("GSN-HydroCel-64_1.0", "GSN-HydroCel-65_1.0"),
@@ -154,7 +164,12 @@ _HYDROCEL_NETS = {
     "256": ("GSN-HydroCel-256", "GSN-HydroCel-257"),
 }
 _EVERY_HYDROCEL_NET = tuple(n for nets in _HYDROCEL_NETS.values() for n in nets)
-HYDROCEL_CAP_MODELS: Mapping[str, tuple[str, ...]] = {
+_OLDER_NETS = {
+    "64": ("GSN64v2_0", "GSN65v2_0"),
+    "128": ("GSN128", "GSN129"),
+    "256": ("GSN256", "GSN257"),
+}
+CAP_MODELS: Mapping[str, tuple[str, ...]] = {
     "hydrocel geodesic sensor net": _EVERY_HYDROCEL_NET,
     # The misspelling of OpenNeuro ds004395's CapManufacturersModelName.
     "hydrocel geodisic sensor net": _EVERY_HYDROCEL_NET,
@@ -169,8 +184,38 @@ HYDROCEL_CAP_MODELS: Mapping[str, tuple[str, ...]] = {
             f"hydrocel gsn {size} 1.0",
         )
     },
-    # The montage names (MNE-Python's, EEGLAB's and FieldTrip's files).
-    **{name.lower(): nets for nets in _HYDROCEL_NETS.values() for name in nets},
+    # The GSN 200 128-channel net, version 2.1: the Healthy Brain Network's
+    # ManufacturersModelName first, then its other spellings.
+    **dict.fromkeys(
+        (
+            "128-channel gsn 200 v.2.1",
+            "128-channel gsn 200 v2.1",
+            "gsn 200 v.2.1",
+            "gsn 200 v2.1",
+            "gsn 128 v2",
+            "gsn 128 v2.0",
+        ),
+        _OLDER_NETS["128"],
+    ),
+    # The 64-channel Geodesic Sensor Net, version 2.0.
+    **dict.fromkeys(
+        (
+            "gsn 64 v2.0",
+            "gsn 64 v2",
+            "gsn 64 2.0",
+            "geodesic sensor net 64 2.0",
+            "geodesic sensor net 64 v2.0",
+        ),
+        _OLDER_NETS["64"],
+    ),
+    # The montage names, which are MNE-Python's, EEGLAB's and FieldTrip's file
+    # names (the older 256-channel net is named by EEGLAB's file name only).
+    **{
+        name.lower(): nets
+        for table in (_HYDROCEL_NETS, _OLDER_NETS)
+        for nets in table.values()
+        for name in nets
+    },
 }
 
 # Channel status, decided from the names alone.
@@ -187,10 +232,10 @@ REASONS = (
     "labels_unrecognized",
     "share_too_low",
     "too_few_matched",
+    "cap_model_unknown",
     "duplicate_label",
     "montage_ambiguous",
     "net_coverage_low",
-    "cap_model_unknown",
 )
 
 # Step 1's fold table, the same in every runtime: full-width ASCII (U+FF01 to
@@ -345,17 +390,17 @@ def excluded_by_name(cleaned: str) -> bool:
 
 
 def fold_cap_model(model: str) -> str:
-    """A cap model as :data:`HYDROCEL_CAP_MODELS` compares it: trimmed and with
-    each run of step-2 whitespace one space, A to Z folded, and nothing else."""
+    """A cap model as :data:`CAP_MODELS` compares it: trimmed and with each
+    run of step-2 whitespace one space, A to Z folded, and nothing else."""
     return ascii_lower(_WHITESPACE_RUN.sub(" ", model.strip(_WHITESPACE)))
 
 
 def cap_model_nets(model: str | None) -> tuple[str, ...]:
-    """The HydroCel montages a recording's cap model names (none for no model,
-    or for any string not in :data:`HYDROCEL_CAP_MODELS`)."""
+    """The EGI montages a cap model names (none for no model, or for any
+    string not in :data:`CAP_MODELS`)."""
     if model is None:
         return ()
-    return tuple(HYDROCEL_CAP_MODELS.get(fold_cap_model(model), ()))
+    return tuple(CAP_MODELS.get(fold_cap_model(model), ()))
 
 
 def _common_reference(rights: Sequence[str], pending: int) -> str | None:
@@ -477,7 +522,7 @@ def infer_positions(
     ``channels`` is (name, BIDS type or None) per channel, in recording order;
     ``montages`` defaults to :func:`load_montages`; ``cap_model`` is the
     recording's BIDS ``CapManufacturersModelName``, if it has one, which a
-    placement on a HydroCel net needs (:data:`HYDROCEL_CAP_MODELS`). See
+    placement on an EGI net needs to name that net (:data:`CAP_MODELS`). See
     ``docs/views/sensor-labels.md`` for each rule.
     """
     montages = load_montages() if montages is None else tuple(montages)
@@ -505,6 +550,12 @@ def infer_positions(
 
     num, den = CONTENDER_SHARE
     contenders = [m for m in montages if len(hits[m.name]) * den >= best * num]
+    named = cap_model_nets(cap_model)
+    kept = [m for m in contenders if m.family not in EGI_FAMILIES or m.name in named]
+    if not any(len(hits[m.name]) == best for m in kept):
+        names = [m.name for m in contenders]
+        return _refused("cap_model_unknown", candidates, best, classified, names)
+    contenders = kept
     remaining = [
         m
         for m in contenders
@@ -545,11 +596,6 @@ def infer_positions(
     num, den = NET_COVERAGE
     if winner.family in NET_FAMILIES and best * den < winner.size * num:
         return _refused("net_coverage_low", candidates, best, classified, names)
-
-    if winner.family == HYDROCEL_FAMILY and winner.name not in cap_model_nets(
-        cap_model
-    ):
-        return _refused("cap_model_unknown", candidates, best, classified, names)
 
     placed = []
     for i, channel in enumerate(classified):

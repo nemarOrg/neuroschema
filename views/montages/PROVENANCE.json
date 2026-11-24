@@ -1,15 +1,26 @@
 {
   "format": "nemar.montages-provenance.v1",
-  "description": "Where the montages of nemar.sensor-labels.v1 come from. Each file holds the electrode positions MNE-Python returns for one built-in montage, times scale_to_m, rounded to 9 decimal places of a meter. Every montage is RAS: +x toward the right preauricular point, +y toward the nasion, +z up.",
+  "description": "Where the montages of nemar.sensor-labels.v1 come from. Each file holds the electrode positions MNE-Python returns for one built-in montage, or reads from one of EEGLAB's files (source, eeglab_source), times scale_to_m, rounded to 9 decimal places of a meter. Every montage is RAS: +x toward the right preauricular point, +y toward the nasion, +z up.",
   "generator": "scripts/generate_montages.py",
   "mne": {
     "version": "1.13.2",
     "license": "BSD-3-Clause",
     "license_text": "Copyright 2011-2025 MNE-Python authors\n\nRedistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\n\n1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.\n\n2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.\n\n3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
   },
+  "eeglab": {
+    "repository": "https://github.com/sccn/eeglab",
+    "commit": "1f8488b81eaec671319938278ab59bace267d341",
+    "files_last_changed": "188434a932dc34977be8befeefcea85d0e8b918a",
+    "copied_to": "scripts/montage_sources/eeglab",
+    "license": "BSD-2-Clause",
+    "license_scope": "EEGLAB's LICENSE covers eeglab.m and the functions folder; plugins may have other licenses, and it states none for sample_locs, the folder these files come from.",
+    "license_sha256": "f098d1bbf6c5628b507fd4040810b77000fa1796e988be4ee68bd0ff6607bfe2",
+    "license_text": "This is the license for the core for the eeglab.m function and\nthe source code in the \"functions\" folder. EEGLAB plugins (in the\n\"plugins\" folder) may be released under different licenses.\n\nBSD 2-Clause License\n\nCopyright (c) 2024, Swartz Center for Computational Neuroscience\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n1. Redistributions of source code must retain the above copyright notice,\nthis list of conditions and the following disclaimer.\n\n2. Redistributions in binary form must reproduce the above copyright notice,\nthis list of conditions and the following disclaimer in the documentation\nand/or other materials provided with the distribution.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE\nARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE\nLIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR\nCONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF\nSUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS\nINTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN\nCONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)\nARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF\nTHE POSSIBILITY OF SUCH DAMAGE.\n"
+  },
   "upstream": {
     "FieldTrip": "FieldTrip template/electrode/standard_1005.elc: 10-05 positions constructed by Robert Oostenveld (Oostenveld and Praamstra 2001, The five percent electrode system for high-resolution EEG and ERP measurements), in millimeters in Montreal Neurological Institute (MNI) coordinates on FieldTrip's template head (Colin27). The FieldTrip repository is GPL-3.0 and its website CC BY-SA 4.0; neither states a license for the template electrode files. MNE-Python ships the file under its BSD-3-Clause license.",
     "EGI": "Electrical Geodesics, Inc. (EGI) HydroCel Geodesic Sensor Net layouts. FieldTrip states its template/electrode/GSN-HydroCel-*.sfp files were downloaded from the EGI FTP server, and MNE-Python's montage README says its GSN-HydroCel files are taken from FieldTrip. MNE's files hold the same numbers as FieldTrip's (FieldTrip names the 64 and 65 nets without _1.0); the bytes differ in whitespace. No license is stated for the layouts by EGI or FieldTrip; MNE-Python ships them under BSD-3-Clause.",
+    "EGI via EEGLAB": "Electrical Geodesics, Inc. (EGI) Geodesic Sensor Net layouts from before the HydroCel nets, in EGI's .sfp format with EGI's fiducial names (FidNz, FidT9, FidT10), as EEGLAB ships them in sample_locs: GSN64v2_0.sfp and GSN65v2_0.sfp (the 64-channel net, version 2.0, without and with Cz), GSN128.sfp and GSN129.sfp (the GSN 200 128-channel net), GSN256.sfp and GSN257.sfp (the older 256-channel net). EEGLAB places every 64, 65, 128 and 129 channel EGI recording on GSN65v2_0.sfp or GSN129.sfp (functions/sigprocfunc/readegilocs.m); its files record neither their EGI source nor a net version beyond the 64 net's, and have not changed since sccn/eeglab commit 188434a9 (2010-02-06, no message). EEGLAB's LICENSE (BSD 2-Clause, Copyright (c) 2024 Swartz Center for Computational Neuroscience) covers eeglab.m and the functions folder and states no license for sample_locs.",
     "BioSemi": "BioSemi head cap layouts (ABC labels, A1 to H32), as spherical angles in MNE-Python's biosemi*.txt. MNE's montage README does not name their origin. BioSemi publishes the position coordinates of its standard head caps (biosemi.com/download/Cap_coords_all.xls, linked from biosemi.com/headcap.htm) with no license statement; its 16, 32 and 64 channel sheets list the same 10-20 names and angles as MNE's biosemi16/32/64.txt, in the same order (spreadsheet SHA-256 38304148957c86b16622a7511c972f268ecbe2a7da2288edd3d59718ab82e2fa); the 128, 160 and 256 channel sheets were not compared. MNE-Python ships the files under BSD-3-Clause."
   },
   "montages": [
@@ -148,6 +159,108 @@
         "head_size=None keeps the net file's own geometry, in centimeters, so each net and its Cz variant (64 and 65, 128 and 129, 256 and 257) share their electrode positions exactly; MNE's default rescales each file by its own median radius, which moves the 64/65 and 256/257 pairs apart by up to 0.14 mm."
       ],
       "mne_montage": "GSN-HydroCel-257"
+    },
+    {
+      "name": "GSN64v2_0",
+      "file": "views/montages/GSN64v2_0.json",
+      "sha256": "dee98bd698e0df8f440caa2ae86c3a54e8ec6f8c50a3ba7aa05996554783c8c1",
+      "electrodes": 64,
+      "family": "GSN",
+      "mne_call": "mne.channels._standard_montage_utils._read_sfp(<source>, head_size=None).get_positions()",
+      "mne_coord_frame": "unknown",
+      "scale_to_m": 0.01,
+      "upstream": "EGI via EEGLAB",
+      "notes": [
+        "EEGLAB's file, read by MNE-Python's own .sfp reader with head_size=None as the HydroCel nets are: the file's geometry, in centimeters, converted to meters. The older nets put each electrode number elsewhere than the HydroCel nets: about each montage's own center, a median 22% of the head radius from the HydroCel 129 net's place (128 and 129), 19% from the HydroCel 257 net's (256 and 257) and 40% from the HydroCel 65 net's (64 and 65)."
+      ],
+      "source": "scripts/montage_sources/eeglab/GSN64v2_0.sfp",
+      "source_sha256": "1986f9dd14dea9c2d5d8f717bec1c0e7c04c85dc6b403b4bd36c4ce981e2f69a",
+      "eeglab_source": "https://github.com/sccn/eeglab/blob/1f8488b81eaec671319938278ab59bace267d341/sample_locs/GSN64v2_0.sfp"
+    },
+    {
+      "name": "GSN65v2_0",
+      "file": "views/montages/GSN65v2_0.json",
+      "sha256": "0fcbf1da718b9c3a2e5e3af501c04a7618e12b908eb3d0d76b38c2bdcd151115",
+      "electrodes": 65,
+      "family": "GSN",
+      "mne_call": "mne.channels._standard_montage_utils._read_sfp(<source>, head_size=None).get_positions()",
+      "mne_coord_frame": "unknown",
+      "scale_to_m": 0.01,
+      "upstream": "EGI via EEGLAB",
+      "notes": [
+        "EEGLAB's file, read by MNE-Python's own .sfp reader with head_size=None as the HydroCel nets are: the file's geometry, in centimeters, converted to meters. The older nets put each electrode number elsewhere than the HydroCel nets: about each montage's own center, a median 22% of the head radius from the HydroCel 129 net's place (128 and 129), 19% from the HydroCel 257 net's (256 and 257) and 40% from the HydroCel 65 net's (64 and 65)."
+      ],
+      "source": "scripts/montage_sources/eeglab/GSN65v2_0.sfp",
+      "source_sha256": "c2a89461879fb713078de9cad406dc8cc34738e28b262fc8cade1e60eb5c05f4",
+      "eeglab_source": "https://github.com/sccn/eeglab/blob/1f8488b81eaec671319938278ab59bace267d341/sample_locs/GSN65v2_0.sfp"
+    },
+    {
+      "name": "GSN128",
+      "file": "views/montages/GSN128.json",
+      "sha256": "c4cf2420a5954a7e10ab301ecdd1d88990d028706ff5b10eadabaee2a48c70eb",
+      "electrodes": 128,
+      "family": "GSN",
+      "mne_call": "mne.channels._standard_montage_utils._read_sfp(<source>, head_size=None).get_positions()",
+      "mne_coord_frame": "unknown",
+      "scale_to_m": 0.01,
+      "upstream": "EGI via EEGLAB",
+      "notes": [
+        "EEGLAB's file, read by MNE-Python's own .sfp reader with head_size=None as the HydroCel nets are: the file's geometry, in centimeters, converted to meters. The older nets put each electrode number elsewhere than the HydroCel nets: about each montage's own center, a median 22% of the head radius from the HydroCel 129 net's place (128 and 129), 19% from the HydroCel 257 net's (256 and 257) and 40% from the HydroCel 65 net's (64 and 65)."
+      ],
+      "source": "scripts/montage_sources/eeglab/GSN128.sfp",
+      "source_sha256": "a127c4faeaa81fe39acc6d2770654c803d6b2a6f473b7d7ba39c8d2429f17e48",
+      "eeglab_source": "https://github.com/sccn/eeglab/blob/1f8488b81eaec671319938278ab59bace267d341/sample_locs/GSN128.sfp"
+    },
+    {
+      "name": "GSN129",
+      "file": "views/montages/GSN129.json",
+      "sha256": "04b09f15536a8e3082294c49324fb24d0db05413e3d2f046f74df1432ee3566f",
+      "electrodes": 129,
+      "family": "GSN",
+      "mne_call": "mne.channels._standard_montage_utils._read_sfp(<source>, head_size=None).get_positions()",
+      "mne_coord_frame": "unknown",
+      "scale_to_m": 0.01,
+      "upstream": "EGI via EEGLAB",
+      "notes": [
+        "EEGLAB's file, read by MNE-Python's own .sfp reader with head_size=None as the HydroCel nets are: the file's geometry, in centimeters, converted to meters. The older nets put each electrode number elsewhere than the HydroCel nets: about each montage's own center, a median 22% of the head radius from the HydroCel 129 net's place (128 and 129), 19% from the HydroCel 257 net's (256 and 257) and 40% from the HydroCel 65 net's (64 and 65)."
+      ],
+      "source": "scripts/montage_sources/eeglab/GSN129.sfp",
+      "source_sha256": "0340f4505a30b04faa46be47f6761888ad67bbc689d1f8ab7fc3b0fc2af75c8b",
+      "eeglab_source": "https://github.com/sccn/eeglab/blob/1f8488b81eaec671319938278ab59bace267d341/sample_locs/GSN129.sfp"
+    },
+    {
+      "name": "GSN256",
+      "file": "views/montages/GSN256.json",
+      "sha256": "0863de3144b4552656befe51e07dd96ffbfde7bc477cfdda22f36b16f6358943",
+      "electrodes": 256,
+      "family": "GSN",
+      "mne_call": "mne.channels._standard_montage_utils._read_sfp(<source>, head_size=None).get_positions()",
+      "mne_coord_frame": "unknown",
+      "scale_to_m": 0.01,
+      "upstream": "EGI via EEGLAB",
+      "notes": [
+        "EEGLAB's file, read by MNE-Python's own .sfp reader with head_size=None as the HydroCel nets are: the file's geometry, in centimeters, converted to meters. The older nets put each electrode number elsewhere than the HydroCel nets: about each montage's own center, a median 22% of the head radius from the HydroCel 129 net's place (128 and 129), 19% from the HydroCel 257 net's (256 and 257) and 40% from the HydroCel 65 net's (64 and 65)."
+      ],
+      "source": "scripts/montage_sources/eeglab/GSN256.sfp",
+      "source_sha256": "ef3a1b6009358fc378969fa259f2ea245f9b16e6cdf7fe262771efcb58292ab6",
+      "eeglab_source": "https://github.com/sccn/eeglab/blob/1f8488b81eaec671319938278ab59bace267d341/sample_locs/GSN256.sfp"
+    },
+    {
+      "name": "GSN257",
+      "file": "views/montages/GSN257.json",
+      "sha256": "06cf337ed7e3164871ec5490b5fae2d323277961e7dca48b6cdd24f555d50446",
+      "electrodes": 257,
+      "family": "GSN",
+      "mne_call": "mne.channels._standard_montage_utils._read_sfp(<source>, head_size=None).get_positions()",
+      "mne_coord_frame": "unknown",
+      "scale_to_m": 0.01,
+      "upstream": "EGI via EEGLAB",
+      "notes": [
+        "EEGLAB's file, read by MNE-Python's own .sfp reader with head_size=None as the HydroCel nets are: the file's geometry, in centimeters, converted to meters. The older nets put each electrode number elsewhere than the HydroCel nets: about each montage's own center, a median 22% of the head radius from the HydroCel 129 net's place (128 and 129), 19% from the HydroCel 257 net's (256 and 257) and 40% from the HydroCel 65 net's (64 and 65)."
+      ],
+      "source": "scripts/montage_sources/eeglab/GSN257.sfp",
+      "source_sha256": "b130d6508d785a806482facfade59306eb060da378896575c55d9b55872ca6dd",
+      "eeglab_source": "https://github.com/sccn/eeglab/blob/1f8488b81eaec671319938278ab59bace267d341/sample_locs/GSN257.sfp"
     },
     {
       "name": "biosemi16",
