@@ -37,7 +37,8 @@ jobs:
 
   view-vectors:
     # Regenerates the sensor-field and sensor-layout vectors from eegprep at the
-    # pinned commit and fails if they differ from the committed files.
+    # pinned commit, and the ic-activity vectors with scipy, and fails if they
+    # differ from the committed files.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -49,6 +50,11 @@ jobs:
         run: >-
           uv run --locked --python 3.12 --extra views --group vectors
           python scripts/generate_view_vectors.py --check
+
+      - name: Check the ic-activity vectors against scipy
+        run: >-
+          uv run --locked --python 3.12 --extra views --group vectors
+          python scripts/generate_ic_activity_vectors.py --check
 
   schema-validate:
     runs-on: ubuntu-latest

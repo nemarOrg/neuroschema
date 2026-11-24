@@ -375,6 +375,30 @@
           "then": {
             "$ref": "../views/transform.nemar.sensor-layout.v1.schema.json"
           }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "transform": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "const": "nemar.ic-activity.v1"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            },
+            "required": [
+              "transform"
+            ]
+          },
+          "then": {
+            "$ref": "../views/transform.nemar.ic-activity.v1.schema.json"
+          }
         }
       ],
       "additionalProperties": false

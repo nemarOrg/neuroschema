@@ -1,0 +1,252 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "transform.nemar.ic-activity.v1.schema.json",
+  "title": "View Transform nemar.ic-activity, Version 1",
+  "description": "Applied on top of the envelope to a view declaration whose transform is nemar.ic-activity.v1 (docs/views/ic-activity.md): component activations as one plain multiply, the browser's unmixing matrix times the serving copy's physical values of the decomposition's channels, with no preprocessing. It reads three inputs, each once: unmixing (a TSV file of the run's product: one column per channel, headed by its label, and one row per component), signal (the recording's store in the serving copy) and components (a TSV file whose column component names the rows of unmixing). The parameters say how the matrix's columns find their store rows (match: store_row, by the rows the decomposition read, or label, by channel label) and the unit the matrix takes (unit).",
+  "type": "object",
+  "required": [
+    "inputs",
+    "transform"
+  ],
+  "properties": {
+    "inputs": {
+      "type": "array",
+      "description": "The roles unmixing, signal and components, each once.",
+      "items": {
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "enum": [
+                    "unmixing",
+                    "components"
+                  ]
+                }
+              },
+              "required": [
+                "role"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "file"
+              ],
+              "properties": {
+                "file": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "type": "string",
+                      "pattern": "\\.tsv$(?!\n)"
+                    }
+                  }
+                }
+              },
+              "description": "The matrix and the components table are TSV files of the run's product."
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "const": "signal"
+                }
+              },
+              "required": [
+                "role"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "store"
+              ],
+              "description": "The signal is a store of the serving copy."
+            }
+          }
+        ]
+      },
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "const": "unmixing"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "const": "signal"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "const": "components"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "minContains": 1,
+          "maxContains": 1
+        }
+      ]
+    },
+    "transform": {
+      "type": "object",
+      "properties": {
+        "parameters": {
+          "type": "object",
+          "required": [
+            "match",
+            "unit"
+          ],
+          "properties": {
+            "match": {
+              "enum": [
+                "store_row",
+                "label"
+              ],
+              "description": "store_row: column j of the matrix is store row rows[j], whose label must be the column's (a decomposition of the serving copy, which read those rows); label: each column is the one store row whose label is the column's (a decomposition of the archive, which read no store)."
+            },
+            "rows": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1024,
+              "uniqueItems": true,
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "description": "With match store_row, the 0-based store row of each column of the matrix, in column order; absent with match label."
+            },
+            "unit": {
+              "enum": [
+                "V",
+                "mV",
+                "uV",
+                "µV",
+                "μV"
+              ],
+              "description": "The unit the matrix takes: the store's own unit for a decomposition of the serving copy (the factor to microvolts is folded into the matrix), microvolts for one of the archive. Microvolts may be spelled uV, with the micro sign U+00B5 or with the Greek small letter mu U+03BC."
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "type": "object",
+                "properties": {
+                  "match": {
+                    "const": "store_row"
+                  }
+                },
+                "required": [
+                  "match"
+                ]
+              },
+              "then": {
+                "type": "object",
+                "required": [
+                  "rows"
+                ]
+              },
+              "else": {
+                "type": "object",
+                "properties": {
+                  "rows": {
+                    "not": {},
+                    "description": "Columns matched by label name no rows."
+                  }
+                }
+              }
+            }
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": "array",
+            "contains": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "const": "signal"
+                },
+                "store": {
+                  "type": "object",
+                  "properties": {
+                    "profile": {
+                      "const": "archive"
+                    }
+                  },
+                  "required": [
+                    "profile"
+                  ]
+                }
+              },
+              "required": [
+                "role",
+                "store"
+              ]
+            }
+          }
+        },
+        "required": [
+          "inputs"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "transform": {
+            "type": "object",
+            "properties": {
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "match": {
+                    "const": "label"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "A decomposition of the archive read no store, so its columns can only be matched by label."
+      }
+    }
+  ]
+}

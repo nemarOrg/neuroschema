@@ -233,6 +233,12 @@
       "spec": "docs/views/sensor-layout.md",
       "vectors": "views/vectors/sensor-layout.v1.json",
       "schema": "schema/views/transform.nemar.sensor-layout.v1.schema.json"
+    },
+    {
+      "name": "nemar.ic-activity.v1",
+      "spec": "docs/views/ic-activity.md",
+      "vectors": "views/vectors/ic-activity.v1.json",
+      "schema": "schema/views/transform.nemar.ic-activity.v1.schema.json"
     }
   ],
   "algorithms": [
