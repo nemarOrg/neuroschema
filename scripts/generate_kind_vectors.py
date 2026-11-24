@@ -3977,8 +3977,12 @@ def models() -> dict:
             "and compare it with model: numbers by binary64 equality that tells "
             "-0 from 0 (Object.is), texts exactly. snaps give the row a pointer at "
             "x reads, and locates the bin that holds a value (-1 underflow, the "
-            "bin count overflow). Each refusal's view is refused with word, "
-            "nothing is drawn, and downloads lists the files still offered."
+            "bin count overflow). A nemar.sensor-field model (sensor-field.md) "
+            "holds each map's word from the scalp-map algorithm; a nemar.spectrum "
+            "case's maps give, for the frequencies hz, the rows they snap to and "
+            "the model of the scalp maps at them, or the word that refused them "
+            "(presets.md). Each refusal's view is refused with word, nothing is "
+            "drawn, and downloads lists the files still offered."
         ),
         "cases": [_model_case(case) for case in cases],
         "refusals": [_refusal(case) for case in refusals()],

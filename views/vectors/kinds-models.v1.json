@@ -1,7 +1,7 @@
 {
   "format": "nemar.kinds-models.v1",
   "spec": "docs/views/generic-kinds.md",
-  "description": "Cases every renderer of the generic kinds reproduces. For each case, decode files (text is UTF-8; base64 is raw bytes), use the registry's caps with the case's caps in their place, build the model of view, and compare it with model: numbers by binary64 equality that tells -0 from 0 (Object.is), texts exactly. snaps give the row a pointer at x reads, and locates the bin that holds a value (-1 underflow, the bin count overflow). Each refusal's view is refused with word, nothing is drawn, and downloads lists the files still offered.",
+  "description": "Cases every renderer of the generic kinds reproduces. For each case, decode files (text is UTF-8; base64 is raw bytes), use the registry's caps with the case's caps in their place, build the model of view, and compare it with model: numbers by binary64 equality that tells -0 from 0 (Object.is), texts exactly. snaps give the row a pointer at x reads, and locates the bin that holds a value (-1 underflow, the bin count overflow). A nemar.sensor-field model (sensor-field.md) holds each map's word from the scalp-map algorithm; a nemar.spectrum case's maps give, for the frequencies hz, the rows they snap to and the model of the scalp maps at them, or the word that refused them (presets.md). Each refusal's view is refused with word, nothing is drawn, and downloads lists the files still offered.",
   "cases": [
     {
       "name": "table_channels",
