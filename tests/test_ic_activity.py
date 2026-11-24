@@ -518,6 +518,14 @@ def _step_declaration(case):
     ia.check_declaration(case["view"])
 
 
+def _step_locations(case):
+    ia.check_locations(case["view"])
+
+
+def _step_store(case):
+    ia.check_store(case["view"])
+
+
 def _step_files(case):
     for role in ("unmixing", "components", "badsegments"):
         entry = _input_file(case, role)
@@ -569,6 +577,8 @@ def _step_filter(case):
 
 ORDER = [
     _step_declaration,
+    _step_locations,
+    _step_store,
     _step_files,
     _step_digest,
     _step_matrix,
@@ -580,7 +590,9 @@ ORDER = [
 ]
 # The refusal that holds both faults of each neighboring pair.
 PAIRS = [
-    "order_declaration_before_files",
+    "order_declaration_before_locations",
+    "order_locations_before_store",
+    "order_store_before_files",
     "order_file_before_digest",
     "order_digest_before_matrix",
     "order_matrix_before_components",

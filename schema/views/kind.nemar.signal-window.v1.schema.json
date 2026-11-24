@@ -47,7 +47,7 @@
           },
           {
             "type": "object",
-            "description": "A table of the floor's decisions: the channels (the floor's _channels.tsv, whose status column marks bad channels) or the bad segments (its _badsegments.tsv, onset and duration in seconds).",
+            "description": "A table of the floor's decisions: the channels (the floor's _channels.tsv, whose status column marks bad channels) or the bad segments (its _badsegments.tsv, onset and duration in seconds), each named by its suffix and written beside the recording (a renderer checks the directory and the shared stem).",
             "required": [
               "role",
               "file"
@@ -68,7 +68,47 @@
                   }
                 }
               }
-            }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "const": "channels"
+                    }
+                  }
+                },
+                "then": {
+                  "type": "object",
+                  "properties": {
+                    "file": {
+                      "type": "object",
+                      "properties": {
+                        "location": {
+                          "type": "string",
+                          "pattern": "_channels\\.tsv$(?!\n)"
+                        }
+                      }
+                    }
+                  }
+                },
+                "else": {
+                  "type": "object",
+                  "properties": {
+                    "file": {
+                      "type": "object",
+                      "properties": {
+                        "location": {
+                          "type": "string",
+                          "pattern": "_badsegments\\.tsv$(?!\n)"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
           }
         ]
       },

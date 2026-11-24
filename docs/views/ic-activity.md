@@ -101,7 +101,8 @@ The kind's parameters:
 The schema checks that a decomposition of the archive declares a store of profile `archive` and matches by `label`, with a caption that is a string, and that one of the serving copy declares a store of profile `serving`, whose `content_sha256` is then a digest, and matches by `store_row`: the serving copy is never matched by label, which could find a row the decomposition did not read.
 In a recording's `dataQuality` entry, every store input of a view names the copy the entry's run read: its `profile` is the entry's.
 The transform's schema checks that the view declares `badsegments` exactly when `shaded.files` is not null, whatever the view's kind, so a kind that reuses the transform cannot drop the table.
-The writer also makes sure that `shaded.files` is null only when the floor wrote no bad-segment table, that `matrix` is the `unmixing` input's location, that `rows` has one entry per column, that the matrix's header is `columns` and `decomposition_input.channels`, that the components table has one row per matrix row, that the first of `shaded.files` is the `badsegments` input's location when there is one, and, for the serving copy, that `decomposition_input.store` names the `signal` store and its digest.
+The writer also makes sure that `shaded.files` is null only when the floor wrote no bad-segment table, that `rows` has one entry per column, that the matrix's header is `columns` and `decomposition_input.channels`, and that the components table has one row per matrix row.
+A renderer does not rely on the writer for the rest: it checks that `matrix` is the `unmixing` input's location and `shaded.files[0]` the `badsegments` input's, and, for the serving copy, that `decomposition_input.store` names the `signal` store and its digest ([the checks](#the-checks-in-order)).
 
 ## The transform `nemar.ic-activity.v1`
 
@@ -119,38 +120,44 @@ two binary64 operations, each rounded, as the store content digest `nemar.store-
 
 A renderer runs these checks in this order, and the first that fails gives the word.
 
-0. **The declaration.**
+1. **The declaration.**
    The declaration is valid (`declaration_invalid`): it has a digest and meets `view.schema.json#/$defs/view`, which applies the transform's schema to every view that names the transform, whatever its kind ([generic-kinds.md](generic-kinds.md#building-a-model)).
-1. **The files.**
+2. **The inputs' locations.**
+   Each file input is where the record says (`table_location_mismatch`): the `unmixing` input's location is the transform's `matrix`, then the `badsegments` input's, when there is one, is `shaded.files[0]`.
+   A view cannot read one table and name another, such as a decoy table with no rows in place of the floor's.
+3. **The decomposition's store.**
+   For a decomposition of the serving copy, `decomposition_input.store` names the `signal` store (`store_mismatch`): its `path` is the store's `path` (or its `recording`, when it has no `path`) and its `group` the store's `group`, then its `content_sha256` is the store's.
+   So the state the view shows, `matches` or `not_checked`, is about the store the decomposition read.
+4. **The files.**
    The `unmixing` file, then the `components` file, then the `badsegments` file when the view declares one, in that order: each declares at most `caps.bytes_per_role` bytes (`cap_exceeded`, checked before the file is fetched), is present (`file_missing`), has the declared `size` as its length (`file_size_mismatch`) and the declared `sha256` as its SHA-256 (`file_digest_mismatch`).
-2. **The store digest.**
+5. **The store digest.**
    When the view declares a digest (`content_sha256` is not null) and the serving copy publishes one for that group, the two are equal (`store_digest_mismatch`).
    Where the serving copy publishes each group's digest is nemarOrg/nemar-cli#2343's (the converter writes it at commit); until it does, no store publishes one and every view is `not_checked`.
    When either is absent, the activations are drawn and the state is `not_checked`; when both are present and equal, the state is `matches`.
-3. **The matrix.**
+6. **The matrix.**
    The `unmixing` file meets the TSV grammar, with its words, in their order ([generic-kinds.md](generic-kinds.md#tsv)); its header names are the channel labels, and the grammar already refuses a name twice (`tsv_header_repeated`).
    It has at least one data row (`empty`), and at most `caps.entries_per_dim` (1,024) rows and columns and `caps.cells_per_role` (262,144) cells (`cap_exceeded`).
    Then every cell is a `number` (`cell_not_number`, `cell_not_finite`), read column by column from the first, each from top to bottom.
-4. **The components.**
+7. **The components.**
    The `components` file meets the TSV grammar, holds at most `caps.cells_per_role` cells counting every header column (`cap_exceeded`), has the column `component` (`column_missing`), and has one data row per matrix row (`coords_length`).
    Its `component` cells, in order, label the matrix's rows.
-5. **The bad segments.**
+8. **The bad segments.**
    When the view declares `badsegments`, its file is read as [presets.md](presets.md#the-floors-tables) says for the floor's tables: the TSV grammar, at most `caps.cells_per_role` cells counting every header column (`cap_exceeded`), the columns `onset`, `duration` and `label`, found by name in any position and looked for in that order (`column_missing`), then every `onset` cell and then every `duration` cell a number (`cell_not_number`, `cell_not_finite`).
    A fault refuses the whole view, as every other check does: activations drawn without their shading could pass the spans ASR repaired for brain signal.
-6. **The channel match.**
+9. **The channel match.**
    The matrix's header is the transform's `columns`, in order (`channel_set_mismatch`).
    With `store_row`, `rows` has one entry per column, each a row of the store, and the label of row `rows[j]` is column j's label (`channel_set_mismatch`).
    With `label`, each column's label is the label of exactly one store row (`channel_set_mismatch` when none is, or two are).
    Labels are compared as exact strings: `FP1` is not `Fp1`.
    A store whose rows have no labels matches nothing.
-7. **The units.**
+10. **The units.**
    Each matched row's unit is one of the table below (`unit_unknown`, also for a row with no unit), and column j's factor is
 
        f_j = m(unit of row r_j) / m(unit)
 
    with `m` from the table, one binary64 division.
    For a decomposition of the serving copy the matrix takes the store's own unit, so every factor is 1.
-8. **The display filter.**
+11. **The display filter.**
    `display_filter.highpass_hz` is below half the store's rate (`filter_out_of_range`).
 
 | Unit | m, to microvolts |
@@ -245,6 +252,8 @@ A filter case matches when every value is within 1e-6 times the largest magnitud
 | Word | Meaning |
 |---|---|
 | `declaration_invalid` | The declaration fails `view.schema.json#/$defs/view` (with the transform's schema) or has no digest; among others, it declares `badsegments` when `shaded.files` is null, or not when it names a table. |
+| `table_location_mismatch` | The `unmixing` input is not at the transform's `matrix`, or the `badsegments` input is not at `shaded.files[0]`. |
+| `store_mismatch` | `decomposition_input.store` does not name the `signal` store: another path, group or digest. |
 | `file_missing` | An input file is not there. |
 | `file_size_mismatch` | An input file's length is not its declared `size`. |
 | `file_digest_mismatch` | An input file's SHA-256 is not its declared `sha256`. |

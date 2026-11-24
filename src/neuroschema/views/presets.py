@@ -25,6 +25,7 @@ Python reference. ``nemar.spectrum`` has no checks of its own, and
 from __future__ import annotations
 
 import bisect
+import posixpath
 from collections.abc import Mapping
 
 from neuroschema.views.models import (
@@ -35,6 +36,7 @@ from neuroschema.views.models import (
     build_model,
     cell_value,
     content_validator,
+    declaration_valid,
     read_json,
     read_tsv,
 )
@@ -163,6 +165,38 @@ def _file_input(view: Mapping, role: str) -> Mapping | None:
     return None if entry is None else entry["file"]
 
 
+TABLE_SUFFIXES = (("channels", "_channels.tsv"), ("badsegments", "_badsegments.tsv"))
+
+
+def check_table_locations(view: Mapping) -> None:
+    """The floor's tables are the recording's (``table_location_mismatch``).
+
+    Each table the view declares lies in the directory of the signal's
+    ``recording``, its name begins with the recording's entities (the
+    recording's file name up to its last ``_``) and ends in its suffix
+    (``_channels.tsv``, ``_badsegments.tsv``), and the two tables share one
+    stem: the floor writes both beside the recording, under one name. So a view
+    cannot mark a window with another recording's tables, or with a decoy
+    (probe p8).
+    """
+    signal = next(i for i in view["inputs"] if i["role"] == "signal")["store"]
+    directory, recording = posixpath.split(signal["recording"])
+    entities = recording.rsplit("_", 1)[0]
+    stems = set()
+    for role, suffix in TABLE_SUFFIXES:
+        entry = _file_input(view, role)
+        if entry is None:
+            continue
+        where, name = posixpath.split(entry["location"])
+        if where != directory or not name.endswith(suffix):
+            raise PresetRefused("table_location_mismatch", "nothing", role)
+        if not name.startswith(entities):
+            raise PresetRefused("table_location_mismatch", "nothing", role)
+        stems.add(name[: -len(suffix)])
+    if len(stems) > 1:
+        raise PresetRefused("table_location_mismatch", "nothing", "two stems")
+
+
 def check_signal_window(
     view: Mapping,
     files: Mapping[str, bytes],
@@ -186,6 +220,7 @@ def check_signal_window(
     data. With no bad segments declared, the result notes
     ``no_bad_segment_table``.
     """
+    check_table_locations(view)
     reader = _Reader(view, files, caps)
     tables = {}
     for role in ("channels", "badsegments"):
@@ -254,6 +289,8 @@ def check_preset(
     registry = load_registry() if registry is None else registry
     kind = view["kind"]
     try:
+        if not declaration_valid(view):
+            raise PresetRefused("declaration_invalid", "nothing")
         if kind == "nemar.signal-window":
             return {"word": None} | check_signal_window(
                 view,

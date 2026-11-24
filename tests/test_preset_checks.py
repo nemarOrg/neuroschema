@@ -18,10 +18,16 @@ from pathlib import Path
 import pytest
 
 from neuroschema.views import load_registry
-from neuroschema.views.models import Refusal, content_validator, view_validator
+from neuroschema.views.models import (
+    Refusal,
+    content_validator,
+    declaration_valid,
+    view_validator,
+)
 from neuroschema.views.presets import (
     PRESET_CHECKS_FORMAT,
     check_preset,
+    check_table_locations,
     read_channels,
     read_segments,
     window_samples,
@@ -49,7 +55,9 @@ def test_cases_replay(case):
 
 @pytest.mark.parametrize("case", CASES, ids=[c["name"] for c in CASES])
 def test_every_case_declares_a_valid_view(case):
-    assert view_validator().is_valid(case["view"])
+    """Every case's view is valid, but a case whose word is declaration_invalid."""
+    invalid = case["expected"].get("word") == "declaration_invalid"
+    assert view_validator().is_valid(case["view"]) is not invalid
 
 
 def test_vector_file():
@@ -147,6 +155,18 @@ def _total_check(case):
     return None if total == content.get("n_components") else "components_total"
 
 
+def _declaration_check(case):
+    return None if declaration_valid(case["view"]) else "declaration_invalid"
+
+
+def _locations_check(case):
+    try:
+        check_table_locations(case["view"])
+    except Refusal as exc:
+        return exc.word
+    return None
+
+
 def _files_check(case):
     try:
         check_signal_window_files(case)
@@ -231,6 +251,8 @@ ORDERS = {
     "nemar.signal-window": (
         WINDOWS,
         [
+            _declaration_check,
+            _locations_check,
             _files_check,
             _digest_check,
             _tables_check,

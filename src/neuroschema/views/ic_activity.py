@@ -115,6 +115,41 @@ def check_declaration(view: Mapping) -> None:
         raise IcActivityRefusal("declaration_invalid")
 
 
+def check_locations(view: Mapping) -> None:
+    """Each file input is at the location the record names for it
+    (``table_location_mismatch``): the ``unmixing`` input at the transform's
+    ``matrix``, and the ``badsegments`` input, when declared, at
+    ``shaded.files[0]``. So a view cannot read one table and name another, such
+    as a decoy table with no rows in place of the floor's (probe p7)."""
+    transform = view["transform"]["parameters"]
+    if _input(view, "unmixing")["file"]["location"] != transform["matrix"]:
+        raise IcActivityRefusal("table_location_mismatch", "unmixing is not matrix")
+    segments = next(
+        (i["file"] for i in view["inputs"] if i["role"] == "badsegments"), None
+    )
+    if segments is not None and segments["location"] != transform["shaded"]["files"][0]:
+        raise IcActivityRefusal(
+            "table_location_mismatch", "badsegments is not shaded.files[0]"
+        )
+
+
+def check_store(view: Mapping) -> None:
+    """For a decomposition of the serving copy, ``decomposition_input.store``
+    names the ``signal`` store (``store_mismatch``): the same path (the store's
+    ``path``, or its ``recording`` when it has none), group and digest. So the
+    view's state, ``matches`` or ``not_checked``, is about the store the
+    decomposition read (probe p7)."""
+    given = view["parameters"]["decomposition_input"].get("store")
+    if given is None:
+        return
+    signal = _input(view, "signal")["store"]
+    read = (signal.get("path", signal["recording"]), signal["group"])
+    if (given["path"], given["group"]) != read:
+        raise IcActivityRefusal("store_mismatch", "path or group")
+    if given["content_sha256"] != signal["content_sha256"]:
+        raise IcActivityRefusal("store_mismatch", "content_sha256")
+
+
 def verified(entry: Mapping, files: Mapping[str, bytes], caps: Mapping) -> bytes:
     """A file input's bytes: its declared size within the cap on bytes, checked
     before the file is fetched, then its presence, size and SHA-256."""
@@ -375,14 +410,18 @@ def ic_activity(
     Runs the checks in the specification's order and raises
     :class:`IcActivityRefusal` with the word of the first that fails: the
     declaration (valid under the envelope and the transform's schema, whatever
-    its kind), the files (unmixing, components, then badsegments when
-    declared), the store digest, the matrix, the components table, the bad
-    segments table, the channel match, the units, then the filter. A fault in
-    the bad segments refuses the whole view: unshaded artifact spans could pass
-    for brain signal. The window must lie in the recording and hold at most
-    ``max_window_s`` of it.
+    its kind), the inputs' locations against the record's names for them, the
+    decomposition's store against the signal store, the files (unmixing,
+    components, then badsegments when declared), the store digest, the
+    matrix, the components table, the bad segments table, the channel match,
+    the units, then the filter. A fault in the bad segments refuses the whole
+    view: unshaded artifact spans could pass for brain signal. The window must
+    lie in the recording and hold at most ``max_window_s`` of it.
     """
+
     check_declaration(view)
+    check_locations(view)
+    check_store(view)
     parameters = view["parameters"]
     transform = view["transform"]["parameters"]
     unmixing_entry = _input(view, "unmixing")["file"]

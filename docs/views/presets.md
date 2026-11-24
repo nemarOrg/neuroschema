@@ -39,6 +39,10 @@ The floor always writes `_channels.tsv`, so a `nemar.signal-window` always decla
 It writes `_badsegments.tsv` unless its window step was skipped and ASR repaired nothing, so a `nemar.ic-activity` declares `badsegments` exactly when its transform's `shaded.files` is not null, and a `nemar.signal-window` exactly when its `bad_segment_table` is true.
 The writer sets `shaded.files` and `bad_segment_table` from the record, null and false only when the floor wrote no table.
 
+**Named.** A declared table is the one the record names, and a renderer checks it before it fetches anything (`table_location_mismatch`), because a view that read a decoy table with no rows would draw a clean window.
+A `nemar.ic-activity`'s `badsegments` input is at `shaded.files[0]`, which comes from the record ([ic-activity.md](ic-activity.md#the-checks-in-order)).
+A `nemar.signal-window`'s tables are the recording's: each lies in the directory of the `signal` store's `recording`, its name begins with the recording's entities (the recording's file name up to its last `_`, `sub-01_task-rest` for `sub-01_task-rest_eeg.set`) and ends in `_channels.tsv` or `_badsegments.tsv` (the schema checks the suffix), and the two share one stem (`sub-01_task-rest_desc-nemarfloor`), as the floor writes them.
+
 **Verified.** A declared table is verified like any data file, and a fault refuses the whole view.
 It declares at most `caps.bytes_per_role` bytes (`cap_exceeded`, checked before the file is fetched), it is present, and its length is its `size` and its SHA-256 its `sha256` (`file_missing`, `file_size_mismatch`, `file_digest_mismatch`); when a view declares both tables, the channels' file is checked first.
 It meets the TSV grammar, with its words ([generic-kinds.md](generic-kinds.md#tsv)), and holds at most `caps.cells_per_role` cells counting every header column (`cap_exceeded`).
@@ -146,8 +150,10 @@ The view computes nothing and has no transform: the renderer opens the signal vi
 The window holds the samples k of the recording (0 <= k < S, for S samples at rate r) whose time `k / r`, one binary64 division, satisfies `start_s <= k / r < end`, where `end = start_s + duration_s`, one binary64 sum: the first is the least such k, and a window past the recording's end is clipped to its last sample.
 A renderer finds them from these times, not from `ceil(start_s * r)`, which can start a sample late at a rate such as 500/7 Hz.
 NEMAR's recipes declare the 2-second window inside the floor's good samples nearest the recording's middle (`midsegment`).
-The renderer runs five checks in this order, and the first that fails gives the word; each draws nothing.
-First the tables' files (channels, then badsegments) are the ones recorded.
+The renderer runs seven checks in this order, and the first that fails gives the word; each draws nothing.
+First the declaration is valid (`declaration_invalid`).
+Then the tables are named as the recording's (`table_location_mismatch`, [the floor's tables](#the-floors-tables)).
+Then the tables' files (channels, then badsegments) are the ones recorded.
 Then the store digest, as [ic-activity.md](ic-activity.md#the-checks-in-order) checks it: when the view declares one and the serving copy publishes another, nothing is drawn (`store_digest_mismatch`), because the decisions marked over the window were made on other data; when either is absent, the window is drawn and the state is `not_checked`.
 Then the tables, channels first, are read as [the floor's tables](#the-floors-tables) says.
 Then each bad channel's name is the label of a store row (`bad_channel_unknown`).
@@ -164,6 +170,8 @@ The vectors give, for a window drawn, its state, its `first` sample and `count`,
 | `content_invalid` | `nemar.ic-classes` | base | The content fails `content.nemar.ic-classes.v1` (it meets the histogram's). |
 | `variance_length` | `nemar.ic-classes` | base | `summed_variance_pct` does not have one entry per category. |
 | `components_total` | `nemar.ic-classes` | base | The counts do not sum to `n_components`. |
+| `declaration_invalid` | `nemar.signal-window` | nothing drawn | The declaration fails `view.schema.json#/$defs/view` or has no digest (for example, `bad_segment_table` true and no `badsegments` declared). |
+| `table_location_mismatch` | `nemar.signal-window` | nothing drawn | A floor table is not beside the recording, not named for it, or not under the other table's stem. |
 | `tsv_encoding`, `tsv_line_endings`, `tsv_header_repeated`, `tsv_ragged` | `nemar.signal-window` | nothing drawn | A floor table breaks the TSV grammar. |
 | `column_missing` | `nemar.signal-window` | nothing drawn | The bad segments lack `onset`, `duration` or `label`, or the channels lack `name` or `status`. |
 | `cell_not_number`, `cell_not_finite` | `nemar.signal-window` | nothing drawn | A bad segment's `onset` or `duration` is not a finite JSON number. |

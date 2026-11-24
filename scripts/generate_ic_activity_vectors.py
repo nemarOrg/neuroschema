@@ -722,6 +722,80 @@ def refusals() -> list[Case]:
         "An invalid declaration and a missing matrix: the declaration comes first.",
         (without_segments(view), files),
     )
+    # The record's names for the inputs, and the decomposition's store.
+    decoy = tsv_text("onset duration label nemar_reason")
+    decoy_at = "sub-01/eeg/other_badsegments.tsv"
+    view, files = _small_view(segments=True)
+    files[decoy_at] = decoy
+    for given in view["inputs"]:
+        if given["role"] == "badsegments":
+            given["file"] = file_input("badsegments", decoy_at, decoy)["file"]
+    refused(
+        "segments_location_differs",
+        "The badsegments input reads a decoy table with no rows where "
+        "shaded.files names the floor's: table_location_mismatch, never drawn "
+        "with nothing shaded (probe p7).",
+        (view, files),
+    )
+    view, files = _small_view()
+    view["transform"]["parameters"]["matrix"] = f"{PREFIX}_unmixing.tsv"
+    refused(
+        "matrix_location_differs",
+        "The unmixing input is not the file the record's matrix names: "
+        "table_location_mismatch.",
+        (view, files),
+    )
+    for name, member, value, covers in [
+        (
+            "decomposition_store_digest_differs",
+            "content_sha256",
+            "f" * 64,
+            "The decomposition's store names another digest than the signal "
+            "store: store_mismatch, so a state of matches would be about another "
+            "store (probe p7).",
+        ),
+        (
+            "decomposition_store_path_differs",
+            "path",
+            "sub-01/eeg/sub-01_task-other_eeg.zarr",
+            "The decomposition's store is another path than the signal store's.",
+        ),
+        (
+            "decomposition_store_group_differs",
+            "group",
+            "meg",
+            "The decomposition read another channel group than the signal's.",
+        ),
+    ]:
+        view, files = _small_view()
+        view["parameters"]["decomposition_input"]["store"][member] = value
+        refused(name, covers, (view, files))
+    view, files = _small_view(segments=True)
+    view["transform"]["parameters"]["matrix"] = f"{PREFIX}_unmixing.tsv"
+    refused(
+        "order_declaration_before_locations",
+        "An invalid declaration (the bad segments named and not declared) and a "
+        "matrix at another location: the declaration comes first.",
+        (without_segments(view), files),
+    )
+    view, files = _small_view()
+    view["transform"]["parameters"]["matrix"] = f"{PREFIX}_unmixing.tsv"
+    view["parameters"]["decomposition_input"]["store"]["content_sha256"] = "f" * 64
+    refused(
+        "order_locations_before_store",
+        "A matrix at another location and a decomposition store of another "
+        "digest: the locations come first.",
+        (view, files),
+    )
+    view, files = _small_view()
+    view["parameters"]["decomposition_input"]["store"]["content_sha256"] = "f" * 64
+    del files[UNMIXING_AT]
+    refused(
+        "order_store_before_files",
+        "A decomposition store of another digest and a missing matrix: the "
+        "store comes first.",
+        (view, files),
+    )
     view, files = _small_view()
     del files[UNMIXING_AT]
     refused("unmixing_missing", "The matrix's file is absent.", (view, files))

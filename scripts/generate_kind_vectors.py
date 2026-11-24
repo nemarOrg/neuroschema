@@ -2983,6 +2983,22 @@ def _input_at(view: dict, role: str) -> str:
     return next(i for i in view["inputs"] if i["role"] == role)["file"]["location"]
 
 
+def _relocated(case: tuple, role: str, location: str) -> tuple:
+    """A signal window case whose table for the role sits at another location."""
+    view, files, store, caps = copy.deepcopy(case)
+    entry = next(i for i in view["inputs"] if i["role"] == role)["file"]
+    files[location] = files.pop(entry["location"])
+    entry["location"] = location
+    return view, files, store, caps
+
+
+def _dropped(case: tuple, role: str) -> tuple:
+    """A signal window case that does not declare its table for the role."""
+    view, files, store, caps = copy.deepcopy(case)
+    view["inputs"] = [i for i in view["inputs"] if i["role"] != role]
+    return view, files, store, caps
+
+
 def signal_window_check_cases() -> list[tuple[str, str, dict, dict, dict]]:
     window = preset_views()["midsegment"]
     declared = next(i for i in window["inputs"] if i["role"] == "signal")["store"][
@@ -3195,6 +3211,74 @@ def signal_window_check_cases() -> list[tuple[str, str, dict, dict, dict]]:
             "Times k / rate at 500/7 Hz, where ceil(start * "
             "rate) would start a sample late and end a sample early.",
             *at(0.098, 0.364, samples=100, rate=500 / 7),
+        ),
+        (
+            "signal_window_tables_elsewhere",
+            "The channels table, named for the recording, in another directory: "
+            "table_location_mismatch, never a window marked by another "
+            "recording's decisions.",
+            *_relocated(
+                at(151.5, 2),
+                "channels",
+                "sub-01/meg/sub-01_task-rest_desc-nemarica_channels.tsv",
+            ),
+        ),
+        (
+            "signal_window_tables_another_recording",
+            "Both tables beside the recording but named for another recording "
+            "(task-other): table_location_mismatch.",
+            *_relocated(
+                _relocated(
+                    at(151.5, 2),
+                    "channels",
+                    "sub-01/eeg/sub-01_task-other_desc-nemarica_channels.tsv",
+                ),
+                "badsegments",
+                "sub-01/eeg/sub-01_task-other_desc-nemarica_badsegments.tsv",
+            ),
+        ),
+        (
+            "signal_window_tables_two_stems",
+            "A bad segments table under another stem than the channels' "
+            "(the floor's beside the decomposition's): table_location_mismatch.",
+            *_relocated(
+                at(151.5, 2),
+                "badsegments",
+                "sub-01/eeg/sub-01_task-rest_desc-nemarfloor_badsegments.tsv",
+            ),
+        ),
+        (
+            "signal_window_declaration_invalid",
+            "bad_segment_table true and no bad segments declared: declaration_invalid.",
+            *_dropped(at(151.5, 2), "badsegments"),
+        ),
+        (
+            "signal_window_order_declaration_before_locations",
+            "An invalid declaration and the channels of another directory: the "
+            "declaration comes first.",
+            *_dropped(
+                _relocated(
+                    at(151.5, 2),
+                    "channels",
+                    "sub-01/meg/sub-01_task-rest_desc-nemarica_channels.tsv",
+                ),
+                "badsegments",
+            ),
+        ),
+        (
+            "signal_window_order_locations_before_files",
+            "The channels of another directory and a bad segments file that is not "
+            "the one recorded: the locations come first.",
+            *_relocated(
+                at(
+                    151.5,
+                    2,
+                    segments=tampered,
+                    recorded={"badsegments": FLOOR_SEGMENTS},
+                ),
+                "channels",
+                "sub-01/meg/sub-01_task-rest_desc-nemarica_channels.tsv",
+            ),
         ),
         (
             "signal_window_order_files_before_digest",
