@@ -195,12 +195,25 @@ The output is a `values` role of `nemar.lines`: time in seconds along x (the res
 
 A renderer computes the activations over a window of n consecutive samples `[s0, s0 + n)` that lies in the recording, with `1 <= n <= floor(max_window_s · rate)` (the product in binary64, then the floor).
 A window that holds no sample or runs outside the recording is refused with `window_outside_store`, and a longer one with `window_too_long` ([the checks](#the-checks-in-order)); the vectors hold both.
-It may draw a longer stretch as several windows, each computed and filtered on its own.
+It may draw a longer stretch as several windows, each computed and filtered with its own context, so neighboring windows agree where they meet to within the transient that context leaves.
 
 ### The display filter
 
-Each component's activations over the window, `x[0..n-1]`, are filtered by a zero-phase high-pass: a Butterworth filter of order 2 at `f = display_filter.highpass_hz`, run forward and then backward over an odd extension of the window.
-The reference is scipy's `filtfilt(b, a, x, padtype="odd", padlen=p)` with `(b, a) = butter(2, f, "highpass", fs=rate)`; this section states it so that a renderer in any language computes the same numbers.
+**What it does.**
+The filter is a zero-phase high-pass for display, so that slow drift does not hide the components' activity: a Butterworth filter of order 2 at `f = display_filter.highpass_hz`, run forward and then backward.
+Each pass is 3 dB down at `f`, so the two together are 6 dB down at `f` (-6 dB at 1 Hz for NEMAR's `highpass_hz` of 1) and 3 dB down at about 1.246 · `f` (1.246 Hz); they pass 2 · `f` at -0.53 dB and 5 · `f` at -0.01 dB, and attenuate `f` / 2 by 24.6 dB (for a rate well above `f`, where the prewarped digital filter follows the analog one).
+It changes what is drawn: activity near and below `f` is attenuated, never removed from the data, and the view states the cutoff.
+
+**Context.**
+A renderer filters each window with real samples around it, not with padding alone.
+It computes the activations over the stretch `[s0 - c0, s0 + n + c1)`, where `c0 = min(c, s0)` and `c1 = min(c, S - s0 - n)` are the samples the recording holds before and after the window, at most `c = ceil(rate)` each (the fewest whole samples that span one second), filters the whole stretch, and then keeps the window's n samples.
+The stretch is padded (below) only at an end that is the recording's own: before it when `s0 - c0 = 0`, after it when `s0 + n + c1 = S`.
+The filter starts from its steady state at an end it has no padding for, and the transient that leaves decays by about `e^(-√2·π·f·t)` over t seconds: one second of context leaves about 0.012 of it at 1 Hz (measured on a drifting signal, the largest gap at the window's edge falls from 16% of the window's range with no context to 0.6% with one second).
+At the recording's own ends the odd extension stands in, and its transient is part of the display there.
+
+**The reference.**
+With the odd extension at both ends of a stretch, the filter is scipy's `filtfilt(b, a, x, padtype="odd", padlen=p)` with `(b, a) = butter(2, f, "highpass", fs=rate)`; at an end with no padding, it is `filtfilt` with `padlen=0` over the stretch with the extension added by hand at the other end.
+This section states it so that a renderer in any language computes the same numbers.
 
 **Coefficients.**
 The bilinear transform with a prewarped cutoff (the same filter as the high-pass biquad with Q = 1/√2), each line one binary64 expression evaluated left to right, `π` and `√2` the binary64 numbers nearest them:
@@ -215,11 +228,12 @@ The filter's steady state for a constant input of 1 is `zi = (-b0, b2)`: a const
 (`b0 + b1 + b2` is exactly 0, which scipy's `lfilter_zi` reaches by solving a linear system, to rounding.)
 
 **Padding.**
-The window is extended at each end by `p = min(9, n - 1)` samples, the odd extension: before the window, `2·x[0] - x[p], …, 2·x[0] - x[1]`; after it, `2·x[n-1] - x[n-2], …, 2·x[n-1] - x[n-1-p]`.
-Nine is scipy's default, three times the number of coefficients; a window of 9 samples or fewer is extended by one sample fewer than its length, which is the most scipy allows, and a window of one sample is not extended at all.
+Let `x[0..m-1]` be the stretch, of m samples.
+At each end that is the recording's own, it is extended by `p = min(9, m - 1)` samples, the odd extension: before it, `2·x[0] - x[p], …, 2·x[0] - x[1]`; after it, `2·x[m-1] - x[m-2], …, 2·x[m-1] - x[m-1-p]`.
+Nine is scipy's default, three times the number of coefficients; a stretch of 9 samples or fewer is extended by one sample fewer than its length, which is the most scipy allows, and a stretch of one sample is not extended at all.
 
 **Forward and backward.**
-Let `e` be the extended series, of length n + 2p.
+Let `e` be the extended stretch, of length m plus the padding it got.
 The forward pass runs the direct form II transposed from the state `(z0, z1) = (zi0·e[0], zi1·e[0])`, for each sample in order:
 
     y  = z0 + b0·e[k]
@@ -227,10 +241,10 @@ The forward pass runs the direct form II transposed from the state `(z0, z1) = (
     z1 = b2·e[k] - a2·y
 
 The backward pass runs the same recurrence over the forward output reversed, from the state `zi` times the first sample of that reversed series.
-Its output, reversed again, is cut to the window: samples p to p + n - 1.
-A window of one sample filters to 0.
+Its output, reversed again, loses the padding and the context, and what is left is the window's n samples.
+A stretch of one sample filters to 0.
 
-The filter's transient at each end of a window is part of the display: the same window always gives the same numbers, and a renderer that draws a recording in several windows filters each on its own.
+The same window always gives the same numbers: its context is fixed by the recording, not by what else is drawn.
 
 ### Drawing
 
@@ -291,7 +305,8 @@ A filter case matches when every value is within 1e-6 times the largest magnitud
   The refusals cover each word, and each pair of neighboring checks with two faults, so a renderer that runs two checks in the other order gives the other word.
 - `store_checks` lists the digest states: a `declared` and a `published` digest (each a digest or null) and the `outcome`.
 - `channel_types_digests` lists `channel_types` lists with their RFC 8785 `canonical` text and `sha256`, among them labels outside ASCII and untyped rows.
-- `coefficients` lists `b`, `a` and `zi` for several rates and cutoffs; `filter_cases` lists a `rate`, a `highpass_hz`, the `padding` p, the `input` rows and the `expected` rows, among them windows of 1 to 11 samples around the padding.
+- `coefficients` lists `b`, `a` and `zi` for several rates and cutoffs; `filter_cases` lists a `rate`, a `highpass_hz`, the `padding` p, the `input` rows and the `expected` rows (a stretch padded at both ends), among them windows of 1 to 11 samples around the padding.
+- The cases hold windows with a second of real context on each side (no padding), at the recording's first and last samples (padded there), and with less than a second before the window (all of it read, and padded at the recording's start); a window shorter than its store reads the store around it.
 
 The expected values are the Python reference's, which follows this page's order of operations; only the tangent in the coefficients may differ between platforms in its last bit.
 `generate_ic_activity_vectors.py --check` regenerates them and compares within 1e-10 of each component's (or input row's) largest magnitude, and fails when the reference differs from scipy by more than 1e-9 of it.

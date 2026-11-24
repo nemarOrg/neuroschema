@@ -586,6 +586,58 @@ def transform_cases() -> list[Case]:
         )
     )
 
+    # A recording long enough for a second of real context on each side: 200
+    # samples at 20 Hz, so a window of 40 reads 20 more before it and after it.
+    long = frozen(
+        "cases",
+        "context_long",
+        lambda: {
+            "digital": synthetic_digital(20, 6, 200, rate=20.0),
+            "weights": serving_weights(1020, 4, 6, 1.0),
+        },
+    )
+    sha = digest("context_long")
+    long_store = store(
+        SMALL, ["uV"] * 6, [0.1] * 6, [0.0] * 6, long["digital"], 20.0, sha
+    )
+    for name, window, covers in [
+        (
+            "context_both_sides",
+            (80, 40),
+            "A window with a second of real context on each side (20 samples at "
+            "20 Hz): the filter runs over the 80 samples and keeps the 40, with no "
+            "padding at either end.",
+        ),
+        (
+            "context_recording_start",
+            (0, 40),
+            "A window at the recording's first sample: no context before it, so "
+            "the odd extension there; a second of real context after it.",
+        ),
+        (
+            "context_short_before",
+            (10, 40),
+            "Ten samples before the window, fewer than a second: all ten are read, "
+            "the stretch begins at the recording's start, and is padded there.",
+        ),
+        (
+            "context_recording_end",
+            (160, 40),
+            "A window that ends at the recording's last sample: padded after, a "
+            "second of real context before.",
+        ),
+    ]:
+        view, files = declaration(
+            SMALL,
+            long["weights"],
+            4,
+            match="store_row",
+            unit="uV",
+            rows=list(range(6)),
+            declared=sha,
+        )
+        cases.append(Case(name, covers, view, files, long_store, window))
+
     # Short windows and the last samples of a recording.
     for count in (1, 2, 9, 10):
         cases.append(_short(count))
@@ -1792,7 +1844,24 @@ def against_scipy(doc: dict) -> list[str]:
         compare(f"multiply {case['name']}", expected["activations"], product, scales)
         cutoff = view["parameters"]["display_filter"]["highpass_hz"]
         b, a = signal.butter(2, cutoff, "highpass", fs=spec["rate"])
-        theirs = signal.filtfilt(b, a, product, padtype="odd", padlen=ia.padding(count))
+        samples = digital.shape[-1]
+        before, after = ia.context(start, count, samples, spec["rate"])
+        first, last = start - before, start + count + after
+        stretch = weights @ ((digital[:, first:last] * scale + offset) * factors)
+        # scipy's odd extension, at the recording's own ends only; real context
+        # stands in for it elsewhere, and filtfilt pads nothing (padlen=0).
+        p = ia.padding(last - first)
+        head = p if first == 0 else 0
+        if p and first == 0:
+            stretch = np.concatenate(
+                [2 * stretch[:, :1] - stretch[:, p:0:-1], stretch], axis=1
+            )
+        if p and last == samples:
+            stretch = np.concatenate(
+                [stretch, 2 * stretch[:, -1:] - stretch[:, -2 : -(p + 2) : -1]], axis=1
+            )
+        theirs = signal.filtfilt(b, a, stretch, padlen=0)
+        theirs = theirs[:, head + before : head + before + count]
         compare(f"filtfilt {case['name']}", expected["filtered"], theirs, scales)
     return problems
 

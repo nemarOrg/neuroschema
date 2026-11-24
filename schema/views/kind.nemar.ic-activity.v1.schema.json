@@ -112,7 +112,7 @@
       "properties": {
         "display_filter": {
           "type": "object",
-          "description": "The zero-phase high-pass a renderer applies to each component's activations over the window it computed, before drawing them (docs/views/ic-activity.md, the display filter). It is for display only and is not part of the decomposition.",
+          "description": "The zero-phase high-pass a renderer applies to each component's activations before drawing them: over the window and up to a second of real context on each side, which it then discards, padded only at the recording's own ends (docs/views/ic-activity.md, the display filter). It is for display only and is not part of the decomposition.",
           "required": [
             "highpass_hz",
             "order"
@@ -121,7 +121,7 @@
             "highpass_hz": {
               "type": "number",
               "exclusiveMinimum": 0,
-              "description": "The cutoff, in hertz, where the response is 3 dB down in each pass (6 dB after both); below half the store's sampling rate."
+              "description": "The cutoff, in hertz, where each pass is 3 dB down, so the two passes together are 6 dB down there and 3 dB down at about 1.246 times it; below half the store's sampling rate."
             },
             "order": {
               "const": 2,
