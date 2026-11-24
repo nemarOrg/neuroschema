@@ -177,6 +177,10 @@ NET_COVERAGE = (9, 10)
 # HydroCel net. Any other string names no net, and no model names an older net
 # (family GSN). A new model is a new version.
 EGI_FAMILIES = ("GSN-HydroCel", "GSN")
+# The families whose electrode a recording's EEGReference may name. A BioSemi
+# cap's bank labels (A1, A2) are the 10-05 ear and mastoid names, so on any
+# other family the reference names no channel.
+REFERENCE_FAMILIES = ("10-05", "GSN-HydroCel")
 _HYDROCEL_NETS = {
     "32": ("GSN-HydroCel-32",),
     "64": ("GSN-HydroCel-64_1.0", "GSN-HydroCel-65_1.0"),
@@ -283,7 +287,9 @@ class Inference:
     montage matched. ``contenders`` lists the montages still competing when the
     choice was made, and ``duplicates`` the electrodes two channels mapped to.
     ``reference`` is the name of the placed channel the recording's reference
-    names, whose values are all zero: a map leaves it out of the interpolation.
+    names (:func:`reference_channel`). It is reported, not dropped: a map leaves
+    it out of the interpolation only when all its values are exactly zero, as a
+    channel recorded against itself is.
     """
 
     outcome: str
@@ -357,7 +363,8 @@ def finish(part: str) -> str:
 
 
 def label_key(label: str) -> str:
-    """The key of a montage label: the name normalized as a channel name is."""
+    """The key of a montage label, or of a reference: steps 1 to 3 and 5 to 7,
+    with no split at a hyphen (step 4)."""
     return finish(clean(label))
 
 
@@ -645,13 +652,17 @@ def reference_channel(
 ) -> str | None:
     """The name of the placed channel the recording's reference names, or None.
 
-    The reference (BIDS ``EEGReference``) is normalized as a montage label is
-    (:func:`label_key`), with the montage's aliases; the channel placed on that
-    electrode is the reference channel. A reference that names no placed
-    channel (``average``, ``linked mastoids``, an electrode not recorded)
-    gives None.
+    Only on a montage of :data:`REFERENCE_FAMILIES`: the reference (BIDS
+    ``EEGReference``) is normalized as a montage label is (:func:`label_key`:
+    steps 1 to 3 and 5 to 7, never split at a hyphen), then redirected by the
+    montage's aliases; the channel placed on that electrode is the reference
+    channel. A reference that names no placed channel (``average``, ``linked
+    mastoids``, ``A1-A2``, an electrode not recorded), and any reference on a
+    montage of another family, gives None. The channel is reported, not
+    dropped: a map leaves it out only when all its values are exactly zero
+    (``docs/views/sensor-field.md``).
     """
-    if reference is None:
+    if reference is None or montage.family not in REFERENCE_FAMILIES:
         return None
     key = label_key(reference)
     key = aliases(montage).get(key, key)

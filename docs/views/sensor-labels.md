@@ -90,7 +90,7 @@ Each file holds the positions MNE-Python 1.13.2 returns from `make_standard_mont
 A montage file is `{"format": "nemar.montage.v1", "name", "family", "orientation": "RAS", "unit": "m", "fiducials": {"nasion", "lpa", "rpa"}, "center": [x, y, z], "electrodes": [[label, x, y, z], ...]}`, with the electrodes in MNE-Python's order.
 `center` is the montage's own center: the sphere `nemar.sensor-layout.v1` fits to all its electrodes, rounded to 9 decimal places as the positions are.
 Positions placed from the montage are projected about it, never about a sphere fitted to the few a recording has (see [`sensor-layout.md`](sensor-layout.md), step 3).
-A montage label's key is the label normalized as a channel name is (steps 1 to 7 below); no two labels of one montage share a key.
+A montage label's key is the label normalized by steps 1 to 3 and 5 to 7 below, with no split at a hyphen (step 4); no two labels of one montage share a key.
 
 ## Normalizing a name
 
@@ -226,10 +226,13 @@ The HBN releases as published (no `CapManufacturersModelName`) are refused; with
 
 ### The reference channel
 
-A channel named as the recording's reference holds no data: its values are all zero by construction (the HBN nets record against Cz, and their Cz channel is flat).
-The reference is the sidecar's `EEGReference`, normalized as a montage label is (steps 1 to 7) and redirected by the chosen montage's aliases; the reference channel is the placed channel whose electrode it names.
-It is placed like any channel, since its position is known, and reported in the output (`reference`), so a map leaves its value out of the interpolation and does not draw zeros as data.
-A reference that names no placed channel (`average`, `linked mastoids`, an electrode the recording does not carry) reports none, and a refusal reports none.
+The reference channel is the placed channel that the sidecar's `EEGReference` names.
+The reference is normalized as a montage label is, by steps 1 to 3 and 5 to 7 with no split at a hyphen, so `A1-A2` stays one key and names no electrode; the key is then redirected by the chosen montage's aliases, and the channel placed on that electrode is the reference channel.
+Only a montage of the `10-05` or `GSN-HydroCel` family has a reference channel: a BioSemi cap's bank labels `A1` and `A2` are also the 10-05 names of the ears, so on a BioSemi cap the reference names no channel.
+The channel is placed like any channel, since its position is known, and reported in the output (`reference`); it is not dropped.
+A channel recorded against itself holds no data, and its values are all zero (the HBN nets record against Cz, and their Cz channel is flat), but after re-referencing it carries data like any other.
+So a map leaves the reference channel out of the interpolation only when all its values are exactly zero ([`sensor-field.md`](sensor-field.md#sensors)), and otherwise draws it.
+A reference that names no placed channel (`average`, `linked mastoids`, `A1-A2`, an electrode the recording does not carry) reports none, and a refusal reports none.
 
 ### Why nested nets are dismissed, and why a net needs coverage
 
@@ -255,7 +258,9 @@ These wrong placements remain possible in version 1, and are accepted:
 - A recording that leaves banks of its cap unused is placed on the smallest net it fills, as above: A1 to A32 from a 64-channel cap lands on the 32-channel cap's positions.
 - A recording whose cap model names a HydroCel net it was not recorded on is placed on that net's positions: the model is the writer's statement, and is not checked against anything else.
   A model with no size names every HydroCel net, so with it a recording that left most of a larger net unused can land on a smaller net, as above.
-- A reference written in words this step does not normalize to a channel (`Cz (vertex)`) reports no reference channel, and its zeros are drawn as data.
+- A reference written in words this step does not normalize to a channel (`Cz (vertex)`), or on a BioSemi cap, reports no reference channel, and its zeros are drawn as data.
+- Conversely, a reference channel that is near zero but not exactly zero (a flat reference after filtering, resampling or rounding) is drawn as data, and its near-zero values pull the map toward zero around it; and a channel the reference does not name is drawn even when it is all zero (a dead electrode).
+  The rule reads the name and exact zeros, never why a channel is flat.
 - The `POL ` prefix is dropped from untyped names too, so an untyped Nihon Kohden recording's intracranial strip or depth contacts named like scalp electrodes or bank labels (`POL C3`, `POL A1`) are read as EEG electrodes.
   A contact typed `SEEG` or `ECOG` is excluded by its type; an untyped set is refused only when the share, coverage or ambiguity rules refuse it.
 

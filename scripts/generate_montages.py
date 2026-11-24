@@ -1331,7 +1331,8 @@ CASES = [
         "hbn_with_cap_model",
         "The same channels with a corrected CapManufacturersModelName, HydroCel "
         "GSN 128 1.0, and EEGReference Cz: placed on the HydroCel 129 net, and "
-        "Cz, the reference, is reported, since its values are all zero.",
+        "Cz is reported as the reference channel, not dropped (a map leaves it "
+        "out only when all its values are exactly zero).",
         egi(128, ["Cz"]),
         ("placed", None, "GSN-HydroCel-129"),
         "HydroCel GSN 128 1.0",
@@ -1365,6 +1366,26 @@ CASES = [
         ("placed", None, "standard_1005"),
         None,
         "linked mastoids",
+    ),
+    (
+        "reference_not_split",
+        "The 10-20 names with A1 and A2, and EEGReference A1-A2: a reference is "
+        "never split at a hyphen, so a1-a2 names no electrode, and no channel is "
+        "the reference (A1 would be, were it split).",
+        eeg([*TEN_TWENTY, "A1", "A2"]),
+        ("placed", None, "standard_1005"),
+        None,
+        "A1-A2",
+    ),
+    (
+        "reference_on_biosemi",
+        "A BioSemi 64 recording named by bank (A1 to B32) with EEGReference A1, "
+        "the left ear's 10-05 name and a bank label: a reference names a channel "
+        "only on the 10-05 montage and the HydroCel nets, so none here.",
+        biosemi_bank(64),
+        ("placed", None, "biosemi64"),
+        None,
+        "A1",
     ),
     (
         "reference_not_recorded",
@@ -1673,7 +1694,9 @@ def build_vectors(montages: tuple, sha: dict[str, str]) -> str:
             "CapManufacturersModelName and EEGReference, each null when absent), "
             "and the result: the outcome, the refusal reason, the "
             "montage, the counts, the contending montages, the duplicated "
-            "electrodes, the reference channel, and per channel its status, its "
+            "electrodes, the reference channel (reported, not dropped: a map "
+            "leaves it out only when all its values are exactly zero), and per "
+            "channel its status, its "
             "normalized key and the "
             "montage electrode it is placed on. The montages are views/montages "
             "with the SHA-256 digests listed here."

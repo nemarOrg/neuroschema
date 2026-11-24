@@ -41,6 +41,7 @@ from neuroschema.views.sensor_labels import (
     NET_FAMILIES,
     NON_EEG_PREFIXES,
     REASONS,
+    REFERENCE_FAMILIES,
     REFERENCES,
     TEMPLATE_ONLY_MONTAGES,
     aliases,
@@ -878,6 +879,31 @@ def test_the_reference_channel_is_reported_not_dropped():
     assert on_net.reference == "VREF"
     assert infer_positions(vref, MONTAGES, reference="Cz").reference is None
     assert infer_positions(names, MONTAGES, reference="T3").reference == "T7"
+
+
+def test_a_reference_is_never_split_at_a_hyphen():
+    """The reference is normalized by steps 1 to 3 and 5 to 7 only: A1-A2 is
+    one key, which names no electrode, while A1 alone names the A1 channel."""
+    names = [(n, "EEG") for n in [*TEN_TWENTY, "A1", "A2"]]
+    for reference in ("A1-A2", "A1-REF", "EEG A1-A2", "Cz-REF"):
+        assert infer_positions(names, MONTAGES, reference=reference).reference is None
+    assert infer_positions(names, MONTAGES, reference="EEG A1").reference == "A1"
+    assert infer_positions(names, MONTAGES, reference="'a01.'").reference == "A1"
+    assert label_key("A1-A2") == "a1-a2"
+
+
+def test_a_reference_names_a_channel_on_two_families_only():
+    """On a BioSemi cap the bank labels are also the 10-05 ear names, so no
+    reference names a channel there; the 10-05 montage and HydroCel nets keep
+    theirs."""
+    assert REFERENCE_FAMILIES == ("10-05", "GSN-HydroCel")
+    banks = [(f"{b}{i}", "EEG") for b in "AB" for i in range(1, 33)]
+    for reference in ("A1", "A2", "B1", "a1", "M1", "Cz"):
+        result = infer_positions(banks, MONTAGES, reference=reference)
+        assert (result.montage, result.reference) == ("biosemi64", None)
+    ears = [(n, "EEG") for n in [*TEN_TWENTY, "A1", "A2"]]
+    assert infer_positions(ears, MONTAGES, reference="A2").reference == "A2"
+    assert {m.family for m in MONTAGES} - set(REFERENCE_FAMILIES) == {"BioSemi"}
 
 
 def test_the_cap_model_gates_egi_placements_only():
