@@ -46,7 +46,7 @@ from neuroschema.views.sensor_labels import FIDUCIALS, MONTAGE_NAMES, NON_EEG_PR
 
 ROOT = Path(__file__).resolve().parent.parent
 VECTORS = ROOT / "views" / "vectors"
-EEGPREP_COMMIT = "edf694c8344b9c4c68672eac3acf9a819f1462a8"
+EEGPREP_COMMIT = "871bc7f8a03b6d925330c598e8dcd18b835614d3"
 EEGPREP_REPOSITORY = "https://github.com/sccn/eegprep"
 BIDS_SPEC = (
     "https://github.com/bids-standard/bids-specification/blob/"
@@ -729,19 +729,25 @@ def layout_from(name, count):
 
 
 def pinv_check(theta, radius, values, zi):
-    """eegprep's griddata_v4 leaves 0 * log(0) = NaN where two sensors share a
-    position, so its solve returns NaN without raising and its pinv fallback
-    never runs: record that eegprep's own map of the unmerged inputs is NaN."""
+    """Before sccn/eegprep#672, eegprep's griddata_v4 left 0 * log(0) = NaN
+    where two sensors share a position, so its map of the unmerged inputs had
+    no finite cell (sccn/eegprep#670). Since then it averages coincident
+    sensors first, as MATLAB's griddata does: record how many cells of
+    eegprep's own map of the unmerged inputs are finite."""
     raw, *_ = eegprep_topoplot(theta, radius, values)
     return {"eegprep_unmerged_finite_cells": int(np.isfinite(raw).sum())}
 
 
 def misalignment_check(theta, radius, values, zi):
-    """eegprep at the pin drops a sensor whose value is not finite from the
-    positions but not from the values, so later values shift onto the wrong
-    sensors (EEGLAB's topoplot.m drops both): record that eegprep's own map of
-    the raw inputs misses the spec's by more than the parity tolerance."""
-    raw, *_ = eegprep_topoplot(theta, radius, values)
+    """Before sccn/eegprep#672, eegprep dropped a sensor whose value is not
+    finite from the positions but not from the values, so later values shifted
+    onto the wrong sensors (sccn/eegprep#670; EEGLAB's topoplot.m drops both).
+    Record whether eegprep's own map of the raw inputs, given the deviations
+    from the finite values' mean as the spec's map is, agrees with the spec's
+    within the parity tolerance."""
+    m = deviation_center([v for v in values if math.isfinite(v)])
+    raw, *_ = eegprep_topoplot(theta, radius, [v - m for v in values])
+    raw = m + raw
     span = float(np.nanmax(zi) - np.nanmin(zi))
     same_mask = bool((np.isfinite(raw) == np.isfinite(zi)).all())
     error = np.abs(raw - zi)[np.isfinite(zi)]

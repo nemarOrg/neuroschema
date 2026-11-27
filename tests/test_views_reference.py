@@ -190,10 +190,16 @@ def test_exact_duplicates_pseudo_inverse_equals_merge_then_lu():
 
 
 def test_eegprep_quirks_are_recorded():
-    """The vectors record what eegprep at the pin does with the raw inputs."""
+    """The vectors record what eegprep at the pin does with the raw inputs:
+    since sccn/eegprep#672 it averages coincident sensors, so its map of the
+    unmerged duplicates is finite wherever the spec's is, and it drops a value
+    that is not finite with its position, so its map agrees with the spec's."""
     duplicates = FIELD_CASES["exact_duplicates"]["expected"]
-    assert duplicates["eegprep_unmerged_finite_cells"] == 0
-    assert FIELD_CASES["nan_values"]["expected"]["eegprep_raw_agrees"] is False
+    reference = np.array([numbers(row) for row in duplicates["z"]])
+    finite = int(np.isfinite(reference).sum())
+    assert finite > 0
+    assert duplicates["eegprep_unmerged_finite_cells"] == finite
+    assert FIELD_CASES["nan_values"]["expected"]["eegprep_raw_agrees"] is True
 
 
 def _abs_square(x, y, intrad):
@@ -1428,7 +1434,7 @@ def test_check_compares_layouts_by_planar_point():
 
 
 # What the ubuntu-latest view-vectors job regenerated differently from the
-# macOS-written vectors (CI run 45247745795, eegprep edf694c8, numpy 2.5.5,
+# macOS-written vectors (CI run 45247745795, eegprep edf694c8 then, numpy 2.5.5,
 # scipy 1.18.1), as the Linux value minus the macOS value: the regeneration
 # tolerance must absorb each of them. They are kept as differences, applied
 # to the committed vectors, since the maps those runs drew have changed since.

@@ -34,7 +34,7 @@ views = [
 # for scripts/generate_view_vectors.py, and needs Python 3.12 or later.
 vectors = [
     "mne==1.13.2",
-    "eegprep @ git+https://github.com/sccn/eegprep@edf694c8344b9c4c68672eac3acf9a819f1462a8 ; python_full_version >= '3.12'",
+    "eegprep @ git+https://github.com/sccn/eegprep@871bc7f8a03b6d925330c598e8dcd18b835614d3 ; python_full_version >= '3.12'",
     "numpy>=2.1",
     "scipy>=1.14.1",
 ]
