@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/core/dataset.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.1/schema/core/dataset.schema.json",
   "title": "Dataset Metadata",
   "description": "Study-level metadata for a neuroimaging dataset. Contains what modalities are present, participant demographics (from participants.tsv), signal properties shared across recordings, event/HED annotation status, and provenance. Aligned with BIDS dataset_description.json and participants.tsv. Platform-neutral; platform-specific fields belong in extensions.",
   "type": "object",

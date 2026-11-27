@@ -18,7 +18,7 @@
 
 - Extensions MUST define `"additionalProperties": true` to allow forward compatibility, except `dataQuality`, which is closed at its root and in every `$defs` entry: it carries the views a browser draws, so a member no schema checks is refused rather than carried along (`test_data_quality_is_closed_everywhere`).
 - Extension schemas live in `schema/extensions/`.
-- Every schema file's `$id` is the absolute URI `https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/` plus its path under `schema/` (`neuroschema.validate.SCHEMA_BASE`), so a relative `$ref` resolves by RFC 3986 in every engine, ajv included. The `$id` is an identifier: the validator loads every file from `schema/` and never fetches one.
+- Every schema file's `$id` is the absolute URI `https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.1/schema/` plus its path under `schema/` (`neuroschema.validate.SCHEMA_BASE`), so a relative `$ref` resolves by RFC 3986 in every engine, ajv included. The `$id` is an identifier: the validator loads every file from `schema/` and never fetches one.
 - Extensions can reference definitions from `schema/definitions/`.
 - Objects nested inside an extension may be closed (`additionalProperties: false`); only the namespace root must stay open (`dataQuality` aside).
 - Never declare `$id` below a file's root: vendoring rewrites only root `$id`s, and the validator's store maps only root `$id`s.

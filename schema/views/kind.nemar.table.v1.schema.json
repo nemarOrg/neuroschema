@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/views/kind.nemar.table.v1.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.1/schema/views/kind.nemar.table.v1.schema.json",
   "title": "View Kind nemar.table, Version 1",
   "description": "A generic table, applied to a view declaration whose kind is nemar.table and kind_version 1, on top of the envelope. One stored TSV file read as the role table; a renderer shows the declared columns in the order declared, one row per data row, each cell as its stored text, and offers the file for download. A generic kind: no base, no inputs, no transform, no parameters and no dimensions.",
   "type": "object",

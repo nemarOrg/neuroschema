@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/extensions/rawDetail.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.1/schema/extensions/rawDetail.schema.json",
   "title": "Raw Detail Extension",
   "description": "Detailed per-channel arrays and raw BIDS sidecar content. This extension holds the verbose data that was previously in the core MongoDB documents (channel_names, channel_types, channel_tsv, eeg_json). Separated from core to allow lean queries that skip large arrays.",
   "type": "object",

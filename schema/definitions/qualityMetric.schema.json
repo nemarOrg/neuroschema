@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/definitions/qualityMetric.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.1/schema/definitions/qualityMetric.schema.json",
   "title": "Quality Metric",
   "description": "One quality metric computed for a recording, with exactly one producer. A plugin manifest (nemar-cli shared/contract) declares each of its metric outputs with this shape and names the producer with plugin; recipe is for a metric a recipe writes into its own records.",
   "type": "object",

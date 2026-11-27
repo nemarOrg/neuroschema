@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/definitions/subject.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.1/schema/definitions/subject.schema.json",
   "title": "Subject/Keyword",
   "description": "A structured subject term with optional controlled vocabulary linkage. Aligns with DataCite Subject (property 6). Supports free-text keywords and terms from controlled vocabularies like MeSH, Cognitive Atlas, or Library of Congress Subject Headings.",
   "type": "object",

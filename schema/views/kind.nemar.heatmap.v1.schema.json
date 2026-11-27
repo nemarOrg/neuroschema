@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/views/kind.nemar.heatmap.v1.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.1/schema/views/kind.nemar.heatmap.v1.schema.json",
   "title": "View Kind nemar.heatmap, Version 1",
   "description": "Generic heatmap, applied on top of the envelope to a view declaration whose kind is nemar.heatmap and kind_version 1. One stored TSV file is read as the role values: a matrix of numeric cells, drawn one flat cell per stored value with no interpolation. One dimension runs along the rows: its labels are a column of the file, or, for a preset over this kind, a column of another of the preset's roles. The other runs along the columns: each declared column other than the row-label column is one column of the matrix, and its label is the column name or comes from another role. A renderer builds the model in docs/views/generic-kinds.md. This is a generic kind, so it has no base, no inputs and no transform.",
   "type": "object",

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/definitions/structuredDate.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.1/schema/definitions/structuredDate.schema.json",
   "title": "Structured Date",
   "description": "A date with semantic type. Aligns with DataCite Date (property 8). Supports single dates, date ranges (YYYY-MM-DD/YYYY-MM-DD), and year-only precision. Use 'Collected' for data acquisition periods, 'Issued' for publication date, 'Created' for dataset creation.",
   "type": "object",
