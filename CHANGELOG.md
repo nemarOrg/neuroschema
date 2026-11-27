@@ -5,6 +5,10 @@ While the schema is pre-1.0, a MINOR bump marks a breaking change or a new exten
 
 ## [Unreleased]
 
+### Changed
+
+- The sensor-field and sensor-layout vectors are regenerated with eegprep at `871bc7f8` (sccn/eegprep#672 and later), the commit NEMAR's processing images run, in place of `edf694c8`; the `vectors` dependency group pins it. Every map, grid and layout matches the previous vectors within the regeneration tolerance (eegprep's grid now comes from MATLAB's `linspace`, which moves some coordinates in the last bit). Two recorded eegprep quirks are fixed upstream and the vectors say so: the `exact_duplicates` case's `eegprep_unmerged_finite_cells` is now the map's finite cell count (eegprep averages coincident sensors, as MATLAB's `griddata` does), and the `nan_values` case's `eegprep_raw_agrees` is now `true` (eegprep drops a value that is not finite with its position); the check behind it gives eegprep the same deviations from the mean as the spec's map. `docs/views/sensor-field.md` describes eegprep at the new commit.
+
 ## [0.6.0] - 2026-11-24
 
 Quality views replace figures: a view is data a browser draws, declared with a namespaced, versioned kind (nemarOrg/neuroschema#21, part of nemarOrg/nemar-cli#2324).
