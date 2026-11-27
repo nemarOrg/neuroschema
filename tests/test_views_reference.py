@@ -192,7 +192,7 @@ def test_exact_duplicates_pseudo_inverse_equals_merge_then_lu():
 def test_eegprep_quirks_are_recorded():
     """The vectors record what eegprep at the pin does with the raw inputs:
     since sccn/eegprep#672 it averages coincident sensors, so its map of the
-    unmerged duplicates is finite wherever the spec's is, and it drops a value
+    unmerged duplicates has as many finite cells as the spec's, and it drops a value
     that is not finite with its position, so its map agrees with the spec's."""
     duplicates = FIELD_CASES["exact_duplicates"]["expected"]
     reference = np.array([numbers(row) for row in duplicates["z"]])

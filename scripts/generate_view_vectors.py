@@ -784,7 +784,7 @@ def field_cases():
     base = np.array(base, dtype=float)
 
     # Exact duplicates: two copies of sensor 4 and one of sensor 17, each with
-    # its own value (eegprep would give an all-NaN map).
+    # its own value (eegprep averages coincident sensors since sccn/eegprep#672).
     dup_rows = [4, 4, 17]
     cases.append(
         field_case(
