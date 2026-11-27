@@ -3,7 +3,7 @@
 The transform from three-dimensional sensor positions to the layout `nemar.sensor-field.v1` draws: each sensor's topoplot theta and radius.
 This page is normative.
 [`views/vectors/sensor-layout.v1.json`](../../views/vectors/sensor-layout.v1.json) holds the cases every implementation reproduces, and `neuroschema.views.sensor_layout.sensor_layout` is the Python reference (install the `views` extra).
-The vectors' theta and radius come from eegprep's `convertlocs(..., 'cart2topo')` at commit `edf694c8344b9c4c68672eac3acf9a819f1462a8`, applied to positions centered by this page's sphere fit.
+The vectors' theta and radius come from eegprep's `convertlocs(..., 'cart2topo')` at commit `871bc7f8a03b6d925330c598e8dcd18b835614d3`, applied to positions centered by this page's sphere fit.
 
 ## Input
 

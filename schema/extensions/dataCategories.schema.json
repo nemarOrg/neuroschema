@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/extensions/dataCategories.schema.json",
+  "$id": "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.1/schema/extensions/dataCategories.schema.json",
   "title": "Data Categories Extension",
   "description": "Study classification metadata for filtering and discovery. Captures the experimental paradigm, clinical context, and cognitive domains of the dataset.",
   "type": "object",

@@ -36,7 +36,7 @@ SCHEMA_DIR = Path(__file__).resolve().parent.parent.parent / "schema"
 # Every schema's $id is this base plus its path under schema/: an absolute URI,
 # so a relative $ref resolves by RFC 3986 in every engine (ajv included). It is
 # an identifier; the validator reads each file from schema/ and fetches nothing.
-SCHEMA_BASE = "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.0/schema/"
+SCHEMA_BASE = "https://raw.githubusercontent.com/nemarOrg/neuroschema/v0.6.1/schema/"
 
 
 def schema_id(schema_file: Path, schema_dir: Path = SCHEMA_DIR) -> str:

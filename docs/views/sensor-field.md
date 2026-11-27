@@ -3,7 +3,7 @@
 The scalp map of one value per sensor: EEGLAB's `topoplot` map, interpolated from a two-dimensional layout of the sensors onto a 67-by-67 grid and masked at the head.
 This page is normative for the algorithm and for the kind `nemar.sensor-field` version 1 that draws with it.
 [`views/vectors/sensor-field.v1.json`](../../views/vectors/sensor-field.v1.json) holds the cases every implementation reproduces, and `neuroschema.views.sensor_field.sensor_field` is the Python reference (install the `views` extra).
-The vectors come from eegprep's `topoplot` at commit `edf694c8344b9c4c68672eac3acf9a819f1462a8`, the reference implementation.
+The vectors come from eegprep's `topoplot` at commit `871bc7f8a03b6d925330c598e8dcd18b835614d3`, the reference implementation.
 Where eegprep and this page differ, this page decides; [eegprep at the reference commit](#eegprep-at-the-reference-commit) lists each difference.
 
 ## Input
@@ -308,22 +308,21 @@ The `boundary_ties` case holds the three ties: a sensor at radius exactly `plotr
 
 ## eegprep at the reference commit
 
-The reference is eegprep's `topoplot` and `griddata_v4` in `src/eegprep/functions/sigprocfunc/topoplot.py`, at `edf694c8`.
+The reference is eegprep's `topoplot` and `griddata_v4` in `src/eegprep/functions/sigprocfunc/topoplot.py`, at `871bc7f8`.
 It follows EEGLAB's `topoplot.m`, and it leaves these points implicit or differs from EEGLAB.
-The two divergences, the unreachable pseudo-inverse fallback and the shifted values, are reported upstream as [sccn/eegprep#670](https://github.com/sccn/eegprep/issues/670); this page does not depend on how that issue is resolved, because its own rules (the merge and the drop) decide both cases.
+Two divergences that eegprep had before [sccn/eegprep#672](https://github.com/sccn/eegprep/pull/672), an empty map for duplicate positions and shifted values, were reported upstream as [sccn/eegprep#670](https://github.com/sccn/eegprep/issues/670) and are fixed at the reference commit; this page never depended on them, because its own rules (the merge and the drop) decide both cases.
 
-- **The regularization term is zero.**
-  `griddata_v4` adds `1e-8 * trace(g) / n` to the diagonal as "Tikhonov regularization", but it sets the diagonal of `g` to 0 just before, so the trace is 0 and the term is identically 0.
+- **No regularization.**
+  `griddata_v4` solves the Green's-function system with no added term; before sccn/eegprep#672 it added `1e-8 * trace(g) / n` to the diagonal as "Tikhonov regularization", which was identically 0 because the diagonal of `g` is set to 0 just before.
   This page has no regularization.
-- **Duplicate positions give an empty map.**
-  Where two sensors share a position, the distance is 0 and `g = 0 * (ln 0 - 1) = 0 * -∞`, which is NaN (not a number); only the diagonal is set to 0.
-  `numpy.linalg.solve` returns NaN without raising, so the `pinv` (pseudo-inverse) fallback in its `except LinAlgError` branch never runs, and every cell of eegprep's map is NaN.
-  The fallback the code intends, the pseudo-inverse of the matrix with `g(0) = 0`, is the least-squares solution, and for exact duplicates it equals merging them at their mean value and solving the smaller system.
-  The merge (step 4) is this page's answer for exact duplicates and for sensors closer than ε, whose matrix is nearly singular.
-  The vectors' `exact_duplicates` case records that eegprep's own map of the unmerged sensors has no finite cell, and the test suite checks the pseudo-inverse map against the merged one (sccn/eegprep#670).
-- **A value that is not finite shifts the others.**
-  eegprep drops such a sensor from the positions but not from the values (EEGLAB's `Values = Values(plotchans)` has no counterpart), so every later value lands on the wrong sensor.
-  This page drops both, as EEGLAB does; the vectors' `nan_values` case is eegprep's map with those sensors removed, and records that eegprep's map of the raw inputs disagrees with it (sccn/eegprep#670).
+- **Duplicate positions are averaged with MATLAB's tolerance.**
+  Where two sensors share a position, the distance is 0 and `g = 0 * (ln 0 - 1) = 0 * -∞`, which is NaN (not a number).
+  eegprep now averages near-coincident sensors before it solves, as MATLAB's `griddata` does (`mergesimpts` with a per-axis tolerance of `spacing(0.5 * range) ^ (1/3)`, a few millionths of a unit-size head), so its map of exact duplicates is the map of their mean.
+  That tolerance is far smaller than ε, so this page's merge (step 4) still decides every pair of sensors closer than ε, whose matrix is nearly singular, and the vectors' maps are eegprep's map of the sensors merged by this page.
+  The vectors' `exact_duplicates` case records how many cells of eegprep's own map of the unmerged sensors are finite (as many as the case's map has), and the test suite checks the pseudo-inverse map against the merged one.
+- **A value that is not finite is dropped with its position.**
+  eegprep drops such a sensor from the values and the positions together, as EEGLAB's `Values = Values(plotchans)` does (before sccn/eegprep#672 it dropped only the position, so every later value landed on the wrong sensor).
+  This page drops both too; the vectors' `nan_values` case is eegprep's map with those sensors removed, and records that eegprep's map of the raw inputs, given the same deviations from the mean, agrees with it.
 - **The interpolation square has no absolute value.**
   eegprep tests `(x <= intrad) & (y <= intrad)`, and EEGLAB's `topoplot.m` has the same test, `intchans = find(x <= intrad & y <= intrad)` (checked against EEGLAB's development copy of 17 September 2025).
   A sensor far behind the head (large negative x) or far to its left (large negative y) is interpolated and widens the grid; one far in front or far to the right is not.
@@ -334,7 +333,7 @@ The two divergences, the unreachable pseudo-inverse fallback and the shifted val
   For `minmax` it widens both limits by 5% of the range instead, and so differs from EEGLAB and from eegprep: on a map of one sign, such as a spectrum's map in decibels, EEGLAB's rule moves the limit nearer zero inward (a smallest cell of 20 dB gives a lower limit of 21 dB), so the cells between take the color at the axis's end and the map's floor is clipped.
   The vectors' `one_sign_positive_db` and `one_sign_negative_db` cases are maps of one sign whose every cell lies inside the axis; under EEGLAB's rule some would not.
 - **The radii and the merge.**
-  EEGLAB's `topoplot.m` takes its radii from every channel with a value and a place, before it interpolates; eegprep does the same and has no merge.
+  EEGLAB's `topoplot.m` takes its radii from every channel with a value and a place, before it interpolates; eegprep does the same, and its merge (MATLAB's tolerance) comes after the radii.
   The vectors' maps are eegprep's map of the merged sensors, so where a merged-away sensor is the outermost (the `merged_outermost` case), the generator passes eegprep the plotting radius from every usable sensor through eegprep's own `plotrad` option; everywhere else it checks that eegprep's radius is the spec's.
 - **The mean is removed before the interpolation.**
   EEGLAB's `topoplot.m` and eegprep interpolate the values themselves, so a constant every value carries ripples through the spline (about 4% of the value on the `constant_values` case's cap, and most of a spectrum's color axis when its decibels share an offset); a flat field is drawn as that ripple, with its colors and contours.
